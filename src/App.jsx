@@ -135,10 +135,18 @@ const RD_STAGES = [
 // RISK_STAGES mirrors RISK_CATS 1:1 for stages 1–8 (one category per stage), then adds
 // Results and Action plan as stages 9–10 — same generic stage/rail/Back/Continue system
 // used by FA and RD, just with a 10-stage sequence instead of a linear questionnaire.
+// Stages 11–14 add the Nationwide Farm Risk Ready℠ Plan Builder — a structured planning
+// workbook (distinct from the scored quiz in stages 1–10): identify specific farm risks,
+// rank them by probability × severity, choose a management strategy, build contingency
+// plans, and set a communication/training/review cadence.
+// Farm Risk covers the full 4-section Farm Risk Ready℠ assessment quiz (Identifying risk,
+// Managing & preventing risk, Contingency planning, Communicating the plan) — restored
+// to match Nationwide's actual tool exactly — plus the full Plan Builder.
 const RISK_STAGES = [
-  { n:1, label:"Risk identification" }, { n:2, label:"Financial risk" }, { n:3, label:"Crop & farm insurance" },
-  { n:4, label:"Production risk" }, { n:5, label:"Market risk" }, { n:6, label:"Contingency planning" },
-  { n:7, label:"Succession & legal" }, { n:8, label:"Cyber & operational" }, { n:9, label:"Results" }, { n:10, label:"Action plan" },
+  { n:1, label:"Identifying risk" }, { n:2, label:"Managing & preventing risk" },
+  { n:3, label:"Contingency planning" }, { n:4, label:"Communicating the plan" },
+  { n:5, label:"Revenue ops & key contacts" }, { n:6, label:"Threat identification & ranking" },
+  { n:7, label:"Strategy & contingency plans" }, { n:8, label:"Communicate, train & review" },
 ];
 
 const ENT = {
@@ -562,14 +570,10 @@ function FA5({ fa, setFA }) {
 // to MFP. Restyled to the Idealyst design system — color-coded categories, no
 // decorative icons, consistent with the rest of the app.
 const RISK_CATS = [
-  { id:"identify", label:"Risk identification", color:T.blue, colorL:T.blueL, colorD:"#0A6E8C", questions:3, maxScore:12 },
-  { id:"financial", label:"Financial risk", color:T.red, colorL:T.redL, colorD:T.redD, questions:5, maxScore:20 },
-  { id:"insurance", label:"Crop & farm insurance", color:T.dgreen, colorL:T.greenL, colorD:"#2F6E28", questions:5, maxScore:20 },
-  { id:"production", label:"Production risk", color:T.amber, colorL:T.amberL, colorD:T.amberT, questions:4, maxScore:16 },
-  { id:"market", label:"Market risk", color:"#4338CA", colorL:"#EEF2FF", colorD:"#3730A3", questions:4, maxScore:16 },
-  { id:"contingency", label:"Contingency planning", color:T.navy, colorL:T.bgAlt, colorD:T.fgM, questions:4, maxScore:16 },
-  { id:"succession", label:"Succession & legal", color:"#7C3AED", colorL:"#F3E8FF", colorD:"#5B21B6", questions:4, maxScore:16 },
-  { id:"cyber", label:"Cyber & operational", color:T.water, colorL:T.waterL, colorD:"#0A6E8C", questions:3, maxScore:12 },
+  { id:"identify", label:"Identifying risk", color:T.blue, colorL:T.blueL, colorD:"#0A6E8C", questions:3, maxScore:12 },
+  { id:"managing", label:"Managing & preventing risk", color:T.dgreen, colorL:T.greenL, colorD:"#2F6E28", questions:3, maxScore:12 },
+  { id:"contingency", label:"Contingency planning", color:T.amber, colorL:T.amberL, colorD:T.amberT, questions:4, maxScore:16 },
+  { id:"communicating", label:"Communicating the plan", color:"#7C3AED", colorL:"#F3E8FF", colorD:"#5B21B6", questions:2, maxScore:8 },
 ];
 
 const RISK_QUESTIONS = {
@@ -578,76 +582,26 @@ const RISK_QUESTIONS = {
     { id:"id2", text:"To what extent are you aware of the financial impact these risks or disruptions could have on your farm?", opts:["Not at all — I haven't estimated financial exposure","To a small extent — I have a rough sense of one or two risks","To a moderate extent — I've estimated losses for most major risk events","To a great extent — I have quantified dollar impact for each identified risk"], scores:[1,2,3,4], nationwide:true },
     { id:"id3", text:"To what extent do you know how long you can stay operational if a key revenue source is disrupted?", opts:["Not at all — I haven't thought about this","A few weeks — my cash reserves are minimal","2–3 months — I have some working capital buffer","6+ months — I have strong working capital and know exactly how long I can operate"], scores:[1,2,3,4], nationwide:true },
   ],
-  financial: [
-    { id:"fin1", text:"What is your current debt service coverage ratio (DSCR)?", opts:["Below 1.0x — net farm income does not cover debt payments","1.0–1.1x — covering payments with minimal buffer","1.1–1.25x — watch range, limited cushion for a bad year","Above 1.25x — strong debt coverage with meaningful buffer"], scores:[1,2,3,4], tip:"DSCR below 1.0x means one bad year can trigger payment default. Farm Credit advisors flag 1.0x as the critical threshold." },
-    { id:"fin2", text:"How much working capital do you have per acre (or per animal unit for livestock)?", opts:["Below $200/ac — critically low; one input cost spike is a crisis","$200–$400/ac — below peer average; limited marketing flexibility","$400–$692/ac — peer average range; adequate for most scenarios","Above $692/ac — top quartile; significant marketing and crisis flexibility"], scores:[1,2,3,4], tip:"Compeer data: top-quartile grain farmers carry $692+/ac working capital. Below $400/ac is a watch threshold for Farm Credit." },
-    { id:"fin3", text:"What is your operating expense ratio (OER)?", opts:["Above 85% — more than 85 cents of every revenue dollar covers costs","75–85% — watch range; limited margin for price or yield shock","65–75% — peer average; moderate resilience","Below 65% — top quartile; strong operating efficiency"], scores:[1,2,3,4], tip:"OER above 80% means a 10% price drop can push the operation to a loss. Compeer best-in-class achieve 65%." },
-    { id:"fin4", text:"Do you have a 13-week cash flow projection you update regularly?", opts:["No — I manage cash reactively","I track bank balance but don't project forward","I project cash flow roughly, not week by week","Yes — I have a detailed 13-week cash flow projection I update monthly"], scores:[1,2,3,4], tip:"A 13-week cash flow projection is the first document Farm Credit asks for in a workout conversation." },
-    { id:"fin5", text:"How concentrated is your revenue? What percentage comes from your single largest income source?", opts:["90%+ — almost entirely dependent on one enterprise or buyer","70–90% — highly concentrated; one disruption is catastrophic","50–70% — moderately concentrated","Below 50% — meaningfully diversified across enterprises or channels"], scores:[1,2,3,4], tip:"Revenue concentration is the single largest driver of farm financial fragility — this is exactly what the Revenue Diversification module addresses." },
-  ],
-  insurance: [
-    { id:"ins1", text:"What level of crop/revenue insurance coverage do you carry on your primary enterprise?", opts:["No crop insurance — I am fully self-insured","Basic coverage (65–70%) — catastrophic protection only","Moderate coverage (75–80%) — covers most severe events","High coverage (85%) with SCO/ECO — maximum revenue protection"], scores:[1,2,3,4], tip:"Compeer data: top-quartile grain farms carry 85% RP with SCO. Upgrading from 75% to 85% costs little and raises your floor significantly." },
-    { id:"ins2", text:"Are you enrolled in DMC (Dairy Margin Coverage) or ARC/PLC at the appropriate level for your enterprise?", opts:["No — not enrolled in any federal safety net program","Enrolled at minimum level only","Enrolled at moderate level","Enrolled at maximum appropriate level and reviewed annually"], scores:[1,2,3,4], tip:"DMC at $9.50/cwt for dairy has a deeply favorable risk-reward. ARC/PLC election optimization is worth $5K–$80K for grain operations." },
-    { id:"ins3", text:"Does your farm insurance cover all significant assets: buildings, equipment, livestock, and liability?", opts:["Coverage is incomplete — significant assets are uninsured or underinsured","Most assets covered but I haven't reviewed values recently","All major assets covered; reviewed in the last 2 years","Comprehensive coverage reviewed annually with my agent; values current"], scores:[1,2,3,4], tip:"Farm asset values have risen 25–40% since 2020. Coverage adequate in 2021 may be significantly underinsured today." },
-    { id:"ins4", text:"Do you have livestock risk protection (LRP) or similar price protection for your livestock enterprise?", opts:["No price protection for livestock — fully exposed to price moves","I use forward contracts occasionally but not systematically","I use LRP or futures for a portion of production regularly","I have a written price risk management plan covering 30–50% of expected production"], scores:[1,2,3,4] },
-    { id:"ins5", text:"Do you have cyber liability insurance and a data backup system for your farm's digital records?", opts:["No cyber coverage and no backup system","Basic cyber awareness but no formal coverage","Some cyber coverage but records backup is informal","Cyber liability coverage + verified offsite backup of all financial and operational records"], scores:[1,2,3,4], tip:"Cyberattacks in the food and ag sector doubled between 2024 and 2025." },
-  ],
-  production: [
-    { id:"pro1", text:"How exposed are your yields to a single weather event (drought, flood, frost)?", opts:["Extremely exposed — one drought year would be catastrophic","Moderately exposed — no irrigation; located in single geography","Somewhat exposed — some geographic diversification or irrigation capacity","Low exposure — irrigated, multiple geographies, or enterprise mix reduces concentration"], scores:[1,2,3,4], tip:"USDA: 41% of crop insurance indemnities from 2000–2024 were due to drought or heat." },
-    { id:"pro2", text:"Do you have backup suppliers for your critical inputs (seed, fertilizer, feed, animal health products)?", opts:["No — I rely on a single supplier for each critical input","I know alternatives exist but haven't established relationships","I have identified backup suppliers for most critical inputs","I have active relationships with backup suppliers tested in the last 2 years"], scores:[1,2,3,4], nationwide:true },
-    { id:"pro3", text:"Do you have a disease outbreak or pest response plan for your primary enterprise?", opts:["No plan — I would respond reactively","I have general awareness of what to do but no written protocol","I have a written protocol and have reviewed it with my vet or agronomist","I have a written protocol, reviewed annually, with a clear notification and isolation procedure"], scores:[1,2,3,4], tip:"HPAI cost the U.S. poultry industry $3B+ in losses in 2022–23. A biosecurity protocol is the highest-ROI risk tool for poultry and dairy." },
-    { id:"pro4", text:"Do you have backup capability for critical equipment or facilities?", opts:["No backups — equipment failure during peak season would halt operations","I know where to rent equipment but haven't arranged anything in advance","I have identified rental sources and have a basic contingency plan","I have custom hire or equipment sharing agreements in place that I can activate immediately"], scores:[1,2,3,4], nationwide:true },
-  ],
-  market: [
-    { id:"mkt1", text:"What percentage of your primary commodity production do you typically forward contract before harvest?", opts:["0% — I sell everything at spot price after harvest","1–20% — minimal forward contracting","20–40% — some marketing discipline","40%+ — systematic pre-harvest contracting with a written marketing plan"], scores:[1,2,3,4], tip:"Compeer: top-quartile grain operators earn $66/ac more than peers through marketing discipline, not higher yields." },
-    { id:"mkt2", text:"How diversified are your buyers or market channels?", opts:["Single buyer — one elevator, one processor, one cooperative","Primarily one buyer with 1–2 backup relationships","2–3 active buyer relationships for primary commodity","Multiple active buyer relationships including at least one premium or specialty channel"], scores:[1,2,3,4] },
-    { id:"mkt3", text:"Do you have alternative markets available if your primary buyer cannot accept your product?", opts:["No — I have no alternative market relationships established","I know alternatives exist but haven't established any relationships","I have identified alternative markets but haven't tested them","I have active alternative market relationships I have sold to in the last 3 years"], scores:[1,2,3,4], nationwide:true },
-    { id:"mkt4", text:"How do you monitor commodity price exposure and make marketing decisions?", opts:["Reactively — I sell when I need cash or when prices seem high","I watch prices but make decisions based on gut feel","I have benchmarks (breakeven price, cost of production) that guide decisions","I have a written marketing plan with price targets, contract deadlines, and a review schedule"], scores:[1,2,3,4], tip:"Your breakeven price from the Ratio Deep Dive stage is the foundation of a disciplined marketing plan." },
+  managing: [
+    { id:"mgt1", text:"I've stopped activities that pose a risk to my farm.", opts:["Strongly disagree","Disagree","Agree","Strongly agree"], scores:[1,2,3,4], nationwide:true },
+    { id:"mgt2", text:"I've made changes to reduce the likelihood of a loss or disruption to farm operations.", opts:["Strongly disagree","Disagree","Agree","Strongly agree"], scores:[1,2,3,4], nationwide:true },
+    { id:"mgt3", text:"I've transferred my risk by purchasing insurance.", opts:["Strongly disagree","Disagree","Agree","Strongly agree"], scores:[1,2,3,4], nationwide:true },
   ],
   contingency: [
-    { id:"con1", text:"Do you have a written business continuity plan that covers how the farm operates if you are unavailable for 30+ days?", opts:["No plan — operations depend entirely on my daily presence","The knowledge exists but it's not written down","I have informal notes or instructions but nothing comprehensive","I have a written continuity plan that has been reviewed with my family or key employees"], scores:[1,2,3,4], nationwide:true, tip:"65% of farmers have no formal resiliency plan (Nationwide, December 2024) — this is the most common and most costly gap." },
-    { id:"con2", text:"Are your family members and employees trained on contingency procedures?", opts:["No — they would not know what to do in an emergency","They have general awareness but no formal training","They have been briefed on key procedures","They have been trained and we have reviewed the plan together in the last 12 months"], scores:[1,2,3,4], nationwide:true },
-    { id:"con3", text:"Do you know the minimum revenue and cash flow needed to keep the operation running for 6 months?", opts:["No — I haven't calculated a minimum viable operating budget","I have a rough sense but it's not documented","I know my fixed obligations and have estimated a survival budget","I have a documented minimum viable budget and know exactly what I can cut if needed"], scores:[1,2,3,4] },
-    { id:"con4", text:"Do you have an emergency contact list and clear decision-making authority documented in case of your absence?", opts:["No — authority and contacts are not documented","Contacts are listed somewhere but authority is unclear","Key contacts are documented; authority falls to one person informally","Written contact list + clear authority delegation reviewed and updated annually"], scores:[1,2,3,4] },
+    { id:"con1", text:"I have a list of backup suppliers for things like fertilizer, seed, feed, animal health products, etc.", opts:["Strongly disagree","Disagree","Agree","Strongly agree"], scores:[1,2,3,4], nationwide:true },
+    { id:"con2", text:"My farm has backups for critical equipment, facilities, technology, etc.", opts:["Strongly disagree","Disagree","Agree","Strongly agree"], scores:[1,2,3,4], nationwide:true },
+    { id:"con3", text:"I have a list of alternative customers/markets in the event that my current customer/market can no longer acquire my product.", opts:["Strongly disagree","Disagree","Agree","Strongly agree"], scores:[1,2,3,4], nationwide:true },
+    { id:"con4", text:"I am aware of the necessary steps to minimize downtime and revenue loss following a disruption.", opts:["Strongly disagree","Disagree","Agree","Strongly agree"], scores:[1,2,3,4], nationwide:true },
   ],
-  succession: [
-    { id:"suc1", text:"Do you have a written succession plan that identifies who will own and operate this farm in the next generation?", opts:["No plan — succession has not been addressed","We've discussed it but nothing is documented","We have a general plan but it isn't legally documented","We have a formal, legally documented succession plan reviewed by an ag attorney"], scores:[1,2,3,4], tip:"Only 35% of farms have any formal succession plan." },
-    { id:"suc2", text:"What is the legal structure of your farm operation?", opts:["Sole proprietorship — no legal separation of personal and farm assets","Partnership — informal or formal but limited liability protection","LLC — legal separation in place but estate planning may be incomplete","LLC or corporation with a formal operating agreement, buy-sell agreement, and estate plan"], scores:[1,2,3,4], tip:"A sole proprietorship means your personal assets are exposed to farm liabilities." },
-    { id:"suc3", text:"Does your farm have key-person risk — is there one person whose absence would significantly disrupt operations?", opts:["Yes — everything depends on one person (me) and no one else can fill the role","Yes — but we've identified who would take over with minimal documentation","Partially — we have cross-trained in some areas but gaps remain","No — operations are documented and multiple people can handle key functions"], scores:[1,2,3,4] },
-    { id:"suc4", text:"Is critical farm knowledge (agronomic records, customer relationships, supplier terms, operating procedures) documented and accessible to others?", opts:["No — most knowledge is in my head and not documented","Some operational knowledge is documented but financials and relationships are not","Most knowledge is documented; successor has been briefed","Comprehensive knowledge documentation reviewed and updated annually with successor"], scores:[1,2,3,4], tip:"Knowledge management is the most overlooked succession risk — the value of the farm often walks out the door with the founder." },
+  communicating: [
+    { id:"comm1", text:"My family members and employees are informed of the contingency plans.", opts:["Strongly disagree","Disagree","Agree","Strongly agree"], scores:[1,2,3,4], nationwide:true },
+    { id:"comm2", text:"I have trained my family members and employees on the contingency plans.", opts:["Strongly disagree","Disagree","Agree","Strongly agree"], scores:[1,2,3,4], nationwide:true },
   ],
-  cyber: [
-    { id:"cyb1", text:"How secure are your farm's digital systems and financial records?", opts:["No formal security — I use default passwords and don't think about cyber risk","Basic awareness — I update passwords occasionally but have no formal protocol","Moderate security — I use strong passwords, have antivirus software, and back up records","Strong security — MFA enabled, records backed up offsite, annual cyber review with IT advisor"], scores:[1,2,3,4], tip:"Cyberattacks targeting the ag sector doubled between 2024 and 2025." },
-    { id:"cyb2", text:"Do you have a response plan if your farm's systems are compromised or your financial data is stolen?", opts:["No plan — I would not know what to do","I know who to call (IT support, bank) but have no documented plan","I have a list of steps to take and who to contact","I have a documented cyber incident response plan and have reviewed it with my bank and advisors"], scores:[1,2,3,4] },
-    { id:"cyb3", text:"Are your farm's precision ag data and operational records protected against loss or corruption?", opts:["No backup — data exists only on one device or platform","Backups exist but I haven't tested whether they work","Regular backups to a second location; tested in the last year","Automated offsite backups with verified restore capability tested in the last 6 months"], scores:[1,2,3,4] },
-  ],
-};
-
-const RISK_ACTIONS = {
-  identify: { low:["Document your top 10 farm risks in writing this month — a one-page list is enough to start","Estimate the dollar impact of each risk: how much revenue would you lose and for how long?","Calculate your cash runway: at current burn rate, how many months can you operate without your primary revenue source?"], mid:["Convert your risk list into a simple risk register with likelihood and impact ratings","Schedule an annual risk review meeting — same time each year, review what changed","Share your risk register with your Farm Credit advisor at your next meeting"], high:["Your risk identification is strong — schedule an annual update and add emerging risks (cyber, climate shift, input supply chain)","Consider engaging a farm business consultant to validate your risk register annually"] },
-  financial: { low:["Build a 13-week cash flow projection immediately — this is the first document any lender asks for in a workout","Contact your Farm Credit advisor proactively if DSCR is below 1.0x — do not wait for the annual review","Target $400/ac working capital as your minimum threshold — build toward $692/ac (peer average)"], mid:["Review your OER annually and identify the single largest cost line you can reduce","Develop a working capital building plan — allocate 20–30% of any positive year before capital purchases","Stress test your cash flow: what happens to DSCR at 15% price decline + 10% yield loss?"], high:["Your financial risk posture is strong — maintain your monitoring system and set advisor-call triggers at key thresholds","Consider a formal stress testing exercise annually to identify your breaking point"] },
-  insurance: { low:["Upgrade crop insurance to 85% revenue protection with SCO/ECO if you carry below 80%","Enroll in DMC at $9.50/cwt maximum coverage if you operate dairy — contact FSA this week","Schedule a comprehensive insurance review with your agent — verify all asset values are current"], mid:["Review ARC/PLC election annually — in compressed price environments, PLC often outperforms ARC-CO","Add cyber liability coverage to your farm policy if you don't have it — cost is typically $500–$2,000/year","Review livestock price protection (LRP) for your enterprise before each marketing season"], high:["Your insurance posture is comprehensive — schedule annual reviews to keep asset values current and program elections optimized","Consider adding umbrella liability coverage if you have significant assets or public exposure"] },
-  production: ["Establish backup supplier relationships for your top 3 critical inputs before you need them","Develop a written disease/pest response protocol with your vet or agronomist","Identify equipment rental sources and establish relationships before peak season","Review your geographic and enterprise concentration — consider how a single weather event would affect your operation"],
-  market: { low:["Build a written marketing plan with price targets based on your Ratio Deep Dive breakeven price","Forward contract at least 20–30% of your expected production before harvest","Establish at least one alternative buyer relationship you can test this year"], mid:["Expand your marketing plan to cover 30–40% of production at pre-harvest prices","Add a specialty or premium channel for at least a pilot portion of production","Review basis risk for your primary commodity — know how your elevator's basis compares to the CME"], high:["Your marketing discipline is strong — consider whether increasing forward contracting to 40–50% makes sense given current price levels vs. your breakeven","Review your alternative market relationships annually to ensure they remain active"] },
-  contingency: { low:["Write a one-page business continuity plan this week: who does what, who to call, what the priorities are","Identify the minimum cash amount needed to keep operating for 6 months","Train at least one family member or employee on each critical operational function"], mid:["Formalize your contingency plan and review it annually","Document your emergency contact list and decision-making authority","Calculate your minimum viable operating budget and keep it current"], high:["Your contingency planning is strong — schedule an annual review and test at least one contingency procedure each year"] },
-  succession: { low:["Start the succession conversation with your family this year — it doesn't have to be complete to start","Consult an agricultural attorney about converting from sole proprietorship to LLC","Begin documenting critical farm knowledge — start with operational procedures, then financial and relationship knowledge"], mid:["Have a formal estate planning conversation with an ag attorney and financial advisor","Draft a buy-sell agreement if you have multiple owners or potential heirs","Create a successor development plan with specific responsibilities and timelines"], high:["Your succession posture is strong — review your plan every 3 years or after any major life event","Ensure your successor has active involvement in all key business relationships (Farm Credit, major buyers, key suppliers)"] },
-  cyber: { low:["Enable multi-factor authentication on all farm financial accounts immediately","Create an offsite backup of your financial records and test the restore process","Add cyber liability coverage to your farm insurance policy"], mid:["Develop a simple cyber incident response plan: who to call, what to do first, how to report to your bank","Audit all farm software accounts — remove unused accounts and update passwords","Consider a cybersecurity consultation with an IT professional familiar with ag systems"], high:["Your cyber posture is strong — schedule an annual review and stay current on ag-sector threats","Consider sharing your cyber security practices with other farm operations in your network"] },
 };
 
 const riskScoreLabel = (score, max) => { const pct = score/max; if (pct>=0.75) return { label:"Strong", pill:"strong" }; if (pct>=0.5) return { label:"In progress", pill:"watch" }; return { label:"Needs attention", pill:"vuln" }; };
-const riskActionsForCat = (catId, score, max) => { const raw = RISK_ACTIONS[catId]; if (!raw) return []; if (Array.isArray(raw)) return raw; const pct = score/max; return pct>=0.75 ? (raw.high||[]) : pct>=0.5 ? (raw.mid||[]) : (raw.low||[]); };
 const riskCatScore = (answers, catId) => (RISK_QUESTIONS[catId]||[]).reduce((sum,q) => sum + (answers[q.id]!==undefined ? q.scores[answers[q.id]] : 0), 0);
 const riskCatAnswered = (answers, catId) => (RISK_QUESTIONS[catId]||[]).filter(q => answers[q.id]!==undefined).length;
-const riskTotals = (answers) => {
-  const totalScore = RISK_CATS.reduce((s,c)=>s+riskCatScore(answers,c.id),0);
-  const totalMax = RISK_CATS.reduce((s,c)=>s+c.maxScore,0);
-  const totalAnswered = Object.keys(answers).length;
-  const totalQuestions = RISK_CATS.reduce((s,c)=>s+c.questions,0);
-  const overall = riskScoreLabel(totalScore, totalMax);
-  const overallLabel = totalScore/totalMax>=0.75 ? "Farm Risk Ready" : totalScore/totalMax>=0.5 ? "In progress" : "Needs attention";
-  return { totalScore, totalMax, totalAnswered, totalQuestions, overall, overallLabel };
-};
-
 // Stages 1–8: one category's question set per stage.
 function RiskCategoryStage({ risk, setRisk, catIndex }) {
   const answers = risk.answers || {};
@@ -659,7 +613,7 @@ function RiskCategoryStage({ risk, setRisk, catIndex }) {
   const catSL = riskScoreLabel(catScore, cat.maxScore);
   return (
     <div>
-      <Head eyebrow={`Farm Risk · Stage ${catIndex+1}`} title={cat.label} sub="Adapted from the Nationwide Farm Risk Ready℠ framework, extended with financial, insurance, production, market, succession, and cyber layers specific to MFP." />
+      <Head eyebrow={`Farm Risk · Section ${catIndex+1} of 4`} title={cat.label} sub="Adapted directly from Nationwide's Farm Risk Ready℠ assessment quiz." />
       {catAnswered>0 && <div style={{ marginBottom:16 }}><span style={pillStyle(catSL.pill)}>{catSL.label}</span><span style={{ fontSize:11.5, color:T.fgM, marginLeft:10 }}>{catAnswered}/{cat.questions} answered · {catScore}/{cat.maxScore} points</span></div>}
       {qs.map((q,qi) => {
         const selected = answers[q.id];
@@ -690,79 +644,251 @@ function RiskCategoryStage({ risk, setRisk, catIndex }) {
   );
 }
 
-// Stage 9 — Results dashboard
-function RiskResultsStage({ risk }) {
-  const answers = risk.answers || {};
-  const { totalScore, totalMax, overall, overallLabel } = riskTotals(answers);
+// ─────────────────────────────────────────────────────────────────────────────
+// FARM RISK READY℠ PLAN BUILDER — shared data
+// ─────────────────────────────────────────────────────────────────────────────
+const THREAT_CATEGORIES = [
+  { id:"facility", label:"Facility", desc:"Fires, explosions, structure collapse", color:T.red, colorL:T.redL },
+  { id:"natural", label:"Natural", desc:"Storms, floods, or wildfires", color:T.amber, colorL:T.amberL },
+  { id:"operational", label:"Operational", desc:"Loss of a primary customer, market access, safety recall, or disease outbreak", color:T.blue, colorL:T.blueL },
+  { id:"personnel", label:"Personnel", desc:"Lack of skilled labor, loss of a key employee, divorce, or a family member passing unexpectedly", color:"#7C3AED", colorL:"#F3E8FF" },
+  { id:"social", label:"Social", desc:"An animal welfare video or negative post about the farm on social media", color:T.dgreen, colorL:T.greenL },
+  { id:"technology", label:"Technology", desc:"Data corruption, network failure, or a hack", color:T.water, colorL:T.waterL },
+];
+const STRATEGY_OPTIONS = [
+  { id:"avoidance", label:"Risk avoidance", desc:"Stop or discontinue the activity" },
+  { id:"acceptance", label:"Risk acceptance", desc:"Retain the risk and take no action" },
+  { id:"transfer", label:"Risk transfer", desc:"Transfer through purchasing insurance or contractual means" },
+  { id:"mitigation", label:"Risk control / mitigation", desc:"Change the likelihood or the consequences" },
+];
+const MITIGATION_SUBTYPES = [
+  { id:"likelihood", label:"Change the likelihood (loss prevention)", ex:"e.g., add wind rings around grain bins" },
+  { id:"consequences", label:"Change the consequences (loss reduction)", ex:"e.g., install fire detection and protection equipment" },
+  { id:"separation", label:"Separation or segregation", ex:"e.g., store equipment at different farms or buildings" },
+  { id:"duplication", label:"Duplication and diversification", ex:"e.g., access to a generator or a backup combine" },
+];
+const threatScore = (t) => (Number(t.probability)||0) * (Number(t.severity)||0);
+const topRankedThreats = (threats) => [...(threats||[])].sort((a,b)=>threatScore(b)-threatScore(a)).slice(0,6);
+
+// Stage 2 of Farm Risk — Revenue operations & key contacts
+function RiskPlanRevenueOps({ risk, setRisk }) {
+  const plan = risk.plan || {};
+  const revenueOps = plan.revenueOps || [];
+  const contacts = plan.contacts || [];
+  const setPlan = (patch) => setRisk(s => ({ ...s, plan:{ ...(s.plan||{}), ...patch } }));
+  const addOp = () => setPlan({ revenueOps:[...revenueOps, { name:"", assets:"", suppliers:"", employees:"", customers:"" }] });
+  const updateOp = (i,field,val) => setPlan({ revenueOps: revenueOps.map((o,idx)=>idx===i?{...o,[field]:val}:o) });
+  const removeOp = (i) => setPlan({ revenueOps: revenueOps.filter((_,idx)=>idx!==i) });
+  const addContact = () => setPlan({ contacts:[...contacts, { name:"", materials:"", primaryName:"", primaryPhone:"", primaryEmail:"", altName:"", altPhone:"", altEmail:"" }] });
+  const updateContact = (i,field,val) => setPlan({ contacts: contacts.map((c,idx)=>idx===i?{...c,[field]:val}:c) });
+  const removeContact = (i) => setPlan({ contacts: contacts.filter((_,idx)=>idx!==i) });
   return (
     <div>
-      <Head eyebrow="Farm Risk · Stage 9" title="Risk assessment results" sub="Your score across all eight risk categories, benchmarked against the Nationwide Farm Risk Ready℠ framework." />
-      <div style={{ background:T.navy, borderRadius:10, padding:"20px 24px", marginBottom:16, display:"grid", gridTemplateColumns:"1fr 2fr", gap:20, alignItems:"center" }}>
-        <div>
-          <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:11, fontWeight:700, letterSpacing:"0.1em", textTransform:"uppercase", color:T.green, marginBottom:6 }}>Overall risk score</div>
-          <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:34, fontWeight:800, color:"#fff" }}>{totalScore}<span style={{ fontSize:16, color:"rgba(255,255,255,0.4)" }}> / {totalMax}</span></div>
-          <span style={{ display:"inline-block", padding:"3px 12px", borderRadius:999, fontSize:11.5, fontWeight:700, background:overall.pill==="strong"?T.dgreen:overall.pill==="watch"?T.amber:T.red, color:"#fff", marginTop:6 }}>{overallLabel}</span>
+      <Head eyebrow="Farm Risk · Plan Builder · Stage 1" title="Revenue operations & key contacts" sub="Document each primary revenue operation and the assets, suppliers, employees, and customers it depends on — then record backup contacts for your key suppliers, vendors, and customers." />
+      <div style={cardStyle()}>
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:14 }}>
+          <div style={cardLblStyle({ marginBottom:0 })}><Apex color={T.green} />Primary revenue operations</div>
+          {revenueOps.length<6 && <button style={{ ...btnStyle("outline"), fontSize:11, padding:"5px 12px" }} onClick={addOp}>+ Add operation</button>}
         </div>
-        <div>
-          {RISK_CATS.map(c => { const sc=riskCatScore(answers,c.id); const pct=(sc/c.maxScore)*100; return (
-            <div key={c.id} style={{ display:"flex", alignItems:"center", gap:8, marginBottom:6 }}>
-              <span style={{ fontSize:11, color:"rgba(255,255,255,0.6)", width:150, flexShrink:0 }}>{c.label}</span>
-              <div style={{ flex:1, height:6, background:"rgba(255,255,255,0.12)", borderRadius:3, overflow:"hidden" }}><div style={{ height:"100%", width:`${pct}%`, background:c.color, borderRadius:3 }} /></div>
-              <span style={{ fontSize:11, color:c.color, fontWeight:700, width:24, textAlign:"right" }}>{sc}</span>
+        {revenueOps.length===0 && <div style={{ fontSize:12.5, color:T.fgS }}>No revenue operations added yet. Start with your largest — corn, cattle, custom trucking, whatever generates the most revenue.</div>}
+        {revenueOps.map((op,i) => (
+          <div key={i} style={{ border:`1px solid ${T.border}`, borderRadius:9, padding:14, marginBottom:12 }}>
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}>
+              <label style={labelStyle}>Revenue operation (e.g., corn, cattle, vegetables, trucking)</label>
+              <span onClick={()=>removeOp(i)} style={{ fontSize:11, color:T.red, cursor:"pointer", fontWeight:600 }}>Remove</span>
             </div>
-          );})}
-        </div>
+            <input style={inputStyle({ marginBottom:10 })} value={op.name} onChange={e=>updateOp(i,"name",e.target.value)} placeholder="e.g., Corn" />
+            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
+              <div><label style={labelStyle}>Key assets needed</label><textarea style={inputStyle({ minHeight:60 })} value={op.assets} onChange={e=>updateOp(i,"assets",e.target.value)} /></div>
+              <div><label style={labelStyle}>Key suppliers / vendors</label><textarea style={inputStyle({ minHeight:60 })} value={op.suppliers} onChange={e=>updateOp(i,"suppliers",e.target.value)} /></div>
+              <div><label style={labelStyle}>Key employees</label><textarea style={inputStyle({ minHeight:60 })} value={op.employees} onChange={e=>updateOp(i,"employees",e.target.value)} /></div>
+              <div><label style={labelStyle}>Key customers</label><textarea style={inputStyle({ minHeight:60 })} value={op.customers} onChange={e=>updateOp(i,"customers",e.target.value)} /></div>
+            </div>
+          </div>
+        ))}
       </div>
-      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12, marginBottom:16 }}>
-        {RISK_CATS.map(c => { const sc=riskCatScore(answers,c.id); const ans=riskCatAnswered(answers,c.id); const sl=riskScoreLabel(sc,c.maxScore); const pct=(sc/c.maxScore)*100;
-          return (
-            <div key={c.id} style={{ background:"#fff", border:`1px solid ${T.border}`, borderRadius:10, padding:16, borderLeft:`4px solid ${sl.pill==="strong"?T.dgreen:sl.pill==="watch"?T.amber:T.red}` }}>
-              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}>
-                <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:13.5, fontWeight:700 }}>{c.label}</span>
-                <span style={pillStyle(sl.pill)}>{sl.label}</span>
+      <div style={cardStyle()}>
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:14 }}>
+          <div style={cardLblStyle({ marginBottom:0 })}><Apex color={T.green} />Key supplier, vendor & customer contacts</div>
+          {contacts.length<6 && <button style={{ ...btnStyle("outline"), fontSize:11, padding:"5px 12px" }} onClick={addContact}>+ Add contact</button>}
+        </div>
+        {contacts.length===0 && <div style={{ fontSize:12.5, color:T.fgS }}>Record a primary and a backup contact for each critical relationship — this is exactly what you'll need in the first hour of a real disruption.</div>}
+        {contacts.map((c,i) => (
+          <div key={i} style={{ border:`1px solid ${T.border}`, borderRadius:9, padding:14, marginBottom:12 }}>
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}>
+              <label style={labelStyle}>Name of supplier, vendor, or customer</label>
+              <span onClick={()=>removeContact(i)} style={{ fontSize:11, color:T.red, cursor:"pointer", fontWeight:600 }}>Remove</span>
+            </div>
+            <input style={inputStyle({ marginBottom:8 })} value={c.name} onChange={e=>updateContact(i,"name",e.target.value)} placeholder="Company or individual name" />
+            <input style={inputStyle({ marginBottom:10 })} value={c.materials} onChange={e=>updateContact(i,"materials",e.target.value)} placeholder="Materials / services provided or sold" />
+            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
+              <div>
+                <div style={{ fontSize:11, fontWeight:700, color:T.dgreen, marginBottom:6 }}>PRIMARY CONTACT</div>
+                <input style={inputStyle({ marginBottom:6 })} value={c.primaryName} onChange={e=>updateContact(i,"primaryName",e.target.value)} placeholder="Name" />
+                <input style={inputStyle({ marginBottom:6 })} value={c.primaryPhone} onChange={e=>updateContact(i,"primaryPhone",e.target.value)} placeholder="Phone" />
+                <input style={inputStyle()} value={c.primaryEmail} onChange={e=>updateContact(i,"primaryEmail",e.target.value)} placeholder="Email" />
               </div>
-              <div style={{ height:6, background:T.div, borderRadius:3, overflow:"hidden", marginBottom:8 }}><div style={{ height:"100%", width:`${pct}%`, background:c.color, borderRadius:3 }} /></div>
-              <div style={{ fontSize:11.5, color:T.fgS }}>{sc}/{c.maxScore} points · {ans}/{c.questions} answered</div>
+              <div>
+                <div style={{ fontSize:11, fontWeight:700, color:T.amberT, marginBottom:6 }}>ALTERNATE CONTACT</div>
+                <input style={inputStyle({ marginBottom:6 })} value={c.altName} onChange={e=>updateContact(i,"altName",e.target.value)} placeholder="Name" />
+                <input style={inputStyle({ marginBottom:6 })} value={c.altPhone} onChange={e=>updateContact(i,"altPhone",e.target.value)} placeholder="Phone" />
+                <input style={inputStyle()} value={c.altEmail} onChange={e=>updateContact(i,"altEmail",e.target.value)} placeholder="Email" />
+              </div>
             </div>
-          );
-        })}
+          </div>
+        ))}
       </div>
-      <Flag type="info">Nationwide research (December 2024): only 35% of farmers have a formal resiliency plan in place. This assessment is designed to show where your operation is exposed before a disruption forces the issue.</Flag>
     </div>
   );
 }
 
-// Stage 10 — Action plan
-function RiskPlanStage({ risk }) {
-  const answers = risk.answers || {};
-  const { totalScore, totalMax, overall, overallLabel } = riskTotals(answers);
+// Stage 3 of Farm Risk — Threat identification & ranking
+function RiskPlanThreats({ risk, setRisk }) {
+  const plan = risk.plan || {};
+  const threats = plan.threats || [];
+  const setPlan = (patch) => setRisk(s => ({ ...s, plan:{ ...(s.plan||{}), ...patch } }));
+  const [draft, setDraft] = useState({ category:"facility", label:"", probability:3, severity:3 });
+  const addThreat = () => { if (!draft.label.trim()) return; setPlan({ threats:[...threats, { ...draft, id:Date.now() }] }); setDraft({ category:"facility", label:"", probability:3, severity:3 }); };
+  const removeThreat = (id) => setPlan({ threats: threats.filter(t=>t.id!==id) });
+  const sorted = [...threats].sort((a,b)=>threatScore(b)-threatScore(a));
   return (
     <div>
-      <Head eyebrow="Farm Risk · Stage 10" title="Risk action plan" sub="Prioritized by your weakest categories first." />
-      <div style={{ background:T.navy, borderRadius:10, padding:"18px 22px", marginBottom:16 }}>
-        <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:11, fontWeight:700, letterSpacing:"0.1em", textTransform:"uppercase", color:T.green, marginBottom:6 }}>Risk assessment complete</div>
-        <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:17, fontWeight:700, color:"#fff" }}>Overall risk readiness: <span style={{ color:overall.pill==="strong"?T.green:overall.pill==="watch"?T.amber:"#F87171" }}>{overallLabel}</span> ({totalScore}/{totalMax})</div>
+      <Head eyebrow="Farm Risk · Plan Builder · Stage 2" title="Threat identification & ranking" sub="List potential threats across all six categories, then score each on probability and severity. Threats scoring 10–25 are your most immediate concern — you'll build strategies and contingency plans for these next." />
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:8, marginBottom:16 }}>
+        {THREAT_CATEGORIES.map(c => (<div key={c.id} style={{ background:c.colorL, borderRadius:8, padding:"10px 12px" }}><div style={{ fontSize:12, fontWeight:700, color:c.color }}>{c.label}</div><div style={{ fontSize:10.5, color:T.fgM, marginTop:2 }}>{c.desc}</div></div>))}
       </div>
-      {[...RISK_CATS].sort((a,b)=>(riskCatScore(answers,a.id)/a.maxScore)-(riskCatScore(answers,b.id)/b.maxScore)).map(c => {
-        const sc=riskCatScore(answers,c.id); const sl=riskScoreLabel(sc,c.maxScore); const actions=riskActionsForCat(c.id,sc,c.maxScore);
-        return (
-          <div key={c.id} style={cardStyle({ borderLeft:`4px solid ${sl.pill==="strong"?T.dgreen:sl.pill==="watch"?T.amber:T.red}` })}>
-            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:actions.length?12:0 }}>
-              <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:15, fontWeight:700 }}>{c.label}</span>
-              <span style={pillStyle(sl.pill)}>{sl.label} · {sc}/{c.maxScore}</span>
+      <div style={cardStyle()}>
+        <div style={cardLblStyle()}><Apex color={T.green} />Add a threat or risk</div>
+        <div style={{ display:"grid", gridTemplateColumns:"140px 1fr 110px 110px 90px", gap:10, alignItems:"end" }}>
+          <div><label style={labelStyle}>Category</label><select style={inputStyle()} value={draft.category} onChange={e=>setDraft(d=>({...d,category:e.target.value}))}>{THREAT_CATEGORIES.map(c=><option key={c.id} value={c.id}>{c.label}</option>)}</select></div>
+          <div><label style={labelStyle}>Describe the threat</label><input style={inputStyle()} value={draft.label} onChange={e=>setDraft(d=>({...d,label:e.target.value}))} placeholder="e.g., Grain bin structure collapse" /></div>
+          <div><label style={labelStyle}>Probability (1–5)</label><select style={inputStyle()} value={draft.probability} onChange={e=>setDraft(d=>({...d,probability:parseInt(e.target.value)}))}>{[1,2,3,4,5].map(n=><option key={n} value={n}>{n}</option>)}</select></div>
+          <div><label style={labelStyle}>Severity (1–5)</label><select style={inputStyle()} value={draft.severity} onChange={e=>setDraft(d=>({...d,severity:parseInt(e.target.value)}))}>{[1,2,3,4,5].map(n=><option key={n} value={n}>{n}</option>)}</select></div>
+          <button style={btnStyle("primary")} onClick={addThreat}>Add</button>
+        </div>
+      </div>
+      <div style={cardStyle()}>
+        <div style={cardLblStyle()}><Apex color={T.green} />Your ranked threats — highest score first</div>
+        {sorted.length===0 && <div style={{ fontSize:12.5, color:T.fgS }}>No threats added yet.</div>}
+        {sorted.map(t => {
+          const cat = THREAT_CATEGORIES.find(c=>c.id===t.category); const score = threatScore(t); const urgent = score>=10;
+          return (
+            <div key={t.id} style={{ display:"flex", alignItems:"center", gap:12, padding:"11px 0", borderBottom:`1px solid ${T.div}` }}>
+              <span style={{ fontSize:10, fontWeight:700, padding:"2px 8px", borderRadius:999, background:cat?.colorL, color:cat?.color, flexShrink:0 }}>{cat?.label}</span>
+              <span style={{ fontSize:13, color:T.navy, flex:1 }}>{t.label}</span>
+              <span style={{ fontSize:11, color:T.fgM }}>P{t.probability} × S{t.severity}</span>
+              <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:16, fontWeight:800, color:urgent?T.red:T.fgM, width:36, textAlign:"right" }}>{score}</span>
+              {urgent && <span style={pillStyle("vuln")}>Immediate</span>}
+              <span onClick={()=>removeThreat(t.id)} style={{ fontSize:11, color:T.fgS, cursor:"pointer" }}>✕</span>
             </div>
-            {actions.map((a,i) => (
-              <div key={i} style={{ display:"flex", alignItems:"flex-start", gap:10, padding:"8px 0", borderBottom:i<actions.length-1?`1px solid ${T.div}`:"none" }}>
-                <div style={{ width:22, height:22, borderRadius:"50%", background:c.colorL, color:c.colorD, display:"flex", alignItems:"center", justifyContent:"center", fontSize:11, fontWeight:700, flexShrink:0 }}>{i+1}</div>
-                <div style={{ fontSize:12.5, color:T.navy, lineHeight:1.5 }}>{a}</div>
+          );
+        })}
+      </div>
+      {sorted.filter(t=>threatScore(t)>=10).length>0 && <Flag type="warn">{sorted.filter(t=>threatScore(t)>=10).length} threat(s) scored 10–25 — these carry into the next stage for strategy and contingency planning.</Flag>}
+    </div>
+  );
+}
+
+// Stage 4 of Farm Risk — Strategy & contingency plans (combines Nationwide Steps 2–3)
+function RiskPlanStrategy({ risk, setRisk }) {
+  const plan = risk.plan || {};
+  const threats = plan.threats || [];
+  const strategies = plan.strategies || {};
+  const contingency = plan.contingency || {};
+  const setPlan = (patch) => setRisk(s => ({ ...s, plan:{ ...(s.plan||{}), ...patch } }));
+  const setStrategy = (id,field,val) => setPlan({ strategies:{ ...strategies, [id]:{ ...(strategies[id]||{}), [field]:val } } });
+  const setContingency = (id,field,val) => setPlan({ contingency:{ ...contingency, [id]:{ ...(contingency[id]||{}), [field]:val } } });
+  const top = topRankedThreats(threats);
+  return (
+    <div>
+      <Head eyebrow="Farm Risk · Plan Builder · Stage 3" title="Strategy & contingency plans" sub="For each of your highest-ranked threats, choose a management strategy and build your Plan A for responding if it happens." />
+      {top.length===0 && <Flag type="warn">No ranked threats yet. Go back to the previous stage and add at least one.</Flag>}
+      {top.map(t => {
+        const cat = THREAT_CATEGORIES.find(c=>c.id===t.category); const s = strategies[t.id]||{}; const c2 = contingency[t.id]||{};
+        return (
+          <div key={t.id} style={cardStyle({ borderLeft:`4px solid ${cat?.color}` })}>
+            <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:14 }}>
+              <span style={{ fontSize:10, fontWeight:700, padding:"2px 8px", borderRadius:999, background:cat?.colorL, color:cat?.color }}>{cat?.label}</span>
+              <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:15, fontWeight:700 }}>{t.label}</span>
+              <span style={{ marginLeft:"auto", fontFamily:"'Barlow Condensed',sans-serif", fontSize:15, fontWeight:800, color:T.red }}>Score: {threatScore(t)}</span>
+            </div>
+            <div style={{ marginBottom:14 }}>
+              <label style={labelStyle}>Risk management strategy — select one</label>
+              <div style={{ display:"grid", gridTemplateColumns:"repeat(2,1fr)", gap:8 }}>
+                {STRATEGY_OPTIONS.map(opt => { const on = s.strategy===opt.id; return (
+                  <div key={opt.id} onClick={()=>setStrategy(t.id,"strategy",opt.id)} style={{ padding:"10px 12px", borderRadius:8, border:on?`2px solid ${T.blue}`:`1px solid ${T.border}`, cursor:"pointer", background:on?T.blueL:"#fff" }}>
+                    <div style={{ fontSize:12.5, fontWeight:600, color:on?T.blue:T.navy }}>{opt.label}</div>
+                    <div style={{ fontSize:11, color:T.fgS, marginTop:2 }}>{opt.desc}</div>
+                  </div>
+                );})}
               </div>
-            ))}
+              {s.strategy==="mitigation" && (
+                <div style={{ marginTop:10 }}>
+                  <label style={labelStyle}>Mitigation approach</label>
+                  <select style={inputStyle()} value={s.mitigationType||""} onChange={e=>setStrategy(t.id,"mitigationType",e.target.value)}>
+                    <option value="">Select approach</option>
+                    {MITIGATION_SUBTYPES.map(m=><option key={m.id} value={m.id}>{m.label} — {m.ex}</option>)}
+                  </select>
+                </div>
+              )}
+              <div style={{ marginTop:10 }}>
+                <label style={labelStyle}>Specifically, what will you do?</label>
+                <textarea style={inputStyle({ minHeight:60 })} value={s.action||""} onChange={e=>setStrategy(t.id,"action",e.target.value)} />
+              </div>
+            </div>
+            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
+              <div><label style={labelStyle}>Immediate response to recover</label><textarea style={inputStyle({ minHeight:56 })} value={c2.response||""} onChange={e=>setContingency(t.id,"response",e.target.value)} /></div>
+              <div><label style={labelStyle}>Who will be involved</label><textarea style={inputStyle({ minHeight:56 })} value={c2.who||""} onChange={e=>setContingency(t.id,"who",e.target.value)} /></div>
+              <div><label style={labelStyle}>Their roles / responsibilities</label><textarea style={inputStyle({ minHeight:56 })} value={c2.roles||""} onChange={e=>setContingency(t.id,"roles",e.target.value)} /></div>
+              <div><label style={labelStyle}>Who will be informed</label><textarea style={inputStyle({ minHeight:56 })} value={c2.informed||""} onChange={e=>setContingency(t.id,"informed",e.target.value)} /></div>
+              <div style={{ gridColumn:"1 / -1" }}><label style={labelStyle}>Timeline for response</label><input style={inputStyle()} value={c2.timeline||""} onChange={e=>setContingency(t.id,"timeline",e.target.value)} /></div>
+            </div>
           </div>
         );
       })}
-      <div style={cardStyle({ background:T.greenL, borderTop:`4px solid ${T.dgreen}` })}>
-        <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:13.5, fontWeight:700, color:"#2F6E28", marginBottom:6 }}>Annual risk review — schedule it now</div>
-        <div style={{ fontSize:12.5, color:"#2F6E28", lineHeight:1.5 }}>The Nationwide Farm Risk Ready framework recommends revisiting your risk plan annually. Set a reminder for the same time each year — immediately after tax filing is a natural trigger.</div>
+    </div>
+  );
+}
+
+// Stage 5 of Farm Risk — Communicate, train & review (combines Nationwide Steps 4–5)
+function RiskPlanReview({ risk, setRisk }) {
+  const plan = risk.plan || {};
+  const threats = plan.threats || [];
+  const communication = plan.communication || {};
+  const setPlan = (patch) => setRisk(s => ({ ...s, plan:{ ...(s.plan||{}), ...patch } }));
+  const setComm = (id,field,val) => setPlan({ communication:{ ...communication, [id]:{ ...(communication[id]||{}), [field]:val } } });
+  const top = topRankedThreats(threats);
+  return (
+    <div>
+      <Head eyebrow="Farm Risk · Plan Builder · Stage 4" title="Communicate, train & review" sub="Make sure everyone who needs to know your plan actually knows it — then set a cadence to review, update, and test it." />
+      {top.length===0 && <Flag type="warn">No ranked threats yet. Go back and add threats in Stage 12.</Flag>}
+      {top.map(t => {
+        const cat = THREAT_CATEGORIES.find(c=>c.id===t.category); const cm = communication[t.id]||{};
+        return (
+          <div key={t.id} style={cardStyle({ borderLeft:`4px solid ${cat?.color}` })}>
+            <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:14 }}>
+              <span style={{ fontSize:10, fontWeight:700, padding:"2px 8px", borderRadius:999, background:cat?.colorL, color:cat?.color }}>{cat?.label}</span>
+              <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:15, fontWeight:700 }}>{t.label}</span>
+            </div>
+            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
+              <div><label style={labelStyle}>Who needs to be informed</label><textarea style={inputStyle({ minHeight:56 })} value={cm.whoInform||""} onChange={e=>setComm(t.id,"whoInform",e.target.value)} /></div>
+              <div><label style={labelStyle}>How will you inform them</label><textarea style={inputStyle({ minHeight:56 })} value={cm.howInform||""} onChange={e=>setComm(t.id,"howInform",e.target.value)} /></div>
+              <div><label style={labelStyle}>Training plan</label><textarea style={inputStyle({ minHeight:56 })} value={cm.training||""} onChange={e=>setComm(t.id,"training",e.target.value)} /></div>
+              <div><label style={labelStyle}>Where the plan is kept</label><input style={inputStyle()} value={cm.planLocation||""} onChange={e=>setComm(t.id,"planLocation",e.target.value)} /></div>
+            </div>
+          </div>
+        );
+      })}
+      <div style={cardStyle({ borderTop:`4px solid ${T.dgreen}` })}>
+        <div style={cardLblStyle()}><Apex color={T.green} />Step 5 — Prepare, recover, and review</div>
+        <div style={{ fontSize:12.5, color:T.fgM, lineHeight:1.5, marginBottom:14 }}>Recovery is about the speed of returning to normal operations after a disruption. Review your plans annually, involve your team, and set aside time to test the plan against a real scenario.</div>
+        <label style={labelStyle}>Optional: crisis communications preparedness plan</label>
+        <div style={{ fontSize:11.5, color:T.fgS, marginBottom:8 }}>A product safety scare, animal welfare situation, or manure spill can erode trust in your farm fast if the communication response isn't managed well.</div>
+        <textarea style={inputStyle({ minHeight:80 })} value={plan.crisisComms||""} onChange={e=>setPlan({ crisisComms:e.target.value })} placeholder="Who speaks for the farm publicly? What's the first statement? Who approves it before it goes out?" />
+      </div>
+      <div style={{ ...cardStyle({ background:T.navy, border:"none" }) }}>
+        <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:15, fontWeight:700, color:"#fff", marginBottom:6 }}>Farm Risk Ready℠ Plan complete</div>
+        <div style={{ fontSize:12.5, color:"rgba(255,255,255,0.7)", lineHeight:1.5 }}>Share this plan with your family, employees, and your Farm Credit or Nationwide advisor. Set a calendar reminder to revisit it every year — immediately after tax filing is a natural trigger.</div>
       </div>
     </div>
   );
@@ -1460,7 +1586,8 @@ export default function App() {
   ];
   const RISK_BODY = [
     ...RISK_CATS.map((c,i) => <RiskCategoryStage key={c.id} risk={risk} setRisk={setRisk} catIndex={i} />),
-    <RiskResultsStage risk={risk} />, <RiskPlanStage risk={risk} />,
+    <RiskPlanRevenueOps risk={risk} setRisk={setRisk} />, <RiskPlanThreats risk={risk} setRisk={setRisk} />,
+    <RiskPlanStrategy risk={risk} setRisk={setRisk} />, <RiskPlanReview risk={risk} setRisk={setRisk} />,
   ];
   const body = isFA ? FA_BODY[stage-1] : isRD ? RD_BODY[stage-1] : RISK_BODY[stage-1];
 
