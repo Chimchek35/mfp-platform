@@ -79,6 +79,11 @@ const IconShield = ({ color = "#0A4576", size = 20 }) => (
     <path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6l8-4z" /><path d="M9 12l2 2 4-4" />
   </svg>
 );
+const IconProfile = ({ color = "#0A4576", size = 20 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="3" y="4" width="18" height="16" rx="2" /><circle cx="9" cy="10" r="2" /><path d="M5 17c.7-2 2.3-3 4-3s3.3 1 4 3" /><path d="M14 8h5" /><path d="M14 12h5" />
+  </svg>
+);
 const IconCheckSm = ({ color = "#fff", size = 11 }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>
 );
@@ -130,7 +135,8 @@ const FA_STAGES = [
 ];
 const RD_STAGES = [
   { n:1, label:"Baseline & readiness" }, { n:2, label:"Goal alignment" }, { n:3, label:"Asset & readiness inventory" },
-  { n:4, label:"Opportunity mapping" }, { n:5, label:"Barrier identification" }, { n:6, label:"Scenario comparison" }, { n:7, label:"Action plan" },
+  { n:4, label:"Opportunity mapping" }, { n:5, label:"Barrier identification" }, { n:6, label:"Scenario comparison" },
+  { n:7, label:"Financial reserves & sequencing" }, { n:8, label:"Action plan" },
 ];
 // RISK_STAGES mirrors RISK_CATS 1:1 for stages 1–8 (one category per stage), then adds
 // Results and Action plan as stages 9–10 — same generic stage/rail/Back/Continue system
@@ -202,6 +208,7 @@ const OPPS = [
   { id:"selfInsurance", label:"Self-insurance reserve fund", category:"Risk-smoothing", cluster:"Financial Capital Deployment", growthTier:3, sizeFit:["large"], desc:"Build and manage your own reserve fund to self-insure against certain risks instead of paying rising commercial premiums — typically a large-operation strategy.", time:"Meaningful protection after 3–5 years of funding", capital:"$25K–$500K+", fit:{asset:10,trust:10,risk:90}, reg:3, seasonal:1, effort:1, liquidity:1 },
   { id:"retirementPlan", label:"Qualified retirement plan (SEP-IRA / defined benefit)", category:"Risk-smoothing", cluster:"Financial Capital Deployment", growthTier:2, sizeFit:["mid","large"], desc:"Shelter high-income years from current taxation by contributing to a SEP-IRA or defined benefit plan — converting today's profit into guaranteed future retirement income.", time:"Tax benefit immediate; income access at retirement age", capital:"Up to $70K+/year (SEP) or more for defined benefit", fit:{asset:0,trust:5,risk:90}, reg:2, seasonal:1, effort:1, liquidity:1 },
   { id:"sellerFinancing", label:"Seller financing / ag lending to peers", category:"Risk-smoothing", cluster:"Financial Capital Deployment", growthTier:3, sizeFit:["large"], desc:"Use farm equity or cash reserves to finance land or equipment sales to other farmers, earning interest income secured by the asset sold.", time:"Income begins as soon as the note is originated", capital:"$50K–$500K+ (secured against the asset)", fit:{asset:20,trust:30,risk:70}, reg:3, seasonal:1, effort:2, liquidity:1 },
+  { id:"agReit", label:"Farmland fund or ag REIT investment", category:"Risk-smoothing", cluster:"Financial Capital Deployment", growthTier:2, sizeFit:["mid","large"], desc:"Passive exposure to farmland appreciation through an ag-focused REIT or farmland investment platform (AcreTrader-style) — without buying, financing, or managing more acreage yourself.", time:"Typically a multi-year hold; some platforms offer periodic liquidity windows", capital:"$10K–$100K+", fit:{asset:10,trust:15,risk:85}, reg:2, seasonal:1, effort:1, liquidity:2 },
 ];
 
 // Cluster metadata for grouping/filtering in Stage 4
@@ -248,6 +255,7 @@ const BARRIERS = {
   selfInsurance:["Requires meaningful capital committed for years before the reserve is large enough to matter","A major loss early in the funding period could exceed the reserve built so far","Captive insurance structures carry real regulatory and tax filing complexity — this requires specialist advice, not a DIY approach"],
   retirementPlan:["Contribution limits cap how much income can be sheltered in a single year","Funds are generally locked up until retirement age without penalty","If you have employees, employer contribution rules may apply and add cost"],
   sellerFinancing:["You take on the buyer's credit risk directly — there's no bank underwriting standing between you and a default","Requires proper legal documentation to secure the note against the underlying asset","Illiquid — converting the note back to cash before maturity is difficult and usually requires a discount"],
+  agReit:["Illiquid relative to public markets — most platforms lock capital for several years with limited exit windows","You don't control the underlying farm operation or specific parcel decisions","Platform and management fees reduce net returns — compare fee structures carefully before committing capital","Newer platforms have shorter track records than traditional REITs — vet the sponsor's history"],
 };
 
 const RD_ACTIONS = {
@@ -274,11 +282,12 @@ const RD_ACTIONS = {
   selfInsurance:[{t:"r",title:"Consult an insurance and tax specialist about captive or self-insurance structures",d:"This is one of the more complex tools on this list — specialized advice is essential before proceeding."},{t:"a",title:"Quantify your current premium spend and loss history first",d:"Compare what you're paying now in premiums against the cost of building an equivalent reserve to see if this is worth pursuing."},{t:"g",title:"Fund the reserve systematically over multiple years",d:"Self-insurance only works if the reserve is large enough to absorb a real loss — underfunding defeats the purpose."}],
   retirementPlan:[{t:"r",title:"Confirm current-year contribution limits with your tax advisor",d:"SEP-IRA and defined benefit limits change annually and depend on your business structure and income — this needs a current-year check, not a rule of thumb."},{t:"a",title:"Model the tax savings against this specific year's income",d:"The benefit is largest in high-income years — a tax advisor can confirm the real dollar impact for your situation."},{t:"g",title:"Set up systematic annual contributions rather than one-time decisions",d:"Consistent funding across multiple years builds meaningfully more retirement income than sporadic contributions."}],
   sellerFinancing:[{t:"r",title:"Have an attorney draft and properly secure the note",d:"Proper collateral documentation protects you if the buyer defaults — do not handshake this."},{t:"a",title:"Underwrite the buyer's ability to pay as carefully as a bank would",d:"You're taking on real credit risk — don't skip due diligence just because it's a neighbor or relative."},{t:"g",title:"Price the interest rate to reflect the real risk you're taking",d:"Compare against current ag lending rates — below-market seller financing is effectively a gift, not an investment."}],
+  agReit:[{t:"r",title:"Compare 2–3 platforms on fee structure, minimum investment, and historical distributions",d:"Not financial advice — fee drag varies significantly between platforms and materially affects net return."},{t:"a",title:"Confirm the liquidity terms before committing capital",d:"Understand exactly when and how you could exit — some platforms only offer liquidity windows annually or at fund maturity."},{t:"g",title:"Treat this as a longer-horizon layer, not a near-term reserve",d:"This fits the third step of the sequencing framework — fund your equipment reserve and diversify income first."}],
 };
 
 const REV_RAMP = { energy:[0,0,0,0,0,0,0,0,0,0,0,0], specialty:[0,0,0,0,0,0,0,2,5,7,8,8], custom:[0,0,3,5,5,5,5,5,5,5,3,0], carbon:[0,0,0,0,0,0,2,3,3,3,3,3], education:[0,0,2,4,5,6,6,5,4,4,2,0], processing:[0,0,0,0,0,0,0,0,1,2,4,6], consulting:[0,2,3,4,4,4,4,4,4,4,3,2], storage:[0,0,0,0,0,0,0,8,8,8,4,4],
   trucking:[0,0,2,4,5,5,5,4,4,5,5,4], demolition:[0,0,0,1,3,5,6,6,5,3,2,1], beefOnDairy:[0,0,0,0,2,3,4,5,5,5,5,5], breeding:[0,0,0,0,0,1,2,3,3,4,4,4], manure:[0,0,0,1,2,3,3,4,4,4,4,4], dtcBrand:[0,1,2,3,4,4,5,5,5,5,5,5], dataAdvisory:[1,2,3,3,4,4,4,4,4,4,4,4], envServices:[0,0,0,0,0,1,2,3,3,3,3,3], inputRetail:[0,0,1,2,3,3,4,4,4,4,3,2], eventRental:[0,0,1,3,4,5,5,4,3,2,3,4],
-  annuity:[3,3,3,3,3,3,3,3,3,3,3,3], wholeLife:[0,0,0,0,0,0,1,1,1,1,1,1], selfInsurance:[0,0,0,0,1,1,1,2,2,2,2,2], retirementPlan:[2,2,2,2,2,2,2,2,2,2,2,2], sellerFinancing:[4,4,4,4,4,4,4,4,4,4,4,4] };
+  annuity:[3,3,3,3,3,3,3,3,3,3,3,3], wholeLife:[0,0,0,0,0,0,1,1,1,1,1,1], selfInsurance:[0,0,0,0,1,1,1,2,2,2,2,2], retirementPlan:[2,2,2,2,2,2,2,2,2,2,2,2], sellerFinancing:[4,4,4,4,4,4,4,4,4,4,4,4], agReit:[0,0,0,2,2,2,2,2,2,2,2,2] };
 
 // ─────────────────────────────────────────────────────────────────────────────
 // FA STAGE 1 — Enterprise dashboard
@@ -1435,9 +1444,141 @@ function OpportunityCostLens({ financialSel, physicalSel, setRData }) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// RD STAGE 7 — Action plan
+// RD STAGE 7 — Financial reserves & sequencing
 // ─────────────────────────────────────────────────────────────────────────────
-function RD7({ rd, fa }) {
+// Distinct from Stage 4 (which opportunity to pursue): this stage is about capital
+// placement and timing — where reserve money sits, and in what order to fund the
+// equipment reserve, diversify income, and layer in longer-horizon investments.
+function RD7({ rd, setRData, fa }) {
+  const d = rd.data; const reserves = d.reserves || {};
+  const setReserve = (patch) => setRData(s => ({ ...s, reserves:{ ...(s.reserves||{}), ...patch } }));
+  const selected = d.selectedOpps || [];
+  const selOpps = selected.map(id => OPPS.find(o=>o.id===id)).filter(Boolean);
+
+  // Equipment replacement reserve gap calculator
+  const usefulLife = parseFloat(reserves.usefulLife) || 0;
+  const replacementCost = parseFloat(reserves.replacementCost) || 0;
+  const currentContribution = parseFloat(reserves.currentContribution) || 0;
+  const hasCalcData = usefulLife > 0 && replacementCost > 0;
+  const requiredAnnual = hasCalcData ? replacementCost / usefulLife : null;
+  const gap = hasCalcData ? requiredAnnual - currentContribution : null;
+  const fundedPct = requiredAnnual ? Math.min(100, Math.round((currentContribution/requiredAnnual)*100)) : 0;
+  const reserveFunded = hasCalcData && gap <= 0;
+
+  // Sequencing status — derived from what the farmer has actually done elsewhere in the module
+  const incomeOpps = selOpps.filter(o => o.cluster !== "Financial Capital Deployment");
+  const longHorizonOpps = selOpps.filter(o => ["retirementPlan","agReit"].includes(o.id));
+  const step1Done = hasCalcData && reserveFunded;
+  const step2Done = incomeOpps.length > 0;
+  const step3Done = longHorizonOpps.length > 0;
+
+  const RESERVE_PRODUCTS = ["Dedicated equipment replacement savings account (separate from operating cash)","Money market accounts — liquid, modest yield, no lock-up","Laddered CDs — stagger maturities across 1–5 years so cash becomes available on a rolling basis as equipment ages","Farm Credit patronage/equity retention — some associations let members build equity through retained patronage dividends tied to their existing lending relationship"];
+  const RISK_PRODUCTS = ["Whole Farm Revenue Protection","ARC/PLC elections","Cash-value life insurance — builds savings that can later be borrowed against for equipment, while also serving an estate-planning role"];
+
+  return (
+    <div>
+      <Head eyebrow="Revenue Diversification · Stage 7" title="Beyond the balance sheet: building financial reserves for what's next" sub="Diversifying income is only half the equation. The other half is knowing where to put the money you've diversified — so it's there when a piece of equipment fails or a new opportunity shows up." />
+
+      {/* Equipment reserve calculator */}
+      <div style={cardStyle({ borderTop:`4px solid ${T.green}` })}>
+        <div style={cardLblStyle()}><Apex color={T.green} />Equipment replacement reserve — funding gap calculator</div>
+        <div style={{ fontSize:12.5, color:T.fgM, marginBottom:14, lineHeight:1.5 }}>Before chasing higher returns anywhere else, size a dedicated reserve to your equipment's expected useful life and replacement cost. This is the foundation everything else in this stage sits on top of.</div>
+        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:14, marginBottom:16 }}>
+          <div><label style={labelStyle}>Expected useful life (years)</label><input type="number" style={inputStyle()} value={reserves.usefulLife||""} onChange={e=>setReserve({usefulLife:e.target.value})} placeholder="e.g., 10" /></div>
+          <div><label style={labelStyle}>Estimated replacement cost</label><input type="number" style={inputStyle()} value={reserves.replacementCost||""} onChange={e=>setReserve({replacementCost:e.target.value})} placeholder="e.g., 350000" /></div>
+          <div><label style={labelStyle}>Current annual reserve contribution</label><input type="number" style={inputStyle()} value={reserves.currentContribution||""} onChange={e=>setReserve({currentContribution:e.target.value})} placeholder="e.g., 20000" /></div>
+        </div>
+        {hasCalcData && (
+          <>
+            <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:12, marginBottom:14 }}>
+              <div style={{ background:T.bgAlt, borderRadius:8, padding:"12px 14px", textAlign:"center" }}>
+                <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:10.5, fontWeight:700, color:T.fgS, textTransform:"uppercase", letterSpacing:"0.05em", marginBottom:4 }}>Required annual contribution</div>
+                <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:20, fontWeight:800, color:T.navy }}>${Math.round(requiredAnnual).toLocaleString()}</div>
+              </div>
+              <div style={{ background:T.bgAlt, borderRadius:8, padding:"12px 14px", textAlign:"center" }}>
+                <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:10.5, fontWeight:700, color:T.fgS, textTransform:"uppercase", letterSpacing:"0.05em", marginBottom:4 }}>Annual gap</div>
+                <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:20, fontWeight:800, color:gap>0?T.red:T.dgreen }}>{gap>0?`$${Math.round(gap).toLocaleString()} short`:"Fully funded"}</div>
+              </div>
+              <div style={{ background:T.bgAlt, borderRadius:8, padding:"12px 14px", textAlign:"center" }}>
+                <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:10.5, fontWeight:700, color:T.fgS, textTransform:"uppercase", letterSpacing:"0.05em", marginBottom:4 }}>% of target funded</div>
+                <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:20, fontWeight:800, color:fundedPct>=100?T.dgreen:fundedPct>=60?T.amber:T.red }}>{fundedPct}%</div>
+              </div>
+            </div>
+            <div style={{ height:8, background:T.div, borderRadius:4, overflow:"hidden", marginBottom:8 }}><div style={{ height:"100%", width:`${fundedPct}%`, background:fundedPct>=100?T.dgreen:fundedPct>=60?T.amber:T.red, borderRadius:4, transition:"width .3s" }} /></div>
+            {gap>0 && <Flag type="warn">At your current contribution rate, you're ${Math.round(gap).toLocaleString()}/year short of fully funding this reserve by the time the equipment needs replacing.</Flag>}
+            {reserveFunded && <Flag type="ok">Your reserve is on pace — consider whether the next dollar is better spent on income diversification or a longer-horizon investment.</Flag>}
+          </>
+        )}
+        <div style={{ marginTop:14 }}>
+          <div style={{ fontSize:11, fontWeight:700, color:T.fgS, textTransform:"uppercase", letterSpacing:"0.05em", marginBottom:8 }}>Where the reserve can sit</div>
+          {RESERVE_PRODUCTS.map((p,i) => (<div key={i} style={{ fontSize:12.5, color:T.navy, padding:"6px 0", borderBottom:i<RESERVE_PRODUCTS.length-1?`1px solid ${T.div}`:"none" }}>• {p}</div>))}
+        </div>
+        <div style={{ marginTop:10 }}><Flag type="info">Pair your reserve timeline with Section 179 or bonus depreciation planning — coordinating when you buy with what's already saved maximizes the after-tax benefit.</Flag></div>
+      </div>
+
+      {/* Card 2 — Risk products */}
+      <div style={cardStyle()}>
+        <div style={cardLblStyle()}><Apex color={T.green} />Risk products that free up capital</div>
+        <div style={{ fontSize:12.5, color:T.fgM, marginBottom:12, lineHeight:1.5 }}>Not every financial product is about growing money — some are about not needing as much of it sitting idle. Insurance and revenue protection tools reduce how large a cash cushion you need to hold against a bad year.</div>
+        {RISK_PRODUCTS.map((p,i) => (<div key={i} style={{ fontSize:12.5, color:T.navy, padding:"6px 0", borderBottom:i<RISK_PRODUCTS.length-1?`1px solid ${T.div}`:"none" }}>• {p}</div>))}
+      </div>
+
+      {/* Card 3 — Income diversification vs your actual selections */}
+      <div style={cardStyle()}>
+        <div style={cardLblStyle()}><Apex color={T.green} />Income diversification before investment diversification</div>
+        <div style={{ fontSize:12.5, color:T.fgM, marginBottom:12, lineHeight:1.5 }}>The highest-ROI move for most operations isn't a financial product at all — it's a new income line. Diversify how money comes in before diversifying where it sits once it's in.</div>
+        {incomeOpps.length > 0 ? (
+          <>
+            <div style={{ fontSize:11.5, fontWeight:700, color:T.dgreen, marginBottom:8 }}>From your Stage 4 selections, these are income-diversification moves:</div>
+            {incomeOpps.map(o => (<div key={o.id} style={{ fontSize:12.5, color:T.navy, padding:"5px 0" }}>✓ {o.label}</div>))}
+          </>
+        ) : (
+          <Flag type="warn">None of your currently selected paths are income-diversification moves — everything selected so far is a financial instrument. Consider whether a land-based or value-added enterprise should come first.</Flag>
+        )}
+      </div>
+
+      {/* Card 4 — Longer-horizon vehicles */}
+      <div style={cardStyle()}>
+        <div style={cardLblStyle()}><Apex color={T.green} />Longer-horizon investment vehicles</div>
+        <div style={{ fontSize:12.5, color:T.fgM, marginBottom:12, lineHeight:1.5 }}>Once cash flow is stable and the reserve is funded, some operations layer in longer-horizon vehicles to build wealth outside the operation itself — a buffer that isn't tied to this year's yield or commodity price.</div>
+        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
+          {OPPS.filter(o=>["agReit","retirementPlan"].includes(o.id)).map(o => {
+            const isSel = selected.includes(o.id);
+            return (<div key={o.id} style={{ background:isSel?T.greenL:T.bgAlt, border:`1px solid ${isSel?T.dgreen:T.border}`, borderRadius:8, padding:"12px 14px" }}>
+              <div style={{ fontSize:12.5, fontWeight:700, color:T.navy, marginBottom:3 }}>{o.label}{isSel&&" ✓"}</div>
+              <div style={{ fontSize:11.5, color:T.fgM, lineHeight:1.4 }}>{o.desc}</div>
+            </div>);
+          })}
+        </div>
+        <div style={{ fontSize:11.5, color:T.fgS, marginTop:10 }}>Ag-focused mutual funds and ETFs are another option here, though not modeled as a selectable path in Stage 4 since they're a standard brokerage product rather than an ag-specific opportunity.</div>
+      </div>
+
+      {/* Sequencing framework */}
+      <div style={cardStyle({ background:T.navy, border:"none" })}>
+        <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:11, fontWeight:700, letterSpacing:"0.1em", textTransform:"uppercase", color:T.green, marginBottom:12 }}>The order matters</div>
+        {[
+          { n:1, label:"Fund the reserve first", detail:"Laddered CDs or a money market account sized to your next equipment cycle.", done:step1Done },
+          { n:2, label:"Diversify income before diversifying investments", detail:"New revenue lines reduce risk faster than a new asset class does.", done:step2Done },
+          { n:3, label:"Layer in longer-horizon vehicles last", detail:"Once cash flow is stable and the reserve is no longer competing with this year's operating needs.", done:step3Done },
+        ].map(s => (
+          <div key={s.n} style={{ display:"flex", alignItems:"flex-start", gap:12, padding:"10px 0", borderBottom:s.n<3?"1px solid rgba(255,255,255,0.1)":"none" }}>
+            <div style={{ width:24, height:24, borderRadius:"50%", background:s.done?T.green:"rgba(255,255,255,0.15)", color:s.done?T.navy:"rgba(255,255,255,0.5)", display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"'Barlow Condensed',sans-serif", fontSize:12, fontWeight:800, flexShrink:0 }}>{s.done?"✓":s.n}</div>
+            <div>
+              <div style={{ fontSize:13, fontWeight:700, color:"#fff", marginBottom:2 }}>{s.label}</div>
+              <div style={{ fontSize:12, color:"rgba(255,255,255,0.55)", lineHeight:1.4 }}>{s.detail}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+      <Flag type="warn">This is educational content, not financial advice. Coordinate reserve strategy, depreciation timing, and any investment vehicles with a licensed financial advisor, tax professional, or your Farm Credit advisor.</Flag>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// RD STAGE 8 — Action plan
+// ─────────────────────────────────────────────────────────────────────────────
+function RD8({ rd, fa }) {
   const d = rd.data; const selected = d.selectedOpps || []; const ranked = d.rankedOpps || []; const lev = d.leverItems || {}; const b = d.baseline || {};
   const sel = selected.map(id => OPPS.find(o=>o.id===id)).filter(Boolean).sort((a,c) => { const ra=(ranked.find(r=>r.id===a.id)||{}).rank||99, rb=(ranked.find(r=>r.id===c.id)||{}).rank||99; return ra-rb; });
   const tierC = { r:{bg:T.redL,c:T.red}, a:{bg:T.amberL,c:T.amberT}, g:{bg:T.greenL,c:T.dgreen} };
@@ -1447,7 +1588,7 @@ function RD7({ rd, fa }) {
   const resources = [["Penn State","Advisory team assembly + insurance review"],["Purdue","Five-lever framework — price, production, cost, balance sheet, people"],["Ohio State","Whole-farm planning + succession"],["Iowa State","Equipment benchmarking for custom farming"],["UKY Center","Specialty crop diversification database"]];
   return (
     <div>
-      <Head eyebrow="Revenue Diversification · Stage 7" title="Revenue Diversification action plan" sub="Your personalized diversification roadmap — ranked by the priority order you set in Stage 6." />
+      <Head eyebrow="Revenue Diversification · Stage 8" title="Revenue Diversification action plan" sub="Your personalized diversification roadmap — ranked by the priority order you set in Stage 6." />
       <div style={{ background:T.navy, borderRadius:10, padding:"20px 24px", marginBottom:16 }}>
         <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:11, fontWeight:700, letterSpacing:"0.12em", textTransform:"uppercase", color:T.green, marginBottom:6, display:"flex", alignItems:"center", gap:7 }}><Apex color={T.green} />Both modules complete</div>
         <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:19, fontWeight:700, color:"#fff", marginBottom:5, lineHeight:1.2 }}>{sel.length>0 ? `${sel.length} diversification path${sel.length>1?"s":""} identified. ${sel[0].label} is your Priority 1.` : "No paths selected — revisit Stage 4."}</div>
@@ -1527,20 +1668,93 @@ function EfficiencyValueImpact({ sel, lev }) {
 }
 
 // ═════════════════════════════════════════════════════════════════════════════
+// FARM PROFILE — a single 360° farm view that fills in as the farmer completes
+// onboarding and assessments, and feeds relevant fields back into FA, RD, and Risk
+// so nothing has to be entered twice.
+// ═════════════════════════════════════════════════════════════════════════════
+const ENT_KEYWORDS = { grain:["corn","soy","soybean","wheat","grain","oats"], dairy:["dairy","milk"], beef:["cattle","beef","cow-calf","cow calf"] };
+const matchEnterprisesFromText = (text) => {
+  const t = (text||"").toLowerCase();
+  return Object.entries(ENT_KEYWORDS).filter(([,kws]) => kws.some(k=>t.includes(k))).map(([id])=>id);
+};
+const revTierFromIncome = (income) => {
+  const n = parseFloat(income);
+  if (!n) return "";
+  if (n < 500000) return "< $500K";
+  if (n < 2000000) return "$500K – $2M";
+  if (n < 5000000) return "$2M – $5M";
+  return "$5M+";
+};
+
+function FarmProfilePage({ profile, setProfile, fa, rd }) {
+  const set = (field) => (e) => setProfile(s => ({ ...s, [field]: e.target.value }));
+  const sourceCount = (fa.enterprises||[]).length + (rd.data?.selectedOpps||[]).length;
+  const divLabel = sourceCount===0 ? null : sourceCount<=1 ? "Highly concentrated" : sourceCount<=3 ? "Moderately concentrated" : "Well diversified";
+  const snapField = (label, field, placeholder, info) => (
+    <div style={{ background:T.bgAlt, border:`1px solid ${T.border}`, borderRadius:10, padding:"14px 16px" }}>
+      <div style={{ display:"flex", alignItems:"center", gap:5, marginBottom:8 }}>
+        <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:10.5, fontWeight:700, color:T.fgS, textTransform:"uppercase", letterSpacing:"0.05em" }}>{label}</span>
+        {info && <span title={info} style={{ fontSize:11, color:T.fgS, cursor:"help" }}>ⓘ</span>}
+      </div>
+      <textarea style={inputStyle({ minHeight:44, border:"none", background:"transparent", padding:0, fontSize:14, fontWeight:600, color:T.navy, resize:"vertical" })} value={profile[field]||""} onChange={set(field)} placeholder={placeholder} />
+    </div>
+  );
+  return (
+    <div>
+      <Head eyebrow="MFP Farm Profile" title="MFP farm business profile" sub="A 360° view that fills in as the farmer completes onboarding and assessments — and feeds directly into Financial Analysis, Revenue Diversification, and Farm Risk so nothing has to be entered twice." />
+
+      <div style={cardStyle()}>
+        <div style={cardLblStyle()}><Apex color={T.green} />Farm snapshot</div>
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:12, marginBottom:12 }}>
+          {snapField("Location (state/county)", "location", "e.g., Minnehaha, SD")}
+          {snapField("Size", "size", "e.g., 2,000 acres")}
+          {snapField("Production mix", "productionMix", "e.g., Corn, soy, oats, cow-calf")}
+        </div>
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:12 }}>
+          {snapField("Business ventures beyond production", "ventures", "e.g., diesel repair shop, seed dealership, custom planting/harvest services")}
+          {snapField("Gross farm income", "grossIncome", "e.g., 400000")}
+          <div style={{ background:T.bgAlt, border:`1px solid ${T.border}`, borderRadius:10, padding:"14px 16px" }}>
+            <div style={{ display:"flex", alignItems:"center", gap:5, marginBottom:8 }}>
+              <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:10.5, fontWeight:700, color:T.fgS, textTransform:"uppercase", letterSpacing:"0.05em" }}>Diversification concentration</span>
+              <span title="Computed from your selected enterprises in Financial Analysis plus your selected paths in Revenue Diversification." style={{ fontSize:11, color:T.fgS, cursor:"help" }}>ⓘ</span>
+            </div>
+            {divLabel ? (<span style={pillStyle(sourceCount<=1?"vuln":sourceCount<=3?"watch":"strong")}>{divLabel}</span>) : (<div style={{ fontSize:13.5, fontStyle:"italic", color:T.fgS }}>Not scored yet</div>)}
+            {sourceCount>0 && <div style={{ fontSize:11, color:T.fgS, marginTop:6 }}>{sourceCount} income source{sourceCount!==1?"s":""} across FA + RD</div>}
+          </div>
+        </div>
+      </div>
+
+      <div style={cardStyle()}>
+        <div style={cardLblStyle()}><Apex color={T.green} />Strategy & values</div>
+        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12 }}>
+          {snapField("Near-term objectives (1–3 yrs)", "nearTerm", "e.g., complete a succession plan, maximize ethanol plant opportunities, focus on soil health")}
+          {snapField("Long-term objectives", "longTerm", "e.g., explore the protein sector, update cow-calf facilities, slow steady land expansion")}
+          {snapField("Key competitive advantage", "advantage", "e.g., strong community relationships driving land and business opportunities")}
+          {snapField("Key core values", "values", "e.g., legacy, community involvement, sustainable soil health practices")}
+        </div>
+      </div>
+
+      <Flag type="info">This profile is shared across all three modules. Financial Analysis and Revenue Diversification each offer a one-click way to pull matching fields from here instead of re-entering them.</Flag>
+    </div>
+  );
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
 // ROOT APP
 // ═════════════════════════════════════════════════════════════════════════════
 export default function App() {
-  const [module, setModule] = useState("fa");
+  const [module, setModule] = useState("profile");
   const [fa, setFA] = useState({ stage:1, enterprises:[], goals:{}, wholeFarm:{}, ratioVals:{}, s3vals:{}, s4bench:{}, s5:{}, actionChecked:{} });
   const [rd, setRD] = useState({ stage:1, data:{} });
   const [risk, setRisk] = useState({ stage:1, answers:{} });
+  const [profile, setProfile] = useState({});
 
   const setRData = (fn) => setRD(s => ({ ...s, data: fn(s.data||{}) }));
   const goFA = (n) => { setModule("fa"); setFA(s => ({ ...s, stage:n })); };
   const goRD = (n) => { setModule("rd"); setRD(s => ({ ...s, stage:n })); };
   const goRisk = (n) => { setModule("risk"); setRisk(s => ({ ...s, stage:n })); };
 
-  const isFA = module === "fa", isRD = module === "rd", isRisk = module === "risk";
+  const isFA = module === "fa", isRD = module === "rd", isRisk = module === "risk", isProfile = module === "profile";
   const faTotal = FA_STAGES.length, rdTotal = RD_STAGES.length, riskTotal = RISK_STAGES.length;
   const stage = isFA ? fa.stage : isRD ? rd.stage : risk.stage;
   const total = isFA ? faTotal : isRD ? rdTotal : riskTotal;
@@ -1548,6 +1762,8 @@ export default function App() {
   const faPct = Math.round(Math.min(fa.stage,faTotal)/faTotal*100);
   const rdPct = Math.round(Math.min(rd.stage,rdTotal)/rdTotal*100);
   const riskPct = Math.round(Math.min(risk.stage,riskTotal)/riskTotal*100);
+  const PROFILE_FIELDS = ["location","size","productionMix","ventures","grossIncome","nearTerm","longTerm","advantage","values"];
+  const profilePct = Math.round((PROFILE_FIELDS.filter(f=>(profile[f]||"").trim()).length / PROFILE_FIELDS.length) * 100);
   const pct = isFA ? faPct : isRD ? rdPct : riskPct;
 
   const canAdvance = useMemo(() => {
@@ -1566,8 +1782,9 @@ export default function App() {
     : isRD ? (rd.data.selectedOpps||[]).slice(0,3).map(id => { const o=OPPS.find(x=>x.id===id); return { label:o?o.label:id }; })
     : [{ label:`${riskAnsweredTotal}/32 answered` }];
 
-  let backLabel = "← Back"; let backDisabled = (isFA && fa.stage===1) || (isRisk && risk.stage===1);
-  const onBack = () => { if (isFA) { if (fa.stage>1) goFA(fa.stage-1); } else if (isRD) { if (rd.stage>1) goRD(rd.stage-1); else goFA(FA_STAGES.length); } else { if (risk.stage>1) goRisk(risk.stage-1); } };
+  let backLabel = "← Back"; let backDisabled = isRisk && risk.stage===1;
+  const onBack = () => { if (isFA) { if (fa.stage>1) goFA(fa.stage-1); else setModule("profile"); } else if (isRD) { if (rd.stage>1) goRD(rd.stage-1); else goFA(FA_STAGES.length); } else { if (risk.stage>1) goRisk(risk.stage-1); } };
+  if (isFA && fa.stage===1) backLabel = "← Farm Profile";
   if (isRD && rd.stage===1) backLabel = "← Financial Analysis";
 
   let nextLabel = "Continue →";
@@ -1582,7 +1799,8 @@ export default function App() {
   ];
   const RD_BODY = [
     <RD1 rd={rd} setRData={setRData} fa={fa} />, <RD2 rd={rd} setRData={setRData} />, <RD3 rd={rd} setRData={setRData} />,
-    <RD4 rd={rd} setRData={setRData} fa={fa} />, <RD5 rd={rd} setRData={setRData} />, <RD6 rd={rd} setRData={setRData} />, <RD7 rd={rd} fa={fa} />,
+    <RD4 rd={rd} setRData={setRData} fa={fa} />, <RD5 rd={rd} setRData={setRData} />, <RD6 rd={rd} setRData={setRData} />,
+    <RD7 rd={rd} setRData={setRData} fa={fa} />, <RD8 rd={rd} fa={fa} />,
   ];
   const RISK_BODY = [
     ...RISK_CATS.map((c,i) => <RiskCategoryStage key={c.id} risk={risk} setRisk={setRisk} catIndex={i} />),
@@ -1595,6 +1813,7 @@ export default function App() {
   const faTabStyle = isFA ? { ...tabBase, background:T.blueL, border:`1.5px solid ${T.blue}` } : { ...tabBase, background:"transparent" };
   const rdTabStyle = isRD ? { ...tabBase, background:T.blueL, border:`1.5px solid ${T.blue}` } : { ...tabBase, background:"transparent" };
   const riskTabStyle = isRisk ? { ...tabBase, background:T.blueL, border:`1.5px solid ${T.blue}` } : { ...tabBase, background:"transparent" };
+  const profileTabStyle = isProfile ? { ...tabBase, background:T.blueL, border:`1.5px solid ${T.blue}` } : { ...tabBase, background:"transparent" };
   const lblOn = { fontFamily:"'Barlow Condensed',sans-serif", fontSize:14.5, fontWeight:700, color:T.navy, letterSpacing:"0.01em" };
   const lblOff = { ...lblOn, fontWeight:600, color:T.fgS };
 
@@ -1610,6 +1829,16 @@ export default function App() {
         </div>
         <div style={{ width:1, height:30, background:T.border }} />
         <div style={{ display:"flex", gap:8, alignItems:"center" }}>
+          <div onClick={()=>setModule("profile")} style={profileTabStyle}>
+            <IconProfile />
+            <div>
+              <div style={isProfile?lblOn:lblOff}>Farm Profile</div>
+              <div style={{ display:"flex", alignItems:"center", gap:7, marginTop:3 }}>
+                <div style={{ width:62, height:4, background:T.border, borderRadius:2, overflow:"hidden" }}><div style={{ height:"100%", width:`${profilePct}%`, background:T.green, borderRadius:2 }} /></div>
+                <span style={{ fontSize:11, color:T.fgS, whiteSpace:"nowrap" }}>{profilePct}%</span>
+              </div>
+            </div>
+          </div>
           <div onClick={()=>setModule("fa")} style={faTabStyle}>
             <IconChart />
             <div>
@@ -1649,6 +1878,35 @@ export default function App() {
 
       <div style={{ display:"flex", flex:1, overflow:"hidden" }}>
 
+        {isProfile ? (
+          <>
+            <aside style={{ width:240, background:T.navy, display:"flex", flexDirection:"column", flexShrink:0, overflowY:"auto" }}>
+              <div style={{ padding:"22px 18px 14px" }}>
+                <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:11, letterSpacing:"0.16em", textTransform:"uppercase", color:T.green, display:"flex", alignItems:"center", gap:7, marginBottom:4 }}><Apex color={T.green} />Farm Profile</div>
+                <div style={{ fontSize:12, color:"rgba(255,255,255,0.55)" }}>360° farm business view</div>
+              </div>
+              <div style={{ height:1, background:"rgba(255,255,255,0.09)", margin:"0 0 8px" }} />
+              <div style={{ padding:"10px 16px", fontSize:12.5, color:"rgba(255,255,255,0.7)", lineHeight:1.6 }}>Fill this in once — Financial Analysis and Revenue Diversification each pull matching fields from here instead of asking twice.</div>
+              <div style={{ marginTop:"auto", padding:"14px 18px 20px" }}>
+                <div style={{ display:"flex", justifyContent:"space-between", fontSize:10, color:"rgba(255,255,255,0.4)", marginBottom:5 }}><span>Profile completeness</span><span>{profilePct}%</span></div>
+                <div style={{ height:4, background:"rgba(255,255,255,0.12)", borderRadius:2, overflow:"hidden" }}><div style={{ height:"100%", width:`${profilePct}%`, background:T.green, borderRadius:2, transition:"width .4s" }} /></div>
+              </div>
+            </aside>
+            <div style={{ flex:1, overflowY:"auto", display:"flex", flexDirection:"column" }}>
+              <div style={{ background:"#fff", borderBottom:`1px solid ${T.border}`, padding:"0 28px", height:50, display:"flex", alignItems:"center", flexShrink:0 }}>
+                <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:13, fontWeight:700, letterSpacing:"0.06em", textTransform:"uppercase", color:T.fgM }}>Farm Profile</div>
+              </div>
+              <div style={{ height:3, background:T.div, flexShrink:0 }}><div style={{ height:"100%", width:`${profilePct}%`, background:T.green, transition:"width .4s" }} /></div>
+              <div style={{ flex:1, padding:"30px 34px", maxWidth:960, width:"100%", margin:"0 auto", boxSizing:"border-box" }}>
+                <div key="profile" className="mfp-body-anim"><FarmProfilePage profile={profile} setProfile={setProfile} fa={fa} rd={rd} /></div>
+                <div style={{ display:"flex", justifyContent:"flex-end", alignItems:"center", paddingTop:22, borderTop:`1px solid ${T.border}`, marginTop:26 }}>
+                  <button onClick={()=>goFA(1)} style={btnStyle("primary")}>Continue to Financial Analysis →</button>
+                </div>
+              </div>
+            </div>
+          </>
+        ) : (
+        <>
         {/* Rail */}
         <aside style={{ width:240, background:T.navy, display:"flex", flexDirection:"column", flexShrink:0, overflowY:"auto" }}>
           <div style={{ padding:"22px 18px 14px" }}>
@@ -1698,6 +1956,8 @@ export default function App() {
             </div>
           </div>
         </div>
+        </>
+        )}
 
       </div>
     </div>
