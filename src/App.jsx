@@ -131,12 +131,12 @@ const Head = ({ eyebrow, title, sub }) => (
 // ─────────────────────────────────────────────────────────────────────────────
 const FA_STAGES = [
   { n:1, label:"Enterprise dashboard" }, { n:2, label:"Goal alignment" }, { n:3, label:"Ratio deep dive" },
-  { n:4, label:"Peer benchmarking" }, { n:5, label:"Scenario modeling" }, { n:6, label:"Action plan & monitoring" },
+  { n:4, label:"Peer benchmarking" },
 ];
 const RD_STAGES = [
-  { n:1, label:"Baseline & readiness" }, { n:2, label:"Goal alignment" }, { n:3, label:"Asset & readiness inventory" },
-  { n:4, label:"Opportunity mapping" }, { n:5, label:"Barrier identification" }, { n:6, label:"Scenario comparison" },
-  { n:7, label:"Financial reserves & sequencing" }, { n:8, label:"Action plan" },
+  { n:1, label:"Baseline & readiness" }, { n:2, label:"Goal alignment" }, { n:3, label:"Human capital, assets & financial capital" },
+  { n:4, label:"Opportunity mapping" }, { n:5, label:"Barrier identification" }, { n:6, label:"Policy & grant enablers" },
+  { n:7, label:"Scenario comparison" }, { n:8, label:"Financial reserves & sequencing" }, { n:9, label:"Action plan" },
 ];
 // RISK_STAGES mirrors RISK_CATS 1:1 for stages 1–8 (one category per stage), then adds
 // Results and Action plan as stages 9–10 — same generic stage/rail/Back/Continue system
@@ -151,8 +151,10 @@ const RD_STAGES = [
 const RISK_STAGES = [
   { n:1, label:"Identifying risk" }, { n:2, label:"Managing & preventing risk" },
   { n:3, label:"Contingency planning" }, { n:4, label:"Communicating the plan" },
-  { n:5, label:"Revenue ops & key contacts" }, { n:6, label:"Threat identification & ranking" },
-  { n:7, label:"Strategy & contingency plans" }, { n:8, label:"Communicate, train & review" },
+  { n:5, label:"Results" },
+  { n:6, label:"Revenue ops & key contacts" }, { n:7, label:"Threat identification & ranking" },
+  { n:8, label:"Crop insurance calculator" }, { n:9, label:"Livestock insurance calculator" },
+  { n:10, label:"Strategy & contingency plans" }, { n:11, label:"Communicate, train & review" },
 ];
 
 const ENT = {
@@ -181,34 +183,39 @@ const ENT = {
 // farm revenue tiers this typically suits best), reg (regulatory complexity 1–5),
 // seasonal (conflict with the core farm calendar, 1=complements it, 5=directly competes).
 const OPPS = [
-  { id:"energy", label:"Renewable energy lease", category:"Risk-smoothing", cluster:"Environmental & Energy", growthTier:1, sizeFit:["mid","large"], desc:"Solar or wind developer leases your land. Passive income, no capital required.", time:"12–24 months", capital:"$0–$2K", fit:{asset:40,trust:30,risk:80}, reg:4, seasonal:1 , effort:1, liquidity:2 },
-  { id:"specialty", label:"Specialty grain contracts", category:"Trust leverage", cluster:"Value-Added Processing & Brands", growthTier:2, sizeFit:["small","mid"], desc:"Grow identity-preserved grains — malting barley, non-GMO corn, food-grade soybeans — under contract.", time:"8–14 months", capital:"$5K–$20K", fit:{asset:60,trust:80,risk:50}, reg:2, seasonal:4 , effort:4, liquidity:3 },
-  { id:"custom", label:"Custom farming services", category:"Asset leverage", cluster:"Custom Field Services", growthTier:2, sizeFit:["mid","large"], desc:"Hire out equipment and labor to neighboring farms for tillage, planting, or spraying.", time:"3–6 months", capital:"$0 if equipment audit passes", fit:{asset:90,trust:60,risk:40}, reg:2, seasonal:5 , effort:5, liquidity:3 },
-  { id:"carbon", label:"Carbon & conservation programs", category:"Risk-smoothing", cluster:"Environmental & Energy", growthTier:1, sizeFit:["small","mid","large"], desc:"Enroll in USDA conservation programs or voluntary carbon markets.", time:"6–18 months", capital:"$0–$5K", fit:{asset:30,trust:40,risk:90}, reg:3, seasonal:1 , effort:2, liquidity:2 },
-  { id:"education", label:"On-farm education & agritourism", category:"Trust leverage", cluster:"Space, Storage & Experience", growthTier:3, sizeFit:["small","mid"], desc:"Host farm tours, workshops, or agritourism experiences.", time:"3–9 months", capital:"$2K–$15K", fit:{asset:40,trust:90,risk:30}, reg:3, seasonal:3 , effort:4, liquidity:3 },
-  { id:"processing", label:"Value-added processing", category:"Asset leverage", cluster:"Value-Added Processing & Brands", growthTier:2, sizeFit:["mid","large"], desc:"Process or package a portion of production for direct sale — flour, cheese, meat cuts, spirits.", time:"12–24 months", capital:"$20K–$150K", fit:{asset:70,trust:70,risk:50}, reg:5, seasonal:2 , effort:4, liquidity:2 },
-  { id:"consulting", label:"Agricultural consulting", category:"Trust leverage", cluster:"Data & Knowledge Services", growthTier:1, sizeFit:["small","mid","large"], desc:"Sell management expertise to other farmers.", time:"1–3 months", capital:"$500–$2K", fit:{asset:10,trust:95,risk:60}, reg:2, seasonal:2 , effort:3, liquidity:4 },
-  { id:"storage", label:"Grain storage as a service", category:"Asset leverage", cluster:"Space, Storage & Experience", growthTier:2, sizeFit:["mid","large"], desc:"Rent existing grain storage to neighboring farms during off-peak periods.", time:"1–3 months", capital:"$0", fit:{asset:85,trust:50,risk:70}, reg:2, seasonal:2 , effort:2, liquidity:3 },
-  { id:"trucking", label:"Grain & bulk trucking", category:"Asset leverage", cluster:"Trucking & Heavy Equipment", growthTier:2, sizeFit:["mid","large"], desc:"Haul grain, feed, fertilizer, or bulk freight for local elevators and plants using your own trucks and authority.", time:"6–12 months", capital:"$10K–$40K", fit:{asset:80,trust:40,risk:50}, reg:4, seasonal:2 , effort:4, liquidity:2 },
-  { id:"demolition", label:"Demolition & excavation", category:"Asset leverage", cluster:"Trucking & Heavy Equipment", growthTier:2, sizeFit:["mid","large"], desc:"Structure teardown, concrete removal, and site clearing using existing excavators, loaders, and trucks.", time:"6–12 months", capital:"$15K–$60K", fit:{asset:75,trust:35,risk:45}, reg:5, seasonal:1 , effort:5, liquidity:2 },
-  { id:"beefOnDairy", label:"Beef-on-dairy breeding program", category:"Risk-smoothing", cluster:"Livestock-Specific Ventures", growthTier:2, sizeFit:["mid","large"], desc:"Breed a share of the dairy herd to beef genetics — crossbred calves sell at a significant premium over straight dairy calves.", time:"9–15 months", capital:"$5K–$15K (semen + sorting)", fit:{asset:50,trust:30,risk:75}, reg:1, seasonal:2, entSpecific:"dairy" , effort:3, liquidity:3 },
-  { id:"breeding", label:"Breeding stock sales", category:"Trust leverage", cluster:"Livestock-Specific Ventures", growthTier:3, sizeFit:["small","mid"], desc:"Market high-quality breeding animals to other farmers, building on recognized genetics or bloodlines.", time:"12–24 months", capital:"$5K–$20K", fit:{asset:55,trust:70,risk:40}, reg:2, seasonal:2 , effort:3, liquidity:2 },
-  { id:"manure", label:"Manure-to-value (compost/biogas)", category:"Asset leverage", cluster:"Livestock-Specific Ventures", growthTier:3, sizeFit:["mid","large"], desc:"Convert livestock waste into compost, organic fertilizer, or biogas for sale rather than a disposal cost.", time:"6–18 months", capital:"$10K–$75K", fit:{asset:70,trust:30,risk:60}, reg:3, seasonal:2 , effort:4, liquidity:2 },
-  { id:"dtcBrand", label:"Direct-to-consumer food brand", category:"Trust leverage", cluster:"Value-Added Processing & Brands", growthTier:2, sizeFit:["small","mid"], desc:"Sell meat, eggs, or specialty grains directly via farm stores, CSAs, online, or farmers markets at retail pricing.", time:"6–12 months", capital:"$5K–$25K", fit:{asset:35,trust:85,risk:45}, reg:3, seasonal:3 , effort:4, liquidity:3 },
-  { id:"dataAdvisory", label:"Precision ag & data advisory", category:"Trust leverage", cluster:"Data & Knowledge Services", growthTier:1, sizeFit:["mid","large"], desc:"Offer precision ag consulting, AI-assisted agronomy, or risk decision-support to other operations.", time:"3–9 months", capital:"$1K–$10K", fit:{asset:15,trust:80,risk:55}, reg:1, seasonal:2 , effort:3, liquidity:4 },
-  { id:"envServices", label:"Environmental & ecosystem services", category:"Risk-smoothing", cluster:"Environmental & Energy", growthTier:1, sizeFit:["mid","large"], desc:"Water-quality credits, habitat leasing, or biodiversity programs layered on top of existing conservation practices.", time:"9–18 months", capital:"$0–$8K", fit:{asset:35,trust:35,risk:90}, reg:4, seasonal:1 , effort:2, liquidity:2 },
-  { id:"inputRetail", label:"Input sales & agronomy retail", category:"Trust leverage", cluster:"Custom Field Services", growthTier:3, sizeFit:["small","mid"], desc:"Sell seed, fertilizer, or crop inputs to neighboring farms, leveraging existing supplier relationships and expertise.", time:"3–9 months", capital:"$5K–$15K", fit:{asset:25,trust:75,risk:50}, reg:2, seasonal:3 , effort:3, liquidity:3 },
-  { id:"eventRental", label:"Facility rental & hosted events", category:"Trust leverage", cluster:"Space, Storage & Experience", growthTier:3, sizeFit:["small","mid"], desc:"Rent barns, fields, or converted buildings for weddings, retreats, or community markets during the off-season.", time:"6–12 months", capital:"$5K–$30K", fit:{asset:60,trust:75,risk:35}, reg:3, seasonal:3 , effort:4, liquidity:2 },
+  { id:"energy", label:"Renewable energy lease", category:"Financial capital", cluster:"Environmental & Energy", growthTier:1, sizeFit:["mid","large"], desc:"Solar or wind developer leases your land. Passive income, no capital required.", time:"12–24 months", capital:"$0–$2K", fit:{asset:40,trust:30,risk:80}, reg:4, seasonal:1 , effort:1, liquidity:2, policyPrograms:[{name:"USDA REAP (Rural Energy for America Program)",agency:"USDA Rural Development",note:"Covers up to 25% of project cost for producer-owned renewable energy systems. Status as of mid-2026: new grant awards are paused pending updated regulations — loan guarantees remain available. Confirm current status before counting on grant funding."}] },
+  { id:"specialty", label:"Specialty grain contracts", category:"Human capital", cluster:"Value-Added Processing & Brands", growthTier:2, sizeFit:["small","mid"], desc:"Grow identity-preserved grains — malting barley, non-GMO corn, food-grade soybeans — under contract.", time:"8–14 months", capital:"$5K–$20K", fit:{asset:60,trust:80,risk:50}, reg:2, seasonal:4 , effort:4, liquidity:3 },
+  { id:"custom", label:"Custom farming services", category:"Assets", cluster:"Custom Field Services", growthTier:2, sizeFit:["mid","large"], desc:"Hire out equipment and labor to neighboring farms for tillage, planting, or spraying.", time:"3–6 months", capital:"$0 if equipment audit passes", fit:{asset:90,trust:60,risk:40}, reg:2, seasonal:5 , effort:5, liquidity:3 },
+  { id:"carbon", label:"Carbon & conservation programs", category:"Financial capital", cluster:"Environmental & Energy", growthTier:1, sizeFit:["small","mid","large"], desc:"Enroll in USDA conservation programs or voluntary carbon markets.", time:"6–18 months", capital:"$0–$5K", fit:{asset:30,trust:40,risk:90}, reg:3, seasonal:1 , effort:2, liquidity:2 },
+  { id:"education", label:"On-farm education & agritourism", category:"Human capital", cluster:"Space, Storage & Experience", growthTier:3, sizeFit:["small","mid"], desc:"Host farm tours, workshops, or agritourism experiences.", time:"3–9 months", capital:"$2K–$15K", fit:{asset:40,trust:90,risk:30}, reg:3, seasonal:3 , effort:4, liquidity:3 },
+  { id:"processing", label:"Value-added processing", category:"Assets", cluster:"Value-Added Processing & Brands", growthTier:2, sizeFit:["mid","large"], desc:"Process or package a portion of production for direct sale — flour, cheese, meat cuts, spirits.", time:"12–24 months", capital:"$20K–$150K", fit:{asset:70,trust:70,risk:50}, reg:5, seasonal:2 , effort:4, liquidity:2, policyPrograms:[{name:"USDA Value-Added Producer Grant (VAPG)",agency:"USDA Rural Development",note:"Up to $200K working capital or $50K planning, 1:1 match required. Funds processing and marketing activity only — not land, buildings, or production equipment. Opens on an annual cycle (FY2026 applications closed April 2026); check grants.gov for the next window."}] },
+  { id:"consulting", label:"Agricultural consulting", category:"Human capital", cluster:"Data & Knowledge Services", growthTier:1, sizeFit:["small","mid","large"], desc:"Sell management expertise to other farmers.", time:"1–3 months", capital:"$500–$2K", fit:{asset:10,trust:95,risk:60}, reg:2, seasonal:2 , effort:3, liquidity:4 },
+  { id:"storage", label:"Grain storage as a service", category:"Assets", cluster:"Space, Storage & Experience", growthTier:2, sizeFit:["mid","large"], desc:"Rent existing grain storage to neighboring farms during off-peak periods.", time:"1–3 months", capital:"$0", fit:{asset:85,trust:50,risk:70}, reg:2, seasonal:2 , effort:2, liquidity:3 },
+  { id:"trucking", label:"Grain & bulk trucking", category:"Assets", cluster:"Trucking & Heavy Equipment", growthTier:2, sizeFit:["mid","large"], desc:"Haul grain, feed, fertilizer, or bulk freight for local elevators and plants using your own trucks and authority.", time:"6–12 months", capital:"$10K–$40K", fit:{asset:80,trust:40,risk:50}, reg:4, seasonal:2 , effort:4, liquidity:2 },
+  { id:"demolition", label:"Demolition & excavation", category:"Assets", cluster:"Trucking & Heavy Equipment", growthTier:2, sizeFit:["mid","large"], desc:"Structure teardown, concrete removal, and site clearing using existing excavators, loaders, and trucks.", time:"6–12 months", capital:"$15K–$60K", fit:{asset:75,trust:35,risk:45}, reg:5, seasonal:1 , effort:5, liquidity:2 },
+  { id:"beefOnDairy", label:"Beef-on-dairy breeding program", category:"Financial capital", cluster:"Livestock-Specific Ventures", growthTier:2, sizeFit:["mid","large"], desc:"Breed a share of the dairy herd to beef genetics — crossbred calves sell at a significant premium over straight dairy calves.", time:"9–15 months", capital:"$5K–$15K (semen + sorting)", fit:{asset:50,trust:30,risk:75}, reg:1, seasonal:2, entSpecific:"dairy" , effort:3, liquidity:3 },
+  { id:"breeding", label:"Breeding stock sales", category:"Human capital", cluster:"Livestock-Specific Ventures", growthTier:3, sizeFit:["small","mid"], desc:"Market high-quality breeding animals to other farmers, building on recognized genetics or bloodlines.", time:"12–24 months", capital:"$5K–$20K", fit:{asset:55,trust:70,risk:40}, reg:2, seasonal:2 , effort:3, liquidity:2 },
+  { id:"crpGrazing", label:"CRP land grazing access", category:"Assets", cluster:"Livestock-Specific Ventures", growthTier:3, sizeFit:["small","mid"], desc:"Expand grazing capacity onto enrolled Conservation Reserve Program acres. This depends on pending legislation — the bipartisan Thune-Klobuchar CRP Improvement Act would ease grazing access rules, but it has not passed as of mid-2026. Track its status before building a plan around it.", time:"Uncertain — depends on legislative timeline", capital:"$0–$5K (fencing, water access)", fit:{asset:60,trust:25,risk:50}, reg:3, seasonal:2, entSpecific:"beef", effort:2, liquidity:2, policyPrograms:[{name:"CRP Improvement Act (Thune-Klobuchar, bipartisan)",agency:"U.S. Senate Committee on Agriculture, Nutrition and Forestry",note:"Reintroduced legislation that would improve grazing access on CRP acres and expand enrollment flexibility. Status as of mid-2026: introduced, not enacted — part of a broader Farm Bill negotiation that has stalled repeatedly since the 2018 Farm Bill. Confirm current status with your FSA office before counting on expanded access."}] },
+  { id:"addBeefHerd", label:"Add a beef cow-calf herd", category:"Assets", cluster:"On-Farm Production Diversification", growthTier:3, sizeFit:["small","mid"], desc:"Convert marginal ground, crop residue, and underutilized land into a new cow-calf enterprise — a natural complement for row-crop or dairy operations that don't currently run cattle, rather than a side business layered on top of what you already do.", time:"12–24 months to positive cash flow", capital:"$15K–$60K (herd, fencing, water access)", fit:{asset:65,trust:40,risk:45}, reg:2, seasonal:2, entExclude:["beef"], effort:4, liquidity:2 },
+  { id:"growFeedCrops", label:"Grow your own livestock feed", category:"Financial capital", cluster:"On-Farm Production Diversification", growthTier:3, sizeFit:["small","mid","large"], desc:"Convert purchased-feed dependency into home-grown corn, hay, or forage acres — reduces feed cost volatility and captures margin currently going to your grain supplier. The natural complement for a beef or dairy operation that doesn't currently grow its own grain.", time:"One growing season to first harvest", capital:"$10K–$40K (equipment access, seed, inputs)", fit:{asset:55,trust:20,risk:70}, reg:1, seasonal:4, entRelevant:["beef","dairy"], entExclude:["grain"], effort:4, liquidity:3 },
+  { id:"vegetableCrops", label:"Vegetable & produce production", category:"Human capital", cluster:"On-Farm Production Diversification", growthTier:3, sizeFit:["small","mid"], desc:"Diversify into vegetables or produce on a pilot scale — a market garden, hoop house, or small acreage. Whether this makes sense at all depends heavily on your specific region, soil type, and access to water and direct markets; confirm suitability with your local extension office before committing capital.", time:"6–12 months to first harvest", capital:"$5K–$30K (seed, irrigation, hoop house)", fit:{asset:30,trust:70,risk:35}, reg:3, seasonal:3, effort:5, liquidity:3 },
+  { id:"perennialCrops", label:"Perennial crops (orchard, vineyard, agroforestry)", category:"Assets", cluster:"On-Farm Production Diversification", growthTier:3, sizeFit:["small","mid"], desc:"Establish an orchard, vineyard, or agroforestry planting on suitable acres. This is the longest-horizon production option in this library — most perennials take 3–7 years to reach meaningful harvest — and suitability is entirely dependent on your region's soil, climate, and water access. A soil test and extension consultation should come before any planting decision.", time:"3–7 years to meaningful harvest", capital:"$15K–$75K (establishment costs)", fit:{asset:45,trust:40,risk:55}, reg:2, seasonal:2, effort:4, liquidity:1 },
+  { id:"manure", label:"Manure-to-value (compost/biogas)", category:"Assets", cluster:"Livestock-Specific Ventures", growthTier:3, sizeFit:["mid","large"], desc:"Convert livestock waste into compost, organic fertilizer, or biogas for sale rather than a disposal cost.", time:"6–18 months", capital:"$10K–$75K", fit:{asset:70,trust:30,risk:60}, reg:3, seasonal:2 , effort:4, liquidity:2, policyPrograms:[{name:"EQIP (Environmental Quality Incentives Program)",agency:"USDA NRCS",note:"Cost-share for waste management facilities, composting infrastructure, and nutrient management practices. Apply through your local NRCS field office — sign-up windows vary by state."}] },
+  { id:"dtcBrand", label:"Direct-to-consumer food brand", category:"Human capital", cluster:"Value-Added Processing & Brands", growthTier:2, sizeFit:["small","mid"], desc:"Sell meat, eggs, or specialty grains directly via farm stores, CSAs, online, or farmers markets at retail pricing.", time:"6–12 months", capital:"$5K–$25K", fit:{asset:35,trust:85,risk:45}, reg:3, seasonal:3 , effort:4, liquidity:3, policyPrograms:[{name:"Local Agriculture Market Program (LAMP) / VAPG marketing funds",agency:"USDA Rural Development / AMS",note:"VAPG working capital can fund marketing and DTC channel development specifically, not just processing. Same 1:1 match and annual cycle as the processing-focused use of the program."}] },
+  { id:"dataAdvisory", label:"Precision ag & data advisory", category:"Human capital", cluster:"Data & Knowledge Services", growthTier:1, sizeFit:["mid","large"], desc:"Offer precision ag consulting, AI-assisted agronomy, or risk decision-support to other operations.", time:"3–9 months", capital:"$1K–$10K", fit:{asset:15,trust:80,risk:55}, reg:1, seasonal:2 , effort:3, liquidity:4 },
+  { id:"envServices", label:"Environmental & ecosystem services", category:"Financial capital", cluster:"Environmental & Energy", growthTier:1, sizeFit:["mid","large"], desc:"Water-quality credits, habitat leasing, or biodiversity programs layered on top of existing conservation practices.", time:"9–18 months", capital:"$0–$8K", fit:{asset:35,trust:35,risk:90}, reg:4, seasonal:1 , effort:2, liquidity:2, policyPrograms:[{name:"EQIP / CSP (Environmental Quality Incentives Program / Conservation Stewardship Program)",agency:"USDA NRCS",note:"Cost-share and stewardship payments for conservation practices that can also qualify land for private water-quality or habitat credit markets. Check with your local NRCS office for current sign-up windows."}] },
+  { id:"inputRetail", label:"Input sales & agronomy retail", category:"Human capital", cluster:"Custom Field Services", growthTier:3, sizeFit:["small","mid"], desc:"Sell seed, fertilizer, or crop inputs to neighboring farms, leveraging existing supplier relationships and expertise.", time:"3–9 months", capital:"$5K–$15K", fit:{asset:25,trust:75,risk:50}, reg:2, seasonal:3 , effort:3, liquidity:3 },
+  { id:"eventRental", label:"Facility rental & hosted events", category:"Human capital", cluster:"Space, Storage & Experience", growthTier:3, sizeFit:["small","mid"], desc:"Rent barns, fields, or converted buildings for weddings, retreats, or community markets during the off-season.", time:"6–12 months", capital:"$5K–$30K", fit:{asset:60,trust:75,risk:35}, reg:3, seasonal:3 , effort:4, liquidity:2 },
   // ── Financial capital deployment — opportunity-cost alternatives to physical/sweat-equity
   // ventures. These convert capital directly into future income or risk protection with
   // minimal ongoing physical effort. Not financial advice — for comparison only; a licensed
   // financial advisor or Farm Credit advisor should be consulted before committing capital.
-  { id:"annuity", label:"Fixed or fixed-indexed annuity", category:"Risk-smoothing", cluster:"Financial Capital Deployment", growthTier:3, sizeFit:["mid","large"], desc:"Convert a lump sum or systematic contributions into a guaranteed income stream. Fixed-indexed versions (FIAs) link partial growth to a market index like the S&P 500 while protecting principal from downturns — a way to pursue inflation-beating growth without direct exposure to commodity or stock market losses.", time:"Immediate or deferred by years", capital:"$25K–$250K+", fit:{asset:5,trust:10,risk:95}, reg:2, seasonal:1, effort:1, liquidity:1 },
-  { id:"wholeLife", label:"Whole life insurance (cash value)", category:"Risk-smoothing", cluster:"Financial Capital Deployment", growthTier:3, sizeFit:["small","mid","large"], desc:"Builds tax-advantaged cash value you can borrow against to self-finance equipment or land, while providing a death benefit for succession planning.", time:"Cash value meaningfully usable after 5–10 years", capital:"$5K–$50K+ annual premium", fit:{asset:5,trust:15,risk:85}, reg:2, seasonal:1, effort:1, liquidity:2 },
-  { id:"selfInsurance", label:"Self-insurance reserve fund", category:"Risk-smoothing", cluster:"Financial Capital Deployment", growthTier:3, sizeFit:["large"], desc:"Build and manage your own reserve fund to self-insure against certain risks instead of paying rising commercial premiums — typically a large-operation strategy.", time:"Meaningful protection after 3–5 years of funding", capital:"$25K–$500K+", fit:{asset:10,trust:10,risk:90}, reg:3, seasonal:1, effort:1, liquidity:1 },
-  { id:"retirementPlan", label:"Qualified retirement plan (SEP-IRA / defined benefit)", category:"Risk-smoothing", cluster:"Financial Capital Deployment", growthTier:2, sizeFit:["mid","large"], desc:"Shelter high-income years from current taxation by contributing to a SEP-IRA or defined benefit plan — converting today's profit into guaranteed future retirement income.", time:"Tax benefit immediate; income access at retirement age", capital:"Up to $70K+/year (SEP) or more for defined benefit", fit:{asset:0,trust:5,risk:90}, reg:2, seasonal:1, effort:1, liquidity:1 },
-  { id:"sellerFinancing", label:"Seller financing / ag lending to peers", category:"Risk-smoothing", cluster:"Financial Capital Deployment", growthTier:3, sizeFit:["large"], desc:"Use farm equity or cash reserves to finance land or equipment sales to other farmers, earning interest income secured by the asset sold.", time:"Income begins as soon as the note is originated", capital:"$50K–$500K+ (secured against the asset)", fit:{asset:20,trust:30,risk:70}, reg:3, seasonal:1, effort:2, liquidity:1 },
-  { id:"agReit", label:"Farmland fund or ag REIT investment", category:"Risk-smoothing", cluster:"Financial Capital Deployment", growthTier:2, sizeFit:["mid","large"], desc:"Passive exposure to farmland appreciation through an ag-focused REIT or farmland investment platform (AcreTrader-style) — without buying, financing, or managing more acreage yourself.", time:"Typically a multi-year hold; some platforms offer periodic liquidity windows", capital:"$10K–$100K+", fit:{asset:10,trust:15,risk:85}, reg:2, seasonal:1, effort:1, liquidity:2 },
+  { id:"annuity", label:"Fixed or fixed-indexed annuity", category:"Financial capital", cluster:"Financial Capital Deployment", growthTier:3, sizeFit:["mid","large"], desc:"Convert a lump sum or systematic contributions into a guaranteed income stream. Fixed-indexed versions (FIAs) link partial growth to a market index like the S&P 500 while protecting principal from downturns — a way to pursue inflation-beating growth without direct exposure to commodity or stock market losses.", time:"Immediate or deferred by years", capital:"$25K–$250K+", fit:{asset:5,trust:10,risk:95}, reg:2, seasonal:1, effort:1, liquidity:1 },
+  { id:"wholeLife", label:"Whole life insurance (cash value)", category:"Financial capital", cluster:"Financial Capital Deployment", growthTier:3, sizeFit:["small","mid","large"], desc:"Builds tax-advantaged cash value you can borrow against to self-finance equipment or land, while providing a death benefit for succession planning.", time:"Cash value meaningfully usable after 5–10 years", capital:"$5K–$50K+ annual premium", fit:{asset:5,trust:15,risk:85}, reg:2, seasonal:1, effort:1, liquidity:2 },
+  { id:"selfInsurance", label:"Self-insurance reserve fund", category:"Financial capital", cluster:"Financial Capital Deployment", growthTier:3, sizeFit:["large"], desc:"Build and manage your own reserve fund to self-insure against certain risks instead of paying rising commercial premiums — typically a large-operation strategy.", time:"Meaningful protection after 3–5 years of funding", capital:"$25K–$500K+", fit:{asset:10,trust:10,risk:90}, reg:3, seasonal:1, effort:1, liquidity:1 },
+  { id:"retirementPlan", label:"Qualified retirement plan (SEP-IRA / defined benefit)", category:"Financial capital", cluster:"Financial Capital Deployment", growthTier:2, sizeFit:["mid","large"], desc:"Shelter high-income years from current taxation by contributing to a SEP-IRA or defined benefit plan — converting today's profit into guaranteed future retirement income.", time:"Tax benefit immediate; income access at retirement age", capital:"Up to $70K+/year (SEP) or more for defined benefit", fit:{asset:0,trust:5,risk:90}, reg:2, seasonal:1, effort:1, liquidity:1 },
+  { id:"sellerFinancing", label:"Seller financing / ag lending to peers", category:"Financial capital", cluster:"Financial Capital Deployment", growthTier:3, sizeFit:["large"], desc:"Use farm equity or cash reserves to finance land or equipment sales to other farmers, earning interest income secured by the asset sold.", time:"Income begins as soon as the note is originated", capital:"$50K–$500K+ (secured against the asset)", fit:{asset:20,trust:30,risk:70}, reg:3, seasonal:1, effort:2, liquidity:1 },
+  { id:"agReit", label:"Farmland fund or ag REIT investment", category:"Financial capital", cluster:"Financial Capital Deployment", growthTier:2, sizeFit:["mid","large"], desc:"Passive exposure to farmland appreciation through an ag-focused REIT or farmland investment platform (AcreTrader-style) — without buying, financing, or managing more acreage yourself.", time:"Typically a multi-year hold; some platforms offer periodic liquidity windows", capital:"$10K–$100K+", fit:{asset:10,trust:15,risk:85}, reg:2, seasonal:1, effort:1, liquidity:2 },
 ];
 
 // Cluster metadata for grouping/filtering in Stage 4
@@ -221,6 +228,7 @@ const CLUSTERS = [
   { id:"Trucking & Heavy Equipment", note:"Tier 2 growth — monetizes existing iron; works best off the fieldwork calendar" },
   { id:"Custom Field Services", note:"Tier 2–3 growth — monetizes machinery, labor, and supplier relationships" },
   { id:"Financial Capital Deployment", note:"Capital-only alternatives — minimal physical effort, compare against sweat-equity ventures on an opportunity-cost basis" },
+  { id:"On-Farm Production Diversification", note:"Adding or changing what you actually grow or raise — a new enterprise, not an off-farm venture. Region and soil dependent; confirm suitability with your local extension office." },
 ];
 
 // Maps a Stage-1 revenue tier answer to the small/mid/large bucket used for sizeFit matching
@@ -244,6 +252,11 @@ const BARRIERS = {
   demolition:["Highest regulatory and liability exposure of any path — asbestos, environmental rules, OSHA, and disposal permits typically require a separate legal entity","Specialized licensing and strong insurance are usually required before the first job","Revenue is contract-based and can be lumpy compared to recurring farm income"],
   beefOnDairy:["Requires reliable sexed semen and sorting logistics to hit the target dairy/beef breeding percentage","Buyer relationships for crossbred calves need to be established before scaling the program","Genetic selection mistakes are costly and take a full breeding cycle to correct"],
   breeding:["Building a reputation for quality genetics takes years, not months","Market is relationship-driven — a small network of buyers means concentrated risk","Health and biosecurity protocols must be airtight to protect breeding stock value"],
+  crpGrazing:["This opportunity depends on legislation that has not passed — the CRP Improvement Act could stall or change substantially before enactment","Even if passed, specific grazing rules, timing windows, and eligible contract types will be set by FSA implementation, not the bill itself","Existing CRP contracts have their own terms — check whether your enrolled acres are even eligible for a grazing modification","Fencing and water access infrastructure costs apply regardless of the legislative outcome"],
+  addBeefHerd:["Starting a new species from scratch means a real learning curve — health protocols, breeding decisions, and marketing are all new skills","Cattle prices and input costs (feed, vet) are a different risk exposure than what you're used to managing in your current enterprise","Facilities and fencing built for one purpose (row crops or dairy) usually need real investment to work for a cow-calf herd","Building a herd takes time — genetics, breeding cycles, and herd health don't scale as fast as adding acres"],
+  growFeedCrops:["Taking cropland or hay ground out of another use has a real opportunity cost, not just a new cost line","Weather and yield risk on your own feed crop replaces price risk on purchased feed — it doesn't disappear, it changes shape","Equipment for planting and harvesting a feed crop may not already exist on a livestock-only operation","One bad growing season can leave you short on feed and buying at the worst possible time anyway"],
+  vegetableCrops:["Suitability is highly region- and soil-specific — what works two counties over may not work on your ground at all","Labor requirements per acre are dramatically higher than row crops or pasture — this is not a passive addition","Market access (direct sales, farmers markets, wholesale accounts) has to be built, often before the first harvest is ready","Food safety regulations apply once product leaves the farm gate, even at small scale"],
+  perennialCrops:["The multi-year establishment period before any harvest is the single biggest barrier — cash flow is negative for years before it's positive","A misjudged site (soil drainage, frost pocket, water access) isn't correctable after planting the way it is with an annual crop","Specialized equipment and knowledge (pruning, pest management specific to the crop) usually isn't already on hand","Once established, perennials are a long-term land-use commitment — this isn't a diversification path you can easily reverse"],
   manure:["Nutrient management and environmental permitting vary significantly by state and county","Equipment for processing (composting turners, digesters) requires meaningful upfront capital","Odor and neighbor relations require proactive management, especially near agritourism or DTC ventures"],
   dtcBrand:["Building direct retail, CSA, or online channels takes real marketing time most farmers haven't budgeted for","Food safety and labeling rules apply once product leaves the farm gate","Fulfillment and cold-chain logistics are a new operational skill set"],
   dataAdvisory:["Requires demonstrated results before other farmers will pay for advice","Not scalable without hiring or building software — a true side-hustle ceiling exists","Liability for advice given needs to be addressed contractually"],
@@ -271,6 +284,11 @@ const RD_ACTIONS = {
   demolition:[{t:"r",title:"Confirm licensing, insurance, and entity structure before the first job",d:"Asbestos, OSHA, and disposal-permit exposure typically requires a separate LLC and specialized coverage — consult an attorney first."},{t:"a",title:"Start with agricultural teardown work (barns, bin sites) you already understand",d:"This is the most natural entry point before bidding on general construction demolition."},{t:"g",title:"Build a referral network with local contractors and site developers",d:"Demolition work is contract-based — a referral pipeline smooths out lumpy revenue."}],
   beefOnDairy:[{t:"r",title:"Confirm sexed semen and sorting logistics with your reproduction vet",d:"The breeding percentage (e.g., 40% dairy cows bred to beef) needs a clear protocol before you start."},{t:"a",title:"Establish a buyer relationship for crossbred calves before scaling",d:"Crossbred calf premiums depend on a reliable buyer — confirm demand before committing more of the herd."},{t:"g",title:"Track calf revenue as a % of total dairy income annually",d:"This is now a meaningful income stream on many dairies — treat it as its own line in your financial monitoring."}],
   breeding:[{t:"r",title:"Get an independent genetic and health assessment of your breeding stock",d:"Buyers pay for documented quality — this assessment is the foundation of your marketing."},{t:"a",title:"List with a breed association or regional sale to reach buyers",d:"Breeding stock sales are relationship- and reputation-driven; a breed association listing builds credibility fast."},{t:"g",title:"Build a multi-year genetic improvement plan",d:"Reputation compounds — a documented improvement trajectory justifies premium pricing over time."}],
+  crpGrazing:[{t:"r",title:"Check the status of the CRP Improvement Act before planning around it",d:"This is pending legislation, not current law — confirm with your FSA office or Farm Credit advisor whether it has moved before committing capital to fencing or water infrastructure."},{t:"a",title:"Review your existing CRP contract terms for grazing eligibility",d:"Some contracts already allow limited emergency or managed grazing — you may have options before any new legislation passes."},{t:"g",title:"Budget fencing and water access as a standalone investment",d:"These improvements have value for rotational grazing generally, independent of whether this specific bill becomes law."}],
+  addBeefHerd:[{t:"r",title:"Talk to a neighboring cattle producer or your extension office before buying the first animal",d:"Herd health protocols, breeding decisions, and marketing channels are all new skills — borrow experience before you need it."},{t:"a",title:"Assess what fencing, water, and handling facilities actually need to change",d:"Get a real cost estimate for the infrastructure gap before committing to herd size."},{t:"g",title:"Start smaller than your acreage could theoretically support",d:"A smaller herd in year one lets you learn the health, breeding, and marketing rhythm before scaling up."}],
+  growFeedCrops:[{t:"r",title:"Run the numbers on opportunity cost, not just input cost",d:"Compare what the ground could earn in its current use against the feed-cost savings before converting acres."},{t:"a",title:"Confirm you have or can access the right planting and harvest equipment",d:"Custom hire or equipment sharing (see the Custom Field Services cluster) can bridge this gap in year one."},{t:"g",title:"Keep a feed-purchase backup plan for a bad growing season",d:"Don't let a first-year weather event force a panic purchase at the worst possible price — budget a cushion."}],
+  vegetableCrops:[{t:"r",title:"Get a soil test and talk to your local extension office before committing acres",d:"Regional and soil-specific suitability is the single biggest factor in whether this works at all — confirm it first."},{t:"a",title:"Start with a pilot plot, not your full planned acreage",d:"Prove out labor requirements, yield, and market demand at small scale before expanding."},{t:"g",title:"Line up a market channel before the first harvest, not after",d:"Direct sales, a farmers market stall, or a wholesale account should be arranged in advance — produce doesn't wait."}],
+  perennialCrops:[{t:"r",title:"Commission a proper site assessment — soil, drainage, frost risk, water access — before planting anything",d:"This decision is very hard to reverse once trees or vines are in the ground; get this step right."},{t:"a",title:"Talk to a specialist extension agent or established grower in your region for the specific crop",d:"Perennial crop knowledge is highly specific — generic row-crop experience won't transfer."},{t:"g",title:"Budget for zero income during the full establishment period",d:"Plan financing and cash flow assuming several years pass before any harvest revenue arrives."}],
   manure:[{t:"r",title:"Confirm nutrient management and environmental permitting requirements with your state ag department",d:"Rules vary significantly by state and county — confirm before any capital investment."},{t:"a",title:"Get a composting or digester equipment quote and payback estimate",d:"Compare processing capital cost against current disposal cost and potential sale price to nearby farms or landscapers."},{t:"g",title:"Establish neighbor and community communication before scaling",d:"Odor and traffic concerns are the most common source of local pushback — get ahead of it."}],
   dtcBrand:[{t:"r",title:"Confirm food safety and labeling requirements for your specific products",d:"Rules differ for meat, eggs, and processed foods — check with your state department of agriculture before selling direct."},{t:"a",title:"Start with one channel (farmers market or online) before adding more",d:"Fulfillment and cold-chain logistics are a new skill set — prove the model on one channel first."},{t:"g",title:"Build a customer list and repeat-purchase system",d:"DTC economics depend on repeat customers, not one-time sales — track and nurture your buyer list."}],
   dataAdvisory:[{t:"r",title:"Document your track record before pricing your first engagement",d:"Farmers pay for demonstrated results — build a simple case study from your own operation first."},{t:"a",title:"Start with an hourly or per-field consulting rate, not a subscription",d:"Prove the value before building recurring pricing or software."},{t:"g",title:"Decide whether this stays a side service or becomes a standalone business",d:"There's a real ceiling on solo consulting time — plan for that decision point in advance."}],
@@ -286,7 +304,8 @@ const RD_ACTIONS = {
 };
 
 const REV_RAMP = { energy:[0,0,0,0,0,0,0,0,0,0,0,0], specialty:[0,0,0,0,0,0,0,2,5,7,8,8], custom:[0,0,3,5,5,5,5,5,5,5,3,0], carbon:[0,0,0,0,0,0,2,3,3,3,3,3], education:[0,0,2,4,5,6,6,5,4,4,2,0], processing:[0,0,0,0,0,0,0,0,1,2,4,6], consulting:[0,2,3,4,4,4,4,4,4,4,3,2], storage:[0,0,0,0,0,0,0,8,8,8,4,4],
-  trucking:[0,0,2,4,5,5,5,4,4,5,5,4], demolition:[0,0,0,1,3,5,6,6,5,3,2,1], beefOnDairy:[0,0,0,0,2,3,4,5,5,5,5,5], breeding:[0,0,0,0,0,1,2,3,3,4,4,4], manure:[0,0,0,1,2,3,3,4,4,4,4,4], dtcBrand:[0,1,2,3,4,4,5,5,5,5,5,5], dataAdvisory:[1,2,3,3,4,4,4,4,4,4,4,4], envServices:[0,0,0,0,0,1,2,3,3,3,3,3], inputRetail:[0,0,1,2,3,3,4,4,4,4,3,2], eventRental:[0,0,1,3,4,5,5,4,3,2,3,4],
+  trucking:[0,0,2,4,5,5,5,4,4,5,5,4], demolition:[0,0,0,1,3,5,6,6,5,3,2,1], beefOnDairy:[0,0,0,0,2,3,4,5,5,5,5,5], breeding:[0,0,0,0,0,1,2,3,3,4,4,4], manure:[0,0,0,1,2,3,3,4,4,4,4,4], dtcBrand:[0,1,2,3,4,4,5,5,5,5,5,5], dataAdvisory:[1,2,3,3,4,4,4,4,4,4,4,4], envServices:[0,0,0,0,0,1,2,3,3,3,3,3], inputRetail:[0,0,1,2,3,3,4,4,4,4,3,2], eventRental:[0,0,1,3,4,5,5,4,3,2,3,4], crpGrazing:[0,0,0,0,0,0,0,0,0,0,0,0],
+  addBeefHerd:[0,0,0,0,0,0,0,0,0,1,2,3], growFeedCrops:[0,0,0,0,0,0,0,0,3,5,3,0], vegetableCrops:[0,0,0,0,0,2,4,5,4,2,0,0], perennialCrops:[0,0,0,0,0,0,0,0,0,0,0,0],
   annuity:[3,3,3,3,3,3,3,3,3,3,3,3], wholeLife:[0,0,0,0,0,0,1,1,1,1,1,1], selfInsurance:[0,0,0,0,1,1,1,2,2,2,2,2], retirementPlan:[2,2,2,2,2,2,2,2,2,2,2,2], sellerFinancing:[4,4,4,4,4,4,4,4,4,4,4,4], agReit:[0,0,0,2,2,2,2,2,2,2,2,2] };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -423,20 +442,213 @@ function FA2({ fa, setFA }) {
 // ─────────────────────────────────────────────────────────────────────────────
 // FA STAGE 3 — Ratio deep dive
 // ─────────────────────────────────────────────────────────────────────────────
+// Shared ratio engine for Financial Analysis Stage 3. Extracted to a single function so
+// the Farm Profile's "whole-farm financial health" summary can never drift out of sync
+// with what Stage 3 itself computes and displays.
+const faStR = (val,sv2,vv,lb) => val===null?"blank":(lb?(val<=sv2?"strong":val>=vv?"vuln":"watch"):(val>=sv2?"strong":val<=vv?"vuln":"watch"));
+const faFP = n => n===null?"—":Math.round(n)+"%";
+const faFD = n => n===null?"—":n.toFixed(2)+"x";
+// FFSC (Farm Financial Standards Council) accrual adjustments — the specific
+// balance-sheet-driven corrections that convert Schedule F cash-basis income into the
+// accrual-adjusted figure lenders and FINBIN/ARMS benchmarks actually use. Cash-basis
+// income is distorted by *timing* (when cash moved); accrual income reflects when
+// income was earned and expenses incurred, regardless of cash timing. Every adjustment
+// here is a balance-sheet *change* (ending minus beginning), which is why this needs two
+// balance sheet snapshots, not one. This is fully optional and additive: if a farmer
+// hasn't filled in any of these line items, every adjustment defaults to zero and the
+// engine produces exactly the same cash-basis numbers as before.
+const computeFARatios = (s3) => {
+  const gv = id => parseFloat(s3?.[id])||0;
+  const gross=gv("gross"), opex=gv("opex"), inputs=gv("inputs"), depr=gv("depr"), interest=gv("interest"), acres=gv("acres"), principal=gv("principal");
+  const beginAssets=gv("beginAssets"), beginLiab=gv("beginLiab"), endAssets=gv("endAssets"), livingWithdrawals=gv("livingWithdrawals"), incomeTaxes=gv("incomeTaxes");
+  const hasData = gross>0 && opex>0 && acres>0;
+
+  // Revenue-side accrual adjustments: Δ(receivables + inventories) − Δ(deferred revenue)
+  const dAR = gv("arEnd")-gv("arBegin");
+  const dCropInv = gv("cropInvEnd")-gv("cropInvBegin");
+  const dLivestockInv = gv("livestockInvEnd")-gv("livestockInvBegin");
+  const dFeederInv = gv("feederInvEnd")-gv("feederInvBegin");
+  const dDeferredRev = gv("deferredRevEnd")-gv("deferredRevBegin");
+  const revAdj = dAR + dCropInv + dLivestockInv + dFeederInv - dDeferredRev;
+
+  // Expense-side accrual adjustments: Δ(payables + accruals) − Δ(prepaid + growing crops)
+  const dAP = gv("apEnd")-gv("apBegin");
+  const dAccrInt = gv("accrIntEnd")-gv("accrIntBegin");
+  const dOtherAccr = gv("otherAccrEnd")-gv("otherAccrBegin");
+  const dPrepaid = gv("prepaidEnd")-gv("prepaidBegin");
+  const dGrowingCrop = gv("growingCropEnd")-gv("growingCropBegin");
+  const expAdj = dAP + dAccrInt + dOtherAccr - dPrepaid - dGrowingCrop;
+
+  const hasAccrualData = [dAR,dCropInv,dLivestockInv,dFeederInv,dDeferredRev,dAP,dAccrInt,dOtherAccr,dPrepaid,dGrowingCrop].some(v=>v!==0);
+  const accrualGross = hasData ? gross + revAdj : null;
+  const accrualOpex = hasData ? opex + expAdj : null;
+
+  // Net Farm Income from Operations (NFIFO) — the FFSC operating-trend figure, before
+  // one-time capital gains/losses. Uses accrual-adjusted figures when available.
+  const nfifo = hasData ? (hasAccrualData ? accrualGross-accrualOpex-depr-interest : gross-opex-depr-interest) : null;
+  // Net Farm Income — FFSC's headline figure, adding back one-time gains/losses on culled
+  // breeding livestock and capital asset sales. FFSC keeps this separate from NFIFO
+  // specifically because mixing one-time capital events into the operating trend distorts
+  // year-over-year benchmarking, which is exactly what a tool like this shouldn't do.
+  const gainLossBreeding = gv("gainLossBreeding"), gainLossCapitalAssets = gv("gainLossCapitalAssets");
+  const nfi = hasData ? nfifo + gainLossBreeding + gainLossCapitalAssets : null;
+
+  const oer = hasData ? (hasAccrualData ? accrualOpex/accrualGross*100 : opex/gross*100) : null;
+  const ipa = hasData&&inputs>0 ? inputs/acres : null, grpa = hasData ? (hasAccrualData?accrualGross:gross)/acres : null, nrpa = hasData ? ((hasAccrualData?accrualGross-accrualOpex:gross-opex))/acres : null;
+  const totalDebt = interest+principal, dscr = hasData&&totalDebt>0 ? nfifo/totalDebt : null;
+  const beginNetWorth = beginAssets - beginLiab;
+  const avgAssets = (beginAssets>0 || endAssets>0) ? (beginAssets+endAssets)/2 : 0;
+  const assetTurnover = hasData && avgAssets>0 ? (hasAccrualData?accrualGross:gross)/avgAssets*100 : null;
+  const sgr = hasData && beginNetWorth>0 ? (nfifo-livingWithdrawals-incomeTaxes)/beginNetWorth*100 : null;
+  const ratios = [
+    {key:"oer",label:"Operating expense ratio",val:faFP(oer),status:faStR(oer,65,80,true),bench:"Strong < 65%"},
+    {key:"ipa",label:"Input cost per acre",val:fmt$(ipa)+"/ac",status:faStR(ipa,478,535,true),bench:"Strong < $478"},
+    {key:"grpa",label:"Gross revenue per acre",val:fmt$(grpa)+"/ac",status:faStR(grpa,951,800,false),bench:"Strong > $951"},
+    {key:"nrpa",label:"Net return per acre",val:fmt$(nrpa)+"/ac",status:faStR(nrpa,150,50,false),bench:"Strong > $150"},
+    ...(hasAccrualData ? [{key:"nfifo",label:"Net farm income from operations",val:fmt$(nfifo),status:nfifo===null?"blank":nfifo>=0?"strong":"vuln",bench:"Accrual-adjusted operating trend"}] : []),
+    {key:"nfi",label:hasAccrualData?"Net farm income (incl. capital gains/losses)":"Net farm income",val:fmt$(nfi),status:nfi===null?"blank":nfi>=0?"strong":"vuln",bench:"Positive covers full cost"},
+    {key:"dscr",label:"Debt service coverage",val:faFD(dscr),status:faStR(dscr,1.25,1.0,false),bench:"Strong > 1.25x"},
+    {key:"assetTurnover",label:"Asset turnover ratio",val:faFP(assetTurnover),status:faStR(assetTurnover,40,20,false),bench:"Strong > 40%"},
+    {key:"sgr",label:"Sustainable growth rate",val:faFP(sgr),status:faStR(sgr,10,0,false),bench:"Strong > 10%"},
+  ];
+  return { hasData, hasAccrualData, oer, ipa, grpa, nrpa, nfi, nfifo, dscr, assetTurnover, sgr, accrualGross, accrualOpex, ratios };
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// FA STAGE 3 — Document upload & AI-assisted extraction (placeholder / demo)
+// ─────────────────────────────────────────────────────────────────────────────
+// This UI is fully built and clickable end-to-end, but the actual scan step below
+// returns realistic MOCK data rather than calling a real extraction service. Real
+// document scanning requires a server-side component: an uploaded file can never be
+// sent directly to an AI model from client-side code without exposing an API key in
+// the browser, which is a real security hole, not a style choice. Wiring this up for
+// real means adding a Vercel serverless function that holds the API key server-side,
+// calls the Anthropic API with the uploaded document, and returns structured fields —
+// at which point the only change needed here is swapping runMockScan() for a real
+// fetch() call. Everything else — the upload slots, the review-before-applying step,
+// the field mapping — is already the real, final UI.
+const MOCK_EXTRACTED_DATA = {
+  gross:{val:"920000",src:"Schedule F, Line 11"}, opex:{val:"690000",src:"Schedule F, Line 33"},
+  inputs:{val:"310000",src:"Schedule F, Lines 7–10"}, rent:{val:"145000",src:"Schedule F, Line 24"},
+  depr:{val:"78000",src:"Schedule F, Line 16"}, interest:{val:"52000",src:"Schedule F, Line 21"},
+  acres:{val:"1450",src:"Farm records"}, principal:{val:"61000",src:"Loan statement"},
+  beginAssets:{val:"2850000",src:"Balance sheet — Jan 1"}, beginLiab:{val:"1240000",src:"Balance sheet — Jan 1"},
+  endAssets:{val:"2960000",src:"Balance sheet — Dec 31"}, endLiab:{val:"1195000",src:"Balance sheet — Dec 31"},
+  livingWithdrawals:{val:"68000",src:"Estimated from records"}, incomeTaxes:{val:"34000",src:"Tax return"},
+  arBegin:{val:"18000",src:"Balance sheet — Jan 1"}, arEnd:{val:"27000",src:"Balance sheet — Dec 31"},
+  cropInvBegin:{val:"145000",src:"Balance sheet — Jan 1"}, cropInvEnd:{val:"189000",src:"Balance sheet — Dec 31"},
+  livestockInvBegin:{val:"0",src:"Balance sheet — Jan 1"}, livestockInvEnd:{val:"0",src:"Balance sheet — Dec 31"},
+  feederInvBegin:{val:"0",src:"Balance sheet — Jan 1"}, feederInvEnd:{val:"0",src:"Balance sheet — Dec 31"},
+  deferredRevBegin:{val:"12000",src:"Balance sheet — Jan 1"}, deferredRevEnd:{val:"8000",src:"Balance sheet — Dec 31"},
+  apBegin:{val:"34000",src:"Balance sheet — Jan 1"}, apEnd:{val:"41000",src:"Balance sheet — Dec 31"},
+  accrIntBegin:{val:"6200",src:"Balance sheet — Jan 1"}, accrIntEnd:{val:"7100",src:"Balance sheet — Dec 31"},
+  otherAccrBegin:{val:"9000",src:"Balance sheet — Jan 1"}, otherAccrEnd:{val:"11500",src:"Balance sheet — Dec 31"},
+  prepaidBegin:{val:"22000",src:"Balance sheet — Jan 1"}, prepaidEnd:{val:"28000",src:"Balance sheet — Dec 31"},
+  growingCropBegin:{val:"0",src:"Balance sheet — Jan 1"}, growingCropEnd:{val:"0",src:"Balance sheet — Dec 31"},
+  gainLossBreeding:{val:"0",src:"Schedule F / Form 4797"}, gainLossCapitalAssets:{val:"15000",src:"Form 4797"},
+};
+const EXTRACT_FIELD_GROUPS = [
+  { label:"Financial data", keys:["gross","opex","inputs","rent","depr","interest","acres","principal"] },
+  { label:"Balance sheet snapshot", keys:["beginAssets","beginLiab","endAssets","endLiab","livingWithdrawals","incomeTaxes"] },
+  { label:"Accrual adjustments", keys:["arBegin","arEnd","cropInvBegin","cropInvEnd","livestockInvBegin","livestockInvEnd","feederInvBegin","feederInvEnd","deferredRevBegin","deferredRevEnd","apBegin","apEnd","accrIntBegin","accrIntEnd","otherAccrBegin","otherAccrEnd","prepaidBegin","prepaidEnd","growingCropBegin","growingCropEnd"] },
+  { label:"One-time capital events", keys:["gainLossBreeding","gainLossCapitalAssets"] },
+];
+
+function DocumentScanUpload({ fa, setFA }) {
+  const [files, setFiles] = useState({ schedF:null, beginBS:null, endBS:null });
+  const [scanning, setScanning] = useState(false);
+  const [extracted, setExtracted] = useState(null); // null | { fieldKey: { val, src } }
+  const [edited, setEdited] = useState({});
+
+  const setFile = (slot, f) => setFiles(s => ({ ...s, [slot]: f ? f.name : null }));
+  const canScan = !!files.schedF;
+
+  const runMockScan = () => {
+    setScanning(true);
+    setTimeout(() => { setExtracted(MOCK_EXTRACTED_DATA); setEdited({}); setScanning(false); }, 1400);
+  };
+  const editedVal = (key) => edited[key] !== undefined ? edited[key] : extracted?.[key]?.val ?? "";
+  const applyExtracted = () => {
+    if (!extracted) return;
+    const patch = {};
+    Object.keys(extracted).forEach(key => { patch[key] = edited[key] !== undefined ? edited[key] : extracted[key].val; });
+    setFA(s => ({ ...s, s3vals: { ...s.s3vals, ...patch } }));
+    setExtracted(null); setFiles({ schedF:null, beginBS:null, endBS:null });
+  };
+
+  const uploadSlot = (slot, label, sub) => (
+    <label style={{ display:"block", border:`1.5px dashed ${files[slot]?T.dgreen:T.border}`, borderRadius:8, padding:"14px 16px", cursor:"pointer", background:files[slot]?T.greenL:T.bgAlt, textAlign:"center" }}>
+      <input type="file" accept=".pdf,.jpg,.jpeg,.png" style={{ display:"none" }} onChange={e=>setFile(slot, e.target.files[0])} />
+      <div style={{ fontSize:12.5, fontWeight:700, color:files[slot]?"#2F6E28":T.navy, marginBottom:2 }}>{label}</div>
+      <div style={{ fontSize:11, color:files[slot]?"#2F6E28":T.fgS }}>{files[slot] || sub}</div>
+    </label>
+  );
+
+  return (
+    <div style={cardStyle({ borderTop:`4px solid ${T.blue}` })}>
+      <div style={cardLblStyle()}><Apex color={T.blue} />Upload your documents (AI-assisted, demo)</div>
+      <Flag type="warn">Demo mode — this scan step returns realistic placeholder values, not a real reading of your files. Live document scanning requires a backend extraction service (a server-side function holding an API key) that hasn't been connected yet. Everything else here — the upload flow, the review-before-applying step, the field mapping — is the real, final design.</Flag>
+      {!extracted ? (
+        <>
+          <div style={{ fontSize:12.5, color:T.fgM, marginBottom:14, lineHeight:1.5 }}>Upload your Schedule F and, if you have them, your beginning- and end-of-year balance sheets. This can fill in every field below in one step instead of typing each one by hand.</div>
+          <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:12, marginBottom:16 }}>
+            {uploadSlot("schedF","Schedule F","PDF or photo, required")}
+            {uploadSlot("beginBS","Balance sheet — Jan 1","PDF or photo, optional")}
+            {uploadSlot("endBS","Balance sheet — Dec 31","PDF or photo, optional")}
+          </div>
+          <button onClick={runMockScan} disabled={!canScan||scanning} style={{ ...btnStyle("primary"), opacity:(!canScan||scanning)?0.5:1, pointerEvents:(!canScan||scanning)?"none":"auto" }}>{scanning?"Scanning…":"Scan documents →"}</button>
+        </>
+      ) : (
+        <>
+          <div style={{ fontSize:12.5, color:T.fgM, marginBottom:14, lineHeight:1.5 }}>Review every extracted value before applying — edit anything that looks off. Nothing is written to your Financial Analysis data until you click Apply.</div>
+          {EXTRACT_FIELD_GROUPS.map(group => (
+            <div key={group.label} style={{ marginBottom:16 }}>
+              <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:11, fontWeight:700, color:T.fgS, textTransform:"uppercase", letterSpacing:"0.05em", marginBottom:8 }}>{group.label}</div>
+              <div style={{ display:"grid", gridTemplateColumns:"repeat(2,1fr)", gap:10 }}>
+                {group.keys.map(key => extracted[key] && (
+                  <div key={key} style={{ display:"flex", alignItems:"center", gap:8, background:T.bgAlt, borderRadius:6, padding:"8px 10px" }}>
+                    <div style={{ flex:1 }}>
+                      <div style={{ fontSize:10, color:T.fgS }}>{extracted[key].src}</div>
+                      <input type="number" style={inputStyle({ fontSize:13, padding:"5px 7px", marginTop:2 })} value={editedVal(key)} onChange={e=>setEdited(s=>({...s,[key]:e.target.value}))} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+          <div style={{ display:"flex", gap:10 }}>
+            <button onClick={()=>{setExtracted(null);setFiles({schedF:null,beginBS:null,endBS:null});}} style={btnStyle("outline")}>Start over</button>
+            <button onClick={applyExtracted} style={btnStyle("primary")}>Apply these numbers →</button>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 function FA3({ fa, setFA }) {
   const s3 = fa.s3vals;
-  const gv = id => parseFloat(s3[id])||0; const v = id => s3[id]||""; const sv = (id,val) => setFA(s=>({...s,s3vals:{...s.s3vals,[id]:val}}));
-  const gross=gv("gross"), opex=gv("opex"), inputs=gv("inputs"), depr=gv("depr"), interest=gv("interest"), acres=gv("acres"), principal=gv("principal");
-  const hasData = gross>0 && opex>0 && acres>0;
-  const oer = hasData ? opex/gross*100 : null, ipa = hasData&&inputs>0 ? inputs/acres : null, grpa = hasData ? gross/acres : null, nrpa = hasData ? (gross-opex)/acres : null, nfi = hasData ? gross-opex-depr-interest : null;
-  const totalDebt = interest+principal, dscr = hasData&&totalDebt>0 ? nfi/totalDebt : null;
-  const fP = n => n===null?"—":Math.round(n)+"%"; const fD = n => n===null?"—":n.toFixed(2)+"x";
-  const stR = (val,sv2,vv,lb) => val===null?"blank":(lb?(val<=sv2?"strong":val>=vv?"vuln":"watch"):(val>=sv2?"strong":val<=vv?"vuln":"watch"));
-  const INPUTS = [{id:"gross",label:"Gross farm income",sub:"Sch F, Line 11",pre:"$"},{id:"opex",label:"Total operating expenses",sub:"Sch F, Line 33",pre:"$"},{id:"inputs",label:"Input costs (seed, fert, chem, fuel)",sub:"Sch F Lines 7–10",pre:"$"},{id:"rent",label:"Land rent paid",sub:"Sch F, Line 24",pre:"$"},{id:"depr",label:"Depreciation",sub:"Sch F, Line 16",pre:"$"},{id:"interest",label:"Interest paid",sub:"Sch F, Line 21",pre:"$"},{id:"acres",label:"Total acres farmed",sub:"Owned + rented",suf:"ac"},{id:"principal",label:"Annual principal payments",sub:"From loan statements",pre:"$"}];
-  const RATIOS = [{label:"Operating expense ratio",val:fP(oer),status:stR(oer,65,80,true),bench:"Strong < 65%"},{label:"Input cost per acre",val:fmt$(ipa)+"/ac",status:stR(ipa,478,535,true),bench:"Strong < $478"},{label:"Gross revenue per acre",val:fmt$(grpa)+"/ac",status:stR(grpa,951,800,false),bench:"Strong > $951"},{label:"Net return per acre",val:fmt$(nrpa)+"/ac",status:stR(nrpa,150,50,false),bench:"Strong > $150"},{label:"Net farm income",val:fmt$(nfi),status:nfi===null?"blank":nfi>=0?"strong":"vuln",bench:"Positive covers full cost"},{label:"Debt service coverage",val:fD(dscr),status:stR(dscr,1.25,1.0,false),bench:"Strong > 1.25x"}];
+  const v = id => s3[id]||""; const sv = (id,val) => setFA(s=>({...s,s3vals:{...s.s3vals,[id]:val}}));
+  const { hasData, hasAccrualData, nfi, nfifo, oer, dscr, assetTurnover, sgr, ratios: RATIOS } = computeFARatios(s3);
+  const [showAccrual, setShowAccrual] = useState(hasAccrualData);
+  const INPUTS = [{id:"gross",label:"Gross farm income",sub:"Total farm revenue for the year",pre:"$"},{id:"opex",label:"Total operating expenses",sub:"Cash operating costs, before depreciation and interest",pre:"$"},{id:"inputs",label:"Input costs (seed, fert, chem, fuel)",sub:"Estimate if not tracked separately",pre:"$"},{id:"rent",label:"Land rent paid",sub:"Cash rent paid to landlords",pre:"$"},{id:"depr",label:"Depreciation",sub:"From your tax return or accountant",pre:"$"},{id:"interest",label:"Interest paid",sub:"From loan statements",pre:"$"},{id:"acres",label:"Total acres farmed",sub:"Owned + rented",suf:"ac"},{id:"principal",label:"Annual principal payments",sub:"From loan statements",pre:"$"}];
+  const BS_INPUTS = [{id:"beginAssets",label:"Beginning-of-year total farm assets",sub:"From your lender's balance sheet or net worth statement",pre:"$"},{id:"beginLiab",label:"Beginning-of-year total farm liabilities",sub:"Loan balances as of January 1",pre:"$"},{id:"endAssets",label:"End-of-year total farm assets",sub:"From your lender's balance sheet or net worth statement",pre:"$"},{id:"endLiab",label:"End-of-year total farm liabilities",sub:"Loan balances as of December 31",pre:"$"},{id:"livingWithdrawals",label:"Family living withdrawals",sub:"Cash taken out for household expenses",pre:"$"},{id:"incomeTaxes",label:"Income taxes paid",sub:"From your tax return or accountant",pre:"$"}];
+  const ACCRUAL_ITEMS = [
+    {key:"ar",label:"Accounts/notes receivable",hint:"Sales made but not yet paid",sign:"+"},
+    {key:"cropInv",label:"Raised crop inventory held for sale",hint:"Grain in the bin is earned value, even unsold",sign:"+"},
+    {key:"livestockInv",label:"Raised market livestock inventory",hint:"Value of market animals on hand at year-end",sign:"+"},
+    {key:"feederInv",label:"Purchased feeder livestock / feed for resale",hint:"Purchased-for-resale items follow the same rule",sign:"+"},
+    {key:"deferredRev",label:"Deferred / unearned revenue",hint:"Cash received for next year's product",sign:"−"},
+    {key:"ap",label:"Accounts payable",hint:"Bills incurred but unpaid",sign:"+"},
+    {key:"accrInt",label:"Accrued interest payable",hint:"Interest owed but not yet paid",sign:"+"},
+    {key:"otherAccr",label:"Other accrued expenses",hint:"Wages, property taxes owed but unpaid",sign:"+"},
+    {key:"prepaid",label:"Prepaid expenses",hint:"Seed, chemicals, rent paid ahead",sign:"−"},
+    {key:"growingCrop",label:"Investment in growing crops",hint:"Input costs on an unharvested crop, capitalized until harvest",sign:"−"},
+  ];
   return (
     <div>
-      <Head eyebrow="Financial Analysis · Stage 3" title="Ratio deep dive" sub={(fa.goals.tracking||[]).includes("schedF") ? "Schedule F path active — enter your line numbers below. Ratios calculate automatically." : "Enter your financial data. Ratios calculate automatically as you type."} />
+      <Head eyebrow="Financial Analysis · Stage 3" title="Ratio deep dive" sub="Enter your financial data — from your MFP Financial Data Worksheet, your own records, or your best estimate. Ratios calculate automatically as you type." />
+      <DocumentScanUpload fa={fa} setFA={setFA} />
       <div style={cardStyle()}>
         <div style={cardLblStyle()}><Apex color={T.green} />Financial data</div>
         <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16 }}>
@@ -453,9 +665,56 @@ function FA3({ fa, setFA }) {
           ))}
         </div>
       </div>
+      <div style={cardStyle()}>
+        <div style={cardLblStyle()}><Apex color={T.green} />Balance sheet snapshot</div>
+        <div style={{ fontSize:12, color:T.fgM, marginBottom:14, lineHeight:1.5 }}>Not on Schedule F — these come from a beginning- and end-of-year net worth statement, typically already on file with your lender. They unlock two additional ratios: sustainable growth rate and asset turnover.</div>
+        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16 }}>
+          {BS_INPUTS.map(f => (
+            <div key={f.id}>
+              <label style={labelStyle}>{f.label}</label>
+              <span style={{ fontSize:11, color:T.fgS, marginBottom:6, display:"block", fontStyle:"italic" }}>{f.sub}</span>
+              <div style={{ display:"flex", alignItems:"center", gap:6 }}>
+                {f.pre && <span style={{ fontSize:13, color:T.fgS }}>{f.pre}</span>}
+                <input type="number" style={inputStyle()} placeholder="Enter value" value={v(f.id)} onChange={e=>sv(f.id,e.target.value)} />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div style={cardStyle()}>
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:showAccrual?14:0 }}>
+          <div style={cardLblStyle({ marginBottom:0 })}><Apex color={T.green} />Accrual adjustments (advanced, optional)</div>
+          <button onClick={()=>setShowAccrual(s=>!s)} style={{ ...btnStyle("outline"), fontSize:11.5, padding:"6px 14px" }}>{showAccrual?"Hide":"Show"}</button>
+        </div>
+        {!showAccrual && <div style={{ fontSize:12, color:T.fgM, lineHeight:1.5 }}>Cash-basis income is distorted by timing — when cash moved, not when it was actually earned or incurred. This optional section converts your numbers to the accrual-adjusted figure lenders and FINBIN/ARMS benchmarks actually use. Skip it entirely and everything above still works exactly as before.</div>}
+        {showAccrual && (
+          <>
+            <div style={{ fontSize:12, color:T.fgM, marginBottom:14, lineHeight:1.5 }}>Every adjustment here is a <b>change</b> — ending balance minus beginning balance — from two balance sheet snapshots, not from the income statement itself. Leave any line blank if you don't track it; it's treated as no change. Many informal balance sheets lump these into one number — a rough split is far better than skipping this section entirely.</div>
+            <div style={{ display:"grid", gridTemplateColumns:"2fr 1fr 1fr", gap:8, background:T.bgAlt, borderRadius:6, padding:"8px 12px", marginBottom:4 }}>
+              {["Line item","Beginning","Ending"].map((hh,i)=>(<div key={i} style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:11, fontWeight:700, color:T.fgS, textTransform:"uppercase", letterSpacing:"0.05em" }}>{hh}</div>))}
+            </div>
+            {ACCRUAL_ITEMS.map(it => (
+              <div key={it.key} style={{ display:"grid", gridTemplateColumns:"2fr 1fr 1fr", gap:8, padding:"10px 12px", borderBottom:`1px solid ${T.div}`, alignItems:"center" }}>
+                <div>
+                  <div style={{ fontSize:12.5, fontWeight:600 }}><span style={{ color:it.sign==="+"?T.dgreen:T.red, fontWeight:800 }}>{it.sign}</span> {it.label}</div>
+                  <div style={{ fontSize:10.5, color:T.fgS, fontStyle:"italic" }}>{it.hint}</div>
+                </div>
+                <input type="number" style={inputStyle({ fontSize:13 })} placeholder="$" value={v(it.key+"Begin")} onChange={e=>sv(it.key+"Begin",e.target.value)} />
+                <input type="number" style={inputStyle({ fontSize:13 })} placeholder="$" value={v(it.key+"End")} onChange={e=>sv(it.key+"End",e.target.value)} />
+              </div>
+            ))}
+            <div style={{ marginTop:14, marginBottom:4, fontFamily:"'Barlow Condensed',sans-serif", fontSize:11, fontWeight:700, color:T.fgS, textTransform:"uppercase", letterSpacing:"0.05em" }}>One-time capital events (not part of the operating trend)</div>
+            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16, marginTop:8 }}>
+              <div><label style={labelStyle}>Gain/loss on sale of culled breeding livestock</label><input type="number" style={inputStyle()} placeholder="$" value={v("gainLossBreeding")} onChange={e=>sv("gainLossBreeding",e.target.value)} /></div>
+              <div><label style={labelStyle}>Gain/loss on sale of capital assets</label><input type="number" style={inputStyle()} placeholder="$" value={v("gainLossCapitalAssets")} onChange={e=>sv("gainLossCapitalAssets",e.target.value)} /></div>
+            </div>
+            <div style={{ marginTop:12 }}><Flag type="info">FFSC keeps these one-time capital events separate from Net Farm Income from Operations specifically so they don't distort year-over-year benchmarking — a land sale shouldn't make this year look like a great operating year.</Flag></div>
+          </>
+        )}
+      </div>
       {hasData && (
         <div style={cardStyle({ borderTop:`4px solid ${T.green}` })}>
-          <div style={cardLblStyle()}><Apex color={T.green} />Ratio scorecard</div>
+          <div style={cardLblStyle()}><Apex color={T.green} />Ratio scorecard{hasAccrualData && <span style={{ ...pillStyle("info"), marginLeft:10, fontSize:10 }}>Accrual-adjusted</span>}</div>
           <div style={{ display:"grid", gridTemplateColumns:"1fr 100px 160px", gap:8, background:T.bgAlt, borderRadius:6, padding:"8px 12px", marginBottom:4 }}>
             {["Ratio","Your value","Benchmark"].map((hh,i)=>(<div key={i} style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:11, fontWeight:700, color:T.fgS, textTransform:"uppercase", letterSpacing:"0.05em", textAlign:i===1?"right":"left" }}>{hh}</div>))}
           </div>
@@ -470,6 +729,8 @@ function FA3({ fa, setFA }) {
             {nfi!==null && nfi<0 && <Flag type="danger">Net farm income is negative — depreciation and interest are eroding equity.</Flag>}
             {oer!==null && oer>80 && <Flag type="danger">OER above 80% — operating costs consume more than 80 cents of every revenue dollar.</Flag>}
             {dscr!==null && dscr<1 && <Flag type="danger">DSCR below 1.0x — net income does not cover debt service. Contact your Farm Credit advisor.</Flag>}
+            {sgr!==null && sgr<0 && <Flag type="danger">Sustainable growth rate is negative — the farm is drawing down equity to cover living expenses and taxes, not building it.</Flag>}
+            {assetTurnover!==null && assetTurnover<20 && <Flag type="warn">Asset turnover below 20% — a large asset base relative to the revenue it generates. Common for land-heavy operations, but worth understanding why.</Flag>}
           </div>
         </div>
       )}
@@ -528,56 +789,10 @@ function FA4({ fa, setFA }) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// FA STAGE 5 — Scenario modeling
-// ─────────────────────────────────────────────────────────────────────────────
-function FA5({ fa, setFA }) {
-  const s5 = fa.s5;
-  const gv = (k,def) => s5[k]!==undefined ? s5[k] : def; const sv = (k,v2) => setFA(s=>({...s,s5:{...s.s5,[k]:v2}}));
-  const acres=gv("acres",1200), pctCorn=gv("pctCorn",55)/100, yldCorn=gv("yldCorn",183), yldSoy=gv("yldSoy",53);
-  const cornP=gv("cornP",4.20), soyP=gv("soyP",10.30), inputChg=gv("inputChg",0), rentChg=gv("rentChg",0), yieldVar=gv("yieldVar",0), fwd=gv("fwd",0)/100;
-  const baseInputs=gv("baseInputs",505), baseRent=gv("baseRent",240), overhead=gv("overhead",120), debt=gv("debt",180000), baseCornP=gv("baseCornP",4.20), baseSoyP=gv("baseSoyP",10.30);
-  const aYC=yldCorn*(1+yieldVar/100), aYS=yldSoy*(1+yieldVar/100); const bCorn=fwd*baseCornP+(1-fwd)*cornP, bSoy=fwd*baseSoyP+(1-fwd)*soyP;
-  const grpa=pctCorn*aYC*bCorn+(1-pctCorn)*aYS*bSoy; const totalCostPA=baseInputs*(1+inputChg/100)+baseRent*(1+rentChg/100)+overhead;
-  const nrpa=grpa-totalCostPA, oer=grpa>0?totalCostPA/grpa*100:0, nfi=nrpa*acres, dscr=debt>0?nfi/debt:null;
-  const basegrpa=pctCorn*yldCorn*baseCornP+(1-pctCorn)*yldSoy*baseSoyP, baseNrpa=basegrpa-(baseInputs+baseRent+overhead);
-  const SCENS = [{label:"Baseline",cornP:baseCornP,soyP:baseSoyP,yieldVar:0,inputChg:0,rentChg:0,fwd:0},{label:"Price −15%",cornP:baseCornP*0.85,soyP:baseSoyP*0.85,yieldVar:0,inputChg:0,rentChg:0,fwd:0},{label:"Drought −20%",cornP:baseCornP,soyP:baseSoyP,yieldVar:-20,inputChg:0,rentChg:0,fwd:0},{label:"Input +12%",cornP:baseCornP,soyP:baseSoyP,yieldVar:0,inputChg:12,rentChg:0,fwd:0},{label:"Top quartile",cornP:baseCornP,soyP:baseSoyP,yieldVar:0,inputChg:-11,rentChg:-8,fwd:35}];
-  const loadScen = s2 => { sv("cornP",+s2.cornP.toFixed(2)); sv("soyP",+s2.soyP.toFixed(2)); sv("yieldVar",s2.yieldVar); sv("inputChg",s2.inputChg); sv("rentChg",s2.rentChg); sv("fwd",s2.fwd); };
-  const metrics = [{label:"Gross rev/ac",val:"$"+Math.round(grpa),delta:Math.round(grpa-basegrpa),pos:grpa>=basegrpa},{label:"Net return/ac",val:"$"+Math.round(nrpa),delta:Math.round(nrpa-baseNrpa),pos:nrpa>=baseNrpa,status:nrpa>150?"strong":nrpa>=50?"watch":"vuln"},{label:"OER",val:Math.round(oer)+"%",pos:oer<=(baseInputs+baseRent+overhead)/basegrpa*100},{label:"DSCR",val:dscr?dscr.toFixed(2)+"x":"N/A",status:dscr?(dscr>1.25?"strong":dscr>=1?"watch":"vuln"):"blank"},{label:"Net farm income",val:(nfi<0?"-$":"$")+Math.abs(Math.round(nfi)).toLocaleString(),pos:nfi>=0}];
-  const SL = [{key:"cornP",label:"Corn price ($/bu)",min:3,max:6.5,step:0.05,fmt:x=>"$"+parseFloat(x).toFixed(2)},{key:"soyP",label:"Soy price ($/bu)",min:8,max:16,step:0.05,fmt:x=>"$"+parseFloat(x).toFixed(2)},{key:"yieldVar",label:"Yield variance (%)",min:-30,max:20,step:1,fmt:x=>(x>0?"+":"")+x+"%"},{key:"inputChg",label:"Input cost change (%)",min:-20,max:25,step:1,fmt:x=>(x>0?"+":"")+x+"%"},{key:"rentChg",label:"Rent change (%)",min:-20,max:20,step:1,fmt:x=>(x>0?"+":"")+x+"%"},{key:"fwd",label:"Forward contracted (%)",min:0,max:80,step:5,fmt:x=>x+"%"}];
-  return (
-    <div>
-      <Head eyebrow="Financial Analysis · Stage 5" title="Scenario modeling" sub="Adjust the levers to see how your ratios respond, or load a preset stress scenario." />
-      <div style={cardStyle()}>
-        <div style={cardLblStyle()}><Apex color={T.green} />Baseline inputs</div>
-        <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:14 }}>
-          {[{k:"acres",l:"Acres",d:1200},{k:"pctCorn",l:"% corn",d:55},{k:"baseCornP",l:"Base corn $/bu",d:4.20},{k:"baseSoyP",l:"Base soy $/bu",d:10.30},{k:"baseInputs",l:"Input $/ac",d:505},{k:"baseRent",l:"Rent $/ac",d:240},{k:"overhead",l:"Overhead $/ac",d:120},{k:"debt",l:"Debt service $",d:180000}].map(f => (<div key={f.k}><label style={labelStyle}>{f.l}</label><input type="number" style={inputStyle()} value={gv(f.k,f.d)} onChange={e=>sv(f.k,parseFloat(e.target.value)||0)} /></div>))}
-        </div>
-      </div>
-      <div style={cardStyle()}>
-        <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:16, flexWrap:"wrap", gap:8 }}>
-          <div style={cardLblStyle({ marginBottom:0 })}><Apex color={T.green} />Scenario levers</div>
-          <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>{SCENS.map((s2,i)=>(<button key={i} style={{ ...btnStyle("outline"), fontSize:11, padding:"5px 11px" }} onClick={()=>loadScen(s2)}>{s2.label}</button>))}</div>
-        </div>
-        {SL.map(sl => (<div key={sl.key} style={{ display:"grid", gridTemplateColumns:"170px 1fr 64px", gap:12, alignItems:"center", marginBottom:15 }}><div style={{ fontSize:13 }}>{sl.label}</div><input type="range" min={sl.min} max={sl.max} step={sl.step} value={gv(sl.key,0)} onChange={e=>sv(sl.key,parseFloat(e.target.value))} style={{ width:"100%" }} /><div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:14, fontWeight:700, textAlign:"right" }}>{sl.fmt(gv(sl.key,0))}</div></div>))}
-      </div>
-      <div style={{ display:"grid", gridTemplateColumns:"repeat(5,1fr)", gap:12, marginBottom:16 }}>
-        {metrics.map((m,i) => (<div key={i} style={{ background:"#fff", border:`1px solid ${T.border}`, borderRadius:10, padding:"14px 12px", textAlign:"center" }}><div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:11, color:T.fgS, marginBottom:5, textTransform:"uppercase", letterSpacing:"0.05em", fontWeight:600 }}>{m.label}</div><div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:22, fontWeight:800, color:m.status?scColor(m.status):(m.pos!==undefined?(m.pos?T.dgreen:T.red):T.navy) }}>{m.val}</div>{m.delta!=null && <div style={{ fontSize:10.5, color:m.pos?T.dgreen:T.red, marginTop:4 }}>{(m.delta>0?"+":"")+m.delta}/ac vs base</div>}</div>))}
-      </div>
-      {nrpa<0 && <Flag type="danger">Net return is negative at ${Math.round(nrpa)}/acre in this scenario.</Flag>}
-      {nrpa>=0 && nrpa<50 && <Flag type="warn">Net return ${Math.round(nrpa)}/acre — below the $50 watch threshold.</Flag>}
-      {nrpa>=50 && oer<=80 && <Flag type="ok">Ratios in acceptable range. OER {Math.round(oer)}%, net return ${Math.round(nrpa)}/ac.</Flag>}
-    </div>
-  );
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// FA STAGE 6 — Farm risk assessment
+// FARM RISK — quiz categories & question bank
 // ─────────────────────────────────────────────────────────────────────────────
 // Adapted from the Nationwide Farm Risk Ready℠ framework (risk identification,
-// managing/preventing risk, contingency planning, communicating the plan) plus
-// financial, insurance, production, market, succession, and cyber layers specific
-// to MFP. Restyled to the Idealyst design system — color-coded categories, no
-// decorative icons, consistent with the rest of the app.
+// managing/preventing risk, contingency planning, communicating the plan).
 const RISK_CATS = [
   { id:"identify", label:"Identifying risk", color:T.blue, colorL:T.blueL, colorD:"#0A6E8C", questions:3, maxScore:12 },
   { id:"managing", label:"Managing & preventing risk", color:T.dgreen, colorL:T.greenL, colorD:"#2F6E28", questions:3, maxScore:12 },
@@ -663,6 +878,8 @@ const THREAT_CATEGORIES = [
   { id:"personnel", label:"Personnel", desc:"Lack of skilled labor, loss of a key employee, divorce, or a family member passing unexpectedly", color:"#7C3AED", colorL:"#F3E8FF" },
   { id:"social", label:"Social", desc:"An animal welfare video or negative post about the farm on social media", color:T.dgreen, colorL:T.greenL },
   { id:"technology", label:"Technology", desc:"Data corruption, network failure, or a hack", color:T.water, colorL:T.waterL },
+  { id:"price", label:"Price risk", desc:"Commodity or livestock prices falling below your cost of production — see the insurance calculators in the next two stages", color:T.tan, colorL:"#F5EDE0" },
+  { id:"yield", label:"Production/yield risk", desc:"Drought, disease, or other factors reducing output below expectations — see the insurance calculators in the next two stages", color:"#0369A1", colorL:"#E0F2FE" },
 ];
 const STRATEGY_OPTIONS = [
   { id:"avoidance", label:"Risk avoidance", desc:"Stop or discontinue the activity" },
@@ -679,7 +896,55 @@ const MITIGATION_SUBTYPES = [
 const threatScore = (t) => (Number(t.probability)||0) * (Number(t.severity)||0);
 const topRankedThreats = (threats) => [...(threats||[])].sort((a,b)=>threatScore(b)-threatScore(a)).slice(0,6);
 
-// Stage 2 of Farm Risk — Revenue operations & key contacts
+// Stage 5 of Farm Risk — Results dashboard, summarizing the four quiz sections
+function RiskResultsStage({ risk }) {
+  const answers = risk.answers || {};
+  const totalScore = RISK_CATS.reduce((s,c)=>s+riskCatScore(answers,c.id),0);
+  const totalMax = RISK_CATS.reduce((s,c)=>s+c.maxScore,0);
+  const totalAnswered = Object.keys(answers).length;
+  const totalQuestions = RISK_CATS.reduce((s,c)=>s+c.questions,0);
+  const overall = riskScoreLabel(totalScore, totalMax);
+  const overallLabel = totalMax>0 && totalScore/totalMax>=0.75 ? "Farm Risk Ready" : totalMax>0 && totalScore/totalMax>=0.5 ? "In progress" : "Needs attention";
+  return (
+    <div>
+      <Head eyebrow="Farm Risk · Stage 5" title="Results" sub="Your score across the four Farm Risk Ready℠ sections. This is a snapshot of risk-management awareness and habits, not a substitute for the specific plan you'll build next." />
+      <div style={{ background:T.navy, borderRadius:10, padding:"20px 24px", marginBottom:16, display:"grid", gridTemplateColumns:"1fr 2fr", gap:20, alignItems:"center" }}>
+        <div>
+          <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:11, fontWeight:700, letterSpacing:"0.1em", textTransform:"uppercase", color:T.green, marginBottom:6 }}>Overall score</div>
+          <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:34, fontWeight:800, color:"#fff" }}>{totalScore}<span style={{ fontSize:16, color:"rgba(255,255,255,0.4)" }}> / {totalMax}</span></div>
+          <span style={{ display:"inline-block", padding:"3px 12px", borderRadius:999, fontSize:11.5, fontWeight:700, background:overall.pill==="strong"?T.dgreen:overall.pill==="watch"?T.amber:T.red, color:"#fff", marginTop:6 }}>{overallLabel}</span>
+          <div style={{ fontSize:11, color:"rgba(255,255,255,0.5)", marginTop:8 }}>{totalAnswered}/{totalQuestions} questions answered</div>
+        </div>
+        <div>
+          {RISK_CATS.map(c => { const sc=riskCatScore(answers,c.id); const pct=(sc/c.maxScore)*100; return (
+            <div key={c.id} style={{ display:"flex", alignItems:"center", gap:8, marginBottom:8 }}>
+              <span style={{ fontSize:11.5, color:"rgba(255,255,255,0.6)", width:190, flexShrink:0 }}>{c.label}</span>
+              <div style={{ flex:1, height:7, background:"rgba(255,255,255,0.12)", borderRadius:3, overflow:"hidden" }}><div style={{ height:"100%", width:`${pct}%`, background:c.color, borderRadius:3 }} /></div>
+              <span style={{ fontSize:11.5, color:c.color, fontWeight:700, width:28, textAlign:"right" }}>{sc}</span>
+            </div>
+          );})}
+        </div>
+      </div>
+      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12, marginBottom:16 }}>
+        {RISK_CATS.map(c => { const sc=riskCatScore(answers,c.id); const ans=riskCatAnswered(answers,c.id); const sl=riskScoreLabel(sc,c.maxScore); const pct=(sc/c.maxScore)*100;
+          return (
+            <div key={c.id} style={{ background:"#fff", border:`1px solid ${T.border}`, borderRadius:10, padding:16, borderLeft:`4px solid ${sl.pill==="strong"?T.dgreen:sl.pill==="watch"?T.amber:T.red}` }}>
+              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}>
+                <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:13.5, fontWeight:700 }}>{c.label}</span>
+                <span style={pillStyle(sl.pill)}>{sl.label}</span>
+              </div>
+              <div style={{ height:6, background:T.div, borderRadius:3, overflow:"hidden", marginBottom:8 }}><div style={{ height:"100%", width:`${pct}%`, background:c.color, borderRadius:3 }} /></div>
+              <div style={{ fontSize:11.5, color:T.fgS }}>{sc}/{c.maxScore} points · {ans}/{c.questions} answered</div>
+            </div>
+          );
+        })}
+      </div>
+      <Flag type="info">Nationwide research (December 2024): only 35% of farmers have a formal resiliency plan in place. Whatever your score, the Plan Builder stages next turn this into a specific, farm-tailored plan rather than a general readiness score.</Flag>
+    </div>
+  );
+}
+
+// Stage 6 of Farm Risk — Revenue operations & key contacts
 function RiskPlanRevenueOps({ risk, setRisk }) {
   const plan = risk.plan || {};
   const revenueOps = plan.revenueOps || [];
@@ -751,7 +1016,7 @@ function RiskPlanRevenueOps({ risk, setRisk }) {
   );
 }
 
-// Stage 3 of Farm Risk — Threat identification & ranking
+// Stage 7 of Farm Risk — Threat identification & ranking
 function RiskPlanThreats({ risk, setRisk }) {
   const plan = risk.plan || {};
   const threats = plan.threats || [];
@@ -762,8 +1027,8 @@ function RiskPlanThreats({ risk, setRisk }) {
   const sorted = [...threats].sort((a,b)=>threatScore(b)-threatScore(a));
   return (
     <div>
-      <Head eyebrow="Farm Risk · Plan Builder · Stage 2" title="Threat identification & ranking" sub="List potential threats across all six categories, then score each on probability and severity. Threats scoring 10–25 are your most immediate concern — you'll build strategies and contingency plans for these next." />
-      <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:8, marginBottom:16 }}>
+      <Head eyebrow="Farm Risk · Plan Builder · Stage 2" title="Threat identification & ranking" sub="List potential threats across all eight categories, then score each on probability and severity. Threats scoring 10–25 are your most immediate concern — you'll build strategies and contingency plans for these next." />
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:8, marginBottom:16 }}>
         {THREAT_CATEGORIES.map(c => (<div key={c.id} style={{ background:c.colorL, borderRadius:8, padding:"10px 12px" }}><div style={{ fontSize:12, fontWeight:700, color:c.color }}>{c.label}</div><div style={{ fontSize:10.5, color:T.fgM, marginTop:2 }}>{c.desc}</div></div>))}
       </div>
       <div style={cardStyle()}>
@@ -798,7 +1063,7 @@ function RiskPlanThreats({ risk, setRisk }) {
   );
 }
 
-// Stage 4 of Farm Risk — Strategy & contingency plans (combines Nationwide Steps 2–3)
+// Stage 8 of Farm Risk — Strategy & contingency plans (combines Nationwide Steps 2–3)
 function RiskPlanStrategy({ risk, setRisk }) {
   const plan = risk.plan || {};
   const threats = plan.threats || [];
@@ -859,7 +1124,7 @@ function RiskPlanStrategy({ risk, setRisk }) {
   );
 }
 
-// Stage 5 of Farm Risk — Communicate, train & review (combines Nationwide Steps 4–5)
+// Stage 9 of Farm Risk — Communicate, train & review (combines Nationwide Steps 4–5)
 function RiskPlanReview({ risk, setRisk }) {
   const plan = risk.plan || {};
   const threats = plan.threats || [];
@@ -904,67 +1169,281 @@ function RiskPlanReview({ risk, setRisk }) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// FA STAGE 6 — Action plan & monitoring
+// FARM RISK — Stage 10: Crop insurance calculator
 // ─────────────────────────────────────────────────────────────────────────────
-function FA6({ fa, goRD }) {
-  const enterprises = fa.enterprises;
-  const isDairy = enterprises.includes("dairy"); const isDistress = fa.wholeFarm.profitability==="vuln" || fa.wholeFarm.liquidity==="vuln";
-  const s3 = fa.s3vals; const dscr_ = (s3.interest&&s3.principal) ? ((parseFloat(s3.gross||0)-parseFloat(s3.opex||0)-parseFloat(s3.depr||0)-parseFloat(s3.interest||0))/(parseFloat(s3.interest||0)+parseFloat(s3.principal||0))) : null;
-  const ACTIONS = isDairy ? [
-    { tier:"r", label:"Schedule Farm Credit advisor meeting this week", detail:"Present IOFC, NCOP, OER and DSCR. Bring your most recent milk check and feed invoices.", impact:"Non-cash — preserves options worth $50K–$1M+" },
-    { tier:"r", label:"DMC enrollment at $9.50/cwt maximum coverage", detail:"Contact FSA before the enrollment deadline. Annual premium ~$5,000 on 5M lbs.", impact:"$15K–$120K depending on production history" },
-    { tier:"a", label:"Commission a ration audit — independent nutritionist", detail:"A 5–8% feed cost reduction across 250 cows recovers $35K–$56K annually.", impact:"$35K–$80K annually" },
-    { tier:"g", label:"DHIA enrollment — individual cow production records", detail:"Build the data foundation for culling, breeding and benchmarking.", impact:"Enables $10K–$40K in annual management precision" },
-  ] : [
-    { tier:"r", label:"Proactive lender disclosure", detail:`DSCR at ${(dscr_==null?0:dscr_).toFixed(2)}x. Schedule a Farm Credit meeting. Do not wait for annual review.`, impact:"Non-cash — preserves restructuring options worth $50K–$500K+" },
-    { tier:"a", label:"Forward contracting — 30–40% of production", detail:"Write a marketing plan targeting pre-harvest contracting. Compeer: best-in-class earn $66/ac more through marketing discipline.", impact:"$36K–$108K on 1,200 acres in a down-price year" },
-    { tier:"a", label:"Input cost audit — fertilizer rate verification", detail:"Soil tests on all fields vs. current application rates. Compeer: best-in-class spend $57/ac less on inputs.", impact:"$24K–$72K annually on 1,200 acres" },
-    { tier:"g", label:"Annual monitoring system", detail:"Track OER, net return/ac, working capital/ac and DSCR every March after tax filing.", impact:"Systemic — early warning prevents $50K–$500K+ distress events" },
-  ];
-  const tierC = { r:{bg:T.redL,c:T.red,label:"Now"}, a:{bg:T.amberL,c:T.amberT,label:"This quarter"}, g:{bg:T.greenL,c:T.dgreen,label:"Ongoing"} };
-  const xsell = isDairy ? [{l:"Operating line relief"},{l:"DMC enrollment"},{l:"Succession planning"},{l:"Loan covenant review"}] : [{l:"Operating line review"},{l:"Crop insurance optimization"},{l:"Succession planning"},{l:"Energy lease covenant review"},{l:"Grain storage loan"}];
-  const subCopy = fa.goals.outcome==="lenderready" ? "Lender-ready track — ratios and narrative prepared for your advisor." : fa.goals.outcome==="monitor" ? "Monitoring track — a repeatable annual process." : fa.goals.outcome==="improve" ? "Improvement track — your highest-leverage actions first." : "Understanding track — your numbers, in plain language.";
+// Models Revenue Protection (RP) mechanics using the projected/expected price only —
+// it does not model the harvest-price-option feature of full RP, where the guarantee
+// can rise if harvest price exceeds the projected price. That simplification is called
+// out explicitly in the disclaimer rather than left implicit.
+const CROP_PRESETS = {
+  corn:     { label:"Corn",     unit:"bu", variable:588, fixed:200, land:280, aph:200, price:4.20 },
+  soybeans: { label:"Soybeans", unit:"bu", variable:340, fixed:150, land:250, aph:55,  price:10.30 },
+  wheat:    { label:"Wheat",    unit:"bu", variable:220, fixed:130, land:200, aph:60,  price:5.00 },
+};
+const COVERAGE_LEVELS = [50,55,60,65,70,75,80,85];
+
+// Representative statewide average yields, not official RMA county T-yields. RMA's actual
+// county-level Actuarial Data Master files aren't available as a live, queryable source —
+// they're periodic FTP file drops, the same limitation we hit with FINBIN. These figures
+// are an approximate starting point by state; the farmer's actual county T-yield should
+// always be confirmed with their crop insurance agent before using it for real coverage
+// decisions.
+const STATE_YIELD_REFERENCE = {
+  SD:{corn:165,soybeans:48,wheat:55}, MN:{corn:190,soybeans:52,wheat:60}, IA:{corn:200,soybeans:58,wheat:65},
+  NE:{corn:185,soybeans:60,wheat:55}, IL:{corn:210,soybeans:62,wheat:68}, IN:{corn:195,soybeans:58,wheat:70},
+  OH:{corn:180,soybeans:55,wheat:72}, WI:{corn:175,soybeans:50,wheat:62}, KS:{corn:145,soybeans:45,wheat:48},
+  ND:{corn:145,soybeans:38,wheat:45}, MO:{corn:165,soybeans:50,wheat:58}, MI:{corn:165,soybeans:50,wheat:68},
+  KY:{corn:175,soybeans:52,wheat:70}, TX:{corn:140,soybeans:40,wheat:38}, CO:{corn:175,soybeans:45,wheat:42},
+};
+const STATE_NAME_TO_ABBR = {
+  "south dakota":"SD","minnesota":"MN","iowa":"IA","nebraska":"NE","illinois":"IL","indiana":"IN",
+  "ohio":"OH","wisconsin":"WI","kansas":"KS","north dakota":"ND","missouri":"MO","michigan":"MI",
+  "kentucky":"KY","texas":"TX","colorado":"CO",
+};
+// Parses a free-text "Location" field like "Minnehaha, SD" or "Sioux Falls, South Dakota"
+const parseStateFromLocation = (location) => {
+  if (!location) return null;
+  const text = location.trim();
+  const abbrMatch = text.match(/\b([A-Z]{2})\b\s*$/);
+  if (abbrMatch && STATE_YIELD_REFERENCE[abbrMatch[1]]) return abbrMatch[1];
+  const lower = text.toLowerCase();
+  for (const [name, abbr] of Object.entries(STATE_NAME_TO_ABBR)) { if (lower.includes(name)) return abbr; }
+  return null;
+};
+
+function CropInsuranceCalculator({ risk, setRisk, fa, profile }) {
+  const calc = risk.cropCalc || {};
+  const cropId = calc.crop || "corn";
+  const preset = CROP_PRESETS[cropId];
+  const setCalc = (patch) => setRisk(s => ({ ...s, cropCalc:{ ...(s.cropCalc||{}), ...patch } }));
+  const loadCrop = (id) => setCalc({ crop:id, variable:CROP_PRESETS[id].variable, fixed:CROP_PRESETS[id].fixed, land:CROP_PRESETS[id].land, aph:CROP_PRESETS[id].aph, price:CROP_PRESETS[id].price, coverage:75 });
+
+  const stateAbbr = parseStateFromLocation(profile?.location);
+  const stateRef = stateAbbr ? STATE_YIELD_REFERENCE[stateAbbr] : null;
+  const stateRefYield = stateRef ? stateRef[cropId] : null;
+
+  // Pull whatever genuinely overlaps from Financial Analysis: Stage 1's grain input
+  // cost/ac (most enterprise-specific) or, failing that, whole-farm figures from Stage 3
+  // divided across total acres. Expected price has no FA source — FA never asks for a
+  // price assumption — so that always comes from the crop preset.
+  const faGrain = fa?.ratioVals?.grain || {};
+  const faS3 = fa?.s3vals || {};
+  const faAcres = parseFloat(faS3.acres) || 0;
+  const faInputs = parseFloat(faS3.inputs) || 0;
+  const faOpex = parseFloat(faS3.opex) || 0;
+  const faRent = parseFloat(faS3.rent) || 0;
+  const faIpa = parseFloat(faGrain.ipa) || 0;
+  const derivedVariable = faIpa>0 ? faIpa : (faAcres>0 && faInputs>0 ? faInputs/faAcres : null);
+  const derivedLand = (faAcres>0 && faRent>0) ? faRent/faAcres : null;
+  const derivedFixed = (faAcres>0 && faOpex>0 && faInputs>0) ? Math.max(0,(faOpex-faInputs)/faAcres) : null;
+  const hasFAData = derivedVariable!==null || derivedLand!==null || derivedFixed!==null;
+  const useFAData = () => setCalc({
+    ...(derivedVariable!==null ? { variable: Math.round(derivedVariable) } : {}),
+    ...(derivedFixed!==null ? { fixed: Math.round(derivedFixed) } : {}),
+    ...(derivedLand!==null ? { land: Math.round(derivedLand) } : {}),
+  });
+  const useStateYield = () => setCalc({ aph: stateRefYield });
+
+  const variable = calc.variable!==undefined ? Number(calc.variable) : preset.variable;
+  const fixed = calc.fixed!==undefined ? Number(calc.fixed) : preset.fixed;
+  const land = calc.land!==undefined ? Number(calc.land) : preset.land;
+  const aph = calc.aph!==undefined ? Number(calc.aph) : preset.aph;
+  const price = calc.price!==undefined ? Number(calc.price) : preset.price;
+  const coverage = calc.coverage!==undefined ? Number(calc.coverage) : 75;
+
+  const totalCost = variable + fixed + land;
+  const breakeven = aph>0 ? totalCost/aph : 0;
+  const normalYearRevenue = aph * price;
+  const guarantee = aph * (coverage/100) * price;
+  const gapToFullCost = totalCost - guarantee;
+  const gapNormalYear = totalCost - normalYearRevenue;
+  const priceGap = breakeven - price;
+  const maxVal = Math.max(totalCost, normalYearRevenue, guarantee, 1);
+  const barPct = v => Math.max(2, Math.round((v/maxVal)*100));
+
   return (
     <div>
-      <Head eyebrow="Financial Analysis · Stage 6" title="Action plan & monitoring" sub={subCopy} />
-      <div style={{ background:T.navy, borderRadius:10, padding:"20px 24px", marginBottom:16 }}>
-        <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:11, fontWeight:700, letterSpacing:"0.12em", textTransform:"uppercase", color:T.green, marginBottom:6, display:"flex", alignItems:"center", gap:7 }}><Apex color={T.green} />Financial Analysis complete</div>
-        <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:19, fontWeight:700, color:"#fff", marginBottom:5, lineHeight:1.2 }}>Your priority actions and Farm Credit triggers are below. When ready, continue to Revenue Diversification.</div>
-        <div style={{ fontSize:12.5, color:"rgba(255,255,255,0.55)" }}>{[...new Set(enterprises)].map(e=>ENT[e]&&ENT[e].label).filter(Boolean).join(" · ") || "No enterprise selected"}</div>
+      <Head eyebrow="Farm Risk · Stage 8" title="Crop insurance calculator" sub="See how your Revenue Protection guarantee compares to your actual cost of production — and why insurance is a floor to keep the farm solvent, not a guarantee of profit." />
+
+      <div style={{ display:"flex", gap:6, marginBottom:16 }}>
+        {Object.entries(CROP_PRESETS).map(([id,c]) => (<button key={id} onClick={()=>loadCrop(id)} style={{ ...btnStyle(cropId===id?"primary":"outline"), fontSize:12, padding:"6px 16px" }}>{c.label}</button>))}
       </div>
-      {isDistress && (
-        <div style={{ background:T.redL, border:`1.5px solid ${T.red}`, borderRadius:10, padding:"15px 18px", marginBottom:16 }}>
-          <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:15, fontWeight:700, color:T.red, marginBottom:5 }}>Financial distress — stabilization first</div>
-          <div style={{ fontSize:12.5, color:T.redD, lineHeight:1.5 }}>Lender communication and cash triage must precede any diversification planning.</div>
+
+      {hasFAData && (
+        <div style={{ background:T.blueL, borderRadius:8, padding:"12px 16px", marginBottom:16, display:"flex", alignItems:"center", justifyContent:"space-between", gap:16, flexWrap:"wrap" }}>
+          <div style={{ fontSize:12.5, color:"#0A6E8C", lineHeight:1.5 }}>
+            <b>Financial Analysis carried over</b> — {faIpa>0 ? `your grain input cost of $${Math.round(faIpa)}/ac from Stage 1 is available.` : `whole-farm figures from Stage 3 suggest roughly $${Math.round(derivedVariable||0)}/ac in variable costs.`} These are whole-farm or blended-grain figures — if you separate corn and soybean costs, treat this as a starting point to confirm, not a precise per-crop number.
+          </div>
+          <button onClick={useFAData} style={{ ...btnStyle("outline"), fontSize:11.5, padding:"6px 14px", whiteSpace:"nowrap", flexShrink:0 }}>Use my Financial Analysis numbers →</button>
         </div>
       )}
+
+      {stateRefYield && (
+        <div style={{ background:T.greenL, borderRadius:8, padding:"12px 16px", marginBottom:16, display:"flex", alignItems:"center", justifyContent:"space-between", gap:16, flexWrap:"wrap" }}>
+          <div style={{ fontSize:12.5, color:"#2F6E28", lineHeight:1.5 }}>
+            <b>Farm Profile location detected</b> — your profile lists {profile.location}. A representative {stateAbbr} statewide average yield for {preset.label.toLowerCase()} is <b>{stateRefYield} {preset.unit}/ac</b>. This is an approximate reference figure, not your actual county's official RMA T-yield — confirm the real number with your crop insurance agent.
+          </div>
+          <button onClick={useStateYield} style={{ ...btnStyle("outline", T.dgreen), fontSize:11.5, padding:"6px 14px", whiteSpace:"nowrap", flexShrink:0 }}>Use {stateAbbr} reference yield →</button>
+        </div>
+      )}
+
       <div style={cardStyle()}>
-        <div style={cardLblStyle()}><Apex color={T.green} />Priority actions</div>
-        {ACTIONS.map((a,i) => {
-          const tc = tierC[a.tier];
-          return (
-            <div key={i} style={{ display:"flex", alignItems:"flex-start", gap:13, padding:"13px 0", borderBottom:i<ACTIONS.length-1?`1px solid ${T.div}`:"none" }}>
-              <div style={{ width:28, height:28, borderRadius:"50%", display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"'Barlow Condensed',sans-serif", fontSize:13, fontWeight:700, background:tc.bg, color:tc.c, flexShrink:0 }}>{i+1}</div>
-              <div style={{ flex:1 }}>
-                <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:3, flexWrap:"wrap" }}><div style={{ fontSize:13.5, fontWeight:700 }}>{a.label}</div><span style={pillStyle({r:"vuln",a:"watch",g:"strong"}[a.tier])}>{tc.label}</span></div>
-                <div style={{ fontSize:12.5, color:T.fgM, marginBottom:5, lineHeight:1.5 }}>{a.detail}</div>
-                <span style={{ fontSize:11.5, color:T.dgreen, fontWeight:600 }}>{a.impact}</span>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-      <div style={cardStyle()}>
-        <div style={cardLblStyle()}><Apex color={T.green} />Farm Credit cross-sell triggers</div>
-        <div style={{ display:"flex", flexWrap:"wrap", gap:8 }}>
-          {xsell.map((x,i) => (<span key={i} style={{ display:"inline-flex", alignItems:"center", gap:6, padding:"5px 12px", borderRadius:6, fontSize:12.5, background:T.blueL, color:T.blue, fontWeight:500 }}><span style={{ padding:"1px 7px", borderRadius:999, fontSize:10, fontWeight:700, background:T.greenL, color:"#2F6E28", fontFamily:"'Barlow Condensed',sans-serif" }}>FA</span>{x.l}</span>))}
+        <div style={cardLblStyle()}><Apex color={T.green} />Your numbers</div>
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:14, marginBottom:14 }}>
+          <div><label style={labelStyle}>Variable costs ($/ac)</label><input type="number" style={inputStyle()} value={calc.variable??preset.variable} onChange={e=>setCalc({variable:e.target.value})} /></div>
+          <div><label style={labelStyle}>Fixed costs ($/ac)</label><input type="number" style={inputStyle()} value={calc.fixed??preset.fixed} onChange={e=>setCalc({fixed:e.target.value})} /></div>
+          <div><label style={labelStyle}>Land cost ($/ac)</label><input type="number" style={inputStyle()} value={calc.land??preset.land} onChange={e=>setCalc({land:e.target.value})} /></div>
+          <div><label style={labelStyle}>APH yield ({preset.unit}/ac)</label><input type="number" style={inputStyle()} value={calc.aph??preset.aph} onChange={e=>setCalc({aph:e.target.value})} /></div>
+          <div><label style={labelStyle}>Expected price (${preset.unit==="bu"?"/bu":"/"+preset.unit})</label><input type="number" step="0.01" style={inputStyle()} value={calc.price??preset.price} onChange={e=>setCalc({price:e.target.value})} /></div>
+          <div><label style={labelStyle}>Coverage level ({coverage}%)</label><input type="range" min={50} max={85} step={5} value={coverage} onChange={e=>setCalc({coverage:parseInt(e.target.value,10)})} style={{ width:"100%", marginTop:10 }} /></div>
         </div>
       </div>
-      <div style={cardStyle({ borderTop:`4px solid ${T.green}`, marginBottom:0 })}>
-        <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:17, fontWeight:700, color:T.navy, marginBottom:6 }}>Ready to explore revenue diversification?</div>
-        <div style={{ fontSize:12.5, color:T.fgM, marginBottom:14, lineHeight:1.55, maxWidth:640 }}>Your enterprise type, financial-health tier and MFP score carry into the Revenue Diversification module automatically — you won't re-enter your farm profile.</div>
-        <button style={btnStyle("primary")} onClick={()=>goRD(1)}>Continue to Revenue Diversification →</button>
+
+      <div style={cardStyle({ borderTop:`4px solid ${T.green}` })}>
+        <div style={cardLblStyle()}><Apex color={T.green} />Cost vs. guarantee</div>
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(2,1fr)", gap:12, marginBottom:16 }}>
+          <div style={{ background:T.bgAlt, borderRadius:8, padding:"12px 14px", textAlign:"center" }}>
+            <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:10.5, fontWeight:700, color:T.fgS, textTransform:"uppercase", letterSpacing:"0.05em", marginBottom:4 }}>Breakeven price</div>
+            <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:22, fontWeight:800, color:priceGap>0?T.red:T.dgreen }}>${breakeven.toFixed(2)}/{preset.unit}</div>
+          </div>
+          <div style={{ background:T.bgAlt, borderRadius:8, padding:"12px 14px", textAlign:"center" }}>
+            <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:10.5, fontWeight:700, color:T.fgS, textTransform:"uppercase", letterSpacing:"0.05em", marginBottom:4 }}>Total cost per acre</div>
+            <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:22, fontWeight:800, color:T.navy }}>${Math.round(totalCost).toLocaleString()}</div>
+          </div>
+        </div>
+
+        {priceGap>0 && <Flag type="warn">At {aph} {preset.unit}/ac, this year's breakeven price (${breakeven.toFixed(2)}/{preset.unit}) sits ${priceGap.toFixed(2)} above your expected price (${price.toFixed(2)}/{preset.unit}) — the crop doesn't cover full cost even in a normal year, before any insurance is considered.</Flag>}
+
+        <div style={{ marginTop:16, marginBottom:6 }}>
+          <div style={{ display:"flex", justifyContent:"space-between", fontSize:11.5, color:T.fgM, marginBottom:4 }}><span style={{ fontWeight:600 }}>Total cost per acre</span><span>${Math.round(totalCost).toLocaleString()}</span></div>
+          <div style={{ height:20, background:T.red, borderRadius:4, width:`${barPct(totalCost)}%` }} />
+        </div>
+        <div style={{ marginBottom:6 }}>
+          <div style={{ display:"flex", justifyContent:"space-between", fontSize:11.5, color:T.fgM, marginBottom:4 }}><span style={{ fontWeight:600 }}>Normal-year revenue (APH × expected price)</span><span>${Math.round(normalYearRevenue).toLocaleString()}</span></div>
+          <div style={{ height:20, background:T.amber, borderRadius:4, width:`${barPct(normalYearRevenue)}%` }} />
+        </div>
+        <div style={{ marginBottom:14 }}>
+          <div style={{ display:"flex", justifyContent:"space-between", fontSize:11.5, color:T.fgM, marginBottom:4 }}><span style={{ fontWeight:600 }}>RP guarantee at {coverage}% coverage</span><span>${Math.round(guarantee).toLocaleString()}</span></div>
+          <div style={{ height:20, background:T.blue, borderRadius:4, width:`${barPct(guarantee)}%` }} />
+        </div>
+
+        <div style={{ background:gapToFullCost>0?T.redL:T.greenL, borderRadius:8, padding:"14px 16px" }}>
+          <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:13, fontWeight:700, color:gapToFullCost>0?T.red:T.dgreen, marginBottom:4 }}>Gap to full cost</div>
+          <div style={{ fontSize:12.5, color:gapToFullCost>0?T.redD:"#2F6E28", lineHeight:1.5 }}>
+            {gapToFullCost>0
+              ? `A ${coverage}% Revenue Protection guarantee covers $${Math.round(guarantee).toLocaleString()} of your $${Math.round(totalCost).toLocaleString()} total cost per acre — a $${Math.round(gapToFullCost).toLocaleString()}/ac shortfall even if the guarantee pays out in full. Insurance is there to keep the farm solvent through a bad year, not to make a marginal year whole.`
+              : `A ${coverage}% Revenue Protection guarantee of $${Math.round(guarantee).toLocaleString()}/ac fully covers your $${Math.round(totalCost).toLocaleString()} total cost per acre, with $${Math.round(Math.abs(gapToFullCost)).toLocaleString()}/ac to spare if the guarantee pays out in full.`}
+          </div>
+        </div>
       </div>
+
+      <div style={cardStyle()}>
+        <div style={cardLblStyle()}><Apex color={T.green} />Gap to full cost by coverage level</div>
+        <div style={{ display:"grid", gridTemplateColumns:`repeat(${COVERAGE_LEVELS.length},1fr)`, gap:6 }}>
+          {COVERAGE_LEVELS.map(cl => {
+            const g = aph*(cl/100)*price; const gap = totalCost-g; const isCurrent = cl===coverage;
+            return (
+              <div key={cl} onClick={()=>setCalc({coverage:cl})} style={{ cursor:"pointer", textAlign:"center", padding:"10px 4px", borderRadius:8, border:isCurrent?`2px solid ${T.blue}`:`1px solid ${T.border}`, background:isCurrent?T.blueL:"#fff" }}>
+                <div style={{ fontSize:11, color:T.fgS, marginBottom:4 }}>{cl}%</div>
+                <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:13, fontWeight:800, color:gap>0?T.red:T.dgreen }}>{gap>0?"-":"+"}${Math.round(Math.abs(gap))}</div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      <Flag type="warn">This is an educational planning tool, not a quote. It models Revenue Protection using the expected/projected price only — actual RP policies can also raise the guarantee if the harvest price exceeds the projected price. Actual APH, projected price, and coverage options are set by RMA and confirmed with your crop insurance agent.</Flag>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// FARM RISK — Stage 11: Livestock insurance calculator
+// ─────────────────────────────────────────────────────────────────────────────
+// Models Livestock Risk Protection (LRP) mechanics: a price floor set at coverage
+// level × expected ending value, compared against cost of production per cwt.
+const LIVESTOCK_PRESETS = {
+  feeder: { label:"Feeder cattle", price:240, cost:205, coverageDefault:90, min:70, max:100 },
+  fed:    { label:"Fed cattle",    price:185, cost:175, coverageDefault:90, min:70, max:100 },
+  hogs:   { label:"Hogs",          price:83,  cost:83,  coverageDefault:90, min:70, max:100 },
+};
+const LIVESTOCK_COVERAGE_LEVELS = [70,75,80,85,90,95,100];
+
+function LivestockInsuranceCalculator({ risk, setRisk }) {
+  const calc = risk.livestockCalc || {};
+  const typeId = calc.type || "feeder";
+  const preset = LIVESTOCK_PRESETS[typeId];
+  const setCalc = (patch) => setRisk(s => ({ ...s, livestockCalc:{ ...(s.livestockCalc||{}), ...patch } }));
+  const loadType = (id) => setCalc({ type:id, price:LIVESTOCK_PRESETS[id].price, cost:LIVESTOCK_PRESETS[id].cost, coverage:LIVESTOCK_PRESETS[id].coverageDefault });
+
+  const price = calc.price!==undefined ? Number(calc.price) : preset.price;
+  const cost = calc.cost!==undefined ? Number(calc.cost) : preset.cost;
+  const coverage = calc.coverage!==undefined ? Number(calc.coverage) : preset.coverageDefault;
+
+  const floor = price * (coverage/100);
+  const marginOverCost = floor - cost;
+  const maxVal = Math.max(price, cost, floor, 1);
+  const barPct = v => Math.max(2, Math.round((v/maxVal)*100));
+
+  return (
+    <div>
+      <Head eyebrow="Farm Risk · Stage 9" title="Livestock insurance calculator" sub="See how a Livestock Risk Protection (LRP) price floor compares to your cost of production — and how that relationship can look very different from crop insurance depending on the market." />
+
+      <div style={{ display:"flex", gap:6, marginBottom:16 }}>
+        {Object.entries(LIVESTOCK_PRESETS).map(([id,c]) => (<button key={id} onClick={()=>loadType(id)} style={{ ...btnStyle(typeId===id?"primary":"outline"), fontSize:12, padding:"6px 16px" }}>{c.label}</button>))}
+      </div>
+
+      <div style={cardStyle()}>
+        <div style={cardLblStyle()}><Apex color={T.green} />Your numbers</div>
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:14 }}>
+          <div><label style={labelStyle}>Expected price ($/cwt)</label><input type="number" step="0.01" style={inputStyle()} value={calc.price??preset.price} onChange={e=>setCalc({price:e.target.value})} /></div>
+          <div><label style={labelStyle}>Cost of production ($/cwt)</label><input type="number" step="0.01" style={inputStyle()} value={calc.cost??preset.cost} onChange={e=>setCalc({cost:e.target.value})} /></div>
+          <div><label style={labelStyle}>Coverage level ({coverage}%)</label><input type="range" min={70} max={100} step={5} value={coverage} onChange={e=>setCalc({coverage:parseInt(e.target.value,10)})} style={{ width:"100%", marginTop:10 }} /></div>
+        </div>
+      </div>
+
+      <div style={cardStyle({ borderTop:`4px solid ${T.green}` })}>
+        <div style={cardLblStyle()}><Apex color={T.green} />Price floor vs. cost of production</div>
+
+        <div style={{ marginBottom:6 }}>
+          <div style={{ display:"flex", justifyContent:"space-between", fontSize:11.5, color:T.fgM, marginBottom:4 }}><span style={{ fontWeight:600 }}>Expected price</span><span>${price.toFixed(2)}/cwt</span></div>
+          <div style={{ height:20, background:T.amber, borderRadius:4, width:`${barPct(price)}%` }} />
+        </div>
+        <div style={{ marginBottom:6 }}>
+          <div style={{ display:"flex", justifyContent:"space-between", fontSize:11.5, color:T.fgM, marginBottom:4 }}><span style={{ fontWeight:600 }}>Cost of production</span><span>${cost.toFixed(2)}/cwt</span></div>
+          <div style={{ height:20, background:T.red, borderRadius:4, width:`${barPct(cost)}%` }} />
+        </div>
+        <div style={{ marginBottom:14 }}>
+          <div style={{ display:"flex", justifyContent:"space-between", fontSize:11.5, color:T.fgM, marginBottom:4 }}><span style={{ fontWeight:600 }}>LRP floor at {coverage}% coverage</span><span>${floor.toFixed(2)}/cwt</span></div>
+          <div style={{ height:20, background:T.blue, borderRadius:4, width:`${barPct(floor)}%` }} />
+        </div>
+
+        <div style={{ background:marginOverCost>=0?T.greenL:T.redL, borderRadius:8, padding:"14px 16px" }}>
+          <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:13, fontWeight:700, color:marginOverCost>=0?T.dgreen:T.red, marginBottom:4 }}>Margin over cost at this floor</div>
+          <div style={{ fontSize:12.5, color:marginOverCost>=0?"#2F6E28":T.redD, lineHeight:1.5 }}>
+            {marginOverCost>=0
+              ? `A ${coverage}% LRP floor of $${floor.toFixed(2)}/cwt sits $${marginOverCost.toFixed(2)}/cwt above your cost of production — in this market, LRP can lock in a margin, not just protect solvency. That's a different relationship than crop insurance often shows in a high-input-cost year.`
+              : `A ${coverage}% LRP floor of $${floor.toFixed(2)}/cwt still falls $${Math.abs(marginOverCost).toFixed(2)}/cwt short of your cost of production — the floor limits how bad a price collapse can get, but doesn't guarantee covering full cost.`}
+          </div>
+        </div>
+      </div>
+
+      <div style={cardStyle()}>
+        <div style={cardLblStyle()}><Apex color={T.green} />Margin over cost by coverage level</div>
+        <div style={{ display:"grid", gridTemplateColumns:`repeat(${LIVESTOCK_COVERAGE_LEVELS.length},1fr)`, gap:6 }}>
+          {LIVESTOCK_COVERAGE_LEVELS.map(cl => {
+            const f = price*(cl/100); const m = f-cost; const isCurrent = cl===coverage;
+            return (
+              <div key={cl} onClick={()=>setCalc({coverage:cl})} style={{ cursor:"pointer", textAlign:"center", padding:"10px 4px", borderRadius:8, border:isCurrent?`2px solid ${T.blue}`:`1px solid ${T.border}`, background:isCurrent?T.blueL:"#fff" }}>
+                <div style={{ fontSize:11, color:T.fgS, marginBottom:4 }}>{cl}%</div>
+                <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:13, fontWeight:800, color:m>=0?T.dgreen:T.red }}>{m>=0?"+":"-"}${Math.abs(m).toFixed(2)}</div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      <Flag type="warn">This is an educational planning tool, not a quote. LRP endorsement lengths, expected ending values, and actual coverage levels are set by RMA and confirmed with your livestock insurance agent — and vary by species, weight class, and endorsement period.</Flag>
     </div>
   );
 }
@@ -976,32 +1455,43 @@ function FA6({ fa, goRD }) {
 // blanket rating. Every item is framed so a HIGHER value (0–100) always means MORE
 // opportunity — i.e. "idle capacity" or "strength," not raw utilization — so scoring
 // stays consistent without needing to invert any individual item.
+// Internal keys (asset/trust/risk) are unchanged from earlier builds — every opportunity
+// in OPPS has a fit:{asset,trust,risk} score, and the scoring engine keys off these exact
+// names. Only the display labels and the items within each lever changed: "trust" now
+// assesses Human Capital (labor, skills, management, succession) instead of relationship
+// capital alone, and "risk" now assesses Financial Capital more explicitly, including
+// access to credit. Renaming the underlying keys would mean touching all 24 opportunity
+// definitions for no functional benefit — the fit scores already reasonably approximate
+// "how much does this depend on people/expertise" (trust) vs. "how much does this depend
+// on financial buffer" (risk), so they carry over cleanly under the new labels.
 const ASSET_ITEMS = [
   { id:"land", label:"Underutilized or marginal acres", hint:"% of total acres not in full production use — field edges, marginal ground, or land not in your core rotation", default:10 },
   { id:"equipment", label:"Field equipment idle capacity", hint:"Estimated % below full annual utilization for tillage, planting, spraying, and harvest equipment — most farms run well under 60%", default:35 },
   { id:"truckingCap", label:"Trucking & hauling capacity", hint:"% of truck, trailer, and driver time available beyond your own hauling needs — separate from field equipment", default:20 },
   { id:"storageCap", label:"Excess grain/storage capacity", hint:"% of storage capacity beyond what your own production requires in a typical year", default:15 },
   { id:"facilities", label:"Underutilized buildings & facilities", hint:"% of barns, shops, or outbuilding space not in active daily use", default:20 },
+];
+const HUMAN_ITEMS = [
   { id:"laborCap", label:"Available labor capacity", hint:"% of family or hired labor time available beyond core operation needs, especially shoulder seasons", default:15 },
+  { id:"management", label:"Management & decision-making experience", hint:"Years actively running or co-running the operation, including succession planning and delegation", default:35 },
+  { id:"expertise", label:"Recognized skills or specialized expertise", hint:"Formal or informal recognition in a specific skill — agronomy, genetics, mechanics, marketing", default:25 },
+  { id:"network", label:"Professional network & buyer relationships", hint:"Strength of existing relationships with buyers, cooperatives, processors, or a direct customer base", default:30 },
+  { id:"succession", label:"Family or successor involvement", hint:"Active next-generation or partner involvement in daily decisions and operations", default:15 },
 ];
-const TRUST_ITEMS = [
-  { id:"buyerRel", label:"Buyer & cooperative relationships", hint:"Strength of existing purchase relationships with elevators, cooperatives, or processors", default:30 },
-  { id:"reputation", label:"Community reputation & network", hint:"Local visibility, word-of-mouth reach, and standing among neighboring operations", default:40 },
-  { id:"expertise", label:"Recognized expertise or credentials", hint:"Formal or informal recognition in a specific skill — agronomy, genetics, mechanics, marketing", default:25 },
-  { id:"customerRel", label:"Direct-to-consumer relationships", hint:"Existing CSA members, farm-stand customers, or online buyer base", default:15 },
-];
-const RISK_ITEMS = [
+const FINANCIAL_ITEMS = [
   { id:"workingCapital", label:"Working capital position", hint:"Relative to peer benchmark (~$692/ac is top quartile for row crop operations)", default:40 },
   { id:"debtHeadroom", label:"Balance sheet headroom", hint:"Debt-to-asset cushion — higher score means less leveraged, more room to invest", default:45 },
   { id:"cashReserve", label:"Operating cash reserve", hint:"Months of operating expenses covered by cash reserves, higher is stronger", default:30 },
+  { id:"creditAccess", label:"Access to credit", hint:"Strength of your lending relationship and unused borrowing capacity with your Farm Credit or bank", default:35 },
   { id:"existingDiversification", label:"Existing revenue diversification", hint:"How spread out current income already is across enterprises, buyers, or markets", default:20 },
 ];
-const LEVER_ITEM_GROUPS = { asset:ASSET_ITEMS, trust:TRUST_ITEMS, risk:RISK_ITEMS };
+const LEVER_ITEM_GROUPS = { asset:ASSET_ITEMS, trust:HUMAN_ITEMS, risk:FINANCIAL_ITEMS };
 const LEVER_META = {
-  asset: { label:"Asset leverage", color:T.dgreen, desc:"Physical assets that could generate diversified income" },
-  trust: { label:"Trust leverage", color:T.tan, desc:"Relationships, reputation, and knowledge that can be monetized" },
-  risk: { label:"Risk-smoothing capacity", color:T.blue, desc:"Financial buffers that let the farm absorb startup risk" },
+  asset: { label:"Assets", color:T.dgreen, desc:"Physical assets that could generate diversified income" },
+  trust: { label:"Human Capital", color:T.tan, desc:"Labor, skills, management, and relationships that can be leveraged" },
+  risk: { label:"Financial Capital", color:T.blue, desc:"Financial buffers and credit capacity that let the farm absorb startup risk" },
 };
+
 
 const leverCategoryScore = (items, category) => {
   const group = LEVER_ITEM_GROUPS[category] || [];
@@ -1020,17 +1510,46 @@ const faScoreOf = (fa) => { const wf=fa.wholeFarm||{}; const vuln=Object.values(
 const HIGH_CAP_OPPS = ["processing","demolition","manure","eventRental"];
 const PASSIVE_TIME_OPPS = ["energy","carbon","envServices","storage"];
 
-const scoredOpps = (rd, faEnt) => { const d=rd.data||{}; const g=d.goals2||{}; const b=d.baseline||{}; const capMap={zero:0,low:10000,medium:50000,high:200000}; const capLimit=capMap[g.capitalAppetite]!==undefined?capMap[g.capitalAppetite]:200000; const items=d.leverItems||{};
+// Embeds Financial Analysis directly into the Revenue Diversification optimization
+// logic. Two signals derived from Stage 3's actual computed ratios (via the shared
+// computeFARatios engine) adjust scoring on top of the existing lever/capital/time/size
+// logic: financial distress (weak DSCR or negative net farm income) shifts scoring toward
+// low-capital, low-effort, high-liquidity paths and away from high-capital ones; financial
+// strength (healthy DSCR and OER) modestly favors higher-capital, higher-growth-tier paths.
+const faFinancialSignal = (faS3vals) => {
+  const { hasData, dscr, nfi, oer } = computeFARatios(faS3vals);
+  const distress = hasData && ((dscr!==null && dscr<1.0) || (nfi!==null && nfi<0));
+  const strong = hasData && dscr!==null && dscr>=1.25 && oer!==null && oer<70;
+  return { hasData, distress, strong };
+};
+
+const scoredOpps = (rd, faEnterprises, faS3vals) => { const d=rd.data||{}; const g=d.goals2||{}; const b=d.baseline||{}; const capMap={zero:0,low:10000,medium:50000,high:200000}; const capLimit=capMap[g.capitalAppetite]!==undefined?capMap[g.capitalAppetite]:200000; const items=d.leverItems||{};
   const sizeBucket = sizeBucketFromTier(b.revTier);
+  const { distress: faDistress, strong: faStrong } = faFinancialSignal(faS3vals);
+  const enterprises = faEnterprises || [];
+  const faEnt = enterprises[0] || "";
   return OPPS.map(o => { const a=o.fit.asset/100*leverPct(items,"asset"), t=o.fit.trust/100*leverPct(items,"trust"), r=o.fit.risk/100*leverPct(items,"risk"); let leverMatch=(a+t+r)/3;
     const capOk = HIGH_CAP_OPPS.includes(o.id) ? (capLimit>=20000) : (capLimit>=5000 || PASSIVE_TIME_OPPS.includes(o.id) || o.id==="consulting" || o.id==="dataAdvisory");
     const timeOk = g.timeAppetite!=="minimal" || PASSIVE_TIME_OPPS.includes(o.id);
     const sizeMatch = !sizeBucket || !o.sizeFit ? true : o.sizeFit.includes(sizeBucket);
     const entMatch = !o.entSpecific || o.entSpecific===faEnt;
+    // entExclude: for "add a new enterprise you don't already run" opportunities — suppress
+    // if the farmer already operates any of the excluded enterprises. entRelevant: modest
+    // boost if the farmer runs an enterprise this opportunity is a natural complement to.
+    const isExcluded = o.entExclude && o.entExclude.some(e => enterprises.includes(e));
+    const isRelevant = o.entRelevant && o.entRelevant.some(e => enterprises.includes(e));
     if (sizeMatch) leverMatch = leverMatch * 1.15; // modest boost for farms this opportunity typically suits
     if (o.entSpecific && !entMatch) leverMatch = leverMatch * 0.15; // heavily suppress enterprise-specific paths that don't apply
+    if (isRelevant) leverMatch = leverMatch * 1.2; // boost — this complements an enterprise the farm already runs
+    if (isExcluded) leverMatch = leverMatch * 0.2; // heavily suppress — this isn't diversification if you already run it
 
-    return { ...o, leverMatch:Math.round(Math.min(100,leverMatch)), capOk, timeOk, sizeMatch, entMatch, score:leverMatch*(capOk?1:0.3)*(timeOk?1:0.7)*(entMatch?1:0.1) }; }).sort((a,b)=>b.score-a.score); };
+    // Financial-health adjustment, embedded directly from FA Stage 3's ratios
+    let faAdj = 1;
+    const lowFriction = (o.effort||3)<=2 || (o.liquidity||3)>=4 || PASSIVE_TIME_OPPS.includes(o.id);
+    if (faDistress) faAdj = lowFriction ? 1.25 : (HIGH_CAP_OPPS.includes(o.id) ? 0.4 : 0.85);
+    else if (faStrong) faAdj = (HIGH_CAP_OPPS.includes(o.id) || o.growthTier===2) ? 1.15 : 1;
+
+    return { ...o, leverMatch:Math.round(Math.min(100,leverMatch)), capOk, timeOk, sizeMatch, entMatch, isRelevant, isExcluded, faAdj, score:leverMatch*(capOk?1:0.3)*(timeOk?1:0.7)*(entMatch?1:0.1)*faAdj }; }).sort((a,b)=>b.score-a.score); };
 
 // ─────────────────────────────────────────────────────────────────────────────
 // RD STAGE 1 — Baseline & readiness
@@ -1140,7 +1659,7 @@ function RD2({ rd, setRData }) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// RD STAGE 3 — Asset & readiness inventory
+// RD STAGE 3 — Human capital, assets & financial capital
 // ─────────────────────────────────────────────────────────────────────────────
 function RD3({ rd, setRData }) {
   const items = rd.data.leverItems || {};
@@ -1150,7 +1669,7 @@ function RD3({ rd, setRData }) {
   const allWeak = Object.values(scores).every(s => s < 34);
   return (
     <div>
-      <Head eyebrow="Revenue Diversification · Stage 3" title="Asset & readiness inventory" sub="Rate specific, measurable items within each lever rather than one blanket score. This gives a far more precise read on which opportunities actually fit your operation." />
+      <Head eyebrow="Revenue Diversification · Stage 3" title="Human capital, assets & financial capital" sub="Rate specific, measurable items across the three resources that determine which diversification paths are actually realistic for your operation — not just what sounds appealing." />
       {["asset","trust","risk"].map(cat => {
         const meta = LEVER_META[cat]; const group = LEVER_ITEM_GROUPS[cat]; const score = scores[cat];
         return (
@@ -1209,21 +1728,27 @@ const GROWTH_TIER_COLOR = { 1:T.dgreen, 2:T.blue, 3:T.tan };
 
 function RD4({ rd, setRData, fa }) {
   const d = rd.data; const selected = d.selectedOpps || []; const lev = d.leverItems || {}; const b = d.baseline || {};
-  const faEntKey = (fa.enterprises||[])[0] || "";
   const [clusterFilter, setClusterFilter] = useState("all");
   const toggle = (id) => setRData(s => { const cur=s.selectedOpps||[]; return { ...s, selectedOpps: cur.includes(id)?cur.filter(x=>x!==id):[...cur,id] }; });
-  const allOpps = scoredOpps(rd, faEntKey);
+  const allOpps = scoredOpps(rd, fa.enterprises||[], fa.s3vals);
   const opps = clusterFilter==="all" ? allOpps : allOpps.filter(o=>o.cluster===clusterFilter);
   const sizeBucket = sizeBucketFromTier(b.revTier);
+  const faSignal = faFinancialSignal(fa.s3vals);
   return (
     <div>
       <Head eyebrow="Revenue Diversification · Stage 4" title="Opportunity mapping" sub="Ranked by fit with your three-lever profile, farm size, and goals. Select your top 2–3 to carry into the barrier and scenario stages." />
+      {faSignal.distress && (
+        <Flag type="warn">Your Financial Analysis shows financial strain (weak debt service coverage or negative net farm income) — this ranking now favors low-capital, low-effort, high-liquidity paths and pulls back higher-capital ones like processing or demolition. Stabilize the core operation before committing new capital.</Flag>
+      )}
+      {faSignal.strong && (
+        <Flag type="ok">Your Financial Analysis shows solid debt service coverage and a healthy operating expense ratio — this ranking gives a modest boost to higher-capital, faster-growth paths, since your core operation has room to support them.</Flag>
+      )}
       <div style={{ background:"#FAF6EC", border:`1px solid ${T.silver}`, borderRadius:10, padding:"14px 18px", marginBottom:16 }}>
         <div style={cardLblStyle()}><Apex color={T.green} />Your lever inputs</div>
         <div style={{ display:"flex", gap:26, flexWrap:"wrap" }}>
           {["asset","trust","risk"].map(k => (
             <div key={k} style={{ display:"flex", alignItems:"center", gap:9 }}>
-              <div style={{ width:90, fontSize:12, fontWeight:600, color:T.fgM }}>{({asset:"Asset",trust:"Trust",risk:"Risk buffer"})[k]}</div>
+              <div style={{ width:90, fontSize:12, fontWeight:600, color:T.fgM }}>{({asset:"Assets",trust:"Human",risk:"Financial"})[k]}</div>
               <div style={{ width:80, height:6, background:T.div, borderRadius:3, overflow:"hidden" }}><div style={{ height:"100%", width:`${leverPct(lev,k)}%`, background:leverColor(lev,k), borderRadius:3 }} /></div>
               <span style={{ fontSize:11.5, fontWeight:700, color:leverColor(lev,k) }}>{leverPct(lev,k)}%</span>
             </div>
@@ -1242,17 +1767,20 @@ function RD4({ rd, setRData, fa }) {
       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:14 }}>
         {opps.map(o => {
           const isSel = selected.includes(o.id); const fl = o.leverMatch>=60?"ready":o.leverMatch>=35?"caution":"foundation"; const fLabel = { ready:"Strong fit", caution:"Moderate fit", foundation:"Weak fit" }[fl];
-          const dimmed = o.entSpecific && !o.entMatch;
+          const dimmed = (o.entSpecific && !o.entMatch) || o.isExcluded;
           return (
             <div key={o.id} onClick={()=>toggle(o.id)} style={{ background:"#fff", border:isSel?`2px solid ${T.blue}`:`1px solid ${T.border}`, borderRadius:10, padding:18, cursor:"pointer", transition:"all .15s", opacity:dimmed?0.5:(o.capOk?1:0.75), boxShadow:isSel?"0 4px 12px rgba(15,28,57,0.10)":"0 1px 2px rgba(15,28,57,0.06)" }}>
               <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", marginBottom:6, gap:8 }}>
                 <div><div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:16, fontWeight:700, color:isSel?T.blue:T.navy, lineHeight:1.15 }}>{o.label}</div><div style={{ fontSize:10, color:T.fgS, textTransform:"uppercase", letterSpacing:"0.06em", marginTop:3, fontWeight:600 }}>{o.cluster}</div></div>
                 <span style={pillStyle(fl)}>{fLabel}</span>
               </div>
-              <div style={{ display:"flex", alignItems:"center", gap:6, marginBottom:10 }}>
+              <div style={{ display:"flex", alignItems:"center", gap:6, marginBottom:10, flexWrap:"wrap" }}>
                 <span style={{ fontSize:10, fontWeight:700, color:GROWTH_TIER_COLOR[o.growthTier] }}>● {GROWTH_TIER_LABEL[o.growthTier]}</span>
                 {o.sizeFit && sizeBucket && o.sizeFit.includes(sizeBucket) && <span style={{ fontSize:10, fontWeight:700, color:T.dgreen }}>· Good fit for your farm size</span>}
-                {dimmed && <span style={{ fontSize:10, fontWeight:700, color:T.red }}>· Requires {o.entSpecific} enterprise</span>}
+                {dimmed && !o.isExcluded && <span style={{ fontSize:10, fontWeight:700, color:T.red }}>· Requires {o.entSpecific} enterprise</span>}
+                {o.isExcluded && <span style={{ fontSize:10, fontWeight:700, color:T.red }}>· You already run this enterprise</span>}
+                {o.isRelevant && <span style={{ fontSize:10, fontWeight:700, color:T.dgreen }}>· Complements your current enterprise</span>}
+                {o.policyPrograms && <span style={{ fontSize:10, fontWeight:700, color:"#4338CA" }}>· Policy/grant program available</span>}
               </div>
               <div style={{ fontSize:12.5, color:T.fgM, lineHeight:1.5, marginBottom:12 }}>{o.desc}</div>
               <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginBottom:10 }}><div style={{ fontSize:11.5, color:T.fgM }}><span style={{ fontWeight:600 }}>Time to revenue: </span>{o.time}</div><div style={{ fontSize:11.5, color:T.fgM }}><span style={{ fontWeight:600 }}>Capital: </span>{o.capital}</div></div>
@@ -1262,7 +1790,7 @@ function RD4({ rd, setRData, fa }) {
               </div>
               <div>
                 <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:10.5, fontWeight:700, color:T.fgS, textTransform:"uppercase", letterSpacing:"0.05em", marginBottom:6 }}>Lever fit</div>
-                {[["asset","Asset",T.dgreen],["trust","Trust",T.tan],["risk","Risk",T.blue]].map(([k,label,color]) => {
+                {[["asset","Assets",T.dgreen],["trust","Human",T.tan],["risk","Financial",T.blue]].map(([k,label,color]) => {
                   const actual = Math.round(o.fit[k]/100*leverPct(lev,k));
                   return (
                     <div key={k} style={{ display:"flex", alignItems:"center", gap:8, marginBottom:4 }}>
@@ -1346,22 +1874,97 @@ function RD5({ rd, setRData }) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// RD STAGE 6 — Scenario comparison
+// RD STAGE 6 — Policy & grant enablers
 // ─────────────────────────────────────────────────────────────────────────────
-function RD6({ rd, setRData }) {
-  const d = rd.data; const selected = d.selectedOpps || []; const ranked = d.rankedOpps || [];
+// Deliberately mirrors Barrier Identification's structure — same per-opportunity card
+// layout, same checkbox-to-acknowledge pattern — but framed as tailwinds rather than
+// obstacles: policy and grant programs that could actively support a selected path,
+// not risks to plan around. Kept as its own stage rather than buried in the Action
+// Plan, since knowing about a relevant program is a decision input, not an afterthought.
+function RDPolicyEnablers({ rd, setRData }) {
+  const d = rd.data; const selected = d.selectedOpps || []; const acked = d.policyAcked || {};
+  const ack = (id,i) => setRData(s => { const key=`${id}_${i}`; return { ...s, policyAcked:{ ...(s.policyAcked||{}), [key]:!(s.policyAcked||{})[key] } }; });
+  const sel = selected.map(id => OPPS.find(o=>o.id===id)).filter(Boolean);
+  const selWithPrograms = sel.filter(o => o.policyPrograms && o.policyPrograms.length>0);
+  return (
+    <div>
+      <Head eyebrow="Revenue Diversification · Stage 6" title="Policy & grant enablers" sub="Federal and state programs that could actively support your selected paths — grants, cost-share, and pending legislation worth tracking. Check each one to confirm you've reviewed it." />
+      {selected.length===0 && <Flag type="warn">No opportunities selected. Go back to Stage 4.</Flag>}
+      {selected.length>0 && selWithPrograms.length>0 && (
+        <Flag type="warn">Program details reflect their status as of mid-2026 and are a starting point, not a guarantee — federal farm program funding, eligibility, and enrollment windows change often, and the current Farm Bill remains unresolved. Confirm current status with your local FSA/NRCS office, your Farm Credit advisor, or grants.gov before building a plan around any of them.</Flag>
+      )}
+      {selected.length>0 && selWithPrograms.length===0 && (
+        <Flag type="info">No specific federal or state programs are currently mapped to your selected paths. That doesn't mean none exist — check with your local FSA/NRCS office or Farm Credit advisor, since program availability shifts by state and county.</Flag>
+      )}
+      {selWithPrograms.map(o => {
+        const programs = o.policyPrograms || []; const allAck = programs.every((_,i)=>acked[`${o.id}_${i}`]);
+        return (
+          <div key={o.id} style={cardStyle(allAck?{borderTop:`4px solid ${T.green}`}:{ borderTop:`4px solid #4338CA` })}>
+            <div style={{ display:"flex", alignItems:"center", gap:9, marginBottom:14 }}>
+              <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:16, fontWeight:700 }}>{o.label}</div>
+              {allAck && <span style={pillStyle("ready")}>All reviewed</span>}
+            </div>
+            {programs.map((p,i) => {
+              const on = acked[`${o.id}_${i}`];
+              return (
+                <div key={i} onClick={()=>ack(o.id,i)} style={{ display:"flex", alignItems:"flex-start", gap:11, padding:"11px 0", borderBottom:i<programs.length-1?`1px solid ${T.div}`:"none", cursor:"pointer", opacity:on?0.6:1 }}>
+                  <div style={{ width:19, height:19, borderRadius:4, border:`1.5px solid ${on?"#4338CA":T.border}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, marginTop:1, background:on?"#4338CA":"#fff", transition:"all .12s" }}>{on && <IconCheckSm />}</div>
+                  <div style={{ flex:1 }}>
+                    <div style={{ fontSize:12.5, fontWeight:700, color:on?T.fgS:"#3730A3", textDecoration:on?"line-through":"none", marginBottom:2 }}>{p.name}</div>
+                    <div style={{ fontSize:11, color:T.fgS, marginBottom:3 }}>{p.agency}</div>
+                    <span style={{ fontSize:12, color:on?T.fgS:T.navy, lineHeight:1.5 }}>{p.note}</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// RD STAGE 7 — Scenario comparison
+// ─────────────────────────────────────────────────────────────────────────────
+const VALUES_ALIGNMENT_OPTS = [
+  { id:"strong", label:"Strong fit", color:T.dgreen, bg:T.greenL },
+  { id:"neutral", label:"Neutral", color:T.fgS, bg:T.div },
+  { id:"tension", label:"Tension", color:T.red, bg:T.redL },
+];
+function RD6({ rd, setRData, profile }) {
+  const d = rd.data; const selected = d.selectedOpps || []; const ranked = d.rankedOpps || []; const valuesAlignment = d.valuesAlignment || {};
   const setRank = (id,rank) => setRData(s => { const cur=(s.rankedOpps||[]).filter(x=>x.id!==id); return { ...s, rankedOpps:[...cur,{id,rank}] }; });
   const getRank = (id) => { const r=ranked.find(x=>x.id===id); return r?r.rank:0; };
+  const setAlignment = (id,val) => setRData(s => ({ ...s, valuesAlignment:{ ...(s.valuesAlignment||{}), [id]:val } }));
   const sel = selected.map(id => OPPS.find(o=>o.id===id)).filter(Boolean);
-  if (selected.length===0) return (<div><Head eyebrow="Revenue Diversification · Stage 6" title="Scenario comparison" sub="Compare your selected paths side by side." /><Flag type="warn">No opportunities selected. Go back to Stage 4.</Flag><OpportunityCostLens financialSel={[]} physicalSel={[]} setRData={setRData} /></div>);
+  const hasValues = profile && (profile.values||profile.nearTerm||profile.longTerm||profile.advantage);
+  if (selected.length===0) return (<div><Head eyebrow="Revenue Diversification · Stage 7" title="Scenario comparison" sub="Compare your selected paths side by side." /><Flag type="warn">No opportunities selected. Go back to Stage 4.</Flag><OpportunityCostLens financialSel={[]} physicalSel={[]} setRData={setRData} /></div>);
   const td = { padding:"11px 14px", fontSize:12.5, textAlign:"center", borderLeft:`1px solid ${T.div}` };
   const dotRow = (val,color) => (<div style={{ display:"flex", gap:3, justifyContent:"center" }}>{[1,2,3,4,5].map(n=>(<span key={n} style={{ width:6, height:6, borderRadius:"50%", background:n<=val?color:T.div, display:"inline-block" }}/>))}</div>);
   const rows = [{ label:"Time to revenue", vals:sel.map(o=>o.time) }, { label:"Capital required", vals:sel.map(o=>o.capital) }, { label:"Primary lever", vals:sel.map(o=>o.category) }];
   const financialSel = sel.filter(o=>o.cluster==="Financial Capital Deployment");
   const physicalSel = sel.filter(o=>o.cluster!=="Financial Capital Deployment");
+  const tensionCount = sel.filter(o=>valuesAlignment[o.id]==="tension").length;
   return (
     <div>
-      <Head eyebrow="Revenue Diversification · Stage 6" title="Scenario comparison" sub="Compare your selected paths side by side, then set your priority ranking." />
+      <Head eyebrow="Revenue Diversification · Stage 7" title="Scenario comparison" sub="Compare your selected paths side by side, then set your priority ranking." />
+      <div style={cardStyle({ borderTop:`4px solid ${T.green}` })}>
+        <div style={cardLblStyle()}><Apex color={T.green} />Your core values check</div>
+        {hasValues ? (
+          <>
+            <div style={{ fontSize:12.5, color:T.fgM, marginBottom:12, lineHeight:1.5 }}>From your Farm Profile — worth holding next to each option below before you rank them.</div>
+            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:4 }}>
+              {profile.values && <div style={{ background:T.bgAlt, borderRadius:8, padding:"10px 14px" }}><div style={{ fontSize:10.5, fontWeight:700, color:T.fgS, textTransform:"uppercase", letterSpacing:"0.05em", marginBottom:3 }}>Core values</div><div style={{ fontSize:12.5, color:T.navy }}>{profile.values}</div></div>}
+              {profile.advantage && <div style={{ background:T.bgAlt, borderRadius:8, padding:"10px 14px" }}><div style={{ fontSize:10.5, fontWeight:700, color:T.fgS, textTransform:"uppercase", letterSpacing:"0.05em", marginBottom:3 }}>Competitive advantage</div><div style={{ fontSize:12.5, color:T.navy }}>{profile.advantage}</div></div>}
+              {profile.nearTerm && <div style={{ background:T.bgAlt, borderRadius:8, padding:"10px 14px" }}><div style={{ fontSize:10.5, fontWeight:700, color:T.fgS, textTransform:"uppercase", letterSpacing:"0.05em", marginBottom:3 }}>Near-term objectives</div><div style={{ fontSize:12.5, color:T.navy }}>{profile.nearTerm}</div></div>}
+              {profile.longTerm && <div style={{ background:T.bgAlt, borderRadius:8, padding:"10px 14px" }}><div style={{ fontSize:10.5, fontWeight:700, color:T.fgS, textTransform:"uppercase", letterSpacing:"0.05em", marginBottom:3 }}>Long-term objectives</div><div style={{ fontSize:12.5, color:T.navy }}>{profile.longTerm}</div></div>}
+            </div>
+          </>
+        ) : (
+          <Flag type="info">Your Farm Profile doesn't have core values or objectives filled in yet — add them there and this check will pull them in automatically. In the meantime, rate alignment below from memory.</Flag>
+        )}
+      </div>
       <div style={{ overflowX:"auto" }}>
         <table style={{ width:"100%", borderCollapse:"collapse", background:"#fff", border:`1px solid ${T.border}`, borderRadius:10, overflow:"hidden" }}>
           <thead><tr style={{ background:T.navy }}>
@@ -1382,6 +1985,14 @@ function RD6({ rd, setRData }) {
               <td style={{ padding:"11px 14px", fontSize:12.5, fontWeight:600, color:T.fgM, borderRight:`1px solid ${T.border}` }}>12-month revenue ramp</td>
               {sel.map(o => (<td key={o.id} style={{ ...td, padding:"11px 8px" }}><div style={{ height:38, display:"flex", alignItems:"flex-end", gap:2, justifyContent:"center" }}>{(REV_RAMP[o.id]||[]).slice(0,12).map((v2,i)=>(<div key={i} style={{ width:7, height:`${v2*10}%`, minHeight:2, background:T.green, borderRadius:"1px 1px 0 0", opacity:0.55+(v2/80) }} />))}</div></td>))}
             </tr>
+            <tr style={{ background:"#F3E8FF" }}>
+              <td style={{ padding:"11px 14px", fontSize:12.5, fontWeight:600, color:T.fgM, borderRight:`1px solid ${T.border}` }}>Values alignment</td>
+              {sel.map(o => (<td key={o.id} style={td}>
+                <div style={{ display:"flex", justifyContent:"center", gap:4 }}>
+                  {VALUES_ALIGNMENT_OPTS.map(opt => (<button key={opt.id} onClick={()=>setAlignment(o.id,opt.id)} title={opt.label} style={{ padding:"4px 8px", borderRadius:6, border:`1.5px solid ${valuesAlignment[o.id]===opt.id?opt.color:T.border}`, cursor:"pointer", fontSize:10, fontWeight:700, background:valuesAlignment[o.id]===opt.id?opt.bg:"#fff", color:valuesAlignment[o.id]===opt.id?opt.color:T.fgS }}>{opt.label}</button>))}
+                </div>
+              </td>))}
+            </tr>
             <tr style={{ background:T.greenL }}>
               <td style={{ padding:"11px 14px", fontFamily:"'Barlow Condensed',sans-serif", fontSize:12.5, fontWeight:700, color:"#2F6E28", borderRight:`1px solid ${T.border}` }}>Your priority rank</td>
               {sel.map(o => (<td key={o.id} style={td}><div style={{ display:"flex", justifyContent:"center", gap:5 }}>{sel.map((_,i) => (<button key={i} onClick={()=>setRank(o.id,i+1)} style={{ width:30, height:30, borderRadius:6, border:`1.5px solid ${getRank(o.id)===i+1?T.blue:T.border}`, cursor:"pointer", fontFamily:"'Barlow Condensed',sans-serif", fontSize:13, fontWeight:700, background:getRank(o.id)===i+1?T.blue:"#fff", color:getRank(o.id)===i+1?"#fff":T.fgS }}>{i+1}</button>))}</div></td>))}
@@ -1389,6 +2000,7 @@ function RD6({ rd, setRData }) {
           </tbody>
         </table>
       </div>
+      {tensionCount>0 && <div style={{ marginTop:16 }}><Flag type="warn">You flagged {tensionCount} selected path{tensionCount>1?"s":""} as in tension with your stated values or objectives. That doesn't mean rule it out — but it's worth naming the tradeoff explicitly before ranking it highly, and revisiting whether the near-term financial case is strong enough to justify it.</Flag></div>}
       <OpportunityCostLens financialSel={financialSel} physicalSel={physicalSel} setRData={setRData} />
     </div>
   );
@@ -1477,7 +2089,7 @@ function RD7({ rd, setRData, fa }) {
 
   return (
     <div>
-      <Head eyebrow="Revenue Diversification · Stage 7" title="Beyond the balance sheet: building financial reserves for what's next" sub="Diversifying income is only half the equation. The other half is knowing where to put the money you've diversified — so it's there when a piece of equipment fails or a new opportunity shows up." />
+      <Head eyebrow="Revenue Diversification · Stage 8" title="Beyond the balance sheet: building financial reserves for what's next" sub="Diversifying income is only half the equation. The other half is knowing where to put the money you've diversified — so it's there when a piece of equipment fails or a new opportunity shows up." />
 
       {/* Equipment reserve calculator */}
       <div style={cardStyle({ borderTop:`4px solid ${T.green}` })}>
@@ -1584,11 +2196,11 @@ function RD8({ rd, fa }) {
   const tierC = { r:{bg:T.redL,c:T.red}, a:{bg:T.amberL,c:T.amberT}, g:{bg:T.greenL,c:T.dgreen} };
   const rankColor = (i) => [T.blue,T.tan,T.dgreen][i] || T.fgS;
   const sc = faScoreOf(fa); const mfp = parseFloat(b.mfpScore) || sc;
-  const summary = [["FA module","Complete"],["FA tier", fa.wholeFarm.profitability==="vuln"?"Stabilize":fa.wholeFarm.profitability==="strong"?"Advance":"Optimize"],["RD readiness", mfp>=3.5?"Ready":mfp>=2.5?"Caution":"Foundation first"],["Top RD path",(sel[0]&&sel[0].label)||"—"],["Asset lever",`${leverPct(lev,"asset")}% (${LEVER_BUCKET_LABEL[leverBucket(leverPct(lev,"asset"))]})`],["Trust lever",`${leverPct(lev,"trust")}% (${LEVER_BUCKET_LABEL[leverBucket(leverPct(lev,"trust"))]})`],["Risk buffer",`${leverPct(lev,"risk")}% (${LEVER_BUCKET_LABEL[leverBucket(leverPct(lev,"risk"))]})`]];
+  const summary = [["FA module","Complete"],["FA tier", fa.wholeFarm.profitability==="vuln"?"Stabilize":fa.wholeFarm.profitability==="strong"?"Advance":"Optimize"],["RD readiness", mfp>=3.5?"Ready":mfp>=2.5?"Caution":"Foundation first"],["Top RD path",(sel[0]&&sel[0].label)||"—"],["Assets",`${leverPct(lev,"asset")}% (${LEVER_BUCKET_LABEL[leverBucket(leverPct(lev,"asset"))]})`],["Human capital",`${leverPct(lev,"trust")}% (${LEVER_BUCKET_LABEL[leverBucket(leverPct(lev,"trust"))]})`],["Financial capital",`${leverPct(lev,"risk")}% (${LEVER_BUCKET_LABEL[leverBucket(leverPct(lev,"risk"))]})`]];
   const resources = [["Penn State","Advisory team assembly + insurance review"],["Purdue","Five-lever framework — price, production, cost, balance sheet, people"],["Ohio State","Whole-farm planning + succession"],["Iowa State","Equipment benchmarking for custom farming"],["UKY Center","Specialty crop diversification database"]];
   return (
     <div>
-      <Head eyebrow="Revenue Diversification · Stage 8" title="Revenue Diversification action plan" sub="Your personalized diversification roadmap — ranked by the priority order you set in Stage 6." />
+      <Head eyebrow="Revenue Diversification · Stage 9" title="Revenue Diversification action plan" sub="Your personalized diversification roadmap — ranked by the priority order you set in Stage 7." />
       <div style={{ background:T.navy, borderRadius:10, padding:"20px 24px", marginBottom:16 }}>
         <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:11, fontWeight:700, letterSpacing:"0.12em", textTransform:"uppercase", color:T.green, marginBottom:6, display:"flex", alignItems:"center", gap:7 }}><Apex color={T.green} />Both modules complete</div>
         <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:19, fontWeight:700, color:"#fff", marginBottom:5, lineHeight:1.2 }}>{sel.length>0 ? `${sel.length} diversification path${sel.length>1?"s":""} identified. ${sel[0].label} is your Priority 1.` : "No paths selected — revisit Stage 4."}</div>
@@ -1686,10 +2298,11 @@ const revTierFromIncome = (income) => {
   return "$5M+";
 };
 
-function FarmProfilePage({ profile, setProfile, fa, rd }) {
+function FarmProfilePage({ profile, setProfile, fa, rd, goFA }) {
   const set = (field) => (e) => setProfile(s => ({ ...s, [field]: e.target.value }));
   const sourceCount = (fa.enterprises||[]).length + (rd.data?.selectedOpps||[]).length;
   const divLabel = sourceCount===0 ? null : sourceCount<=1 ? "Highly concentrated" : sourceCount<=3 ? "Moderately concentrated" : "Well diversified";
+  const { hasData: faHasData, ratios: faRatios } = computeFARatios(fa.s3vals);
   const snapField = (label, field, placeholder, info) => (
     <div style={{ background:T.bgAlt, border:`1px solid ${T.border}`, borderRadius:10, padding:"14px 16px" }}>
       <div style={{ display:"flex", alignItems:"center", gap:5, marginBottom:8 }}>
@@ -1721,6 +2334,50 @@ function FarmProfilePage({ profile, setProfile, fa, rd }) {
             {divLabel ? (<span style={pillStyle(sourceCount<=1?"vuln":sourceCount<=3?"watch":"strong")}>{divLabel}</span>) : (<div style={{ fontSize:13.5, fontStyle:"italic", color:T.fgS }}>Not scored yet</div>)}
             {sourceCount>0 && <div style={{ fontSize:11, color:T.fgS, marginTop:6 }}>{sourceCount} income source{sourceCount!==1?"s":""} across FA + RD</div>}
           </div>
+        </div>
+      </div>
+
+      <div style={cardStyle({ borderTop:`4px solid ${T.green}` })}>
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:faHasData?14:0 }}>
+          <div style={cardLblStyle({ marginBottom:0 })}><Apex color={T.green} />Whole-farm financial health</div>
+          {!faHasData && <button onClick={()=>goFA(3)} style={{ ...btnStyle("outline"), fontSize:11.5, padding:"6px 14px" }}>Go to Financial Analysis →</button>}
+        </div>
+        {faHasData ? (
+          <>
+            <div style={{ fontSize:12, color:T.fgM, marginBottom:14, lineHeight:1.5 }}>Pulled live from Financial Analysis Stage 3 — these update automatically any time you revise your numbers there.</div>
+            <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:10 }}>
+              {faRatios.map(r => (
+                <div key={r.key} style={{ background:T.bgAlt, borderRadius:8, padding:"10px 12px", textAlign:"center" }}>
+                  <div style={{ fontSize:10, color:T.fgS, marginBottom:5, lineHeight:1.3 }}>{r.label}</div>
+                  <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:16, fontWeight:800, color:scColor(r.status), marginBottom:3 }}>{r.val}</div>
+                  <span style={{ ...pillStyle(r.status), fontSize:9, padding:"2px 7px" }}>{r.status==="blank"?"—":r.status}</span>
+                </div>
+              ))}
+            </div>
+          </>
+        ) : (
+          <div style={{ fontSize:13.5, fontStyle:"italic", color:T.fgS }}>Not scored yet — complete Financial Analysis Stage 3 (Ratio Deep Dive) to see your benchmarked ratios here.</div>
+        )}
+      </div>
+
+      <div style={cardStyle()}>
+        <div style={cardLblStyle()}><Apex color={T.green} />SWOT analysis</div>
+        <div style={{ fontSize:12, color:T.fgM, marginBottom:14, lineHeight:1.5 }}>Strengths and weaknesses are internal — what's already true about the operation. Opportunities and threats are external — what's happening around it. Worth revisiting each year, since this changes as the operation and the market do.</div>
+        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gridTemplateRows:"1fr 1fr", gap:12 }}>
+          {[
+            { label:"Strengths", field:"swotStrengths", placeholder:"e.g., strong soil health, low debt load, experienced labor, established grain buyer relationships", color:T.dgreen, bg:T.greenL, sub:"Internal · positive" },
+            { label:"Weaknesses", field:"swotWeaknesses", placeholder:"e.g., aging equipment, single-buyer dependence, no succession plan yet", color:T.amberT, bg:T.amberL, sub:"Internal · negative" },
+            { label:"Opportunities", field:"swotOpportunities", placeholder:"e.g., nearby ethanol plant demand, CRP grazing access if pending legislation passes, direct-to-consumer interest in the area", color:T.blue, bg:T.blueL, sub:"External · positive" },
+            { label:"Threats", field:"swotThreats", placeholder:"e.g., input cost volatility, land rent competition, extreme weather trend in the region", color:T.red, bg:T.redL, sub:"External · negative" },
+          ].map(q => (
+            <div key={q.field} style={{ background:q.bg, border:`1.5px solid ${q.color}`, borderRadius:10, padding:"14px 16px" }}>
+              <div style={{ display:"flex", alignItems:"baseline", justifyContent:"space-between", marginBottom:8 }}>
+                <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:14, fontWeight:800, color:q.color, textTransform:"uppercase", letterSpacing:"0.04em" }}>{q.label}</span>
+                <span style={{ fontSize:9.5, fontWeight:700, color:q.color, textTransform:"uppercase", letterSpacing:"0.04em", opacity:0.75 }}>{q.sub}</span>
+              </div>
+              <textarea style={inputStyle({ minHeight:80, border:"none", background:"transparent", padding:0, fontSize:13, fontWeight:500, color:T.navy, resize:"vertical" })} value={profile[q.field]||""} onChange={set(q.field)} placeholder={q.placeholder} />
+            </div>
+          ))}
         </div>
       </div>
 
@@ -1762,7 +2419,7 @@ export default function App() {
   const faPct = Math.round(Math.min(fa.stage,faTotal)/faTotal*100);
   const rdPct = Math.round(Math.min(rd.stage,rdTotal)/rdTotal*100);
   const riskPct = Math.round(Math.min(risk.stage,riskTotal)/riskTotal*100);
-  const PROFILE_FIELDS = ["location","size","productionMix","ventures","grossIncome","nearTerm","longTerm","advantage","values"];
+  const PROFILE_FIELDS = ["location","size","productionMix","ventures","grossIncome","nearTerm","longTerm","advantage","values","swotStrengths","swotWeaknesses","swotOpportunities","swotThreats"];
   const profilePct = Math.round((PROFILE_FIELDS.filter(f=>(profile[f]||"").trim()).length / PROFILE_FIELDS.length) * 100);
   const pct = isFA ? faPct : isRD ? rdPct : riskPct;
 
@@ -1795,16 +2452,18 @@ export default function App() {
 
   const FA_BODY = [
     <FA1 fa={fa} setFA={setFA} />, <FA2 fa={fa} setFA={setFA} />, <FA3 fa={fa} setFA={setFA} />,
-    <FA4 fa={fa} setFA={setFA} />, <FA5 fa={fa} setFA={setFA} />, <FA6 fa={fa} goRD={goRD} />,
+    <FA4 fa={fa} setFA={setFA} />,
   ];
   const RD_BODY = [
     <RD1 rd={rd} setRData={setRData} fa={fa} />, <RD2 rd={rd} setRData={setRData} />, <RD3 rd={rd} setRData={setRData} />,
-    <RD4 rd={rd} setRData={setRData} fa={fa} />, <RD5 rd={rd} setRData={setRData} />, <RD6 rd={rd} setRData={setRData} />,
-    <RD7 rd={rd} setRData={setRData} fa={fa} />, <RD8 rd={rd} fa={fa} />,
+    <RD4 rd={rd} setRData={setRData} fa={fa} />, <RD5 rd={rd} setRData={setRData} />, <RDPolicyEnablers rd={rd} setRData={setRData} />,
+    <RD6 rd={rd} setRData={setRData} profile={profile} />, <RD7 rd={rd} setRData={setRData} fa={fa} />, <RD8 rd={rd} fa={fa} />,
   ];
   const RISK_BODY = [
     ...RISK_CATS.map((c,i) => <RiskCategoryStage key={c.id} risk={risk} setRisk={setRisk} catIndex={i} />),
+    <RiskResultsStage risk={risk} />,
     <RiskPlanRevenueOps risk={risk} setRisk={setRisk} />, <RiskPlanThreats risk={risk} setRisk={setRisk} />,
+    <CropInsuranceCalculator risk={risk} setRisk={setRisk} fa={fa} profile={profile} />, <LivestockInsuranceCalculator risk={risk} setRisk={setRisk} />,
     <RiskPlanStrategy risk={risk} setRisk={setRisk} />, <RiskPlanReview risk={risk} setRisk={setRisk} />,
   ];
   const body = isFA ? FA_BODY[stage-1] : isRD ? RD_BODY[stage-1] : RISK_BODY[stage-1];
@@ -1898,7 +2557,7 @@ export default function App() {
               </div>
               <div style={{ height:3, background:T.div, flexShrink:0 }}><div style={{ height:"100%", width:`${profilePct}%`, background:T.green, transition:"width .4s" }} /></div>
               <div style={{ flex:1, padding:"30px 34px", maxWidth:960, width:"100%", margin:"0 auto", boxSizing:"border-box" }}>
-                <div key="profile" className="mfp-body-anim"><FarmProfilePage profile={profile} setProfile={setProfile} fa={fa} rd={rd} /></div>
+                <div key="profile" className="mfp-body-anim"><FarmProfilePage profile={profile} setProfile={setProfile} fa={fa} rd={rd} goFA={goFA} /></div>
                 <div style={{ display:"flex", justifyContent:"flex-end", alignItems:"center", paddingTop:22, borderTop:`1px solid ${T.border}`, marginTop:26 }}>
                   <button onClick={()=>goFA(1)} style={btnStyle("primary")}>Continue to Financial Analysis →</button>
                 </div>
