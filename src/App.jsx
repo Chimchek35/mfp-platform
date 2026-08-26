@@ -2842,6 +2842,59 @@ function FarmProfilePage({ profile, setProfile, fa, rd, goFA, goRD, goRisk }) {
         )}
       </div>
 
+      <div style={cardStyle({ borderTop:`4px solid ${T.navy}` })}>
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:14, gap:12, flexWrap:"wrap" }}>
+          <div style={cardLblStyle({ marginBottom:0 })}>MFP assessment scores</div>
+          <span style={{ fontSize:11.5, color:T.fgS }}>Four categories, twelve dimensions</span>
+        </div>
+
+        {/* overall */}
+        <div style={{ display:"flex", alignItems:"baseline", justifyContent:"space-between", gap:14, background:T.bgAlt, borderRadius:8, padding:"14px 18px", marginBottom:16 }}>
+          <span style={{ fontSize:13.5, color:T.fgM }}><b style={{ color:T.fg, fontWeight:600 }}>Your whole farm business</b> <span style={{ color:T.fgS, fontSize:12 }}>— overall MFP score</span></span>
+          <span style={{ fontSize:28, fontWeight:600, color:T.navy, whiteSpace:"nowrap" }}>{apOverall}<span style={{ fontSize:13, fontWeight:400, color:T.fgS }}> / 100</span></span>
+        </div>
+
+        {/* four categories */}
+        <div style={{ fontSize:11, letterSpacing:"0.13em", color:T.fgS, textTransform:"uppercase", marginBottom:10 }}>Category scores</div>
+        <div style={{ marginBottom:20 }}>
+          {Object.entries(AP_CATS).map(([cid,c]) => {
+            const st = c.score>=67?"strong":c.score>=34?"watch":"vuln";
+            return (
+              <div key={cid} style={{ display:"flex", alignItems:"center", gap:14, padding:"9px 0", borderBottom:`1px dashed ${T.border}` }}>
+                <span style={{ width:170, fontSize:13.5, fontWeight:600, color:T.fg, flexShrink:0 }}>{c.label}</span>
+                <div style={{ flex:1, height:8, background:"#dde1e8", borderRadius:4, overflow:"hidden" }}>
+                  <div style={{ width:`${c.score}%`, height:"100%", background:scColor(st), borderRadius:4 }} />
+                </div>
+                <span style={{ width:62, textAlign:"right", fontSize:15, fontWeight:600, color:scColor(st), flexShrink:0 }}>{c.score}<span style={{ fontSize:11, fontWeight:400, color:T.fgS }}> /100</span></span>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* twelve dimensions, grouped by category */}
+        <div style={{ fontSize:11, letterSpacing:"0.13em", color:T.fgS, textTransform:"uppercase", marginBottom:10 }}>Dimension index scores</div>
+        {Object.entries(AP_CATS).map(([cid,c]) => (
+          <div key={cid} style={{ marginBottom:14 }}>
+            <div style={{ fontSize:11.5, fontWeight:600, color:T.blue, marginBottom:5 }}>{c.label}</div>
+            {AP_AREAS.filter(a => a.cat===cid).map(a => {
+              const st = a.score>=3.5?"strong":a.score>=2.5?"watch":"vuln";
+              return (
+                <div key={a.id} style={{ display:"flex", alignItems:"center", gap:12, padding:"6px 0 6px 12px", borderLeft:`2px solid ${T.div}` }}>
+                  <span style={{ width:26, fontSize:11, color:T.fgS, flexShrink:0 }}>{String(a.n).padStart(2,"0")}</span>
+                  <span style={{ width:200, fontSize:12.5, color:T.fgM, flexShrink:0 }}>{a.label}</span>
+                  <div style={{ flex:1, height:6, background:"#dde1e8", borderRadius:3, overflow:"hidden" }}>
+                    <div style={{ width:`${(a.score/5)*100}%`, height:"100%", background:scColor(st), borderRadius:3 }} />
+                  </div>
+                  <span style={{ width:50, textAlign:"right", fontSize:13, fontWeight:600, color:scColor(st), flexShrink:0 }}>{a.score.toFixed(1)}<span style={{ fontSize:10.5, fontWeight:400, color:T.fgS }}> /5</span></span>
+                  {a.module && <span style={{ ...pillStyle("strong"), flexShrink:0 }}>module</span>}
+                </div>
+              );
+            })}
+          </div>
+        ))}
+        <Flag type="info">The three lowest-scoring dimensions, weighted for whether they gate other progress or drive near-term lift, become the priorities on the Priority actions tab.</Flag>
+      </div>
+
       <Flag type="info">This profile is shared across all three modules. Financial Analysis and Revenue Diversification each offer a one-click way to pull matching fields from here instead of re-entering them.</Flag>
       </>)}
     </div>
