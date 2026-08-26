@@ -1,21 +1,21 @@
 import { useState, useMemo } from "react";
 
 // ─────────────────────────────────────────────────────────────────────────────
-// FONTS  (Barlow Condensed for display / Montserrat for body — matches the
+// FONTS  (system stack, matching the MFP action plan design language)
 // Idealyst brand system used in the design export. In production, swap this
 // @import for the bundled TTFs shipped in /fonts in the .dc.html package.)
 // ─────────────────────────────────────────────────────────────────────────────
 const FontStyles = () => (
   <style>{`
-    @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700;900&family=Montserrat:wght@400;500;600;700;800&display=swap');
     *{box-sizing:border-box;}
-    .mfp-root{font-family:"Montserrat","Segoe UI",sans-serif;color:#0F1C39;}
-    .mfp-root a{color:#0A4576;text-decoration:none;}
+    .mfp-root{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;color:#181c24;font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased;}
+    .mfp-root h1,.mfp-root h2,.mfp-root h3,.mfp-root h4{margin:0;font-weight:600;line-height:1.25;}
+    .mfp-root a{color:#0C4477;text-decoration:none;}
     .mfp-root input,.mfp-root select,.mfp-root textarea,.mfp-root button{font-family:inherit;}
-    .mfp-root input:focus,.mfp-root select:focus,.mfp-root textarea:focus{border-color:#0A4576!important;box-shadow:0 0 0 3px rgba(10,69,118,0.12);outline:none;}
-    .mfp-root input[type=range]{accent-color:#0A4576;}
+    .mfp-root input:focus,.mfp-root select:focus,.mfp-root textarea:focus{border-color:#0C4477!important;box-shadow:0 0 0 3px rgba(12,68,119,0.10);outline:none;}
+    .mfp-root input[type=range]{accent-color:#0C4477;}
     .mfp-root ::-webkit-scrollbar{width:10px;height:10px;}
-    .mfp-root ::-webkit-scrollbar-thumb{background:#CFD4DD;border-radius:5px;}
+    .mfp-root ::-webkit-scrollbar-thumb{background:#d3d8e0;border-radius:5px;}
     .mfp-root ::-webkit-scrollbar-track{background:transparent;}
     @keyframes mfpFade{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
     .mfp-body-anim{animation:mfpFade .32s cubic-bezier(0.16,1,0.3,1);}
@@ -26,12 +26,12 @@ const FontStyles = () => (
 // DESIGN TOKENS — extracted verbatim from the Idealyst brand palette
 // ─────────────────────────────────────────────────────────────────────────────
 const T = {
-  navy:"#0F1C39", blue:"#0A4576", blueH:"#083A63", green:"#7BBF32", dgreen:"#388633",
-  water:"#03A6D2", skies:"#99DFF9", amber:"#FFA400", amberT:"#B26A00", tan:"#C7893E",
-  red:"#D7282F", redD:"#B0242A", silver:"#D2DCE5",
-  bg:"#fff", bgAlt:"#F5F7FA", fg:"#0F1C39", fgM:"#4A5A75", fgS:"#6F7788",
-  border:"#E1E6ED", div:"#EEF1F5", greenL:"#E4F2D6", amberL:"#FFF1DB",
-  redL:"#FBE0E1", waterL:"#E1F4FB", blueL:"#EDF3F8",
+  navy:"#0E1C39", blue:"#0C4477", blueH:"#0A3760", green:"#358733", dgreen:"#2C5C11",
+  moss:"#97BC62", water:"#0C4477", skies:"#eef2f7", amber:"#C98A2C", amberT:"#8A5C10", tan:"#C98A2C",
+  red:"#B3261E", redD:"#8A1E18", silver:"#e2e5ea",
+  bg:"#fff", bgAlt:"#f1f3f6", fg:"#181c24", fgM:"#4b5261", fgS:"#858c9a",
+  border:"#e2e5ea", div:"#eef0f4", greenL:"#f2f6ec", amberL:"#fdf5e8",
+  redL:"#fbeae8", waterL:"#eef2f7", blueL:"#eef2f7",
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -91,36 +91,36 @@ const IconCheckSm = ({ color = "#fff", size = 11 }) => (
 // ─────────────────────────────────────────────────────────────────────────────
 // STYLE HELPERS
 // ─────────────────────────────────────────────────────────────────────────────
-const cardStyle = (extra={}) => ({ background:"#fff", border:`1px solid ${T.border}`, borderRadius:10, padding:24, marginBottom:16, boxShadow:"0 1px 2px rgba(15,28,57,0.06)", ...extra });
-const h1Style = { fontFamily:"'Barlow Condensed',sans-serif", fontSize:34, fontWeight:700, color:T.navy, margin:"0 0 4px", letterSpacing:"-0.01em", lineHeight:1.05 };
-const eyebrowStyle = { fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:12, letterSpacing:"0.14em", textTransform:"uppercase", color:T.blue, display:"flex", alignItems:"center", gap:8, marginBottom:8 };
-const subStyle = { fontSize:14, color:T.fgS, margin:"0 0 26px", maxWidth:660, lineHeight:1.6 };
-const cardLblStyle = (extra={}) => ({ fontFamily:"'Barlow Condensed',sans-serif", fontSize:12, fontWeight:700, letterSpacing:"0.14em", textTransform:"uppercase", color:T.fgS, marginBottom:16, display:"flex", alignItems:"center", gap:8, ...extra });
-const inputStyle = (extra={}) => ({ width:"100%", padding:"9px 11px", border:`1px solid ${T.border}`, borderRadius:6, fontSize:14, background:"#fff", color:T.fg, boxSizing:"border-box", ...extra });
+const cardStyle = (extra={}) => ({ background:"#fff", border:`1px solid ${T.border}`, borderRadius:10, padding:"24px 28px", marginBottom:14, ...extra });
+const h1Style = { fontSize:21, fontWeight:600, color:T.navy, margin:"0 0 4px", letterSpacing:"-0.01em", lineHeight:1.25 };
+const eyebrowStyle = { fontSize:10.5, fontWeight:400, letterSpacing:"0.15em", textTransform:"uppercase", color:T.fgS, marginBottom:6 };
+const subStyle = { fontSize:13.5, color:T.fgM, margin:"6px 0 22px", maxWidth:640, lineHeight:1.6 };
+const cardLblStyle = (extra={}) => ({ fontSize:11, fontWeight:600, letterSpacing:"0.13em", textTransform:"uppercase", color:T.fgS, marginBottom:12, display:"flex", alignItems:"center", gap:8, ...extra });
+const inputStyle = (extra={}) => ({ width:"100%", padding:"9px 11px", border:`1px solid ${T.border}`, borderRadius:5, fontSize:14, background:"#fff", color:T.fg, boxSizing:"border-box", ...extra });
 const labelStyle = { fontSize:12, fontWeight:600, color:T.fgM, marginBottom:5, display:"block" };
 const btnStyle = (variant, color) => {
-  const col = color || T.blue;
-  if (variant === "outline") return { padding:"10px 20px", borderRadius:6, cursor:"pointer", fontSize:13, fontWeight:600, background:"transparent", color:col, border:`1.5px solid ${col}`, letterSpacing:"0.02em", transition:"all .15s" };
-  if (variant === "ghost") return { padding:"5px 12px", borderRadius:6, cursor:"pointer", fontSize:12, fontWeight:600, background:T.div, color:T.fgM, border:"none" };
-  return { padding:"10px 22px", borderRadius:6, border:"none", cursor:"pointer", fontSize:13, fontWeight:600, background:col, color:"#fff", letterSpacing:"0.02em", transition:"all .15s" };
+  const col = color || T.green;
+  if (variant === "outline") return { padding:"8px 16px", borderRadius:5, cursor:"pointer", fontSize:13, fontWeight:500, background:"#fff", color:T.blue, border:`1px solid #cbd6e2`, transition:"all .15s" };
+  if (variant === "ghost") return { padding:"5px 12px", borderRadius:5, cursor:"pointer", fontSize:12, fontWeight:500, background:T.div, color:T.fgM, border:"none" };
+  return { padding:"9px 17px", borderRadius:5, border:"none", cursor:"pointer", fontSize:13.5, fontWeight:500, background:col, color:"#fff", transition:"all .15s" };
 };
 const pillStyle = (s) => {
-  const m = { strong:{bg:T.greenL,c:"#2F6E28"}, ready:{bg:T.greenL,c:"#2F6E28"}, watch:{bg:T.amberL,c:T.amberT}, caution:{bg:T.amberL,c:T.amberT}, vuln:{bg:T.redL,c:T.redD}, foundation:{bg:T.redL,c:T.redD}, info:{bg:T.waterL,c:"#0A6E8C"}, blank:{bg:T.div,c:T.fgS} };
+  const m = { strong:{bg:T.greenL,c:T.dgreen}, ready:{bg:T.greenL,c:T.dgreen}, watch:{bg:T.amberL,c:T.amberT}, caution:{bg:T.amberL,c:T.amberT}, vuln:{bg:T.redL,c:T.redD}, foundation:{bg:T.redL,c:T.redD}, info:{bg:T.blueL,c:T.blue}, blank:{bg:"#eceef2",c:T.fgS} };
   const st = m[s] || m.blank;
-  return { display:"inline-flex", alignItems:"center", gap:5, padding:"3px 11px", borderRadius:999, fontSize:11, fontWeight:700, background:st.bg, color:st.c, fontFamily:"'Barlow Condensed',sans-serif", letterSpacing:"0.04em", textTransform:"uppercase" };
+  return { display:"inline-block", padding:"3px 8px", borderRadius:3, fontSize:9.5, fontWeight:600, background:st.bg, color:st.c, letterSpacing:"0.12em", textTransform:"uppercase" };
 };
 const scColor = (s) => ({ strong:T.dgreen, watch:T.amberT, vuln:T.red, blank:"#9FA4B0" }[s] || "#9FA4B0");
 const fmt$ = (n, d=0) => { if (n===null||n===undefined||isNaN(n)) return "—"; const s=Math.abs(n).toFixed(d).replace(/\B(?=(\d{3})+(?!\d))/g,","); return (n<0?"-$":"$")+s; };
 const classify = (r, val) => { if (val===""||val===null||val===undefined||isNaN(parseFloat(val))) return "blank"; const v=parseFloat(val); return r.lb ? (v<=r.sv?"strong":v>=r.vv?"vuln":"watch") : (v>=r.sv?"strong":v<=r.vv?"vuln":"watch"); };
 
 const Flag = ({ type, children }) => {
-  const m = { ok:{bg:T.greenL,c:"#2F6E28"}, warn:{bg:T.amberL,c:T.amberT}, danger:{bg:T.redL,c:T.redD}, info:{bg:T.waterL,c:"#0A6E8C"} }[type];
-  return <div style={{ background:m.bg, color:m.c, borderRadius:8, padding:"11px 14px", fontSize:12.5, display:"flex", alignItems:"flex-start", gap:9, marginBottom:10, lineHeight:1.5 }}><Fic type={type} /><span>{children}</span></div>;
+  const m = { ok:{bg:T.greenL,c:T.dgreen,b:T.moss}, warn:{bg:T.amberL,c:T.amberT,b:T.amber}, danger:{bg:T.redL,c:T.redD,b:T.red}, info:{bg:T.blueL,c:T.blue,b:T.blue} }[type];
+  return <div style={{ background:m.bg, color:m.c, borderLeft:`2px solid ${m.b}`, borderRadius:"0 5px 5px 0", padding:"9px 13px", fontSize:12.5, marginBottom:10, lineHeight:1.55 }}>{children}</div>;
 };
 
 const Head = ({ eyebrow, title, sub }) => (
   <div>
-    <div style={eyebrowStyle}><Apex color={T.green} />{eyebrow}</div>
+    <div style={eyebrowStyle}>{eyebrow}</div>
     <h1 style={h1Style}>{title}</h1>
     <p style={subStyle}>{sub}</p>
   </div>
@@ -314,24 +314,18 @@ const REV_RAMP = { energy:[0,0,0,0,0,0,0,0,0,0,0,0], specialty:[0,0,0,0,0,0,0,2,
 function FA1({ fa, setFA }) {
   const active = fa.enterprises;
   const toggle = (k) => setFA(s => ({ ...s, enterprises: s.enterprises.includes(k) ? s.enterprises.filter(x=>x!==k) : [...s.enterprises, k] }));
-  const wfFields = [
-    { key:"liquidity", label:"Liquidity", opts:["Strong — current ratio > 2.0","Watch — 1.0–2.0","Vulnerable — < 1.0"] },
-    { key:"solvency", label:"Solvency", opts:["Strong — D/A < 40%","Watch — 40–60%","Vulnerable — > 60%"] },
-    { key:"profitability", label:"Profitability", opts:["Strong — ROA > 5%","Watch — 1–5%","Vulnerable — < 1%"] },
-    { key:"efficiency", label:"Operating expense ratio", opts:["Strong — OER < 65%","Watch — 65–80%","Weak — > 80%"] },
-  ];
   return (
     <div>
       <Head eyebrow="Financial Analysis · Stage 1" title="Enterprise dashboard" sub="Select the enterprises you operate. Each one gets its own ratio scorecard, and this profile flows into the Revenue Diversification module." />
       <div style={cardStyle()}>
-        <div style={cardLblStyle()}><Apex color={T.green} />Select your enterprises</div>
+        <div style={cardLblStyle()}>Select your enterprises</div>
         <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:12 }}>
           {Object.entries(ENT).map(([k,v]) => {
             const on = active.includes(k);
             return (
               <button key={k} onClick={()=>toggle(k)} style={{ padding:"16px 15px", borderRadius:9, border:on?`2px solid ${T.blue}`:`1px solid ${T.border}`, cursor:"pointer", background:on?T.blueL:"#fff", textAlign:"left", display:"flex", flexDirection:"column", gap:8, transition:"all .12s" }}>
                 <EntIcon type={k} color={on?T.blue:T.fgS} size={26} />
-                <div><div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:16, fontWeight:700, color:on?T.blue:T.navy }}>{v.label}</div><div style={{ fontSize:11.5, color:T.fgS, marginTop:1 }}>{v.sub}</div></div>
+                <div><div style={{ fontSize:16, fontWeight:700, color:on?T.blue:T.navy }}>{v.label}</div><div style={{ fontSize:11.5, color:T.fgS, marginTop:1 }}>{v.sub}</div></div>
               </button>
             );
           })}
@@ -349,11 +343,11 @@ function FA1({ fa, setFA }) {
         return (
           <div key={ek} style={cardStyle()}>
             <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:14, paddingBottom:12, borderBottom:`1px solid ${T.div}` }}>
-              <div style={{ display:"flex", alignItems:"center", gap:10 }}><EntIcon type={ek} color={T.blue} size={24} /><div><div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:17, fontWeight:700 }}>{ec.label}</div><div style={{ fontSize:11.5, color:T.fgS }}>{ec.sub}</div></div></div>
-              <div style={{ fontSize:12.5, fontWeight:700, color:tC, fontFamily:"'Barlow Condensed',sans-serif", letterSpacing:"0.02em" }}>{tL}</div>
+              <div style={{ display:"flex", alignItems:"center", gap:10 }}><EntIcon type={ek} color={T.blue} size={24} /><div><div style={{ fontSize:17, fontWeight:700 }}>{ec.label}</div><div style={{ fontSize:11.5, color:T.fgS }}>{ec.sub}</div></div></div>
+              <div style={{ fontSize:12.5, fontWeight:700, color:tC, letterSpacing:"0.02em" }}>{tL}</div>
             </div>
             <div style={{ display:"grid", gridTemplateColumns:cols, gap:6, background:T.bgAlt, borderRadius:6, padding:"8px 12px", marginBottom:2 }}>
-              {["Ratio","Strong","Watch","Vuln.","Your value"].map((hh,i)=>(<div key={i} style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:11, fontWeight:700, color:T.fgS, textTransform:"uppercase", letterSpacing:"0.05em", textAlign:i===0?"left":"center" }}>{hh}</div>))}
+              {["Ratio","Strong","Watch","Vuln.","Your value"].map((hh,i)=>(<div key={i} style={{ fontSize:11, fontWeight:700, color:T.fgS, textTransform:"uppercase", letterSpacing:"0.05em", textAlign:i===0?"left":"center" }}>{hh}</div>))}
             </div>
             {ec.ratios.map(r => {
               const st = classify(r, vals[r.key]); const dc = { strong:T.dgreen, watch:T.amber, vuln:T.red, blank:T.border }[st];
@@ -373,19 +367,6 @@ function FA1({ fa, setFA }) {
           </div>
         );
       })}
-      <div style={cardStyle()}>
-        <div style={cardLblStyle()}><Apex color={T.green} />Whole-farm health</div>
-        <div style={{ display:"grid", gridTemplateColumns:"repeat(2,1fr)", gap:14 }}>
-          {wfFields.map(f => (
-            <div key={f.key}>
-              <label style={labelStyle}>{f.label}</label>
-              <select style={inputStyle()} value={fa.wholeFarm[f.key]||""} onChange={e=>setFA(s=>({...s,wholeFarm:{...s.wholeFarm,[f.key]:e.target.value}}))}>
-                <option value="">Select</option>{f.opts.map((o,i)=><option key={i} value={["strong","watch","vuln"][i]}>{o}</option>)}
-              </select>
-            </div>
-          ))}
-        </div>
-      </div>
     </div>
   );
 }
@@ -410,7 +391,7 @@ function FA2({ fa, setFA }) {
       <Head eyebrow="Financial Analysis · Stage 2" title="Goal alignment" sub="These answers shape your ratio deep dive, action plan, and what carries into the Revenue Diversification module." />
       {Qs.map(q => (
         <div key={q.key} style={cardStyle()}>
-          <div style={cardLblStyle()}><Apex color={T.green} />{q.title}</div>
+          <div style={cardLblStyle()}>{q.title}</div>
           {q.opts.map(([val,title,desc]) => (
             <div key={val} style={optSty(g[q.key]===val)} onClick={()=>set(q.key,val)}>
               <div style={{ display:"flex", alignItems:"center", gap:10 }}>
@@ -422,7 +403,7 @@ function FA2({ fa, setFA }) {
         </div>
       ))}
       <div style={cardStyle()}>
-        <div style={cardLblStyle()}><Apex color={T.green} />Financial tracking (select all that apply)</div>
+        <div style={cardLblStyle()}>Financial tracking (select all that apply)</div>
         {[["schedF","Schedule F — file taxes annually"],["accrual","Accrual accounting or farm management software"],["ent","Track costs separately by enterprise"],["balance","Up-to-date balance sheet"],["fms","Farm management software (Granular, Ag-Analytics)"],["none","None — tracking is informal"]].map(([val,label]) => {
           const on = tracking.includes(val);
           return (
@@ -500,18 +481,55 @@ const computeFARatios = (s3) => {
   const avgAssets = (beginAssets>0 || endAssets>0) ? (beginAssets+endAssets)/2 : 0;
   const assetTurnover = hasData && avgAssets>0 ? (hasAccrualData?accrualGross:gross)/avgAssets*100 : null;
   const sgr = hasData && beginNetWorth>0 ? (nfifo-livingWithdrawals-incomeTaxes)/beginNetWorth*100 : null;
+  // Liquidity, from current assets and current liabilities
+  const currentAssets = gv("currentAssets"), currentLiab = gv("currentLiab");
+  const hasLiq = currentAssets > 0 || currentLiab > 0;
+  const currentRatio = hasLiq && currentLiab > 0 ? currentAssets/currentLiab : null;
+  const workingCapital = hasLiq ? currentAssets - currentLiab : null;
+  const wcToRevenue = hasLiq && gross > 0 ? (workingCapital/gross)*100 : null;
+
+  // Solvency, from the end-of-year balance sheet
+  const debtToAsset = endAssets > 0 ? (gv("endLiab")/endAssets)*100 : null;
+  const equityRatio = debtToAsset === null ? null : 100 - debtToAsset;
+
   const ratios = [
-    {key:"oer",label:"Operating expense ratio",val:faFP(oer),status:faStR(oer,65,80,true),bench:"Strong < 65%"},
-    {key:"ipa",label:"Input cost per acre",val:fmt$(ipa)+"/ac",status:faStR(ipa,478,535,true),bench:"Strong < $478"},
-    {key:"grpa",label:"Gross revenue per acre",val:fmt$(grpa)+"/ac",status:faStR(grpa,951,800,false),bench:"Strong > $951"},
-    {key:"nrpa",label:"Net return per acre",val:fmt$(nrpa)+"/ac",status:faStR(nrpa,150,50,false),bench:"Strong > $150"},
-    ...(hasAccrualData ? [{key:"nfifo",label:"Net farm income from operations",val:fmt$(nfifo),status:nfifo===null?"blank":nfifo>=0?"strong":"vuln",bench:"Accrual-adjusted operating trend"}] : []),
-    {key:"nfi",label:hasAccrualData?"Net farm income (incl. capital gains/losses)":"Net farm income",val:fmt$(nfi),status:nfi===null?"blank":nfi>=0?"strong":"vuln",bench:"Positive covers full cost"},
-    {key:"dscr",label:"Debt service coverage",val:faFD(dscr),status:faStR(dscr,1.25,1.0,false),bench:"Strong > 1.25x"},
-    {key:"assetTurnover",label:"Asset turnover ratio",val:faFP(assetTurnover),status:faStR(assetTurnover,40,20,false),bench:"Strong > 40%"},
-    {key:"sgr",label:"Sustainable growth rate",val:faFP(sgr),status:faStR(sgr,10,0,false),bench:"Strong > 10%"},
+    {key:"oer",cat:"efficiency",label:"Operating expense ratio",val:faFP(oer),status:faStR(oer,65,80,true),bench:"Strong < 65%"},
+    {key:"ipa",cat:"efficiency",label:"Input cost per acre",val:fmt$(ipa)+"/ac",status:faStR(ipa,478,535,true),bench:"Strong < $478"},
+    {key:"assetTurnover",cat:"efficiency",label:"Asset turnover ratio",val:faFP(assetTurnover),status:faStR(assetTurnover,40,20,false),bench:"Strong > 40%"},
+    {key:"grpa",cat:"efficiency",label:"Gross revenue per acre",val:fmt$(grpa)+"/ac",status:faStR(grpa,951,800,false),bench:"Strong > $951"},
+    {key:"currentRatio",cat:"liquidity",label:"Current ratio",val:currentRatio===null?"—":currentRatio.toFixed(2)+"x",status:faStR(currentRatio,2.0,1.0,false),bench:"Strong > 2.0x"},
+    {key:"workingCapital",cat:"liquidity",label:"Working capital",val:fmt$(workingCapital),status:workingCapital===null?"blank":workingCapital>0?"strong":"vuln",bench:"Positive covers a short year"},
+    {key:"wcToRevenue",cat:"liquidity",label:"Working capital to revenue",val:faFP(wcToRevenue),status:faStR(wcToRevenue,25,10,false),bench:"Strong > 25%"},
+    {key:"debtToAsset",cat:"solvency",label:"Debt-to-asset ratio",val:faFP(debtToAsset),status:faStR(debtToAsset,30,60,true),bench:"Strong < 30%"},
+    {key:"equityRatio",cat:"solvency",label:"Equity ratio",val:faFP(equityRatio),status:faStR(equityRatio,70,40,false),bench:"Strong > 70%"},
+    {key:"dscr",cat:"solvency",label:"Debt service coverage",val:faFD(dscr),status:faStR(dscr,1.25,1.0,false),bench:"Strong > 1.25x"},
+    ...(hasAccrualData ? [{key:"nfifo",cat:"growth",label:"Net farm income from operations",val:fmt$(nfifo),status:nfifo===null?"blank":nfifo>=0?"strong":"vuln",bench:"Accrual-adjusted operating trend"}] : []),
+    {key:"nfi",cat:"growth",label:hasAccrualData?"Net farm income (incl. capital gains/losses)":"Net farm income",val:fmt$(nfi),status:nfi===null?"blank":nfi>=0?"strong":"vuln",bench:"Positive covers full cost"},
+    {key:"sgr",cat:"growth",label:"Sustainable growth rate",val:faFP(sgr),status:faStR(sgr,10,0,false),bench:"Strong > 10%"},
+    {key:"nrpa",cat:"growth",label:"Net return per acre",val:fmt$(nrpa)+"/ac",status:faStR(nrpa,150,50,false),bench:"Strong > $150"},
   ];
-  return { hasData, hasAccrualData, oer, ipa, grpa, nrpa, nfi, nfifo, dscr, assetTurnover, sgr, accrualGross, accrualOpex, ratios };
+
+  // Roll the ratios up into the four financial health categories. A category takes
+  // the weakest status among its scored ratios, so one vulnerable ratio is never
+  // hidden by two strong ones sitting beside it.
+  const rank = { vuln:0, watch:1, strong:2 };
+  const CATS = [
+    { id:"liquidity", label:"Liquidity", desc:"Can the operation cover the next twelve months without forced sales" },
+    { id:"solvency", label:"Solvency", desc:"How much of the balance sheet the operation actually owns" },
+    { id:"growth", label:"Sustainable growth", desc:"Whether the operation earns enough to grow without new debt" },
+    { id:"efficiency", label:"Efficiency", desc:"How much output the operation gets from what it puts in" },
+  ];
+  const categories = CATS.map(c => {
+    const rs = ratios.filter(r => r.cat === c.id);
+    const scored = rs.filter(r => r.status !== "blank");
+    let status = "blank";
+    if (scored.length) status = scored.reduce((w,r) => rank[r.status] < rank[w] ? r.status : w, "strong");
+    return { ...c, ratios: rs, status, scored: scored.length, total: rs.length };
+  });
+
+  return { hasData, hasAccrualData, oer, ipa, grpa, nrpa, nfi, nfifo, dscr, assetTurnover, sgr,
+           currentRatio, workingCapital, wcToRevenue, debtToAsset, equityRatio,
+           accrualGross, accrualOpex, ratios, categories };
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -603,7 +621,7 @@ function DocumentScanUpload({ fa, setFA }) {
           <div style={{ fontSize:12.5, color:T.fgM, marginBottom:14, lineHeight:1.5 }}>Review every extracted value before applying — edit anything that looks off. Nothing is written to your Financial Analysis data until you click Apply.</div>
           {EXTRACT_FIELD_GROUPS.map(group => (
             <div key={group.label} style={{ marginBottom:16 }}>
-              <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:11, fontWeight:700, color:T.fgS, textTransform:"uppercase", letterSpacing:"0.05em", marginBottom:8 }}>{group.label}</div>
+              <div style={{ fontSize:11, fontWeight:700, color:T.fgS, textTransform:"uppercase", letterSpacing:"0.05em", marginBottom:8 }}>{group.label}</div>
               <div style={{ display:"grid", gridTemplateColumns:"repeat(2,1fr)", gap:10 }}>
                 {group.keys.map(key => extracted[key] && (
                   <div key={key} style={{ display:"flex", alignItems:"center", gap:8, background:T.bgAlt, borderRadius:6, padding:"8px 10px" }}>
@@ -632,7 +650,7 @@ function FA3({ fa, setFA }) {
   const { hasData, hasAccrualData, nfi, nfifo, oer, dscr, assetTurnover, sgr, ratios: RATIOS } = computeFARatios(s3);
   const [showAccrual, setShowAccrual] = useState(hasAccrualData);
   const INPUTS = [{id:"gross",label:"Gross farm income",sub:"Total farm revenue for the year",pre:"$"},{id:"opex",label:"Total operating expenses",sub:"Cash operating costs, before depreciation and interest",pre:"$"},{id:"inputs",label:"Input costs (seed, fert, chem, fuel)",sub:"Estimate if not tracked separately",pre:"$"},{id:"rent",label:"Land rent paid",sub:"Cash rent paid to landlords",pre:"$"},{id:"depr",label:"Depreciation",sub:"From your tax return or accountant",pre:"$"},{id:"interest",label:"Interest paid",sub:"From loan statements",pre:"$"},{id:"acres",label:"Total acres farmed",sub:"Owned + rented",suf:"ac"},{id:"principal",label:"Annual principal payments",sub:"From loan statements",pre:"$"}];
-  const BS_INPUTS = [{id:"beginAssets",label:"Beginning-of-year total farm assets",sub:"From your lender's balance sheet or net worth statement",pre:"$"},{id:"beginLiab",label:"Beginning-of-year total farm liabilities",sub:"Loan balances as of January 1",pre:"$"},{id:"endAssets",label:"End-of-year total farm assets",sub:"From your lender's balance sheet or net worth statement",pre:"$"},{id:"endLiab",label:"End-of-year total farm liabilities",sub:"Loan balances as of December 31",pre:"$"},{id:"livingWithdrawals",label:"Family living withdrawals",sub:"Cash taken out for household expenses",pre:"$"},{id:"incomeTaxes",label:"Income taxes paid",sub:"From your tax return or accountant",pre:"$"}];
+  const BS_INPUTS = [{id:"currentAssets",label:"Current farm assets",sub:"Cash, receivables, inventory, prepaid, anything convertible within 12 months",pre:"$"},{id:"currentLiab",label:"Current farm liabilities",sub:"Operating line, payables, accrued interest, principal due within 12 months",pre:"$"},{id:"beginAssets",label:"Beginning-of-year total farm assets",sub:"From your lender's balance sheet or net worth statement",pre:"$"},{id:"beginLiab",label:"Beginning-of-year total farm liabilities",sub:"Loan balances as of January 1",pre:"$"},{id:"endAssets",label:"End-of-year total farm assets",sub:"From your lender's balance sheet or net worth statement",pre:"$"},{id:"endLiab",label:"End-of-year total farm liabilities",sub:"Loan balances as of December 31",pre:"$"},{id:"livingWithdrawals",label:"Family living withdrawals",sub:"Cash taken out for household expenses",pre:"$"},{id:"incomeTaxes",label:"Income taxes paid",sub:"From your tax return or accountant",pre:"$"}];
   const ACCRUAL_ITEMS = [
     {key:"ar",label:"Accounts/notes receivable",hint:"Sales made but not yet paid",sign:"+"},
     {key:"cropInv",label:"Raised crop inventory held for sale",hint:"Grain in the bin is earned value, even unsold",sign:"+"},
@@ -650,7 +668,7 @@ function FA3({ fa, setFA }) {
       <Head eyebrow="Financial Analysis · Stage 3" title="Ratio deep dive" sub="Enter your financial data — from your MFP Financial Data Worksheet, your own records, or your best estimate. Ratios calculate automatically as you type." />
       <DocumentScanUpload fa={fa} setFA={setFA} />
       <div style={cardStyle()}>
-        <div style={cardLblStyle()}><Apex color={T.green} />Financial data</div>
+        <div style={cardLblStyle()}>Financial data</div>
         <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16 }}>
           {INPUTS.map(f => (
             <div key={f.id}>
@@ -666,7 +684,7 @@ function FA3({ fa, setFA }) {
         </div>
       </div>
       <div style={cardStyle()}>
-        <div style={cardLblStyle()}><Apex color={T.green} />Balance sheet snapshot</div>
+        <div style={cardLblStyle()}>Balance sheet snapshot</div>
         <div style={{ fontSize:12, color:T.fgM, marginBottom:14, lineHeight:1.5 }}>Not on Schedule F — these come from a beginning- and end-of-year net worth statement, typically already on file with your lender. They unlock two additional ratios: sustainable growth rate and asset turnover.</div>
         <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16 }}>
           {BS_INPUTS.map(f => (
@@ -683,7 +701,7 @@ function FA3({ fa, setFA }) {
       </div>
       <div style={cardStyle()}>
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:showAccrual?14:0 }}>
-          <div style={cardLblStyle({ marginBottom:0 })}><Apex color={T.green} />Accrual adjustments (advanced, optional)</div>
+          <div style={cardLblStyle({ marginBottom:0 })}>Accrual adjustments (advanced, optional)</div>
           <button onClick={()=>setShowAccrual(s=>!s)} style={{ ...btnStyle("outline"), fontSize:11.5, padding:"6px 14px" }}>{showAccrual?"Hide":"Show"}</button>
         </div>
         {!showAccrual && <div style={{ fontSize:12, color:T.fgM, lineHeight:1.5 }}>Cash-basis income is distorted by timing — when cash moved, not when it was actually earned or incurred. This optional section converts your numbers to the accrual-adjusted figure lenders and FINBIN/ARMS benchmarks actually use. Skip it entirely and everything above still works exactly as before.</div>}
@@ -691,7 +709,7 @@ function FA3({ fa, setFA }) {
           <>
             <div style={{ fontSize:12, color:T.fgM, marginBottom:14, lineHeight:1.5 }}>Every adjustment here is a <b>change</b> — ending balance minus beginning balance — from two balance sheet snapshots, not from the income statement itself. Leave any line blank if you don't track it; it's treated as no change. Many informal balance sheets lump these into one number — a rough split is far better than skipping this section entirely.</div>
             <div style={{ display:"grid", gridTemplateColumns:"2fr 1fr 1fr", gap:8, background:T.bgAlt, borderRadius:6, padding:"8px 12px", marginBottom:4 }}>
-              {["Line item","Beginning","Ending"].map((hh,i)=>(<div key={i} style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:11, fontWeight:700, color:T.fgS, textTransform:"uppercase", letterSpacing:"0.05em" }}>{hh}</div>))}
+              {["Line item","Beginning","Ending"].map((hh,i)=>(<div key={i} style={{ fontSize:11, fontWeight:700, color:T.fgS, textTransform:"uppercase", letterSpacing:"0.05em" }}>{hh}</div>))}
             </div>
             {ACCRUAL_ITEMS.map(it => (
               <div key={it.key} style={{ display:"grid", gridTemplateColumns:"2fr 1fr 1fr", gap:8, padding:"10px 12px", borderBottom:`1px solid ${T.div}`, alignItems:"center" }}>
@@ -703,7 +721,7 @@ function FA3({ fa, setFA }) {
                 <input type="number" style={inputStyle({ fontSize:13 })} placeholder="$" value={v(it.key+"End")} onChange={e=>sv(it.key+"End",e.target.value)} />
               </div>
             ))}
-            <div style={{ marginTop:14, marginBottom:4, fontFamily:"'Barlow Condensed',sans-serif", fontSize:11, fontWeight:700, color:T.fgS, textTransform:"uppercase", letterSpacing:"0.05em" }}>One-time capital events (not part of the operating trend)</div>
+            <div style={{ marginTop:14, marginBottom:4, fontSize:11, fontWeight:700, color:T.fgS, textTransform:"uppercase", letterSpacing:"0.05em" }}>One-time capital events (not part of the operating trend)</div>
             <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16, marginTop:8 }}>
               <div><label style={labelStyle}>Gain/loss on sale of culled breeding livestock</label><input type="number" style={inputStyle()} placeholder="$" value={v("gainLossBreeding")} onChange={e=>sv("gainLossBreeding",e.target.value)} /></div>
               <div><label style={labelStyle}>Gain/loss on sale of capital assets</label><input type="number" style={inputStyle()} placeholder="$" value={v("gainLossCapitalAssets")} onChange={e=>sv("gainLossCapitalAssets",e.target.value)} /></div>
@@ -714,14 +732,14 @@ function FA3({ fa, setFA }) {
       </div>
       {hasData && (
         <div style={cardStyle({ borderTop:`4px solid ${T.green}` })}>
-          <div style={cardLblStyle()}><Apex color={T.green} />Ratio scorecard{hasAccrualData && <span style={{ ...pillStyle("info"), marginLeft:10, fontSize:10 }}>Accrual-adjusted</span>}</div>
+          <div style={cardLblStyle()}>Ratio scorecard{hasAccrualData && <span style={{ ...pillStyle("info"), marginLeft:10, fontSize:10 }}>Accrual-adjusted</span>}</div>
           <div style={{ display:"grid", gridTemplateColumns:"1fr 100px 160px", gap:8, background:T.bgAlt, borderRadius:6, padding:"8px 12px", marginBottom:4 }}>
-            {["Ratio","Your value","Benchmark"].map((hh,i)=>(<div key={i} style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:11, fontWeight:700, color:T.fgS, textTransform:"uppercase", letterSpacing:"0.05em", textAlign:i===1?"right":"left" }}>{hh}</div>))}
+            {["Ratio","Your value","Benchmark"].map((hh,i)=>(<div key={i} style={{ fontSize:11, fontWeight:700, color:T.fgS, textTransform:"uppercase", letterSpacing:"0.05em", textAlign:i===1?"right":"left" }}>{hh}</div>))}
           </div>
           {RATIOS.map((r,i) => (
             <div key={i} style={{ display:"grid", gridTemplateColumns:"1fr 100px 160px", gap:8, padding:"10px 12px", borderBottom:`1px solid ${T.div}`, alignItems:"center" }}>
               <div style={{ fontSize:13 }}>{r.label}</div>
-              <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:18, fontWeight:800, color:scColor(r.status), textAlign:"right" }}>{r.val}</div>
+              <div style={{ fontSize:18, fontWeight:800, color:scColor(r.status), textAlign:"right" }}>{r.val}</div>
               <div style={{ fontSize:11.5, color:T.fgS }}>{r.bench}</div>
             </div>
           ))}
@@ -754,14 +772,14 @@ function FA4({ fa, setFA }) {
     <div>
       <Head eyebrow="Financial Analysis · Stage 4" title="Peer benchmarking" sub="Compeer Financial and IFBA 2023–24 data. Mid-size row crop, $500K–$5M revenue, Midwest region." />
       <div style={cardStyle()}>
-        <div style={cardLblStyle()}><Apex color={T.green} />Enter your values</div>
+        <div style={cardLblStyle()}>Enter your values</div>
         <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:14 }}>
           {B.map(bb => (<div key={bb.key}><label style={labelStyle}>{bb.label} ({bb.unit})</label><input type="number" style={inputStyle()} placeholder={`e.g. ${bb.avg}`} value={v(bb.key)} onChange={e=>sv(bb.key,e.target.value)} /></div>))}
           <div><label style={labelStyle}>Acres farmed</label><input type="number" style={inputStyle()} placeholder="e.g. 1200" value={v("acres")} onChange={e=>sv("acres",e.target.value)} /></div>
         </div>
       </div>
       <div style={cardStyle()}>
-        <div style={cardLblStyle()}><Apex color={T.green} />Your position vs. peers</div>
+        <div style={cardLblStyle()}>Your position vs. peers</div>
         {B.map(bb => {
           const val = gv(bb.key); const hasVal = !isNaN(val); const status = clf(bb,val);
           const pct = hasVal ? (bb.lb?Math.min(100,Math.max(0,((bb.bot-val)/(bb.bot-bb.top))*100)):Math.min(100,Math.max(0,((val-bb.bot)/(bb.top-bb.bot))*100))) : 0;
@@ -773,14 +791,14 @@ function FA4({ fa, setFA }) {
                 <div style={{ position:"relative", height:14, background:T.div, borderRadius:7, overflow:"hidden" }}><div style={{ position:"absolute", top:0, left:0, width:`${pct}%`, height:"100%", background:barC, borderRadius:7, transition:"width .4s" }} /></div>
                 <div style={{ display:"flex", justifyContent:"space-between", marginTop:4, fontSize:10, color:T.fgS }}><span>Bot {bb.bot}{unitSuf(bb)}</span><span>Avg {bb.avg}{unitSuf(bb)}</span><span>Top {bb.top}{unitSuf(bb)}</span></div>
               </div>
-              <div style={{ textAlign:"right" }}>{hasVal && <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:15, fontWeight:800, color:barC, marginBottom:3 }}>{val}{unitSuf(bb)}</div>}<span style={pillStyle(status)}>{pillLabel[status]}</span></div>
+              <div style={{ textAlign:"right" }}>{hasVal && <div style={{ fontSize:15, fontWeight:800, color:barC, marginBottom:3 }}>{val}{unitSuf(bb)}</div>}<span style={pillStyle(status)}>{pillLabel[status]}</span></div>
             </div>
           );
         })}
       </div>
       {gaps.length>0 && (
         <div style={cardStyle({ borderTop:`4px solid ${T.green}` })}>
-          <div style={cardLblStyle()}><Apex color={T.green} />Gap analysis — annual value of reaching top quartile</div>
+          <div style={cardLblStyle()}>Gap analysis — annual value of reaching top quartile</div>
           {gaps.map((g,i) => (<div key={i} style={{ padding:"10px 0", borderBottom:i<gaps.length-1?`1px solid ${T.div}`:"none" }}><div style={{ fontSize:13, fontWeight:600, marginBottom:2 }}>{g.label}</div><div style={{ fontSize:12.5, color:T.dgreen, fontWeight:600 }}>Recover {fmt$(g.toTop)} annually vs. top quartile</div></div>))}
         </div>
       )}
@@ -827,7 +845,7 @@ const riskScoreLabel = (score, max) => { const pct = score/max; if (pct>=0.75) r
 const riskCatScore = (answers, catId) => (RISK_QUESTIONS[catId]||[]).reduce((sum,q) => sum + (answers[q.id]!==undefined ? q.scores[answers[q.id]] : 0), 0);
 const riskCatAnswered = (answers, catId) => (RISK_QUESTIONS[catId]||[]).filter(q => answers[q.id]!==undefined).length;
 // Stages 1–8: one category's question set per stage.
-function RiskCategoryStage({ risk, setRisk, catIndex }) {
+function RiskCategoryStage({ risk, setRisk, catIndex, fa }) {
   const answers = risk.answers || {};
   const setAns = (qId, idx) => setRisk(s => ({ ...s, answers:{ ...(s.answers||{}), [qId]:idx } }));
   const cat = RISK_CATS[catIndex];
@@ -838,13 +856,14 @@ function RiskCategoryStage({ risk, setRisk, catIndex }) {
   return (
     <div>
       <Head eyebrow={`Farm Risk · Section ${catIndex+1} of 4`} title={cat.label} sub="Adapted directly from Nationwide's Farm Risk Ready℠ assessment quiz." />
+      {catIndex===0 && <FinancialHealthStrip fa={fa} />}
       {catAnswered>0 && <div style={{ marginBottom:16 }}><span style={pillStyle(catSL.pill)}>{catSL.label}</span><span style={{ fontSize:11.5, color:T.fgM, marginLeft:10 }}>{catAnswered}/{cat.questions} answered · {catScore}/{cat.maxScore} points</span></div>}
       {qs.map((q,qi) => {
         const selected = answers[q.id];
         return (
           <div key={q.id} style={cardStyle()}>
             <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:10 }}>
-              <div style={{ width:22, height:22, borderRadius:"50%", background:cat.color, display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"'Barlow Condensed',sans-serif", fontSize:11, fontWeight:700, color:"#fff", flexShrink:0 }}>{qi+1}</div>
+              <div style={{ width:22, height:22, borderRadius:"50%", background:cat.color, display:"flex", alignItems:"center", justifyContent:"center", fontSize:11, fontWeight:700, color:"#fff", flexShrink:0 }}>{qi+1}</div>
               <div style={{ fontSize:13.5, fontWeight:600, color:T.navy, lineHeight:1.4 }}>{q.text}</div>
             </div>
             {q.nationwide && <div style={{ display:"inline-flex", padding:"2px 9px", borderRadius:999, fontSize:10, background:T.blueL, color:"#0A6E8C", fontWeight:700, marginBottom:10 }}>Nationwide Farm Risk Ready℠ framework</div>}
@@ -910,8 +929,8 @@ function RiskResultsStage({ risk }) {
       <Head eyebrow="Farm Risk · Stage 5" title="Results" sub="Your score across the four Farm Risk Ready℠ sections. This is a snapshot of risk-management awareness and habits, not a substitute for the specific plan you'll build next." />
       <div style={{ background:T.navy, borderRadius:10, padding:"20px 24px", marginBottom:16, display:"grid", gridTemplateColumns:"1fr 2fr", gap:20, alignItems:"center" }}>
         <div>
-          <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:11, fontWeight:700, letterSpacing:"0.1em", textTransform:"uppercase", color:T.green, marginBottom:6 }}>Overall score</div>
-          <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:34, fontWeight:800, color:"#fff" }}>{totalScore}<span style={{ fontSize:16, color:"rgba(255,255,255,0.4)" }}> / {totalMax}</span></div>
+          <div style={{ fontSize:11, fontWeight:700, letterSpacing:"0.1em", textTransform:"uppercase", color:T.green, marginBottom:6 }}>Overall score</div>
+          <div style={{ fontSize:34, fontWeight:800, color:"#fff" }}>{totalScore}<span style={{ fontSize:16, color:"rgba(255,255,255,0.4)" }}> / {totalMax}</span></div>
           <span style={{ display:"inline-block", padding:"3px 12px", borderRadius:999, fontSize:11.5, fontWeight:700, background:overall.pill==="strong"?T.dgreen:overall.pill==="watch"?T.amber:T.red, color:"#fff", marginTop:6 }}>{overallLabel}</span>
           <div style={{ fontSize:11, color:"rgba(255,255,255,0.5)", marginTop:8 }}>{totalAnswered}/{totalQuestions} questions answered</div>
         </div>
@@ -930,7 +949,7 @@ function RiskResultsStage({ risk }) {
           return (
             <div key={c.id} style={{ background:"#fff", border:`1px solid ${T.border}`, borderRadius:10, padding:16, borderLeft:`4px solid ${sl.pill==="strong"?T.dgreen:sl.pill==="watch"?T.amber:T.red}` }}>
               <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}>
-                <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:13.5, fontWeight:700 }}>{c.label}</span>
+                <span style={{ fontSize:13.5, fontWeight:700 }}>{c.label}</span>
                 <span style={pillStyle(sl.pill)}>{sl.label}</span>
               </div>
               <div style={{ height:6, background:T.div, borderRadius:3, overflow:"hidden", marginBottom:8 }}><div style={{ height:"100%", width:`${pct}%`, background:c.color, borderRadius:3 }} /></div>
@@ -961,7 +980,7 @@ function RiskPlanRevenueOps({ risk, setRisk }) {
       <Head eyebrow="Farm Risk · Plan Builder · Stage 1" title="Revenue operations & key contacts" sub="Document each primary revenue operation and the assets, suppliers, employees, and customers it depends on — then record backup contacts for your key suppliers, vendors, and customers." />
       <div style={cardStyle()}>
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:14 }}>
-          <div style={cardLblStyle({ marginBottom:0 })}><Apex color={T.green} />Primary revenue operations</div>
+          <div style={cardLblStyle({ marginBottom:0 })}>Primary revenue operations</div>
           {revenueOps.length<6 && <button style={{ ...btnStyle("outline"), fontSize:11, padding:"5px 12px" }} onClick={addOp}>+ Add operation</button>}
         </div>
         {revenueOps.length===0 && <div style={{ fontSize:12.5, color:T.fgS }}>No revenue operations added yet. Start with your largest — corn, cattle, custom trucking, whatever generates the most revenue.</div>}
@@ -983,7 +1002,7 @@ function RiskPlanRevenueOps({ risk, setRisk }) {
       </div>
       <div style={cardStyle()}>
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:14 }}>
-          <div style={cardLblStyle({ marginBottom:0 })}><Apex color={T.green} />Key supplier, vendor & customer contacts</div>
+          <div style={cardLblStyle({ marginBottom:0 })}>Key supplier, vendor & customer contacts</div>
           {contacts.length<6 && <button style={{ ...btnStyle("outline"), fontSize:11, padding:"5px 12px" }} onClick={addContact}>+ Add contact</button>}
         </div>
         {contacts.length===0 && <div style={{ fontSize:12.5, color:T.fgS }}>Record a primary and a backup contact for each critical relationship — this is exactly what you'll need in the first hour of a real disruption.</div>}
@@ -1032,7 +1051,7 @@ function RiskPlanThreats({ risk, setRisk }) {
         {THREAT_CATEGORIES.map(c => (<div key={c.id} style={{ background:c.colorL, borderRadius:8, padding:"10px 12px" }}><div style={{ fontSize:12, fontWeight:700, color:c.color }}>{c.label}</div><div style={{ fontSize:10.5, color:T.fgM, marginTop:2 }}>{c.desc}</div></div>))}
       </div>
       <div style={cardStyle()}>
-        <div style={cardLblStyle()}><Apex color={T.green} />Add a threat or risk</div>
+        <div style={cardLblStyle()}>Add a threat or risk</div>
         <div style={{ display:"grid", gridTemplateColumns:"140px 1fr 110px 110px 90px", gap:10, alignItems:"end" }}>
           <div><label style={labelStyle}>Category</label><select style={inputStyle()} value={draft.category} onChange={e=>setDraft(d=>({...d,category:e.target.value}))}>{THREAT_CATEGORIES.map(c=><option key={c.id} value={c.id}>{c.label}</option>)}</select></div>
           <div><label style={labelStyle}>Describe the threat</label><input style={inputStyle()} value={draft.label} onChange={e=>setDraft(d=>({...d,label:e.target.value}))} placeholder="e.g., Grain bin structure collapse" /></div>
@@ -1042,7 +1061,7 @@ function RiskPlanThreats({ risk, setRisk }) {
         </div>
       </div>
       <div style={cardStyle()}>
-        <div style={cardLblStyle()}><Apex color={T.green} />Your ranked threats — highest score first</div>
+        <div style={cardLblStyle()}>Your ranked threats — highest score first</div>
         {sorted.length===0 && <div style={{ fontSize:12.5, color:T.fgS }}>No threats added yet.</div>}
         {sorted.map(t => {
           const cat = THREAT_CATEGORIES.find(c=>c.id===t.category); const score = threatScore(t); const urgent = score>=10;
@@ -1051,7 +1070,7 @@ function RiskPlanThreats({ risk, setRisk }) {
               <span style={{ fontSize:10, fontWeight:700, padding:"2px 8px", borderRadius:999, background:cat?.colorL, color:cat?.color, flexShrink:0 }}>{cat?.label}</span>
               <span style={{ fontSize:13, color:T.navy, flex:1 }}>{t.label}</span>
               <span style={{ fontSize:11, color:T.fgM }}>P{t.probability} × S{t.severity}</span>
-              <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:16, fontWeight:800, color:urgent?T.red:T.fgM, width:36, textAlign:"right" }}>{score}</span>
+              <span style={{ fontSize:16, fontWeight:800, color:urgent?T.red:T.fgM, width:36, textAlign:"right" }}>{score}</span>
               {urgent && <span style={pillStyle("vuln")}>Immediate</span>}
               <span onClick={()=>removeThreat(t.id)} style={{ fontSize:11, color:T.fgS, cursor:"pointer" }}>✕</span>
             </div>
@@ -1083,8 +1102,8 @@ function RiskPlanStrategy({ risk, setRisk }) {
           <div key={t.id} style={cardStyle({ borderLeft:`4px solid ${cat?.color}` })}>
             <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:14 }}>
               <span style={{ fontSize:10, fontWeight:700, padding:"2px 8px", borderRadius:999, background:cat?.colorL, color:cat?.color }}>{cat?.label}</span>
-              <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:15, fontWeight:700 }}>{t.label}</span>
-              <span style={{ marginLeft:"auto", fontFamily:"'Barlow Condensed',sans-serif", fontSize:15, fontWeight:800, color:T.red }}>Score: {threatScore(t)}</span>
+              <span style={{ fontSize:15, fontWeight:700 }}>{t.label}</span>
+              <span style={{ marginLeft:"auto", fontSize:15, fontWeight:800, color:T.red }}>Score: {threatScore(t)}</span>
             </div>
             <div style={{ marginBottom:14 }}>
               <label style={labelStyle}>Risk management strategy — select one</label>
@@ -1142,7 +1161,7 @@ function RiskPlanReview({ risk, setRisk }) {
           <div key={t.id} style={cardStyle({ borderLeft:`4px solid ${cat?.color}` })}>
             <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:14 }}>
               <span style={{ fontSize:10, fontWeight:700, padding:"2px 8px", borderRadius:999, background:cat?.colorL, color:cat?.color }}>{cat?.label}</span>
-              <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:15, fontWeight:700 }}>{t.label}</span>
+              <span style={{ fontSize:15, fontWeight:700 }}>{t.label}</span>
             </div>
             <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
               <div><label style={labelStyle}>Who needs to be informed</label><textarea style={inputStyle({ minHeight:56 })} value={cm.whoInform||""} onChange={e=>setComm(t.id,"whoInform",e.target.value)} /></div>
@@ -1154,14 +1173,14 @@ function RiskPlanReview({ risk, setRisk }) {
         );
       })}
       <div style={cardStyle({ borderTop:`4px solid ${T.dgreen}` })}>
-        <div style={cardLblStyle()}><Apex color={T.green} />Step 5 — Prepare, recover, and review</div>
+        <div style={cardLblStyle()}>Step 5 — Prepare, recover, and review</div>
         <div style={{ fontSize:12.5, color:T.fgM, lineHeight:1.5, marginBottom:14 }}>Recovery is about the speed of returning to normal operations after a disruption. Review your plans annually, involve your team, and set aside time to test the plan against a real scenario.</div>
         <label style={labelStyle}>Optional: crisis communications preparedness plan</label>
         <div style={{ fontSize:11.5, color:T.fgS, marginBottom:8 }}>A product safety scare, animal welfare situation, or manure spill can erode trust in your farm fast if the communication response isn't managed well.</div>
         <textarea style={inputStyle({ minHeight:80 })} value={plan.crisisComms||""} onChange={e=>setPlan({ crisisComms:e.target.value })} placeholder="Who speaks for the farm publicly? What's the first statement? Who approves it before it goes out?" />
       </div>
       <div style={{ ...cardStyle({ background:T.navy, border:"none" }) }}>
-        <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:15, fontWeight:700, color:"#fff", marginBottom:6 }}>Farm Risk Ready℠ Plan complete</div>
+        <div style={{ fontSize:15, fontWeight:700, color:"#fff", marginBottom:6 }}>Farm Risk Ready℠ Plan complete</div>
         <div style={{ fontSize:12.5, color:"rgba(255,255,255,0.7)", lineHeight:1.5 }}>Share this plan with your family, employees, and your Farm Credit or Nationwide advisor. Set a calendar reminder to revisit it every year — immediately after tax filing is a natural trigger.</div>
       </div>
     </div>
@@ -1288,7 +1307,7 @@ function CropInsuranceCalculator({ risk, setRisk, fa, profile }) {
       )}
 
       <div style={cardStyle()}>
-        <div style={cardLblStyle()}><Apex color={T.green} />Your numbers</div>
+        <div style={cardLblStyle()}>Your numbers</div>
         <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:14, marginBottom:14 }}>
           <div><label style={labelStyle}>Variable costs ($/ac)</label><input type="number" style={inputStyle()} value={calc.variable??preset.variable} onChange={e=>setCalc({variable:e.target.value})} /></div>
           <div><label style={labelStyle}>Fixed costs ($/ac)</label><input type="number" style={inputStyle()} value={calc.fixed??preset.fixed} onChange={e=>setCalc({fixed:e.target.value})} /></div>
@@ -1300,15 +1319,15 @@ function CropInsuranceCalculator({ risk, setRisk, fa, profile }) {
       </div>
 
       <div style={cardStyle({ borderTop:`4px solid ${T.green}` })}>
-        <div style={cardLblStyle()}><Apex color={T.green} />Cost vs. guarantee</div>
+        <div style={cardLblStyle()}>Cost vs. guarantee</div>
         <div style={{ display:"grid", gridTemplateColumns:"repeat(2,1fr)", gap:12, marginBottom:16 }}>
           <div style={{ background:T.bgAlt, borderRadius:8, padding:"12px 14px", textAlign:"center" }}>
-            <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:10.5, fontWeight:700, color:T.fgS, textTransform:"uppercase", letterSpacing:"0.05em", marginBottom:4 }}>Breakeven price</div>
-            <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:22, fontWeight:800, color:priceGap>0?T.red:T.dgreen }}>${breakeven.toFixed(2)}/{preset.unit}</div>
+            <div style={{ fontSize:10.5, fontWeight:700, color:T.fgS, textTransform:"uppercase", letterSpacing:"0.05em", marginBottom:4 }}>Breakeven price</div>
+            <div style={{ fontSize:22, fontWeight:800, color:priceGap>0?T.red:T.dgreen }}>${breakeven.toFixed(2)}/{preset.unit}</div>
           </div>
           <div style={{ background:T.bgAlt, borderRadius:8, padding:"12px 14px", textAlign:"center" }}>
-            <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:10.5, fontWeight:700, color:T.fgS, textTransform:"uppercase", letterSpacing:"0.05em", marginBottom:4 }}>Total cost per acre</div>
-            <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:22, fontWeight:800, color:T.navy }}>${Math.round(totalCost).toLocaleString()}</div>
+            <div style={{ fontSize:10.5, fontWeight:700, color:T.fgS, textTransform:"uppercase", letterSpacing:"0.05em", marginBottom:4 }}>Total cost per acre</div>
+            <div style={{ fontSize:22, fontWeight:800, color:T.navy }}>${Math.round(totalCost).toLocaleString()}</div>
           </div>
         </div>
 
@@ -1328,7 +1347,7 @@ function CropInsuranceCalculator({ risk, setRisk, fa, profile }) {
         </div>
 
         <div style={{ background:gapToFullCost>0?T.redL:T.greenL, borderRadius:8, padding:"14px 16px" }}>
-          <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:13, fontWeight:700, color:gapToFullCost>0?T.red:T.dgreen, marginBottom:4 }}>Gap to full cost</div>
+          <div style={{ fontSize:13, fontWeight:700, color:gapToFullCost>0?T.red:T.dgreen, marginBottom:4 }}>Gap to full cost</div>
           <div style={{ fontSize:12.5, color:gapToFullCost>0?T.redD:"#2F6E28", lineHeight:1.5 }}>
             {gapToFullCost>0
               ? `A ${coverage}% Revenue Protection guarantee covers $${Math.round(guarantee).toLocaleString()} of your $${Math.round(totalCost).toLocaleString()} total cost per acre — a $${Math.round(gapToFullCost).toLocaleString()}/ac shortfall even if the guarantee pays out in full. Insurance is there to keep the farm solvent through a bad year, not to make a marginal year whole.`
@@ -1338,14 +1357,14 @@ function CropInsuranceCalculator({ risk, setRisk, fa, profile }) {
       </div>
 
       <div style={cardStyle()}>
-        <div style={cardLblStyle()}><Apex color={T.green} />Gap to full cost by coverage level</div>
+        <div style={cardLblStyle()}>Gap to full cost by coverage level</div>
         <div style={{ display:"grid", gridTemplateColumns:`repeat(${COVERAGE_LEVELS.length},1fr)`, gap:6 }}>
           {COVERAGE_LEVELS.map(cl => {
             const g = aph*(cl/100)*price; const gap = totalCost-g; const isCurrent = cl===coverage;
             return (
               <div key={cl} onClick={()=>setCalc({coverage:cl})} style={{ cursor:"pointer", textAlign:"center", padding:"10px 4px", borderRadius:8, border:isCurrent?`2px solid ${T.blue}`:`1px solid ${T.border}`, background:isCurrent?T.blueL:"#fff" }}>
                 <div style={{ fontSize:11, color:T.fgS, marginBottom:4 }}>{cl}%</div>
-                <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:13, fontWeight:800, color:gap>0?T.red:T.dgreen }}>{gap>0?"-":"+"}${Math.round(Math.abs(gap))}</div>
+                <div style={{ fontSize:13, fontWeight:800, color:gap>0?T.red:T.dgreen }}>{gap>0?"-":"+"}${Math.round(Math.abs(gap))}</div>
               </div>
             );
           })}
@@ -1394,7 +1413,7 @@ function LivestockInsuranceCalculator({ risk, setRisk }) {
       </div>
 
       <div style={cardStyle()}>
-        <div style={cardLblStyle()}><Apex color={T.green} />Your numbers</div>
+        <div style={cardLblStyle()}>Your numbers</div>
         <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:14 }}>
           <div><label style={labelStyle}>Expected price ($/cwt)</label><input type="number" step="0.01" style={inputStyle()} value={calc.price??preset.price} onChange={e=>setCalc({price:e.target.value})} /></div>
           <div><label style={labelStyle}>Cost of production ($/cwt)</label><input type="number" step="0.01" style={inputStyle()} value={calc.cost??preset.cost} onChange={e=>setCalc({cost:e.target.value})} /></div>
@@ -1403,7 +1422,7 @@ function LivestockInsuranceCalculator({ risk, setRisk }) {
       </div>
 
       <div style={cardStyle({ borderTop:`4px solid ${T.green}` })}>
-        <div style={cardLblStyle()}><Apex color={T.green} />Price floor vs. cost of production</div>
+        <div style={cardLblStyle()}>Price floor vs. cost of production</div>
 
         <div style={{ marginBottom:6 }}>
           <div style={{ display:"flex", justifyContent:"space-between", fontSize:11.5, color:T.fgM, marginBottom:4 }}><span style={{ fontWeight:600 }}>Expected price</span><span>${price.toFixed(2)}/cwt</span></div>
@@ -1419,7 +1438,7 @@ function LivestockInsuranceCalculator({ risk, setRisk }) {
         </div>
 
         <div style={{ background:marginOverCost>=0?T.greenL:T.redL, borderRadius:8, padding:"14px 16px" }}>
-          <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:13, fontWeight:700, color:marginOverCost>=0?T.dgreen:T.red, marginBottom:4 }}>Margin over cost at this floor</div>
+          <div style={{ fontSize:13, fontWeight:700, color:marginOverCost>=0?T.dgreen:T.red, marginBottom:4 }}>Margin over cost at this floor</div>
           <div style={{ fontSize:12.5, color:marginOverCost>=0?"#2F6E28":T.redD, lineHeight:1.5 }}>
             {marginOverCost>=0
               ? `A ${coverage}% LRP floor of $${floor.toFixed(2)}/cwt sits $${marginOverCost.toFixed(2)}/cwt above your cost of production — in this market, LRP can lock in a margin, not just protect solvency. That's a different relationship than crop insurance often shows in a high-input-cost year.`
@@ -1429,14 +1448,14 @@ function LivestockInsuranceCalculator({ risk, setRisk }) {
       </div>
 
       <div style={cardStyle()}>
-        <div style={cardLblStyle()}><Apex color={T.green} />Margin over cost by coverage level</div>
+        <div style={cardLblStyle()}>Margin over cost by coverage level</div>
         <div style={{ display:"grid", gridTemplateColumns:`repeat(${LIVESTOCK_COVERAGE_LEVELS.length},1fr)`, gap:6 }}>
           {LIVESTOCK_COVERAGE_LEVELS.map(cl => {
             const f = price*(cl/100); const m = f-cost; const isCurrent = cl===coverage;
             return (
               <div key={cl} onClick={()=>setCalc({coverage:cl})} style={{ cursor:"pointer", textAlign:"center", padding:"10px 4px", borderRadius:8, border:isCurrent?`2px solid ${T.blue}`:`1px solid ${T.border}`, background:isCurrent?T.blueL:"#fff" }}>
                 <div style={{ fontSize:11, color:T.fgS, marginBottom:4 }}>{cl}%</div>
-                <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:13, fontWeight:800, color:m>=0?T.dgreen:T.red }}>{m>=0?"+":"-"}${Math.abs(m).toFixed(2)}</div>
+                <div style={{ fontSize:13, fontWeight:800, color:m>=0?T.dgreen:T.red }}>{m>=0?"+":"-"}${Math.abs(m).toFixed(2)}</div>
               </div>
             );
           })}
@@ -1506,7 +1525,92 @@ const leverScoreColor = (score) => score >= 67 ? T.dgreen : score >= 34 ? T.ambe
 const leverPct = (items, k) => leverCategoryScore(items||{}, k);
 const leverColor = (items, k) => leverScoreColor(leverPct(items, k));
 
-const faScoreOf = (fa) => { const wf=fa.wholeFarm||{}; const vuln=Object.values(wf).filter(v=>v==="vuln").length; const strong=Object.values(wf).filter(v=>v==="strong").length; if(vuln>=2)return 1.5; if(vuln===1)return 2.5; if(strong>=3)return 4.0; return 3.0; };
+// Derived from the four computed financial health categories rather than a manual
+// self-rating. Falls back to a neutral 3.0 until enough financial data is entered.
+const faScoreOf = (fa) => {
+  const { hasData, categories } = computeFARatios(fa.s3vals);
+  if (!hasData) return 3.0;
+  const scored = (categories||[]).filter(c => c.status !== "blank");
+  if (!scored.length) return 3.0;
+  const vuln = scored.filter(c => c.status === "vuln").length;
+  const strong = scored.filter(c => c.status === "strong").length;
+  if (vuln >= 2) return 1.5;
+  if (vuln === 1) return 2.5;
+  if (strong >= 3) return 4.0;
+  return 3.0;
+};
+
+// Stabilize / Optimize / Advance, keyed off the sustainable growth category.
+// ─────────────────────────────────────────────────────────────────────────────
+// LENDER OPPORTUNITIES — derived from the Financial Analysis module
+// ─────────────────────────────────────────────────────────────────────────────
+// Each rule reads a specific computed ratio and, when it trips, names a concrete
+// conversation the lender is positioned to bring. Rules are ordered by urgency, and
+// the signal that triggered each one is shown so nothing reads as a generic pitch.
+const lenderOpportunities = (fa) => {
+  const r = computeFARatios(fa.s3vals);
+  if (!r.hasData) return [];
+  const { dscr, currentRatio, debtToAsset, sgr, oer, assetTurnover, nfi, hasAccrualData } = r;
+  const pct = (v) => Math.round(v) + "%";
+  const x = (v) => v.toFixed(2) + "x";
+  const out = [];
+
+  if (nfi !== null && nfi < 0) out.push({ kind:"t", tag:"STABILIZE FIRST", title:"Net farm income is negative",
+    body:"Depreciation and interest are eroding equity before any growth conversation is worth having. The near-term work is cash flow and cost structure, not new capital. Anything that adds debt service now compounds the problem.",
+    signal:`Signal: net farm income at ${fmt$(nfi)}` });
+
+  if (dscr !== null && dscr < 1.0) out.push({ kind:"t", tag:"TERM DEBT", title:"Debt service is not covered by operations",
+    body:"Coverage below 1.0x means the operation is not generating enough to service its existing obligations. Restructuring amortization, or terming out a portion of the operating line, is the immediate lever available to the lender.",
+    signal:`Signal: debt service coverage at ${x(dscr)}` });
+  else if (dscr !== null && dscr < 1.25) out.push({ kind:"w", tag:"TERM DEBT", title:"Coverage is thin enough to revisit structure",
+    body:"Coverage clears 1.0x but sits under the 1.25x comfort threshold, which leaves no room for a soft year. Better to review amortization terms before the next renewal than during it.",
+    signal:`Signal: debt service coverage at ${x(dscr)}` });
+
+  if (currentRatio !== null && currentRatio < 1.5) out.push({ kind:"w", tag:"WORKING CAPITAL", title:"Short-term position is tight going into the season",
+    body:"The operation is carrying limited cushion against current obligations. Right-sizing the operating line, or converting a portion of current debt to term, protects the season without changing the underlying business.",
+    signal:`Signal: current ratio at ${x(currentRatio)}` });
+
+  if (currentRatio !== null && currentRatio >= 2.0 && sgr !== null && sgr < 5) out.push({ kind:"o", tag:"CAPITAL DEPLOYMENT", title:"Liquidity is strong while equity growth has stalled",
+    body:"The operation holds more short-term capital than it currently needs while the balance sheet is not compounding. That is a conversation about where the capital should go: a term investment, a revenue-generating asset, or a diversification path the Revenue Diversification module can rank against this farm's own capacity.",
+    signal:`Signal: current ratio ${x(currentRatio)} against a sustainable growth rate of ${pct(sgr)}` });
+
+  if (sgr !== null && sgr < 0) out.push({ kind:"t", tag:"EQUITY", title:"The operation is not retaining enough to fund its own growth",
+    body:"After family living and taxes, earnings are not adding to net worth. Growth from here is debt-funded unless margin or withdrawals change. Worth modelling what withdrawal level or margin improvement returns the operation to positive retention.",
+    signal:`Signal: sustainable growth rate at ${pct(sgr)}` });
+
+  if (debtToAsset !== null && debtToAsset < 30) out.push({ kind:"o", tag:"BORROWING CAPACITY", title:"Unused balance sheet capacity",
+    body:"Leverage sits well below the point where it constrains decisions. If the operation has an expansion, land, or facility opportunity worth taking, the balance sheet can support it. The constraint here is cash flow, not equity.",
+    signal:`Signal: debt-to-asset ratio at ${pct(debtToAsset)}` });
+
+  if (debtToAsset !== null && debtToAsset > 60) out.push({ kind:"t", tag:"LEVERAGE", title:"Leverage is limiting what the operation can do next",
+    body:"At this level, further borrowing narrows rather than widens the options. The productive conversation is which assets are carrying their debt and which are not, and whether any of them should be sold or restructured.",
+    signal:`Signal: debt-to-asset ratio at ${pct(debtToAsset)}` });
+
+  if (oer !== null && oer >= 65 && oer <= 80) out.push({ kind:"w", tag:"COST STRUCTURE", title:"Operating costs are consuming most of revenue",
+    body:"Above the strong threshold but not yet critical. This is the window where input financing terms, prepay timing, and enterprise-level cost visibility still change the outcome. Financial Analysis breaks the cost side out per acre.",
+    signal:`Signal: operating expense ratio at ${pct(oer)}` });
+  else if (oer !== null && oer > 80) out.push({ kind:"t", tag:"COST STRUCTURE", title:"Operating costs leave almost nothing to work with",
+    body:"More than eighty cents of every revenue dollar is consumed before depreciation and interest. Financing structure cannot fix a cost problem of this size, but it can buy time while the cost side is addressed.",
+    signal:`Signal: operating expense ratio at ${pct(oer)}` });
+
+  if (assetTurnover !== null && assetTurnover < 20) out.push({ kind:"o", tag:"ASSET UTILISATION", title:"A large asset base relative to the revenue it produces",
+    body:"Common for land-heavy operations and not automatically a problem, but worth understanding. Options include putting idle capacity to work through custom services, or reviewing whether every asset still earns its place on the balance sheet.",
+    signal:`Signal: asset turnover ratio at ${pct(assetTurnover)}` });
+
+  if (hasAccrualData) out.push({ kind:"o", tag:"ACCRUAL VIEW", title:"Accrual-adjusted numbers are available for this operation",
+    body:"Most farm credit files rely on cash-basis tax figures, which move income between years. This operation has entered the balance sheet detail needed for an accrual-adjusted view, which is the same basis FINBIN and peer benchmarks use. Worth using it in the credit narrative.",
+    signal:"Signal: accrual adjustments entered in Financial Analysis" });
+
+  return out;
+};
+
+const faTierOf = (fa) => {
+  const { hasData, categories } = computeFARatios(fa.s3vals);
+  if (!hasData) return "Optimize";
+  const g = (categories||[]).find(c => c.id === "growth");
+  if (!g || g.status === "blank") return "Optimize";
+  return g.status === "vuln" ? "Stabilize" : g.status === "strong" ? "Advance" : "Optimize";
+};
 const HIGH_CAP_OPPS = ["processing","demolition","manure","eventRental"];
 const PASSIVE_TIME_OPPS = ["energy","carbon","envServices","storage"];
 
@@ -1564,9 +1668,10 @@ function RD1({ rd, setRData, fa }) {
   return (
     <div>
       <Head eyebrow="Revenue Diversification · Stage 1" title="Baseline & readiness" sub="Your farm profile from the Financial Analysis module carries over automatically. Review and confirm below." />
+      <FinancialHealthStrip fa={fa} />
       {faEnt && (<div style={{ background:T.waterL, color:"#0A6E8C", borderRadius:8, padding:"11px 14px", fontSize:12.5, display:"flex", alignItems:"flex-start", gap:9, marginBottom:16, lineHeight:1.5 }}><Fic type="link" /><span>Financial Analysis carried over — enterprise <b>{faEnt2||faEnt}</b> · financial-health score <b>{sc.toFixed(1)}/5</b> · readiness <b>{rl}</b></span></div>)}
       <div style={cardStyle()}>
-        <div style={cardLblStyle()}><Apex color={T.green} />Farm profile — confirm or update</div>
+        <div style={cardLblStyle()}>Farm profile — confirm or update</div>
         <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:14 }}>
           <SelField label="Farm type" k="farmType" opts={FARM} val={b.farmType||faEnt2||""} />
           <SelField label="Revenue tier" k="revTier" opts={TIERS} val={b.revTier||""} />
@@ -1576,13 +1681,13 @@ function RD1({ rd, setRData, fa }) {
       </div>
       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16 }}>
         <div style={cardStyle({ marginBottom:0 })}>
-          <div style={cardLblStyle()}><Apex color={T.green} />MFP financial-health score</div>
+          <div style={cardLblStyle()}>MFP financial-health score</div>
           <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:12 }}><input type="number" style={inputStyle({ width:88 })} min={1} max={5} step={0.1} value={b.mfpScore||sc} onChange={e=>set("mfpScore",e.target.value)} /><span style={{ fontSize:13, color:T.fgS }}>out of 5.0</span></div>
           <span style={pillStyle(rf)}>{rl}</span>
           {rf==="foundation" && <div style={{ marginTop:12 }}><Flag type="danger">Foundation-first path. Strengthen core financials before diversification investment.</Flag></div>}
         </div>
         <div style={cardStyle({ marginBottom:0 })}>
-          <div style={cardLblStyle()}><Apex color={T.green} />SWOT signals</div>
+          <div style={cardLblStyle()}>SWOT signals</div>
           <textarea style={inputStyle({ minHeight:96, resize:"vertical", lineHeight:1.5 })} placeholder="Note strengths, weaknesses, opportunities or threats. e.g. 'Strong equipment base. Neighbor asked about custom spraying.'" value={b.swot||""} onChange={e=>set("swot",e.target.value)} />
         </div>
       </div>
@@ -1605,10 +1710,10 @@ function PeerIncomeBenchmark({ revTier }) {
   const highlight = revTier ? INCOME_BENCHMARK.find(row => row.tiers.includes(revTier)) : null;
   return (
     <div style={cardStyle({ borderTop:`4px solid ${T.green}` })}>
-      <div style={cardLblStyle()}><Apex color={T.green} />How similar farms split household income</div>
+      <div style={cardLblStyle()}>How similar farms split household income</div>
       <div style={{ fontSize:12.5, color:T.fgM, marginBottom:14, lineHeight:1.5 }}>USDA ERS research on multi-enterprising farm households. Roughly 8–12% of total household income for commercial and intermediate farms comes from alternative business ventures off the farm — this is the pool your diversification plan is drawing from.</div>
       <div style={{ display:"grid", gridTemplateColumns:"1.3fr 1fr 1fr 1fr 1fr", gap:6, background:T.bgAlt, borderRadius:6, padding:"8px 12px", marginBottom:4 }}>
-        {["Farm category","Farm business","Wages/salary","Nonfarm business","Transfers/other"].map((h,i) => (<div key={i} style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:10.5, fontWeight:700, color:T.fgS, textTransform:"uppercase", letterSpacing:"0.04em", textAlign:i===0?"left":"center" }}>{h}</div>))}
+        {["Farm category","Farm business","Wages/salary","Nonfarm business","Transfers/other"].map((h,i) => (<div key={i} style={{ fontSize:10.5, fontWeight:700, color:T.fgS, textTransform:"uppercase", letterSpacing:"0.04em", textAlign:i===0?"left":"center" }}>{h}</div>))}
       </div>
       {INCOME_BENCHMARK.map((row,i) => {
         const isHighlight = highlight && row.label===highlight.label;
@@ -1646,7 +1751,7 @@ function RD2({ rd, setRData }) {
       <Head eyebrow="Revenue Diversification · Stage 2" title="Goal alignment" sub="These answers shape which opportunities surface and how aggressively they are prioritized." />
       {Qs.map(q => (
         <div key={q.key} style={cardStyle()}>
-          <div style={cardLblStyle()}><Apex color={T.green} />{q.title}</div>
+          <div style={cardLblStyle()}>{q.title}</div>
           {q.opts.map(([val,title,desc]) => (
             <div key={val} style={optSty(g[q.key]===val)} onClick={()=>set(q.key,val)}>
               <div style={{ display:"flex", alignItems:"center", gap:10 }}><Radio on={g[q.key]===val} /><div><div style={{ fontSize:13.5, fontWeight:600, color:g[q.key]===val?T.blue:T.navy, marginBottom:1 }}>{title}</div><div style={{ fontSize:11.5, color:T.fgS, lineHeight:1.4 }}>{desc}</div></div></div>
@@ -1675,9 +1780,9 @@ function RD3({ rd, setRData }) {
         return (
           <div key={cat} style={cardStyle()}>
             <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", marginBottom:16, gap:12, flexWrap:"wrap" }}>
-              <div><div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:17, fontWeight:700, marginBottom:2 }}>{meta.label}</div><div style={{ fontSize:12.5, color:T.fgM }}>{meta.desc}</div></div>
+              <div><div style={{ fontSize:17, fontWeight:700, marginBottom:2 }}>{meta.label}</div><div style={{ fontSize:12.5, color:T.fgM }}>{meta.desc}</div></div>
               <div style={{ textAlign:"right", flexShrink:0 }}>
-                <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:22, fontWeight:800, color:leverScoreColor(score) }}>{score}%</div>
+                <div style={{ fontSize:22, fontWeight:800, color:leverScoreColor(score) }}>{score}%</div>
                 <div style={{ fontSize:11, fontWeight:600, color:leverScoreColor(score) }}>{LEVER_BUCKET_LABEL[leverBucket(score)]}</div>
               </div>
             </div>
@@ -1687,7 +1792,7 @@ function RD3({ rd, setRData }) {
                 <div key={it.id} style={{ marginBottom:14 }}>
                   <div style={{ display:"flex", justifyContent:"space-between", alignItems:"baseline", marginBottom:2 }}>
                     <label style={{ fontSize:12.5, fontWeight:600, color:T.navy }}>{it.label}</label>
-                    <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:13, fontWeight:700, color:meta.color }}>{val}%</span>
+                    <span style={{ fontSize:13, fontWeight:700, color:meta.color }}>{val}%</span>
                   </div>
                   <div style={{ fontSize:10.5, color:T.fgS, marginBottom:6, fontStyle:"italic" }}>{it.hint}</div>
                   <input type="range" min={0} max={100} step={5} value={val} onChange={e=>setItem(it.id, parseInt(e.target.value,10))} style={{ width:"100%" }} />
@@ -1701,13 +1806,13 @@ function RD3({ rd, setRData }) {
       {allWeak && touched && <Flag type="danger">All three levers score below 34% — only zero-capital, passive paths are appropriate until at least one lever is strengthened.</Flag>}
       {!allWeak && touched && (
         <div style={cardStyle({ borderTop:`4px solid ${T.green}` })}>
-          <div style={cardLblStyle()}><Apex color={T.green} />Your three-lever profile</div>
+          <div style={cardLblStyle()}>Your three-lever profile</div>
           <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:16 }}>
             {["asset","trust","risk"].map(cat => {
               const meta = LEVER_META[cat]; const score = scores[cat];
               return (
                 <div key={cat} style={{ textAlign:"center" }}>
-                  <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:11, fontWeight:700, color:T.fgS, marginBottom:8, textTransform:"uppercase", letterSpacing:"0.06em" }}>{meta.label}</div>
+                  <div style={{ fontSize:11, fontWeight:700, color:T.fgS, marginBottom:8, textTransform:"uppercase", letterSpacing:"0.06em" }}>{meta.label}</div>
                   <div style={{ height:64, background:T.bgAlt, borderRadius:6, overflow:"hidden", display:"flex", alignItems:"flex-end" }}><div style={{ width:"100%", height:`${score}%`, background:meta.color, transition:"height .5s" }} /></div>
                   <div style={{ fontSize:11.5, marginTop:7, color:meta.color, fontWeight:700 }}>{score}% · {LEVER_BUCKET_LABEL[leverBucket(score)]}</div>
                 </div>
@@ -1744,7 +1849,7 @@ function RD4({ rd, setRData, fa }) {
         <Flag type="ok">Your Financial Analysis shows solid debt service coverage and a healthy operating expense ratio — this ranking gives a modest boost to higher-capital, faster-growth paths, since your core operation has room to support them.</Flag>
       )}
       <div style={{ background:"#FAF6EC", border:`1px solid ${T.silver}`, borderRadius:10, padding:"14px 18px", marginBottom:16 }}>
-        <div style={cardLblStyle()}><Apex color={T.green} />Your lever inputs</div>
+        <div style={cardLblStyle()}>Your lever inputs</div>
         <div style={{ display:"flex", gap:26, flexWrap:"wrap" }}>
           {["asset","trust","risk"].map(k => (
             <div key={k} style={{ display:"flex", alignItems:"center", gap:9 }}>
@@ -1769,9 +1874,9 @@ function RD4({ rd, setRData, fa }) {
           const isSel = selected.includes(o.id); const fl = o.leverMatch>=60?"ready":o.leverMatch>=35?"caution":"foundation"; const fLabel = { ready:"Strong fit", caution:"Moderate fit", foundation:"Weak fit" }[fl];
           const dimmed = (o.entSpecific && !o.entMatch) || o.isExcluded;
           return (
-            <div key={o.id} onClick={()=>toggle(o.id)} style={{ background:"#fff", border:isSel?`2px solid ${T.blue}`:`1px solid ${T.border}`, borderRadius:10, padding:18, cursor:"pointer", transition:"all .15s", opacity:dimmed?0.5:(o.capOk?1:0.75), boxShadow:isSel?"0 4px 12px rgba(15,28,57,0.10)":"0 1px 2px rgba(15,28,57,0.06)" }}>
+            <div key={o.id} onClick={()=>toggle(o.id)} style={{ background:"#fff", border:isSel?`2px solid ${T.blue}`:`1px solid ${T.border}`, borderRadius:10, padding:18, cursor:"pointer", transition:"all .15s", opacity:dimmed?0.5:(o.capOk?1:0.75), boxShadow:isSel?"0 1px 3px rgba(14,28,57,.08)":"none" }}>
               <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", marginBottom:6, gap:8 }}>
-                <div><div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:16, fontWeight:700, color:isSel?T.blue:T.navy, lineHeight:1.15 }}>{o.label}</div><div style={{ fontSize:10, color:T.fgS, textTransform:"uppercase", letterSpacing:"0.06em", marginTop:3, fontWeight:600 }}>{o.cluster}</div></div>
+                <div><div style={{ fontSize:16, fontWeight:700, color:isSel?T.blue:T.navy, lineHeight:1.15 }}>{o.label}</div><div style={{ fontSize:10, color:T.fgS, textTransform:"uppercase", letterSpacing:"0.06em", marginTop:3, fontWeight:600 }}>{o.cluster}</div></div>
                 <span style={pillStyle(fl)}>{fLabel}</span>
               </div>
               <div style={{ display:"flex", alignItems:"center", gap:6, marginBottom:10, flexWrap:"wrap" }}>
@@ -1789,7 +1894,7 @@ function RD4({ rd, setRData, fa }) {
                 <div style={{ fontSize:11.5, color:T.fgM, display:"flex", alignItems:"center", gap:5 }}><span style={{ fontWeight:600 }}>Season conflict:</span>{[1,2,3,4,5].map(n=>(<span key={n} style={{ width:6, height:6, borderRadius:"50%", background:n<=o.seasonal?T.amber:T.div, display:"inline-block" }}/>))}</div>
               </div>
               <div>
-                <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:10.5, fontWeight:700, color:T.fgS, textTransform:"uppercase", letterSpacing:"0.05em", marginBottom:6 }}>Lever fit</div>
+                <div style={{ fontSize:10.5, fontWeight:700, color:T.fgS, textTransform:"uppercase", letterSpacing:"0.05em", marginBottom:6 }}>Lever fit</div>
                 {[["asset","Assets",T.dgreen],["trust","Human",T.tan],["risk","Financial",T.blue]].map(([k,label,color]) => {
                   const actual = Math.round(o.fit[k]/100*leverPct(lev,k));
                   return (
@@ -1853,7 +1958,7 @@ function RD5({ rd, setRData }) {
         return (
           <div key={o.id} style={cardStyle(allAck?{borderTop:`4px solid ${T.green}`}:{})}>
             <div style={{ display:"flex", alignItems:"center", gap:9, marginBottom:14 }}>
-              <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:16, fontWeight:700 }}>{o.label}</div>
+              <div style={{ fontSize:16, fontWeight:700 }}>{o.label}</div>
               {o.reg>=4 && <span style={pillStyle("vuln")}>High regulatory load</span>}
               {allAck && <span style={pillStyle("ready")}>All reviewed</span>}
             </div>
@@ -1901,7 +2006,7 @@ function RDPolicyEnablers({ rd, setRData }) {
         return (
           <div key={o.id} style={cardStyle(allAck?{borderTop:`4px solid ${T.green}`}:{ borderTop:`4px solid #4338CA` })}>
             <div style={{ display:"flex", alignItems:"center", gap:9, marginBottom:14 }}>
-              <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:16, fontWeight:700 }}>{o.label}</div>
+              <div style={{ fontSize:16, fontWeight:700 }}>{o.label}</div>
               {allAck && <span style={pillStyle("ready")}>All reviewed</span>}
             </div>
             {programs.map((p,i) => {
@@ -1950,7 +2055,7 @@ function RD6({ rd, setRData, profile }) {
     <div>
       <Head eyebrow="Revenue Diversification · Stage 7" title="Scenario comparison" sub="Compare your selected paths side by side, then set your priority ranking." />
       <div style={cardStyle({ borderTop:`4px solid ${T.green}` })}>
-        <div style={cardLblStyle()}><Apex color={T.green} />Your core values check</div>
+        <div style={cardLblStyle()}>Your core values check</div>
         {hasValues ? (
           <>
             <div style={{ fontSize:12.5, color:T.fgM, marginBottom:12, lineHeight:1.5 }}>From your Farm Profile — worth holding next to each option below before you rank them.</div>
@@ -1968,8 +2073,8 @@ function RD6({ rd, setRData, profile }) {
       <div style={{ overflowX:"auto" }}>
         <table style={{ width:"100%", borderCollapse:"collapse", background:"#fff", border:`1px solid ${T.border}`, borderRadius:10, overflow:"hidden" }}>
           <thead><tr style={{ background:T.navy }}>
-            <td style={{ padding:"12px 14px", fontFamily:"'Barlow Condensed',sans-serif", fontSize:11, fontWeight:700, color:"#fff", textTransform:"uppercase", letterSpacing:"0.06em" }}>Comparison</td>
-            {sel.map(o => (<td key={o.id} style={{ padding:"12px 14px", textAlign:"center", borderLeft:"1px solid rgba(255,255,255,0.12)" }}><div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:13.5, fontWeight:700, color:"#fff", lineHeight:1.2 }}>{o.label}</div></td>))}
+            <td style={{ padding:"12px 14px", fontSize:11, fontWeight:700, color:"#fff", textTransform:"uppercase", letterSpacing:"0.06em" }}>Comparison</td>
+            {sel.map(o => (<td key={o.id} style={{ padding:"12px 14px", textAlign:"center", borderLeft:"1px solid rgba(255,255,255,0.12)" }}><div style={{ fontSize:13.5, fontWeight:700, color:"#fff", lineHeight:1.2 }}>{o.label}</div></td>))}
           </tr></thead>
           <tbody>
             {rows.map((r,i) => (<tr key={i} style={{ background:i%2===0?T.bgAlt:"#fff" }}><td style={{ padding:"11px 14px", fontSize:12.5, fontWeight:600, color:T.fgM, borderRight:`1px solid ${T.border}` }}>{r.label}</td>{r.vals.map((v2,j)=>(<td key={j} style={td}>{v2}</td>))}</tr>))}
@@ -1994,8 +2099,8 @@ function RD6({ rd, setRData, profile }) {
               </td>))}
             </tr>
             <tr style={{ background:T.greenL }}>
-              <td style={{ padding:"11px 14px", fontFamily:"'Barlow Condensed',sans-serif", fontSize:12.5, fontWeight:700, color:"#2F6E28", borderRight:`1px solid ${T.border}` }}>Your priority rank</td>
-              {sel.map(o => (<td key={o.id} style={td}><div style={{ display:"flex", justifyContent:"center", gap:5 }}>{sel.map((_,i) => (<button key={i} onClick={()=>setRank(o.id,i+1)} style={{ width:30, height:30, borderRadius:6, border:`1.5px solid ${getRank(o.id)===i+1?T.blue:T.border}`, cursor:"pointer", fontFamily:"'Barlow Condensed',sans-serif", fontSize:13, fontWeight:700, background:getRank(o.id)===i+1?T.blue:"#fff", color:getRank(o.id)===i+1?"#fff":T.fgS }}>{i+1}</button>))}</div></td>))}
+              <td style={{ padding:"11px 14px", fontSize:12.5, fontWeight:700, color:"#2F6E28", borderRight:`1px solid ${T.border}` }}>Your priority rank</td>
+              {sel.map(o => (<td key={o.id} style={td}><div style={{ display:"flex", justifyContent:"center", gap:5 }}>{sel.map((_,i) => (<button key={i} onClick={()=>setRank(o.id,i+1)} style={{ width:30, height:30, borderRadius:6, border:`1.5px solid ${getRank(o.id)===i+1?T.blue:T.border}`, cursor:"pointer", fontSize:13, fontWeight:700, background:getRank(o.id)===i+1?T.blue:"#fff", color:getRank(o.id)===i+1?"#fff":T.fgS }}>{i+1}</button>))}</div></td>))}
             </tr>
           </tbody>
         </table>
@@ -2039,11 +2144,11 @@ function OpportunityCostLens({ financialSel, physicalSel, setRData }) {
       {physicalSel.length > 0 ? (
         <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:14, marginBottom:12 }}>
           <div style={{ background:T.waterL, borderRadius:8, padding:"14px 16px" }}>
-            <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:13, fontWeight:700, color:"#0A6E8C", marginBottom:8 }}>Capital-only path{financialSel.length>1?"s":""}</div>
+            <div style={{ fontSize:13, fontWeight:700, color:"#0A6E8C", marginBottom:8 }}>Capital-only path{financialSel.length>1?"s":""}</div>
             {financialSel.map(o => (<div key={o.id} style={{ fontSize:12.5, color:"#0A6E8C", marginBottom:4 }}>• <b>{o.label}</b> — effort {o.effort||1}/5, liquidity {o.liquidity||1}/5</div>))}
           </div>
           <div style={{ background:T.wheatL||T.bgAlt, borderRadius:8, padding:"14px 16px" }}>
-            <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:13, fontWeight:700, color:T.amberT, marginBottom:8 }}>Sweat-equity path{physicalSel.length>1?"s":""}</div>
+            <div style={{ fontSize:13, fontWeight:700, color:T.amberT, marginBottom:8 }}>Sweat-equity path{physicalSel.length>1?"s":""}</div>
             {physicalSel.map(o => (<div key={o.id} style={{ fontSize:12.5, color:T.amberT, marginBottom:4 }}>• <b>{o.label}</b> — effort {o.effort||3}/5, liquidity {o.liquidity||3}/5</div>))}
           </div>
         </div>
@@ -2093,7 +2198,7 @@ function RD7({ rd, setRData, fa }) {
 
       {/* Equipment reserve calculator */}
       <div style={cardStyle({ borderTop:`4px solid ${T.green}` })}>
-        <div style={cardLblStyle()}><Apex color={T.green} />Equipment replacement reserve — funding gap calculator</div>
+        <div style={cardLblStyle()}>Equipment replacement reserve — funding gap calculator</div>
         <div style={{ fontSize:12.5, color:T.fgM, marginBottom:14, lineHeight:1.5 }}>Before chasing higher returns anywhere else, size a dedicated reserve to your equipment's expected useful life and replacement cost. This is the foundation everything else in this stage sits on top of.</div>
         <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:14, marginBottom:16 }}>
           <div><label style={labelStyle}>Expected useful life (years)</label><input type="number" style={inputStyle()} value={reserves.usefulLife||""} onChange={e=>setReserve({usefulLife:e.target.value})} placeholder="e.g., 10" /></div>
@@ -2104,16 +2209,16 @@ function RD7({ rd, setRData, fa }) {
           <>
             <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:12, marginBottom:14 }}>
               <div style={{ background:T.bgAlt, borderRadius:8, padding:"12px 14px", textAlign:"center" }}>
-                <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:10.5, fontWeight:700, color:T.fgS, textTransform:"uppercase", letterSpacing:"0.05em", marginBottom:4 }}>Required annual contribution</div>
-                <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:20, fontWeight:800, color:T.navy }}>${Math.round(requiredAnnual).toLocaleString()}</div>
+                <div style={{ fontSize:10.5, fontWeight:700, color:T.fgS, textTransform:"uppercase", letterSpacing:"0.05em", marginBottom:4 }}>Required annual contribution</div>
+                <div style={{ fontSize:20, fontWeight:800, color:T.navy }}>${Math.round(requiredAnnual).toLocaleString()}</div>
               </div>
               <div style={{ background:T.bgAlt, borderRadius:8, padding:"12px 14px", textAlign:"center" }}>
-                <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:10.5, fontWeight:700, color:T.fgS, textTransform:"uppercase", letterSpacing:"0.05em", marginBottom:4 }}>Annual gap</div>
-                <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:20, fontWeight:800, color:gap>0?T.red:T.dgreen }}>{gap>0?`$${Math.round(gap).toLocaleString()} short`:"Fully funded"}</div>
+                <div style={{ fontSize:10.5, fontWeight:700, color:T.fgS, textTransform:"uppercase", letterSpacing:"0.05em", marginBottom:4 }}>Annual gap</div>
+                <div style={{ fontSize:20, fontWeight:800, color:gap>0?T.red:T.dgreen }}>{gap>0?`$${Math.round(gap).toLocaleString()} short`:"Fully funded"}</div>
               </div>
               <div style={{ background:T.bgAlt, borderRadius:8, padding:"12px 14px", textAlign:"center" }}>
-                <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:10.5, fontWeight:700, color:T.fgS, textTransform:"uppercase", letterSpacing:"0.05em", marginBottom:4 }}>% of target funded</div>
-                <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:20, fontWeight:800, color:fundedPct>=100?T.dgreen:fundedPct>=60?T.amber:T.red }}>{fundedPct}%</div>
+                <div style={{ fontSize:10.5, fontWeight:700, color:T.fgS, textTransform:"uppercase", letterSpacing:"0.05em", marginBottom:4 }}>% of target funded</div>
+                <div style={{ fontSize:20, fontWeight:800, color:fundedPct>=100?T.dgreen:fundedPct>=60?T.amber:T.red }}>{fundedPct}%</div>
               </div>
             </div>
             <div style={{ height:8, background:T.div, borderRadius:4, overflow:"hidden", marginBottom:8 }}><div style={{ height:"100%", width:`${fundedPct}%`, background:fundedPct>=100?T.dgreen:fundedPct>=60?T.amber:T.red, borderRadius:4, transition:"width .3s" }} /></div>
@@ -2130,14 +2235,14 @@ function RD7({ rd, setRData, fa }) {
 
       {/* Card 2 — Risk products */}
       <div style={cardStyle()}>
-        <div style={cardLblStyle()}><Apex color={T.green} />Risk products that free up capital</div>
+        <div style={cardLblStyle()}>Risk products that free up capital</div>
         <div style={{ fontSize:12.5, color:T.fgM, marginBottom:12, lineHeight:1.5 }}>Not every financial product is about growing money — some are about not needing as much of it sitting idle. Insurance and revenue protection tools reduce how large a cash cushion you need to hold against a bad year.</div>
         {RISK_PRODUCTS.map((p,i) => (<div key={i} style={{ fontSize:12.5, color:T.navy, padding:"6px 0", borderBottom:i<RISK_PRODUCTS.length-1?`1px solid ${T.div}`:"none" }}>• {p}</div>))}
       </div>
 
       {/* Card 3 — Income diversification vs your actual selections */}
       <div style={cardStyle()}>
-        <div style={cardLblStyle()}><Apex color={T.green} />Income diversification before investment diversification</div>
+        <div style={cardLblStyle()}>Income diversification before investment diversification</div>
         <div style={{ fontSize:12.5, color:T.fgM, marginBottom:12, lineHeight:1.5 }}>The highest-ROI move for most operations isn't a financial product at all — it's a new income line. Diversify how money comes in before diversifying where it sits once it's in.</div>
         {incomeOpps.length > 0 ? (
           <>
@@ -2151,7 +2256,7 @@ function RD7({ rd, setRData, fa }) {
 
       {/* Card 4 — Longer-horizon vehicles */}
       <div style={cardStyle()}>
-        <div style={cardLblStyle()}><Apex color={T.green} />Longer-horizon investment vehicles</div>
+        <div style={cardLblStyle()}>Longer-horizon investment vehicles</div>
         <div style={{ fontSize:12.5, color:T.fgM, marginBottom:12, lineHeight:1.5 }}>Once cash flow is stable and the reserve is funded, some operations layer in longer-horizon vehicles to build wealth outside the operation itself — a buffer that isn't tied to this year's yield or commodity price.</div>
         <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
           {OPPS.filter(o=>["agReit","retirementPlan"].includes(o.id)).map(o => {
@@ -2167,14 +2272,14 @@ function RD7({ rd, setRData, fa }) {
 
       {/* Sequencing framework */}
       <div style={cardStyle({ background:T.navy, border:"none" })}>
-        <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:11, fontWeight:700, letterSpacing:"0.1em", textTransform:"uppercase", color:T.green, marginBottom:12 }}>The order matters</div>
+        <div style={{ fontSize:11, fontWeight:700, letterSpacing:"0.1em", textTransform:"uppercase", color:T.green, marginBottom:12 }}>The order matters</div>
         {[
           { n:1, label:"Fund the reserve first", detail:"Laddered CDs or a money market account sized to your next equipment cycle.", done:step1Done },
           { n:2, label:"Diversify income before diversifying investments", detail:"New revenue lines reduce risk faster than a new asset class does.", done:step2Done },
           { n:3, label:"Layer in longer-horizon vehicles last", detail:"Once cash flow is stable and the reserve is no longer competing with this year's operating needs.", done:step3Done },
         ].map(s => (
           <div key={s.n} style={{ display:"flex", alignItems:"flex-start", gap:12, padding:"10px 0", borderBottom:s.n<3?"1px solid rgba(255,255,255,0.1)":"none" }}>
-            <div style={{ width:24, height:24, borderRadius:"50%", background:s.done?T.green:"rgba(255,255,255,0.15)", color:s.done?T.navy:"rgba(255,255,255,0.5)", display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"'Barlow Condensed',sans-serif", fontSize:12, fontWeight:800, flexShrink:0 }}>{s.done?"✓":s.n}</div>
+            <div style={{ width:24, height:24, borderRadius:"50%", background:s.done?T.green:"rgba(255,255,255,0.15)", color:s.done?T.navy:"rgba(255,255,255,0.5)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:12, fontWeight:800, flexShrink:0 }}>{s.done?"✓":s.n}</div>
             <div>
               <div style={{ fontSize:13, fontWeight:700, color:"#fff", marginBottom:2 }}>{s.label}</div>
               <div style={{ fontSize:12, color:"rgba(255,255,255,0.55)", lineHeight:1.4 }}>{s.detail}</div>
@@ -2196,14 +2301,14 @@ function RD8({ rd, fa }) {
   const tierC = { r:{bg:T.redL,c:T.red}, a:{bg:T.amberL,c:T.amberT}, g:{bg:T.greenL,c:T.dgreen} };
   const rankColor = (i) => [T.blue,T.tan,T.dgreen][i] || T.fgS;
   const sc = faScoreOf(fa); const mfp = parseFloat(b.mfpScore) || sc;
-  const summary = [["FA module","Complete"],["FA tier", fa.wholeFarm.profitability==="vuln"?"Stabilize":fa.wholeFarm.profitability==="strong"?"Advance":"Optimize"],["RD readiness", mfp>=3.5?"Ready":mfp>=2.5?"Caution":"Foundation first"],["Top RD path",(sel[0]&&sel[0].label)||"—"],["Assets",`${leverPct(lev,"asset")}% (${LEVER_BUCKET_LABEL[leverBucket(leverPct(lev,"asset"))]})`],["Human capital",`${leverPct(lev,"trust")}% (${LEVER_BUCKET_LABEL[leverBucket(leverPct(lev,"trust"))]})`],["Financial capital",`${leverPct(lev,"risk")}% (${LEVER_BUCKET_LABEL[leverBucket(leverPct(lev,"risk"))]})`]];
+  const summary = [["FA module","Complete"],["FA tier", faTierOf(fa)],["RD readiness", mfp>=3.5?"Ready":mfp>=2.5?"Caution":"Foundation first"],["Top RD path",(sel[0]&&sel[0].label)||"—"],["Assets",`${leverPct(lev,"asset")}% (${LEVER_BUCKET_LABEL[leverBucket(leverPct(lev,"asset"))]})`],["Human capital",`${leverPct(lev,"trust")}% (${LEVER_BUCKET_LABEL[leverBucket(leverPct(lev,"trust"))]})`],["Financial capital",`${leverPct(lev,"risk")}% (${LEVER_BUCKET_LABEL[leverBucket(leverPct(lev,"risk"))]})`]];
   const resources = [["Penn State","Advisory team assembly + insurance review"],["Purdue","Five-lever framework — price, production, cost, balance sheet, people"],["Ohio State","Whole-farm planning + succession"],["Iowa State","Equipment benchmarking for custom farming"],["UKY Center","Specialty crop diversification database"]];
   return (
     <div>
       <Head eyebrow="Revenue Diversification · Stage 9" title="Revenue Diversification action plan" sub="Your personalized diversification roadmap — ranked by the priority order you set in Stage 7." />
       <div style={{ background:T.navy, borderRadius:10, padding:"20px 24px", marginBottom:16 }}>
-        <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:11, fontWeight:700, letterSpacing:"0.12em", textTransform:"uppercase", color:T.green, marginBottom:6, display:"flex", alignItems:"center", gap:7 }}><Apex color={T.green} />Both modules complete</div>
-        <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:19, fontWeight:700, color:"#fff", marginBottom:5, lineHeight:1.2 }}>{sel.length>0 ? `${sel.length} diversification path${sel.length>1?"s":""} identified. ${sel[0].label} is your Priority 1.` : "No paths selected — revisit Stage 4."}</div>
+        <div style={{ fontSize:11, fontWeight:700, letterSpacing:"0.12em", textTransform:"uppercase", color:T.green, marginBottom:6, display:"flex", alignItems:"center", gap:7 }}>Both modules complete</div>
+        <div style={{ fontSize:19, fontWeight:700, color:"#fff", marginBottom:5, lineHeight:1.2 }}>{sel.length>0 ? `${sel.length} diversification path${sel.length>1?"s":""} identified. ${sel[0].label} is your Priority 1.` : "No paths selected — revisit Stage 4."}</div>
         <div style={{ fontSize:12.5, color:"rgba(255,255,255,0.55)" }}>{(b.farmType||"Farm")}{b.revTier?` · ${b.revTier}`:""}</div>
       </div>
       {sel.map((o,idx) => {
@@ -2211,12 +2316,12 @@ function RD8({ rd, fa }) {
         return (
           <div key={o.id} style={cardStyle()}>
             <div style={{ display:"flex", alignItems:"center", gap:11, marginBottom:14, paddingBottom:12, borderBottom:`1px solid ${T.div}` }}>
-              <div style={{ width:30, height:30, borderRadius:"50%", background:rankColor(idx), display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"'Barlow Condensed',sans-serif", fontSize:14, fontWeight:700, color:"#fff", flexShrink:0 }}>{idx+1}</div>
-              <div><div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:16, fontWeight:700 }}>{o.label}</div><div style={{ fontSize:11.5, color:T.fgS }}>{o.time} to first revenue · {o.capital}</div></div>
+              <div style={{ width:30, height:30, borderRadius:"50%", background:rankColor(idx), display:"flex", alignItems:"center", justifyContent:"center", fontSize:14, fontWeight:700, color:"#fff", flexShrink:0 }}>{idx+1}</div>
+              <div><div style={{ fontSize:16, fontWeight:700 }}>{o.label}</div><div style={{ fontSize:11.5, color:T.fgS }}>{o.time} to first revenue · {o.capital}</div></div>
             </div>
             {acts.map((a,i) => {
               const tc = tierC[a.t];
-              return (<div key={i} style={{ display:"flex", alignItems:"flex-start", gap:12, padding:"11px 0", borderBottom:i<acts.length-1?`1px solid ${T.div}`:"none" }}><div style={{ width:26, height:26, borderRadius:"50%", background:tc.bg, display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"'Barlow Condensed',sans-serif", fontSize:12, fontWeight:700, color:tc.c, flexShrink:0 }}>{i+1}</div><div><div style={{ fontSize:13, fontWeight:600, marginBottom:3 }}>{a.title}</div><div style={{ fontSize:12.5, color:T.fgM, lineHeight:1.5 }}>{a.d}</div></div></div>);
+              return (<div key={i} style={{ display:"flex", alignItems:"flex-start", gap:12, padding:"11px 0", borderBottom:i<acts.length-1?`1px solid ${T.div}`:"none" }}><div style={{ width:26, height:26, borderRadius:"50%", background:tc.bg, display:"flex", alignItems:"center", justifyContent:"center", fontSize:12, fontWeight:700, color:tc.c, flexShrink:0 }}>{i+1}</div><div><div style={{ fontSize:13, fontWeight:600, marginBottom:3 }}>{a.title}</div><div style={{ fontSize:12.5, color:T.fgM, lineHeight:1.5 }}>{a.d}</div></div></div>);
             })}
           </div>
         );
@@ -2224,11 +2329,11 @@ function RD8({ rd, fa }) {
       <EfficiencyValueImpact sel={sel} lev={lev} />
       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16 }}>
         <div style={cardStyle({ marginBottom:0 })}>
-          <div style={cardLblStyle()}><Apex color={T.green} />Land-grant advisory resources</div>
+          <div style={cardLblStyle()}>Land-grant advisory resources</div>
           {resources.map(([org,note],i) => (<div key={i} style={{ padding:"7px 0", borderBottom:i<resources.length-1?`1px solid ${T.div}`:"none" }}><span style={{ fontSize:12.5, fontWeight:700, color:T.blue }}>{org}: </span><span style={{ fontSize:12.5, color:T.fgM }}>{note}</span></div>))}
         </div>
         <div style={cardStyle({ marginBottom:0 })}>
-          <div style={cardLblStyle()}><Apex color={T.green} />Module summary</div>
+          <div style={cardLblStyle()}>Module summary</div>
           {summary.map(([k,v2],i) => (<div key={i} style={{ display:"flex", justifyContent:"space-between", padding:"7px 0", borderBottom:i<summary.length-1?`1px solid ${T.div}`:"none" }}><span style={{ fontSize:11.5, color:T.fgM, fontWeight:600 }}>{k}</span><span style={{ fontSize:11.5, color:T.navy, fontWeight:600 }}>{v2}</span></div>))}
         </div>
       </div>
@@ -2260,15 +2365,15 @@ function EfficiencyValueImpact({ sel, lev }) {
       <div style={{ fontSize:12.5, color:T.fgM, marginBottom:14, lineHeight:1.5 }}>Beyond the standalone economics of each path, here's how this plan affects the efficiency and risk profile of the whole farm.</div>
       <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:12, marginBottom:14 }}>
         <div style={{ background:T.bgAlt, borderRadius:8, padding:"12px 14px" }}>
-          <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:10.5, fontWeight:700, color:T.fgS, textTransform:"uppercase", letterSpacing:"0.05em", marginBottom:6 }}>Asset utilization</div>
+          <div style={{ fontSize:10.5, fontWeight:700, color:T.fgS, textTransform:"uppercase", letterSpacing:"0.05em", marginBottom:6 }}>Asset utilization</div>
           <div style={{ fontSize:12.5, color:T.navy, lineHeight:1.5 }}>{usesAsset ? "This plan puts existing land, equipment, or facilities to work rather than requiring new core-farm capital." : "This plan leans more on relationships and expertise than existing physical assets."}</div>
         </div>
         <div style={{ background:T.bgAlt, borderRadius:8, padding:"12px 14px" }}>
-          <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:10.5, fontWeight:700, color:T.fgS, textTransform:"uppercase", letterSpacing:"0.05em", marginBottom:6 }}>Calendar fit</div>
+          <div style={{ fontSize:10.5, fontWeight:700, color:T.fgS, textTransform:"uppercase", letterSpacing:"0.05em", marginBottom:6 }}>Calendar fit</div>
           <div style={{ fontSize:12.5, color:T.navy, lineHeight:1.5 }}>{calendarFit.text}</div>
         </div>
         <div style={{ background:T.bgAlt, borderRadius:8, padding:"12px 14px" }}>
-          <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:10.5, fontWeight:700, color:T.fgS, textTransform:"uppercase", letterSpacing:"0.05em", marginBottom:6 }}>Portfolio breadth</div>
+          <div style={{ fontSize:10.5, fontWeight:700, color:T.fgS, textTransform:"uppercase", letterSpacing:"0.05em", marginBottom:6 }}>Portfolio breadth</div>
           <div style={{ fontSize:12.5, color:T.navy, lineHeight:1.5 }}>{leverCount>=2 ? `Your selections draw on ${leverCount} of the 3 diversification levers — a genuinely diversified plan rather than one concentrated bet.` : "Your selections lean on a single lever — consider whether one more path from a different lever would strengthen the plan."}</div>
         </div>
       </div>
@@ -2298,26 +2403,341 @@ const revTierFromIncome = (income) => {
   return "$5M+";
 };
 
-function FarmProfilePage({ profile, setProfile, fa, rd, goFA }) {
-  const set = (field) => (e) => setProfile(s => ({ ...s, [field]: e.target.value }));
-  const sourceCount = (fa.enterprises||[]).length + (rd.data?.selectedOpps||[]).length;
-  const divLabel = sourceCount===0 ? null : sourceCount<=1 ? "Highly concentrated" : sourceCount<=3 ? "Moderately concentrated" : "Well diversified";
-  const { hasData: faHasData, ratios: faRatios } = computeFARatios(fa.s3vals);
-  const snapField = (label, field, placeholder, info) => (
-    <div style={{ background:T.bgAlt, border:`1px solid ${T.border}`, borderRadius:10, padding:"14px 16px" }}>
-      <div style={{ display:"flex", alignItems:"center", gap:5, marginBottom:8 }}>
-        <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:10.5, fontWeight:700, color:T.fgS, textTransform:"uppercase", letterSpacing:"0.05em" }}>{label}</span>
-        {info && <span title={info} style={{ fontSize:11, color:T.fgS, cursor:"help" }}>ⓘ</span>}
+// Shared finding treatment: left accent rule, chip, heading, body, source line.
+// Used by both the priority action findings and the Business at a glance sections
+// so the two views read as one design language.
+const FIND_COLOR = {
+  s:   { b:T.moss,   bg:T.greenL,  c:T.dgreen },
+  w:   { b:T.blue,   bg:T.blueL,   c:T.blue },
+  o:   { b:"#4338CA",bg:"#EEF2FF", c:"#4338CA" },
+  t:   { b:T.amber,  bg:T.amberL,  c:T.amberT },
+  none:{ b:"#cfd5dd",bg:"#eceef2", c:T.fgS },
+  neutral:{ b:T.silver, bg:"#eceef2", c:T.fgS },
+};
+
+const FindingBlock = ({ kind, tag, heading, source, children }) => {
+  const fc = FIND_COLOR[kind] || FIND_COLOR.none;
+  return (
+    <div style={{ borderLeft:`2px solid ${fc.b}`, paddingLeft:14, marginBottom:15 }}>
+      <span style={{ display:"inline-block", fontSize:9.5, letterSpacing:"0.12em", fontWeight:600, padding:"3px 8px", borderRadius:3, marginBottom:6, background:fc.bg, color:fc.c }}>{tag}</span>
+      <h4 style={{ fontSize:14.5, marginBottom:4, color:T.fg }}>{heading}</h4>
+      {children}
+      {source && <p style={{ fontSize:12, color:T.fgS, margin:"5px 0 0" }}>{source}</p>}
+    </div>
+  );
+};
+
+// ═════════════════════════════════════════════════════════════════════════════
+// ACTION PLAN — twelve business areas, ranked into three priorities
+// ═════════════════════════════════════════════════════════════════════════════
+// Areas map to one of the four MFP categories, and some map to a guided module.
+// Ranking is weight-aware: a constraint area gates everything downstream, a value
+// area produces the largest near-term lift, so neither is ranked on raw score alone.
+const AP_CATS = {
+  fundamentals: { label:"Business Fundamentals", score:44 },
+  growth:       { label:"Sustainable Growth",    score:50 },
+  production:   { label:"Production",            score:45 },
+  legacy:       { label:"Legacy",                score:33 },
+};
+
+const AP_AREAS = [
+  { n:1,  id:"vision",     label:"Strategic vision & planning",  cat:"fundamentals", score:2.7, weight:"standard",   module:null },
+  { n:2,  id:"advantage",  label:"Competitive advantage",        cat:"fundamentals", score:3.2, weight:"standard",   module:null },
+  { n:3,  id:"records",    label:"Records & data management",    cat:"fundamentals", score:3.0, weight:"standard",   module:null },
+  { n:4,  id:"workforce",  label:"Workforce planning",           cat:"fundamentals", score:1.3, weight:"standard",   module:null },
+  { n:5,  id:"finanalysis",label:"Financial analysis",           cat:"growth",       score:2.5, weight:"value",      module:"fa" },
+  { n:6,  id:"market",     label:"Market analysis",              cat:"growth",       score:2.9, weight:"standard",   module:null },
+  { n:7,  id:"incomediv",  label:"Income diversification",       cat:"growth",       score:2.2, weight:"value",      module:"rd" },
+  { n:8,  id:"adoption",   label:"Adoption & efficiency",        cat:"production",   score:3.4, weight:"standard",   module:null },
+  { n:9,  id:"riskprot",   label:"Risk & protection",            cat:"production",   score:2.4, weight:"constraint", module:"risk" },
+  { n:10, id:"ventures",   label:"Ventures beyond production",   cat:"production",   score:3.1, weight:"standard",   module:"rd" },
+  { n:11, id:"knowledge",  label:"Knowledge management",         cat:"legacy",       score:1.3, weight:"constraint", module:null },
+  { n:12, id:"succession", label:"Succession & transition",      cat:"legacy",       score:2.6, weight:"constraint", module:null },
+];
+
+const AP_WEIGHT_LABEL = { constraint:"constraint-weighted", value:"value-weighted", standard:"" };
+const AP_WEIGHT_BOOST = { constraint:1.6, value:1.8, standard:1.0 };
+
+// Priority score: how far the area is from 5, amplified by its weight.
+const apPriorityScore = (a) => (5 - a.score) * AP_WEIGHT_BOOST[a.weight];
+const apRanked = () => [...AP_AREAS].sort((x,y) => apPriorityScore(y) - apPriorityScore(x));
+const apOverall = 44;
+
+// Narrative content per area. Only the ranked-in areas need full detail; the rest
+// fall back to a generic shape so the page never renders an empty card.
+const AP_DETAIL = {
+  knowledge: {
+    vm:"Protect decades of work and know-how so the farm can keep creating value after you.",
+    why:"this is a constraint area. A weakness here caps the return on everything else you improve, so it moves ahead of areas with a similar score.",
+    finds:[
+      ["s","STRENGTH","A records habit to build from","You already keep more than many operations at this scale. Written procedures build on that habit rather than starting from nothing.","From your assessment · Records & data (03) scored 3.0 / 5"],
+      ["w","WEAKNESS","Know-how is undocumented","Decades of operating knowledge live largely with one person and are not captured for anyone who comes next.","From your assessment · Knowledge management (11) scored 1.3 / 5, high confidence"],
+      ["t","THREAT","Expanding while transfer is undefined","Adding assets and ventures while the transfer plan is absent concentrates risk in one person. The most common gap in family operations, not a personal shortcoming.","From EagleEye market intelligence · high confidence, current"],
+    ],
+    synth:"Succession is the deeper issue here, and capturing what you know is the step that makes a succession plan executable.",
+    steps:[["List the 5 to 10 decisions that only you can make today.","Start with the venture only you fully understand."],["Write a one-page checklist or procedure for the top two.",""],["Have a successor shadow you on those, then gradually let them lead.",""]],
+    lender:"can review your first list and flag which decisions matter most to the credit relationship.",
+    tools:[["Gripp","step 2","Procedures, task ownership, and document storage for farm teams.","Matched because you run multiple ventures with no single place for procedures."]],
+    toolcount:"1 of 2 available in this area",
+  },
+  finanalysis: {
+    vm:"Know exactly which acres, enterprises, or products are making you money, and which are burning equity.",
+    why:"this is a value area. Financial visibility creates more near-term economic lift than most areas, so it outranks several lower scores.",
+    finds:[
+      ["s","STRENGTH","A records habit to build from","Modest in absolute terms, but one of your stronger areas. The raw material for this work already exists.","From your assessment · Records & data (03) scored 3.0 / 5"],
+      ["w","WEAKNESS","Enterprise-level financial visibility is thin","With several ventures, blended numbers can hide both your best performer and a quiet drain on equity. Today it is difficult to tell which is which.","From your assessment · Financial analysis (05) scored 2.5 / 5, high confidence"],
+      ["t","THREAT","Margin squeeze while input costs hold","Input costs and capital constraints keep pressuring farm margins. An industry-wide condition, not a management failure, but harder to absorb without knowing where the pressure lands.","From EagleEye market intelligence · medium confidence, near term"],
+    ],
+    synth:"The gap is real, the market is applying pressure to it now, and you already hold what it takes to close it.",
+    steps:[["Calculate per-enterprise profitability and compare to benchmarks.","Start with the two ventures carrying the most row-crop exposure."],["Build a simple cash flow forecast for the next 12 to 18 months.",""],["Set 2 to 3 financial targets with annual check-ins.",""]],
+    lender:"can benchmark the output against peer operations.",
+    tools:[["Cropzilla","step 1","Per-enterprise and per-acre cost modeling.","Matched because you run several ventures on shared equipment, where cost allocation is the hard part."],["AgWorld","steps 2 and 3","Ongoing cash flow and target tracking.","Matched because your records habit means there is already data to load."]],
+    toolcount:"2 of 5 available in this area",
+  },
+  succession: {
+    vm:"Make sure the business outlives the operator, on terms the family has actually agreed to.",
+    why:"this is a constraint area. Without a transfer plan, improvements elsewhere accrue to an operation whose future ownership is undefined.",
+    finds:[
+      ["w","WEAKNESS","No documented transition plan","Ownership, management, and timing have not been written down or agreed across the family.","From your assessment · Succession & transition (12) scored 1.6 / 5"],
+      ["t","THREAT","Transition risk concentrates with age","The share of farm assets held by operators over 65 continues to rise, and unplanned transitions are the most common way a viable business ends.","From EagleEye market intelligence · high confidence, structural"],
+    ],
+    synth:"Nothing here is urgent this season, which is exactly why it keeps getting deferred.",
+    steps:[["Name who is intended to take over management, and who is intended to own.","These are two different questions and often two different answers."],["Get a preliminary valuation so the conversation has real numbers.",""],["Set a target date for a written agreement and work backward from it.",""]],
+    lender:"can outline the financing structures that make a transfer workable.",
+    tools:[],
+    toolcount:"No partner tools in this area yet",
+  },
+  riskprot: {
+    vm:"Understand where the operation is exposed, and whether the coverage you carry actually closes the gap.",
+    why:"this is a constraint area. An uninsured or underinsured loss can undo several years of progress everywhere else.",
+    finds:[
+      ["w","WEAKNESS","Coverage has not been sized against cost of production","Policies are in place, but the gap between what they pay and what production actually costs has not been calculated.","From your assessment · Risk & protection (09) scored 2.4 / 5"],
+      ["t","THREAT","Cost of production above expected price","At trend yield, breakeven sits above the expected season-average price, which means a normal year does not cover full cost.","From EagleEye market intelligence · high confidence, current"],
+    ],
+    synth:"Coverage is a floor, not a profit guarantee. The useful question is how far the floor sits below full cost.",
+    steps:[["Calculate breakeven per unit against your current coverage level.","The Farm Risk module sizes this gap directly."],["Rank your threats by probability and severity.",""],["Decide which threats to transfer, mitigate, accept, or avoid.",""]],
+    lender:"can review whether current coverage protects the credit position.",
+    tools:[],
+    toolcount:"No partner tools in this area yet",
+  },
+  incomediv: {
+    vm:"Find the income streams your assets, people, and balance sheet can actually support.",
+    why:"this is a value area. New revenue reduces concentration risk faster than most improvements, so it outranks several lower scores.",
+    finds:[
+      ["s","STRENGTH","Underused capacity already exists","Equipment, storage, and labour are not fully utilised across the season, which is the raw material for a second income line.","From your assessment · Ventures beyond production (10) scored 3.1 / 5"],
+      ["w","WEAKNESS","Income remains concentrated","Most revenue traces to a small number of buyers and a single production system.","From your assessment · Income diversification (07) scored 2.2 / 5"],
+    ],
+    synth:"The capacity is there. What is missing is a ranked, farm-specific view of which path to take first.",
+    steps:[["Rate your human capital, assets, and financial capacity honestly.",""],["Map two or three opportunities against that profile, not twelve.",""],["Screen each for barriers before committing capital.",""]],
+    lender:"can talk through how comparable operations financed a similar move.",
+    tools:[],
+    toolcount:"No partner tools in this area yet",
+  },
+};
+
+const AP_FALLBACK = {
+  vm:"Improve this area to lift what the rest of the operation can achieve.",
+  why:"a meaningful gap, but a standard-weighted area. It neither gates other progress nor produces the largest near-term lift.",
+  finds:[["none","NO FINDING YET","Your assessment conversation did not cover this area","This ranked on score and gap alone. Nothing from the conversation explains it, and no market signal points here, so treat it as a question to open rather than a conclusion.","Worth raising directly in the review, or revisit at the next assessment"]],
+  synth:"Ranked by the numbers, unsupported by the conversation. The most useful thing here is a question, not a plan.",
+  steps:[["Open this area in your next advisor conversation.",""],["Decide whether the score reflects reality or a gap in the assessment.",""]],
+  lender:"can talk through how comparable operations have handled this.",
+  tools:[], toolcount:"No partner tools in this area yet",
+};
+
+const AP_MODULE_LABEL = { fa:"Financial Analysis", rd:"Revenue Diversification", risk:"Farm Risk" };
+
+// Compact carry-forward of the four financial health categories, shown inside the
+// modules so the numbers travel with the farmer rather than living only on one page.
+const FinancialHealthStrip = ({ fa }) => {
+  const { hasData, categories } = computeFARatios(fa.s3vals);
+  if (!hasData) return null;
+  return (
+    <div style={{ background:T.bgAlt, border:`1px solid ${T.border}`, borderRadius:8, padding:"11px 14px", marginBottom:16 }}>
+      <div style={{ fontSize:10.5, fontWeight:600, letterSpacing:"0.13em", textTransform:"uppercase", color:T.fgS, marginBottom:9 }}>Financial health carried forward</div>
+      <div style={{ display:"flex", gap:10, flexWrap:"wrap" }}>
+        {categories.map(c => (
+          <div key={c.id} style={{ display:"flex", alignItems:"center", gap:7 }}>
+            <span style={{ fontSize:12, color:T.fgM }}>{c.label}</span>
+            <span style={pillStyle(c.status)}>{c.status==="blank"?"not scored":c.status}</span>
+          </div>
+        ))}
       </div>
+    </div>
+  );
+};
+
+function FarmProfilePage({ profile, setProfile, fa, rd, goFA, goRD, goRisk }) {
+  const set = (field) => (e) => setProfile(s => ({ ...s, [field]: e.target.value }));
+  const [pri, setPri] = useState(0);
+  const [view, setView] = useState("actions");
+  const { hasData: faHasData, categories: faCategories } = computeFARatios(fa.s3vals);
+  const lenderOpps = lenderOpportunities(fa);
+
+  const ranked = apRanked();
+  const top3 = ranked.slice(0,3);
+  const area = top3[pri] || top3[0];
+  const d = AP_DETAIL[area.id] || AP_FALLBACK;
+  const cat = AP_CATS[area.cat];
+  const byScore = [...AP_AREAS].sort((a,b) => a.score - b.score);
+  const posIdx = byScore.findIndex(a => a.id === area.id);
+  const ordinal = ["1st","2nd","3rd","4th","5th","6th","7th","8th","9th","10th","11th","12th"][posIdx];
+  const startModule = () => { if (area.module==="fa") goFA(1); else if (area.module==="rd") goRD(1); else if (area.module==="risk") goRisk(1); };
+
+  const findColor = FIND_COLOR;
+
+  const tierRow = (label, note, value, unit, hl) => (
+    <div style={{ display:"flex", justifyContent:"space-between", alignItems:"baseline", gap:14, padding:hl?"9px 18px":"8px 0", borderBottom:hl?"none":`1px dashed ${T.border}`, background:hl?"#e8edf4":"transparent", margin:hl?"0 -18px":0, borderRadius:hl?4:0 }}>
+      <span style={{ fontSize:13, color:T.fgM }}><b style={{ color:T.fg, fontWeight:600 }}>{label}</b> <span style={{ color:T.fgS, fontSize:12 }}>{note}</span></span>
+      <span style={{ fontSize:17, fontWeight:600, whiteSpace:"nowrap" }}>{value}<span style={{ fontSize:11.5, fontWeight:400, color:T.fgS }}> {unit}</span></span>
+    </div>
+  );
+
+  const snapField = (label, field, placeholder) => (
+    <div style={{ background:T.bgAlt, border:`1px solid ${T.border}`, borderRadius:10, padding:"14px 16px" }}>
+      <div style={{ fontSize:10.5, fontWeight:600, color:T.fgS, textTransform:"uppercase", letterSpacing:"0.05em", marginBottom:8 }}>{label}</div>
       <textarea style={inputStyle({ minHeight:44, border:"none", background:"transparent", padding:0, fontSize:14, fontWeight:600, color:T.navy, resize:"vertical" })} value={profile[field]||""} onChange={set(field)} placeholder={placeholder} />
     </div>
   );
+
+  const sourceCount = (fa.enterprises||[]).length + (rd.data?.selectedOpps||[]).length;
+  const divLabel = sourceCount===0 ? null : sourceCount<=1 ? "Highly concentrated" : sourceCount<=3 ? "Moderately concentrated" : "Well diversified";
+
   return (
     <div>
-      <Head eyebrow="MFP Farm Profile" title="MFP farm business profile" sub="A 360° view that fills in as the farmer completes onboarding and assessments — and feeds directly into Financial Analysis, Revenue Diversification, and Farm Risk so nothing has to be entered twice." />
+      <Head eyebrow="Farm business profile" title={view==="actions" ? "Three priorities, drawn from twelve areas" : "Business at a glance"} sub={view==="actions" ? "Each card shows how the area scored, what your assessment and the market found there, and what to do first. Work them in order, the first one unlocks the others." : "The operating picture behind the priorities: what the farm is, what it is trying to become, and where its financial health currently sits."} />
 
+      {/* view tabs */}
+      <div style={{ display:"flex", gap:8, borderBottom:`1px solid ${T.border}`, marginBottom:20 }}>
+        {[["actions","Priority actions"],["glance","Business at a glance"]].map(([k,lab]) => {
+          const on = view===k;
+          return (
+            <button key={k} onClick={()=>setView(k)} style={{ background:"none", border:"none", borderBottom:`2px solid ${on?T.navy:"transparent"}`, padding:"9px 4px", marginBottom:-1, cursor:"pointer", font:"inherit", fontSize:14, fontWeight:on?600:500, color:on?T.navy:T.fgS, marginRight:14 }}>{lab}</button>
+          );
+        })}
+      </div>
+
+      {view==="actions" && (<>
+
+      {/* priority tabs */}
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:10, marginBottom:8 }}>
+        {top3.map((a,j) => {
+          const on = j===pri;
+          return (
+            <button key={a.id} onClick={()=>setPri(j)} style={{ background:"#fff", border:`1px solid ${T.border}`, borderTop:`3px solid ${on?T.navy:"#d8dce3"}`, borderRadius:"0 0 8px 8px", padding:"13px 15px", cursor:"pointer", textAlign:"left", font:"inherit", transition:"border-color .15s" }}>
+              <div style={{ fontSize:10, letterSpacing:"0.12em", fontWeight:600, color:on?T.navy:T.fgS }}>PRIORITY {j+1}</div>
+              <div style={{ fontSize:14, fontWeight:600, margin:"4px 0 3px", color:T.fg }}>{a.label}</div>
+              <div style={{ fontSize:11.5, color:T.fgS }}>{a.score.toFixed(1)} / 5 · {AP_CATS[a.cat].label}</div>
+              {a.module && <span style={{ ...pillStyle("strong"), marginTop:5 }}>module</span>}
+            </button>
+          );
+        })}
+      </div>
+      <p style={{ fontSize:11.5, color:T.fgS, margin:"0 0 20px", textAlign:"right" }}>Showing priority {pri+1} of 3</p>
+
+      {/* priority card */}
       <div style={cardStyle()}>
-        <div style={cardLblStyle()}><Apex color={T.green} />Farm snapshot</div>
+        <div style={{ display:"flex", alignItems:"center", gap:10, flexWrap:"wrap", marginBottom:5 }}>
+          <span style={{ background:T.navy, color:"#fff", fontSize:11, letterSpacing:"0.08em", fontWeight:600, padding:"3px 10px", borderRadius:4 }}>PRIORITY {pri+1}</span>
+          <span style={{ fontSize:12, color:T.fgS }}>Area {String(area.n).padStart(2,"0")} · {cat.label}{AP_WEIGHT_LABEL[area.weight] ? " · "+AP_WEIGHT_LABEL[area.weight] : ""}</span>
+        </div>
+        <h2 style={{ fontSize:21, letterSpacing:"-0.01em", marginBottom:3, color:T.fg }}>{area.label}</h2>
+        <p style={{ fontSize:14.5, color:T.blue, fontStyle:"italic", margin:"0 0 18px" }}>{d.vm}</p>
+
+        {/* scores */}
+        <div style={{ background:T.bgAlt, borderRadius:8, padding:"16px 18px", marginBottom:20 }}>
+          <div style={{ fontSize:10.5, letterSpacing:"0.13em", color:T.fgS, marginBottom:13, textTransform:"uppercase" }}>How this area scored</div>
+          {tierRow("Your whole farm business", "— overall MFP score", apOverall, "/ 100", false)}
+          {tierRow(cat.label, "— the category this area belongs to, 1 of 4", cat.score, "/ 100", false)}
+          {tierRow(area.label, "— this action area, 1 of 12", area.score.toFixed(1), "/ 5", true)}
+          {tierRow("Room to improve", "— distance from this score to 5", (5-area.score).toFixed(1), "pts", false)}
+
+          <div style={{ marginTop:15, borderTop:`1px solid ${T.border}`, paddingTop:14 }}>
+            <p style={{ fontSize:12, color:T.fgM, margin:"0 0 9px" }}>All twelve areas of your business, weakest to strongest. This one is highlighted, {ordinal} lowest of 12 areas by score.</p>
+            <div style={{ display:"flex", gap:4, alignItems:"flex-end", height:32 }}>
+              {byScore.map(a => (
+                <span key={a.id} style={{ flex:1, background:a.id===area.id?T.blue:"#d3d8e0", borderRadius:"2px 2px 0 0", display:"block", height:`${Math.max(8,(a.score/5)*100)}%` }} />
+              ))}
+            </div>
+            <div style={{ display:"flex", justifyContent:"space-between", fontSize:10.5, color:T.fgS, marginTop:5 }}><span>weakest</span><span>strongest</span></div>
+            <p style={{ fontSize:12.5, color:T.fgM, margin:"10px 0 0", background:"#fff", borderRadius:5, padding:"9px 12px" }}>
+              <b style={{ color:T.navy }}>Why it ranks {["first","second","third"][pri]}:</b> {d.why}
+            </p>
+          </div>
+        </div>
+
+        {/* findings */}
+        <div style={{ fontSize:11, letterSpacing:"0.13em", color:T.fgS, margin:"0 0 12px", textTransform:"uppercase" }}>What your assessment and the market found here</div>
+        {d.finds.map((f,i) => {
+          const fc = findColor[f[0]];
+          return (
+            <div key={i} style={{ borderLeft:`2px solid ${fc.b}`, paddingLeft:14, marginBottom:13 }}>
+              <span style={{ display:"inline-block", fontSize:9.5, letterSpacing:"0.12em", fontWeight:600, padding:"3px 8px", borderRadius:3, marginBottom:6, background:fc.bg, color:fc.c }}>{f[1]}</span>
+              <h4 style={{ fontSize:14.5, marginBottom:4, color:T.fg }}>{f[2]}</h4>
+              <p style={{ fontSize:13.5, color:T.fgM, margin:"0 0 5px" }}>{f[3]}</p>
+              <p style={{ fontSize:12, color:T.fgS, margin:0 }}>{f[4]}</p>
+            </div>
+          );
+        })}
+        <p style={{ fontSize:13.5, color:T.fgM, fontStyle:"italic", margin:"0 0 20px" }}>{d.synth}</p>
+
+        {/* steps */}
+        <ol style={{ margin:"0 0 19px", paddingLeft:21, fontSize:14.5 }}>
+          {d.steps.map((s,i) => (
+            <li key={i} style={{ marginBottom:8 }}>{s[0]}
+              {s[1] && <div style={{ background:T.greenL, borderLeft:`2px solid ${T.moss}`, borderRadius:"0 4px 4px 0", padding:"8px 12px", marginTop:6, fontSize:12.5, color:T.dgreen }}>{s[1]}</div>}
+            </li>
+          ))}
+        </ol>
+
+        {/* module CTA */}
+        {area.module && (
+          <div style={{ background:T.greenL, border:"1px solid #dde7cd", borderRadius:9, padding:"15px 18px", display:"flex", justifyContent:"space-between", alignItems:"center", gap:16, flexWrap:"wrap", marginBottom:16 }}>
+            <div>
+              <p style={{ fontSize:14.5, fontWeight:600, color:T.dgreen, margin:0 }}>Work through this together in MFP</p>
+              <p style={{ fontSize:13, color:T.fgM, margin:"3px 0 0", maxWidth:460 }}>The guided {AP_MODULE_LABEL[area.module]} module walks this with you and writes the numbers back into the plan.</p>
+            </div>
+            <button onClick={startModule} style={btnStyle("primary")}>Start module</button>
+          </div>
+        )}
+
+        <p style={{ fontSize:13.5, color:T.fgM, margin:"0 0 18px" }}><b style={{ color:T.navy, fontWeight:600 }}>Your relationship manager</b> {d.lender}</p>
+
+        {/* tools */}
+        <div style={{ borderTop:`1px solid ${T.border}`, paddingTop:17 }}>
+          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"baseline", gap:12, flexWrap:"wrap", marginBottom:12 }}>
+            <span style={{ fontSize:11, letterSpacing:"0.13em", color:T.fgS, textTransform:"uppercase" }}>Tools matched to this action</span>
+            <span style={{ fontSize:11.5, color:T.fgS }}>{d.toolcount}</span>
+          </div>
+          {d.tools.length ? (
+            <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(240px,1fr))", gap:12 }}>
+              {d.tools.map((t,i) => (
+                <div key={i} style={{ background:T.bgAlt, borderRadius:8, padding:"14px 16px" }}>
+                  <div style={{ display:"flex", justifyContent:"space-between", alignItems:"baseline", gap:8 }}>
+                    <p style={{ fontSize:14.5, fontWeight:600, margin:0, color:T.fg }}>{t[0]}</p>
+                    <p style={{ fontSize:11, color:T.fgS, margin:0, whiteSpace:"nowrap" }}>{t[1]}</p>
+                  </div>
+                  <p style={{ fontSize:12.5, color:T.fgM, margin:"4px 0 8px" }}>{t[2]}</p>
+                  <p style={{ fontSize:12, color:T.green, margin:0 }}>▸ {t[3]}</p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p style={{ fontSize:12.5, color:T.fgS, margin:0 }}>No partner tools are matched to this area. The steps above and a conversation with your lender are the path here.</p>
+          )}
+        </div>
+      </div>
+
+      {/* pager */}
+      <div style={{ display:"flex", justifyContent:"space-between", gap:12, marginBottom:26 }}>
+        <button onClick={()=>setPri(p=>Math.max(0,p-1))} disabled={pri===0} style={{ ...btnStyle("outline"), opacity:pri===0?0.45:1, cursor:pri===0?"default":"pointer" }}>← Previous priority</button>
+        <button onClick={()=>setPri(p=>Math.min(2,p+1))} disabled={pri===2} style={{ ...btnStyle("outline"), opacity:pri===2?0.45:1, cursor:pri===2?"default":"pointer" }}>Next priority →</button>
+      </div>
+      </>)}
+
+      {view==="glance" && (<>
+      <div style={cardStyle()}>
+        <div style={cardLblStyle()}>Farm snapshot</div>
         <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:12, marginBottom:12 }}>
           {snapField("Location (state/county)", "location", "e.g., Minnehaha, SD")}
           {snapField("Size", "size", "e.g., 2,000 acres")}
@@ -2328,7 +2748,7 @@ function FarmProfilePage({ profile, setProfile, fa, rd, goFA }) {
           {snapField("Gross farm income", "grossIncome", "e.g., 400000")}
           <div style={{ background:T.bgAlt, border:`1px solid ${T.border}`, borderRadius:10, padding:"14px 16px" }}>
             <div style={{ display:"flex", alignItems:"center", gap:5, marginBottom:8 }}>
-              <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:10.5, fontWeight:700, color:T.fgS, textTransform:"uppercase", letterSpacing:"0.05em" }}>Diversification concentration</span>
+              <span style={{ fontSize:10.5, fontWeight:700, color:T.fgS, textTransform:"uppercase", letterSpacing:"0.05em" }}>Diversification concentration</span>
               <span title="Computed from your selected enterprises in Financial Analysis plus your selected paths in Revenue Diversification." style={{ fontSize:11, color:T.fgS, cursor:"help" }}>ⓘ</span>
             </div>
             {divLabel ? (<span style={pillStyle(sourceCount<=1?"vuln":sourceCount<=3?"watch":"strong")}>{divLabel}</span>) : (<div style={{ fontSize:13.5, fontStyle:"italic", color:T.fgS }}>Not scored yet</div>)}
@@ -2337,61 +2757,93 @@ function FarmProfilePage({ profile, setProfile, fa, rd, goFA }) {
         </div>
       </div>
 
+      <div style={cardStyle()}>
+        <div style={cardLblStyle()}>SWOT analysis</div>
+        <div style={{ fontSize:12.5, color:T.fgM, marginBottom:16, lineHeight:1.55 }}>Strengths and weaknesses are internal, what is already true about the operation. Opportunities and threats are external, what is happening around it. Every line below is editable and meant to be replaced with this operation's own read.</div>
+        {[
+          { kind:"s", tag:"STRENGTH", heading:"What the operation already does well", field:"swotStrengths", source:"Internal · from your assessment and farm profile" },
+          { kind:"w", tag:"WEAKNESS", heading:"Where the operation is currently limited", field:"swotWeaknesses", source:"Internal · from your assessment and farm profile" },
+          { kind:"o", tag:"OPPORTUNITY", heading:"What the operation could move toward", field:"swotOpportunities", source:"External · from EagleEye market intelligence" },
+          { kind:"t", tag:"THREAT", heading:"What could disrupt the operation", field:"swotThreats", source:"External · from EagleEye market intelligence" },
+        ].map(q => (
+          <FindingBlock key={q.field} kind={q.kind} tag={q.tag} heading={q.heading} source={q.source}>
+            <textarea style={inputStyle({ minHeight:56, border:"none", background:"transparent", padding:0, fontSize:13.5, color:T.fgM, resize:"vertical", lineHeight:1.6 })} value={profile[q.field]||""} onChange={set(q.field)} placeholder="Add what is true for this operation" />
+          </FindingBlock>
+        ))}
+      </div>
+
+      <div style={cardStyle()}>
+        <div style={cardLblStyle()}>Strategy & values</div>
+        <div style={{ fontSize:12.5, color:T.fgM, marginBottom:16, lineHeight:1.55 }}>What the operation is trying to become, and what it will not trade away to get there. These four answers set the filter every diversification and risk decision gets tested against.</div>
+        {[
+          { kind:"w", tag:"NEAR TERM", heading:"Objectives for the next one to three years", field:"nearTerm", source:"From your farm profile · revisit each year" },
+          { kind:"o", tag:"LONG TERM", heading:"Where the operation is headed beyond that", field:"longTerm", source:"From your farm profile · revisit each year" },
+          { kind:"s", tag:"ADVANTAGE", heading:"What this operation does better than its peers", field:"advantage", source:"From your farm profile · tested against benchmarking" },
+          { kind:"neutral", tag:"CORE VALUES", heading:"What the operation will not trade away", field:"values", source:"From your farm profile · applied in the values check" },
+        ].map(q => (
+          <FindingBlock key={q.field} kind={q.kind} tag={q.tag} heading={q.heading} source={q.source}>
+            <textarea style={inputStyle({ minHeight:52, border:"none", background:"transparent", padding:0, fontSize:13.5, color:T.fgM, resize:"vertical", lineHeight:1.6 })} value={profile[q.field]||""} onChange={set(q.field)} placeholder="Add what is true for this operation" />
+          </FindingBlock>
+        ))}
+      </div>
+
       <div style={cardStyle({ borderTop:`4px solid ${T.green}` })}>
-        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:faHasData?14:0 }}>
-          <div style={cardLblStyle({ marginBottom:0 })}><Apex color={T.green} />Whole-farm financial health</div>
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:14 }}>
+          <div style={cardLblStyle({ marginBottom:0 })}>Whole-farm financial health</div>
           {!faHasData && <button onClick={()=>goFA(3)} style={{ ...btnStyle("outline"), fontSize:11.5, padding:"6px 14px" }}>Go to Financial Analysis →</button>}
         </div>
         {faHasData ? (
           <>
-            <div style={{ fontSize:12, color:T.fgM, marginBottom:14, lineHeight:1.5 }}>Pulled live from Financial Analysis Stage 3 — these update automatically any time you revise your numbers there.</div>
-            <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:10 }}>
-              {faRatios.map(r => (
-                <div key={r.key} style={{ background:T.bgAlt, borderRadius:8, padding:"10px 12px", textAlign:"center" }}>
-                  <div style={{ fontSize:10, color:T.fgS, marginBottom:5, lineHeight:1.3 }}>{r.label}</div>
-                  <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:16, fontWeight:800, color:scColor(r.status), marginBottom:3 }}>{r.val}</div>
-                  <span style={{ ...pillStyle(r.status), fontSize:9, padding:"2px 7px" }}>{r.status==="blank"?"—":r.status}</span>
+            <div style={{ fontSize:12.5, color:T.fgM, marginBottom:16, lineHeight:1.55 }}>Four categories, pulled live from the financial data in Financial Analysis. Each category takes the weakest of its ratios, so one soft number is never hidden behind two strong ones.</div>
+            <div style={{ display:"grid", gridTemplateColumns:"repeat(2,1fr)", gap:12 }}>
+              {faCategories.map(c => (
+                <div key={c.id} style={{ background:T.bgAlt, borderRadius:8, padding:"14px 16px" }}>
+                  <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:4 }}>
+                    <span style={{ fontSize:14, fontWeight:600, color:T.navy }}>{c.label}</span>
+                    <span style={pillStyle(c.status)}>{c.status==="blank"?"not scored":c.status}</span>
+                  </div>
+                  <div style={{ fontSize:11.5, color:T.fgS, marginBottom:10, lineHeight:1.45 }}>{c.desc}</div>
+                  {c.ratios.map((r,i) => (
+                    <div key={r.key} style={{ display:"flex", justifyContent:"space-between", alignItems:"baseline", gap:10, padding:"6px 0", borderBottom:i<c.ratios.length-1?`1px dashed ${T.border}`:"none" }}>
+                      <span style={{ fontSize:12, color:T.fgM }}>{r.label}</span>
+                      <span style={{ fontSize:13.5, fontWeight:600, color:scColor(r.status), whiteSpace:"nowrap" }}>{r.val}</span>
+                    </div>
+                  ))}
                 </div>
               ))}
             </div>
           </>
         ) : (
-          <div style={{ fontSize:13.5, fontStyle:"italic", color:T.fgS }}>Not scored yet — complete Financial Analysis Stage 3 (Ratio Deep Dive) to see your benchmarked ratios here.</div>
+          <div style={{ fontSize:13.5, fontStyle:"italic", color:T.fgS }}>Not scored yet. Complete the financial data in Financial Analysis to see liquidity, solvency, sustainable growth and efficiency here.</div>
         )}
       </div>
 
-      <div style={cardStyle()}>
-        <div style={cardLblStyle()}><Apex color={T.green} />SWOT analysis</div>
-        <div style={{ fontSize:12, color:T.fgM, marginBottom:14, lineHeight:1.5 }}>Strengths and weaknesses are internal — what's already true about the operation. Opportunities and threats are external — what's happening around it. Worth revisiting each year, since this changes as the operation and the market do.</div>
-        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gridTemplateRows:"1fr 1fr", gap:12 }}>
-          {[
-            { label:"Strengths", field:"swotStrengths", placeholder:"e.g., strong soil health, low debt load, experienced labor, established grain buyer relationships", color:T.dgreen, bg:T.greenL, sub:"Internal · positive" },
-            { label:"Weaknesses", field:"swotWeaknesses", placeholder:"e.g., aging equipment, single-buyer dependence, no succession plan yet", color:T.amberT, bg:T.amberL, sub:"Internal · negative" },
-            { label:"Opportunities", field:"swotOpportunities", placeholder:"e.g., nearby ethanol plant demand, CRP grazing access if pending legislation passes, direct-to-consumer interest in the area", color:T.blue, bg:T.blueL, sub:"External · positive" },
-            { label:"Threats", field:"swotThreats", placeholder:"e.g., input cost volatility, land rent competition, extreme weather trend in the region", color:T.red, bg:T.redL, sub:"External · negative" },
-          ].map(q => (
-            <div key={q.field} style={{ background:q.bg, border:`1.5px solid ${q.color}`, borderRadius:10, padding:"14px 16px" }}>
-              <div style={{ display:"flex", alignItems:"baseline", justifyContent:"space-between", marginBottom:8 }}>
-                <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:14, fontWeight:800, color:q.color, textTransform:"uppercase", letterSpacing:"0.04em" }}>{q.label}</span>
-                <span style={{ fontSize:9.5, fontWeight:700, color:q.color, textTransform:"uppercase", letterSpacing:"0.04em", opacity:0.75 }}>{q.sub}</span>
-              </div>
-              <textarea style={inputStyle({ minHeight:80, border:"none", background:"transparent", padding:0, fontSize:13, fontWeight:500, color:T.navy, resize:"vertical" })} value={profile[q.field]||""} onChange={set(q.field)} placeholder={q.placeholder} />
-            </div>
-          ))}
+      <div style={cardStyle({ borderTop:`4px solid ${T.blue}` })}>
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12, gap:12, flexWrap:"wrap" }}>
+          <div style={cardLblStyle({ marginBottom:0 })}>Opportunities for your lender</div>
+          <span style={{ fontSize:11.5, color:T.fgS }}>{lenderOpps.length ? `${lenderOpps.length} surfaced from Financial Analysis` : "Nothing surfaced yet"}</span>
         </div>
-      </div>
-
-      <div style={cardStyle()}>
-        <div style={cardLblStyle()}><Apex color={T.green} />Strategy & values</div>
-        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12 }}>
-          {snapField("Near-term objectives (1–3 yrs)", "nearTerm", "e.g., complete a succession plan, maximize ethanol plant opportunities, focus on soil health")}
-          {snapField("Long-term objectives", "longTerm", "e.g., explore the protein sector, update cow-calf facilities, slow steady land expansion")}
-          {snapField("Key competitive advantage", "advantage", "e.g., strong community relationships driving land and business opportunities")}
-          {snapField("Key core values", "values", "e.g., legacy, community involvement, sustainable soil health practices")}
-        </div>
+        {faHasData ? (
+          lenderOpps.length ? (
+            <>
+              <div style={{ fontSize:12.5, color:T.fgM, marginBottom:16, lineHeight:1.55 }}>Read straight off the financial analysis, not a product list. Each one names the ratio that triggered it, so the conversation starts from this operation's own numbers.</div>
+              {lenderOpps.map((o,i) => (
+                <FindingBlock key={i} kind={o.kind} tag={o.tag} heading={o.title} source={o.signal}>
+                  <p style={{ fontSize:13.5, color:T.fgM, margin:0, lineHeight:1.6 }}>{o.body}</p>
+                </FindingBlock>
+              ))}
+              <Flag type="info">These are conversation starters drawn from ratio thresholds, not credit decisions or product recommendations. Which ones are actually appropriate depends on the full credit picture.</Flag>
+            </>
+          ) : (
+            <div style={{ fontSize:13.5, fontStyle:"italic", color:T.fgS }}>No thresholds tripped. On the numbers entered, this operation is not showing a financial condition that points to a specific lender action.</div>
+          )
+        ) : (
+          <div style={{ fontSize:13.5, fontStyle:"italic", color:T.fgS }}>Not available yet. Complete the financial data in Financial Analysis and any lender-relevant conditions will surface here.</div>
+        )}
       </div>
 
       <Flag type="info">This profile is shared across all three modules. Financial Analysis and Revenue Diversification each offer a one-click way to pull matching fields from here instead of re-entering them.</Flag>
+      </>)}
     </div>
   );
 }
@@ -2399,12 +2851,47 @@ function FarmProfilePage({ profile, setProfile, fa, rd, goFA }) {
 // ═════════════════════════════════════════════════════════════════════════════
 // ROOT APP
 // ═════════════════════════════════════════════════════════════════════════════
+// Generic farm SWOT, pre-populated so the quadrants open with a real starting point
+// rather than four empty boxes. Every line is editable and meant to be replaced with
+// the operation's own read once the conversation gets specific.
+const GENERIC_FARM_SWOT = {
+  swotStrengths: "Owned land base and established equity position. Multi-generational operating knowledge and a known local reputation. Long-standing relationships with buyers, lenders, and suppliers. Equipment and infrastructure already in place and paid down.",
+  swotWeaknesses: "Income concentrated in a small number of commodities and buyers. Records kept for tax filing rather than management decisions. No documented succession or transition plan. Limited visibility into cost and margin at the enterprise level.",
+  swotOpportunities: "Underused equipment, storage, and labour capacity across the season. Local and regional demand for direct-marketed or value-added product. Conservation and energy programs that pay for practices already underway. Adjacent ventures that use existing assets without buying land.",
+  swotThreats: "Margin compression as supply chain concentration continues. Input cost and interest rate volatility. Weather variability and more frequent extreme events. An aging operator base and thin local labour availability.",
+};
+
+
+// Generic strategy and values, seeded alongside the SWOT so the glance view opens
+// with a coherent operating picture rather than empty fields.
+const GENERIC_FARM_STRATEGY = {
+  location: "Midwest corn belt, mixed county",
+  size: "1,100 acres owned and rented",
+  productionMix: "Corn and soybean rotation with a small cow-calf herd on marginal ground",
+  ventures: "Custom planting and harvest for two neighbours, on-farm grain storage",
+  grossIncome: "920000",
+  nearTerm: "Complete a written succession plan. Get enterprise-level cost visibility in place before the next operating loan renewal. Hold gross margin steady through the current input cost cycle.",
+  longTerm: "Transition ownership and management to the next generation on agreed terms. Add a second meaningful income stream that does not move with commodity price. Grow the land base slowly, and only where it adjoins existing ground.",
+  advantage: "Long-standing local relationships that surface land and business opportunities before they are publicly listed, paired with a reputation for doing what was agreed.",
+  values: "Leave the operation stronger than it was received. Keep the family involved in the decisions that matter. Farm in a way the next generation can be proud of and the ground can sustain.",
+};
+
+// Illustrative whole-farm financials, seeded so the four health categories compute
+// on first load. Replaced the moment a real operation enters its own numbers.
+const GENERIC_FARM_FINANCIALS = {
+  gross:"920000", opex:"690000", inputs:"310000", rent:"145000", depr:"78000",
+  interest:"52000", acres:"1100", principal:"40000",
+  currentAssets:"480000", currentLiab:"190000",
+  beginAssets:"2850000", beginLiab:"1240000", endAssets:"2960000", endLiab:"1195000",
+  livingWithdrawals:"68000", incomeTaxes:"34000",
+};
+
 export default function App() {
   const [module, setModule] = useState("profile");
-  const [fa, setFA] = useState({ stage:1, enterprises:[], goals:{}, wholeFarm:{}, ratioVals:{}, s3vals:{}, s4bench:{}, s5:{}, actionChecked:{} });
+  const [fa, setFA] = useState({ stage:1, enterprises:[], goals:{}, wholeFarm:{}, ratioVals:{}, s3vals:{ ...GENERIC_FARM_FINANCIALS }, s4bench:{}, s5:{}, actionChecked:{} });
   const [rd, setRD] = useState({ stage:1, data:{} });
   const [risk, setRisk] = useState({ stage:1, answers:{} });
-  const [profile, setProfile] = useState({});
+  const [profile, setProfile] = useState({ ...GENERIC_FARM_SWOT, ...GENERIC_FARM_STRATEGY });
 
   const setRData = (fn) => setRD(s => ({ ...s, data: fn(s.data||{}) }));
   const goFA = (n) => { setModule("fa"); setFA(s => ({ ...s, stage:n })); };
@@ -2431,7 +2918,7 @@ export default function App() {
   }, [isFA, isRD, fa, rd]);
 
   const faScore = faScoreOf(fa);
-  const faTier = fa.wholeFarm.profitability==="vuln" ? "Stabilize" : fa.wholeFarm.profitability==="strong" ? "Advance" : "Optimize";
+  const faTier = faTierOf(fa);
   const faSumEnt = [...new Set(fa.enterprises)].map(e=>ENT[e]&&ENT[e].label).filter(Boolean).join(", ") || "No enterprise selected";
   const riskAnsweredTotal = Object.keys(risk.answers||{}).length;
 
@@ -2460,7 +2947,7 @@ export default function App() {
     <RD6 rd={rd} setRData={setRData} profile={profile} />, <RD7 rd={rd} setRData={setRData} fa={fa} />, <RD8 rd={rd} fa={fa} />,
   ];
   const RISK_BODY = [
-    ...RISK_CATS.map((c,i) => <RiskCategoryStage key={c.id} risk={risk} setRisk={setRisk} catIndex={i} />),
+    ...RISK_CATS.map((c,i) => <RiskCategoryStage key={c.id} risk={risk} setRisk={setRisk} catIndex={i} fa={fa} />),
     <RiskResultsStage risk={risk} />,
     <RiskPlanRevenueOps risk={risk} setRisk={setRisk} />, <RiskPlanThreats risk={risk} setRisk={setRisk} />,
     <CropInsuranceCalculator risk={risk} setRisk={setRisk} fa={fa} profile={profile} />, <LivestockInsuranceCalculator risk={risk} setRisk={setRisk} />,
@@ -2473,7 +2960,7 @@ export default function App() {
   const rdTabStyle = isRD ? { ...tabBase, background:T.blueL, border:`1.5px solid ${T.blue}` } : { ...tabBase, background:"transparent" };
   const riskTabStyle = isRisk ? { ...tabBase, background:T.blueL, border:`1.5px solid ${T.blue}` } : { ...tabBase, background:"transparent" };
   const profileTabStyle = isProfile ? { ...tabBase, background:T.blueL, border:`1.5px solid ${T.blue}` } : { ...tabBase, background:"transparent" };
-  const lblOn = { fontFamily:"'Barlow Condensed',sans-serif", fontSize:14.5, fontWeight:700, color:T.navy, letterSpacing:"0.01em" };
+  const lblOn = { fontSize:14.5, fontWeight:700, color:T.navy, letterSpacing:"0.01em" };
   const lblOff = { ...lblOn, fontWeight:600, color:T.fgS };
 
   return (
@@ -2481,10 +2968,10 @@ export default function App() {
       <FontStyles />
 
       {/* Header */}
-      <header style={{ background:"#fff", borderBottom:`1px solid ${T.border}`, height:66, display:"flex", alignItems:"center", gap:18, padding:"0 22px", flexShrink:0, zIndex:5, boxShadow:"0 1px 2px rgba(15,28,57,0.04)" }}>
+      <header style={{ background:"#fff", borderBottom:`1px solid ${T.border}`, height:66, display:"flex", alignItems:"center", gap:18, padding:"0 22px", flexShrink:0, zIndex:5 }}>
         <div style={{ display:"flex", alignItems:"center", gap:8 }}>
           <svg width="26" height="26" viewBox="0 0 24 24"><polygon points="12,2 22,20 2,20" fill={T.navy} /><polygon points="12,8 17,20 7,20" fill={T.green} /></svg>
-          <span style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:17, color:T.navy, letterSpacing:"0.01em" }}>IDEALYST</span>
+          <span style={{ fontWeight:700, fontSize:15, color:T.navy, letterSpacing:"0.01em", whiteSpace:"nowrap" }}>MAXIMUM FARM POTENTIAL</span>
         </div>
         <div style={{ width:1, height:30, background:T.border }} />
         <div style={{ display:"flex", gap:8, alignItems:"center" }}>
@@ -2531,7 +3018,7 @@ export default function App() {
         </div>
         <div style={{ marginLeft:"auto", display:"flex", alignItems:"center", gap:16 }}>
           <span style={{ fontSize:11, color:T.fgS, maxWidth:190, textAlign:"right", lineHeight:1.4 }}>Your farm profile carries across all modules</span>
-          <div style={{ width:38, height:38, borderRadius:"50%", background:T.blue, color:"#fff", display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:15 }}>RM</div>
+          <div style={{ width:38, height:38, borderRadius:"50%", background:T.blue, color:"#fff", display:"flex", alignItems:"center", justifyContent:"center", fontWeight:700, fontSize:15 }}>RM</div>
         </div>
       </header>
 
@@ -2541,7 +3028,7 @@ export default function App() {
           <>
             <aside style={{ width:240, background:T.navy, display:"flex", flexDirection:"column", flexShrink:0, overflowY:"auto" }}>
               <div style={{ padding:"22px 18px 14px" }}>
-                <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:11, letterSpacing:"0.16em", textTransform:"uppercase", color:T.green, display:"flex", alignItems:"center", gap:7, marginBottom:4 }}><Apex color={T.green} />Farm Profile</div>
+                <div style={{ fontWeight:700, fontSize:11, letterSpacing:"0.16em", textTransform:"uppercase", color:T.green, display:"flex", alignItems:"center", gap:7, marginBottom:4 }}>Farm Profile</div>
                 <div style={{ fontSize:12, color:"rgba(255,255,255,0.55)" }}>360° farm business view</div>
               </div>
               <div style={{ height:1, background:"rgba(255,255,255,0.09)", margin:"0 0 8px" }} />
@@ -2553,11 +3040,11 @@ export default function App() {
             </aside>
             <div style={{ flex:1, overflowY:"auto", display:"flex", flexDirection:"column" }}>
               <div style={{ background:"#fff", borderBottom:`1px solid ${T.border}`, padding:"0 28px", height:50, display:"flex", alignItems:"center", flexShrink:0 }}>
-                <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:13, fontWeight:700, letterSpacing:"0.06em", textTransform:"uppercase", color:T.fgM }}>Farm Profile</div>
+                <div style={{ fontSize:13, fontWeight:700, letterSpacing:"0.06em", textTransform:"uppercase", color:T.fgM }}>Farm Profile</div>
               </div>
               <div style={{ height:3, background:T.div, flexShrink:0 }}><div style={{ height:"100%", width:`${profilePct}%`, background:T.green, transition:"width .4s" }} /></div>
               <div style={{ flex:1, padding:"30px 34px", maxWidth:960, width:"100%", margin:"0 auto", boxSizing:"border-box" }}>
-                <div key="profile" className="mfp-body-anim"><FarmProfilePage profile={profile} setProfile={setProfile} fa={fa} rd={rd} goFA={goFA} /></div>
+                <div key="profile" className="mfp-body-anim"><FarmProfilePage profile={profile} setProfile={setProfile} fa={fa} rd={rd} goFA={goFA} goRD={goRD} goRisk={goRisk} /></div>
                 <div style={{ display:"flex", justifyContent:"flex-end", alignItems:"center", paddingTop:22, borderTop:`1px solid ${T.border}`, marginTop:26 }}>
                   <button onClick={()=>goFA(1)} style={btnStyle("primary")}>Continue to Financial Analysis →</button>
                 </div>
@@ -2569,7 +3056,7 @@ export default function App() {
         {/* Rail */}
         <aside style={{ width:240, background:T.navy, display:"flex", flexDirection:"column", flexShrink:0, overflowY:"auto" }}>
           <div style={{ padding:"22px 18px 14px" }}>
-            <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:11, letterSpacing:"0.16em", textTransform:"uppercase", color:T.green, display:"flex", alignItems:"center", gap:7, marginBottom:4 }}><Apex color={T.green} />{isFA?"Financial Analysis":isRD?"Revenue Diversification":"Farm Risk Assessment"}</div>
+            <div style={{ fontWeight:700, fontSize:11, letterSpacing:"0.16em", textTransform:"uppercase", color:T.green, display:"flex", alignItems:"center", gap:7, marginBottom:4 }}>{isFA?"Financial Analysis":isRD?"Revenue Diversification":"Farm Risk Assessment"}</div>
             <div style={{ fontSize:12, color:"rgba(255,255,255,0.55)" }}>{isFA?"6-stage diagnostic":isRD?"7-stage planning":"10-stage risk review"}</div>
           </div>
           <div style={{ height:1, background:"rgba(255,255,255,0.09)", margin:"0 0 8px" }} />
@@ -2578,7 +3065,7 @@ export default function App() {
               const active = s.n===stage, done = s.n<stage;
               return (
                 <div key={s.n} onClick={()=>{ if (s.n<=stage) { isFA?goFA(s.n):isRD?goRD(s.n):goRisk(s.n); } }} style={{ display:"flex", alignItems:"flex-start", gap:11, padding:"10px 16px", cursor:s.n<=stage?"pointer":"default", background:active?"rgba(123,191,50,0.12)":"transparent", borderLeft:active?`3px solid ${T.green}`:"3px solid transparent" }}>
-                  <div style={{ width:21, height:21, borderRadius:"50%", flexShrink:0, marginTop:1, display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"'Barlow Condensed',sans-serif", fontSize:11, fontWeight:700, background:done?T.green:active?T.blue:"rgba(255,255,255,0.12)", color:done||active?"#fff":"rgba(255,255,255,0.5)" }}>
+                  <div style={{ width:21, height:21, borderRadius:"50%", flexShrink:0, marginTop:1, display:"flex", alignItems:"center", justifyContent:"center", fontSize:11, fontWeight:700, background:done?T.green:active?T.blue:"rgba(255,255,255,0.12)", color:done||active?"#fff":"rgba(255,255,255,0.5)" }}>
                     {done ? <IconCheckSm size={11} /> : s.n}
                   </div>
                   <div style={{ fontSize:12.5, fontWeight:active?600:400, color:done?"rgba(255,255,255,0.7)":active?"#fff":"rgba(255,255,255,0.42)", lineHeight:1.4 }}>{s.label}</div>
@@ -2588,7 +3075,7 @@ export default function App() {
           </nav>
           {isRD && (
             <div style={{ margin:"8px 12px", background:"rgba(123,191,50,0.10)", border:"1px solid rgba(123,191,50,0.22)", borderRadius:8, padding:"11px 13px" }}>
-              <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontWeight:700, fontSize:10, letterSpacing:"0.14em", color:T.green, marginBottom:6 }}>FINANCIAL ANALYSIS</div>
+              <div style={{ fontWeight:700, fontSize:10, letterSpacing:"0.14em", color:T.green, marginBottom:6 }}>FINANCIAL ANALYSIS</div>
               <div style={{ fontSize:11, color:"rgba(255,255,255,0.7)", lineHeight:1.55 }}>{faSumEnt}<br/>Score {faScore.toFixed(1)}/5 · {faTier}</div>
               <div onClick={()=>setModule("fa")} style={{ marginTop:9, fontSize:11, fontWeight:600, color:T.green, cursor:"pointer", display:"inline-flex", alignItems:"center", gap:4 }}>← Back to Financial Analysis</div>
             </div>
@@ -2602,7 +3089,7 @@ export default function App() {
         {/* Main */}
         <div style={{ flex:1, overflowY:"auto", display:"flex", flexDirection:"column" }}>
           <div style={{ background:"#fff", borderBottom:`1px solid ${T.border}`, padding:"0 28px", height:50, display:"flex", alignItems:"center", justifyContent:"space-between", flexShrink:0 }}>
-            <div style={{ fontFamily:"'Barlow Condensed',sans-serif", fontSize:13, fontWeight:700, letterSpacing:"0.06em", textTransform:"uppercase", color:T.fgM }}>Stage {stage} of {total} · {stageDefs[stage-1].label}</div>
+            <div style={{ fontSize:13, fontWeight:700, letterSpacing:"0.06em", textTransform:"uppercase", color:T.fgM }}>Stage {stage} of {total} · {stageDefs[stage-1].label}</div>
             <div style={{ display:"flex", gap:6 }}>{chips.map((c,i) => (<span key={i} style={{ fontSize:11, fontWeight:600, padding:"3px 10px", borderRadius:999, background:T.greenL, color:"#2F6E28", whiteSpace:"nowrap" }}>{c.label}</span>))}</div>
           </div>
           <div style={{ height:3, background:T.div, flexShrink:0 }}><div style={{ height:"100%", width:`${pct}%`, background:T.green, transition:"width .4s" }} /></div>
