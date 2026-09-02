@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // FONTS  (system stack, matching the MFP action plan design language)
@@ -153,8 +153,9 @@ const RISK_STAGES = [
   { n:3, label:"Contingency planning" }, { n:4, label:"Communicating the plan" },
   { n:5, label:"Results" },
   { n:6, label:"Revenue ops & key contacts" }, { n:7, label:"Threat identification & ranking" },
-  { n:8, label:"Crop insurance calculator" }, { n:9, label:"Livestock insurance calculator" },
-  { n:10, label:"Strategy & contingency plans" }, { n:11, label:"Communicate, train & review" },
+  { n:8, label:"Strategy & contingency plans" }, { n:9, label:"Communicate, train & review" },
+  { n:10, label:"Your risk plan" },
+  { n:11, label:"Crop insurance calculator" }, { n:12, label:"Livestock insurance calculator" },
 ];
 
 const ENT = {
@@ -845,7 +846,7 @@ const riskScoreLabel = (score, max) => { const pct = score/max; if (pct>=0.75) r
 const riskCatScore = (answers, catId) => (RISK_QUESTIONS[catId]||[]).reduce((sum,q) => sum + (answers[q.id]!==undefined ? q.scores[answers[q.id]] : 0), 0);
 const riskCatAnswered = (answers, catId) => (RISK_QUESTIONS[catId]||[]).filter(q => answers[q.id]!==undefined).length;
 // Stages 1–8: one category's question set per stage.
-function RiskCategoryStage({ risk, setRisk, catIndex, fa }) {
+function RiskCategoryStage({ risk, setRisk, catIndex, fa, onStartConvo }) {
   const answers = risk.answers || {};
   const setAns = (qId, idx) => setRisk(s => ({ ...s, answers:{ ...(s.answers||{}), [qId]:idx } }));
   const cat = RISK_CATS[catIndex];
@@ -857,6 +858,15 @@ function RiskCategoryStage({ risk, setRisk, catIndex, fa }) {
     <div>
       <Head eyebrow={`Farm Risk · Section ${catIndex+1} of 4`} title={cat.label} sub="Adapted directly from Nationwide's Farm Risk Ready℠ assessment quiz." />
       {catIndex===0 && <FinancialHealthStrip fa={fa} />}
+      {catIndex===0 && onStartConvo && (
+        <div style={{ background:T.greenL, border:"1px solid #dde7cd", borderRadius:9, padding:"14px 18px", display:"flex", justifyContent:"space-between", alignItems:"center", gap:16, flexWrap:"wrap", marginBottom:18 }}>
+          <div>
+            <p style={{ fontSize:14.5, fontWeight:600, color:T.dgreen, margin:0 }}>Would you rather just talk it through?</p>
+            <p style={{ fontSize:13, color:T.fgM, margin:"3px 0 0", maxWidth:520 }}>Answer out loud and the guided conversation scores the first seven steps for you, including your revenue operations and threats. You confirm every reading before it is recorded.</p>
+          </div>
+          <button onClick={onStartConvo} style={btnStyle("primary")}>Start the conversation</button>
+        </div>
+      )}
       {catAnswered>0 && <div style={{ marginBottom:16 }}><span style={pillStyle(catSL.pill)}>{catSL.label}</span><span style={{ fontSize:11.5, color:T.fgM, marginLeft:10 }}>{catAnswered}/{cat.questions} answered · {catScore}/{cat.maxScore} points</span></div>}
       {qs.map((q,qi) => {
         const selected = answers[q.id];
@@ -900,6 +910,21 @@ const THREAT_CATEGORIES = [
   { id:"price", label:"Price risk", desc:"Commodity or livestock prices falling below your cost of production — see the insurance calculators in the next two stages", color:T.tan, colorL:"#F5EDE0" },
   { id:"yield", label:"Production/yield risk", desc:"Drought, disease, or other factors reducing output below expectations — see the insurance calculators in the next two stages", color:"#0369A1", colorL:"#E0F2FE" },
 ];
+
+// Concrete prompts per threat category. The open question alone produces whatever is
+// top of mind, which is usually weather and prices. These are the nudges that surface
+// the categories people reliably forget: people, reputation, technology, single-buyer risk.
+const THREAT_PROMPTS = {
+  facility:    ["A fire in the shop or barn", "A grain bin or roof failure", "Losing power or water to a facility"],
+  natural:     ["Drought or a wet spring you cannot plant into", "Hail, wind, or a tornado", "An early freeze or flooding"],
+  operational: ["Losing your biggest buyer or contract", "A disease outbreak in the herd", "A supplier who cannot deliver on time", "A recall or contamination issue"],
+  personnel:   ["You or a key operator injured or unable to work", "Losing the one person who knows a critical job", "A death, divorce, or family dispute", "Not being able to find seasonal help"],
+  social:      ["A video or post about the farm going around", "A neighbour complaint or nuisance claim", "Pressure over a practice you use"],
+  technology:  ["Losing farm records or accounting data", "A hack, ransomware, or fraudulent payment", "GPS, monitors, or software failing mid-season"],
+  price:       ["Commodity price dropping below your cost of production", "Input costs rising faster than output prices", "Interest rates on the operating line"],
+  yield:       ["A crop failure or badly below-average yield", "Poor conception or death loss in livestock", "A pest or disease that cuts production"],
+};
+
 const STRATEGY_OPTIONS = [
   { id:"avoidance", label:"Risk avoidance", desc:"Stop or discontinue the activity" },
   { id:"acceptance", label:"Risk acceptance", desc:"Retain the risk and take no action" },
@@ -962,6 +987,689 @@ function RiskResultsStage({ risk }) {
     </div>
   );
 }
+
+
+// ═════════════════════════════════════════════════════════════════════════════
+// CONVERSATIONAL CAPTURE — Farm Risk Ready, steps 1 through 7
+// ═════════════════════════════════════════════════════════════════════════════
+// Speech capture runs entirely in the browser through the Web Speech API, so it
+// needs no server and no API key. Interpretation of what was said is currently a
+// keyword heuristic that PROPOSES an answer for the farmer to confirm, never one
+// that commits silently. Swapping the heuristic for a real model later means
+// replacing interpretScale() and interpretList() with a call to a serverless
+// function; every other part of this flow stays as it is.
+
+const useSpeechInput = (onFinal) => {
+  const [listening, setListening] = useState(false);
+  const [interim, setInterim] = useState("");
+  const [supported, setSupported] = useState(false);
+  const recRef = useRef(null);
+  const finalRef = useRef(onFinal);
+  finalRef.current = onFinal;
+
+  useEffect(() => {
+    const SR = typeof window !== "undefined" && (window.SpeechRecognition || window.webkitSpeechRecognition);
+    if (!SR) { setSupported(false); return; }
+    setSupported(true);
+    const rec = new SR();
+    rec.continuous = true;
+    rec.interimResults = true;
+    rec.lang = "en-US";
+    rec.onresult = (e) => {
+      let fin = "", inter = "";
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        const t = e.results[i][0].transcript;
+        if (e.results[i].isFinal) fin += t; else inter += t;
+      }
+      if (inter) setInterim(inter);
+      if (fin) { setInterim(""); finalRef.current && finalRef.current(fin.trim()); }
+    };
+    rec.onerror = () => setListening(false);
+    rec.onend = () => setListening(false);
+    recRef.current = rec;
+    return () => { try { rec.stop(); } catch(e){} };
+  }, []);
+
+  const start = () => { if (!recRef.current) return; try { recRef.current.start(); setListening(true); } catch(e){} };
+  const stop = () => { if (!recRef.current) return; try { recRef.current.stop(); } catch(e){} setListening(false); setInterim(""); };
+  return { listening, interim, supported, start, stop };
+};
+
+// Heuristic read of a spoken answer against a four-point scale. Returns a proposed
+// index plus the phrases that drove it, so the farmer can see why it landed there.
+const SCALE_SIGNALS = [
+  { idx:3, weight:3, words:["to a great extent","strongly agree","absolutely","definitely","every year","always","fully documented","written plan","we have a plan","completely","very confident","six months","6 months","more than six"] },
+  { idx:2, weight:2, words:["agree","moderate","mostly","generally","for the most part","we do some","two three months","2-3 months","couple months","a few months","some of it","partly","working on it"] },
+  { idx:1, weight:2, words:["small extent","disagree","a little","not much","not really","barely","a few weeks","couple weeks","started thinking","informally","in my head","only some"] },
+  { idx:0, weight:3, words:["not at all","strongly disagree","never","nothing","none","no plan","haven't thought","have not thought","no idea","we don't","we do not","zero"] },
+];
+
+const interpretScale = (transcript) => {
+  const t = (transcript||"").toLowerCase();
+  if (!t.trim()) return { idx:null, confidence:"none", hits:[] };
+  const tally = [0,0,0,0]; const hits = [];
+  SCALE_SIGNALS.forEach(sig => sig.words.forEach(w => {
+    if (t.includes(w)) { tally[sig.idx] += sig.weight; hits.push(w); }
+  }));
+  // bare yes / no when nothing stronger matched
+  if (!hits.length) {
+    if (/\bno\b|\bnope\b/.test(t)) { tally[0] += 2; hits.push("no"); }
+    else if (/\byes\b|\byeah\b|\byep\b/.test(t)) { tally[2] += 2; hits.push("yes"); }
+  }
+  const max = Math.max(...tally);
+  if (max === 0) return { idx:null, confidence:"none", hits:[] };
+  const idx = tally.indexOf(max);
+  const runnerUp = [...tally].sort((a,b)=>b-a)[1];
+  const confidence = max >= 3 && max > runnerUp ? "high" : max > runnerUp ? "medium" : "low";
+  return { idx, confidence, hits:[...new Set(hits)].slice(0,4) };
+};
+
+// Split a spoken list into items. Handles "and", commas, and filler openers.
+const interpretList = (transcript) => {
+  let t = (transcript||"").trim();
+  if (!t) return [];
+  t = t.replace(/^(well|so|um|uh|okay|ok|i guess|i'd say|i would say|we have|we've got|there's|there is|it's)[,\s]+/i, "");
+  return t.split(/,|;|\bthen\b|\balso\b|\band\b/i)
+    .map(s => s.replace(/[.\s]+$/,"").trim())
+    // strip connectors and filler left at the head of an item by the split
+    .map(s => s.replace(/^(then|also|plus|maybe|probably|we do some|we do|we have|we've got|i guess|some|a bit of)\s+/i, "").trim())
+    .filter(s => s.length > 1)
+    .map(s => s.charAt(0).toUpperCase() + s.slice(1))
+    .slice(0, 8);
+};
+
+
+
+// One spoken answer covering everything an operation depends on, sorted into the four
+// fields by what the clause is actually about. Anything that does not clearly signal a
+// supplier, a person, or a buyer falls to assets, which is the catch-all "depends on".
+const DEP_KEYWORDS = {
+  suppliers: ["buy","bought","buying","purchase","supplier","vendor","dealer","co-op","coop","cooperative","source","order from","get it from","get them from","comes from"],
+  employees: ["work","works","working","employee","hired","hand","help","helps","labor","labour","myself","my son","my daughter","my wife","my husband","my dad","family","crew","operator","run it","runs it"],
+  customers: ["sell","sold","sells","selling","buyer","customer","market","elevator","contract","ship","hauled to","haul it to","take it to","goes to","delivered to"],
+  assets:    ["equipment","tractor","combine","planter","sprayer","truck","trailer","land","acres","ground","barn","shop","bin","storage","facility","irrigation","building","pens","fence","parlor","parlour"],
+};
+
+const segmentDependencies = (text) => {
+  const out = { assets:[], suppliers:[], employees:[], customers:[] };
+  const clauses = (text||"")
+    .split(/[.;]+|,\s*|\bthen\b|\balso\b/i)
+    .map(s => s.trim())
+    .filter(s => s.length > 2);
+  clauses.forEach(cl => {
+    const low = cl.toLowerCase();
+    let bestKey = "assets", bestScore = 0;
+    Object.entries(DEP_KEYWORDS).forEach(([key, words]) => {
+      const score = words.reduce((n,w) => n + (low.includes(w) ? 1 : 0), 0);
+      if (score > bestScore) { bestScore = score; bestKey = key; }
+    });
+    const cleaned = cl.replace(/^(and|we|i|it|they)\s+/i, "").trim();
+    if (cleaned) out[bestKey].push(cleaned.charAt(0).toUpperCase() + cleaned.slice(1));
+  });
+  return {
+    assets: out.assets.join(", "),
+    suppliers: out.suppliers.join(", "),
+    employees: out.employees.join(", "),
+    customers: out.customers.join(", "),
+  };
+};
+
+// Five-point ratings spoken in plain language, for threat probability and severity.
+const RATING_SIGNALS = {
+  probability: [
+    { v:5, words:["almost certain","every year","constantly","for sure","definitely will","happens all the time","guaranteed"] },
+    { v:4, words:["likely","probably","pretty likely","often","every few years","more than once","expect it"] },
+    { v:3, words:["maybe","possible","could happen","fifty fifty","50 50","sometimes","now and then","occasionally"] },
+    { v:2, words:["unlikely","not likely","rare","rarely","hasn't happened","has not happened","doubt it","long shot"] },
+    { v:1, words:["never","almost never","very unlikely","no chance","never happened","not in my lifetime"] },
+  ],
+  severity: [
+    { v:5, words:["devastating","catastrophic","end the farm","out of business","wipe us out","lose everything","finished","ruin us"] },
+    { v:4, words:["major","serious","really bad","big hit","significant","set us back years","very bad","huge"] },
+    { v:3, words:["moderate","manageable","painful","hurt","sting","tough year","noticeable"] },
+    { v:2, words:["minor","small","we would get by","we'd get by","annoying","inconvenient","not a big deal"] },
+    { v:1, words:["negligible","barely","nothing much","hardly matter","no real impact"] },
+  ],
+};
+
+const interpretRating = (transcript, kind) => {
+  const t = (transcript||"").toLowerCase();
+  if (!t.trim()) return { v:null, hits:[] };
+  const hits = []; let best = null;
+  (RATING_SIGNALS[kind]||[]).forEach(sig => sig.words.forEach(w => {
+    if (t.includes(w) && best === null) { best = sig.v; hits.push(w); }
+    else if (t.includes(w)) hits.push(w);
+  }));
+  // a bare number spoken as "three out of five" or "about a four"
+  const num = t.match(/\b(one|two|three|four|five|1|2|3|4|5)\b/);
+  if (best === null && num) {
+    const map = { one:1, two:2, three:3, four:4, five:5 };
+    best = map[num[1]] || parseInt(num[1]);
+    hits.push(num[1]);
+  }
+  return { v:best, hits:[...new Set(hits)].slice(0,3) };
+};
+
+// Pull a phone number and email out of a spoken or typed contact answer.
+const extractContactDetail = (text) => {
+  const t = text || "";
+  const email = (t.match(/[\w.+-]+@[\w-]+\.[\w.]+/) || [null])[0];
+  const digits = (t.match(/(\+?\d[\d\s\-().]{6,}\d)/) || [null])[0];
+  let name = t;
+  if (email) name = name.replace(email, "");
+  if (digits) name = name.replace(digits, "");
+  name = name.replace(/^(talk to|call|reach out to|contact|speak to|ask for|it'?s|that'?s)\s+/i, "")
+             .replace(/\b(you can reach (him|her|them) at|his|her|their|number is|email is|phone is|at|on|is)\b/gi, " ")
+             .replace(/[,.\s]+/g, " ")
+             .replace(/\s+(or|and)\s*$/i, "")
+             .trim();
+  return { name: name.slice(0, 60), phone: digits ? digits.replace(/[^\d+]/g,"") : "", email: email || "" };
+};
+
+// The question script. Sections map to the seven steps the flow covers.
+const buildRiskScript = (risk) => {
+  const script = [];
+  RISK_CATS.forEach((c, ci) => {
+    (RISK_QUESTIONS[c.id] || []).forEach(q => {
+      script.push({ kind:"scale", section:`Step ${ci+1} · ${c.label}`, qId:q.id, prompt:q.text, opts:q.opts });
+    });
+  });
+  script.push({ kind:"oplist", section:"Step 6 · Revenue operations", prompt:"Tell me the main things this farm makes money from. Just say them out loud, one after another." });
+  const ops = (risk.plan?.revenueOps || []).filter(o => o.name);
+  ops.slice(0,3).forEach(op => {
+    script.push({ kind:"opdeps", opName:op.name, section:"Step 6 · "+op.name,
+      prompt:`Walk me through ${op.name}. What does it depend on, who do you buy from, who works on it, and who buys it?`,
+      hint:"One answer covers all four. Say it however it comes out and I will sort it." });
+  });
+  script.push({ kind:"contactlist", section:"Step 6 · Key contacts", prompt:"If something went wrong tomorrow, who would you need to call? Suppliers, buyers, vendors, anyone critical." });
+  const contacts = (risk.plan?.contacts || []).filter(c => c.name);
+  contacts.slice(0,3).forEach(ct => {
+    script.push({ kind:"ctfield", field:"materials", ctName:ct.name, section:"Step 6 · "+ct.name, prompt:`What do you get from ${ct.name}, or what do they do for you?` });
+    script.push({ kind:"ctprimary", ctName:ct.name, section:"Step 6 · "+ct.name, prompt:`Who is your main contact at ${ct.name}, and what is the best number or email?` });
+    script.push({ kind:"ctalt", ctName:ct.name, section:"Step 6 · "+ct.name, prompt:`If you could not reach them, who is the backup at ${ct.name}?` });
+  });
+
+  script.push({ kind:"threats", section:"Step 7 · Threats",
+    prompt:"Now the hard question. What could go wrong on this farm?",
+    hint:"The categories below are there to jog your thinking. Work down them out loud and name anything that applies. Most people cover weather and prices and stop, so give the people and technology ones a moment." });
+  const threats = (risk.plan?.threats || []).filter(t => t.label);
+  if (threats.length) {
+    script.push({ kind:"threatgaps", section:"Step 7 · Threats",
+      prompt:"Anything in the areas you have not touched yet?",
+      hint:"Covered categories are marked below. The unmarked ones are worth a second look before we score these." });
+  }
+  threats.slice(0,5).forEach(th => {
+    script.push({ kind:"rating", ratingKind:"probability", threatId:th.id, section:"Step 7 · "+th.label, prompt:`How likely is "${th.label}" in the next few years?` });
+    script.push({ kind:"rating", ratingKind:"severity", threatId:th.id, section:"Step 7 · "+th.label, prompt:`If "${th.label}" did happen, how badly would it hurt the operation?` });
+  });
+  return script;
+};
+
+// Order matters: the specific categories are tested before the broad ones, so
+// "price below breakeven" lands in price rather than being swallowed by operational.
+const THREAT_KEYWORDS = {
+  price:      ["price","prices","commodity","market price","cash price","below cost","breakeven","break even","input cost","margin","interest rate"],
+  yield:      ["yield","yields","crop failure","poor crop","low yield","production loss","death loss","conception"],
+  personnel:  ["labor","labour","employee","help","hired","injury","injured","hurt","death","divorce","succession","quit","sick","dad","son","daughter","wife","husband","key person"],
+  facility:   ["fire","barn","building","shop","explosion","collapse","roof","structure","grain bin","bin"],
+  natural:    ["drought","flood","storm","hail","wind","tornado","freeze","frost","wildfire","weather","rain","dry","wet spring"],
+  technology: ["hack","hacked","data","records","computer","internet","gps","software","cyber","network","system","ransomware"],
+  social:     ["social media","reputation","video","activist","public","neighbor","neighbour","complaint","nuisance"],
+  operational:["customer","buyer","contract","recall","disease","outbreak","supply","supplier","market access","delivery"],
+};
+
+// Word-boundary matching, so "grain buyer" is not caught by "rain" and "combine"
+// is not caught by "bin". Multi-word phrases are matched as a unit.
+const hasWord = (haystack, needle) => {
+  const esc = needle.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return new RegExp("(^|[^a-z])" + esc + "([^a-z]|$)", "i").test(haystack);
+};
+
+const categorizeThreat = (label) => {
+  const t = (label||"").toLowerCase();
+  for (const [cat, words] of Object.entries(THREAT_KEYWORDS)) {
+    if (words.some(w => hasWord(t, w))) return cat;
+  }
+  return "operational";
+};
+
+
+// The finished plan, rendered as a document rather than a form. This is the artifact
+// a farmer hands to a spouse, a successor, an employee, or an insurance agent, so it
+// reads top to bottom without needing the app to explain it.
+function RiskPlanDocument({ risk, profile, goCalc }) {
+  const plan = risk.plan || {};
+  const answers = risk.answers || {};
+  const ops = (plan.revenueOps || []).filter(o => o.name);
+  const contacts = (plan.contacts || []).filter(c => c.name);
+  const threats = [...(plan.threats || [])].filter(t => t.label).sort((a,b)=>threatScore(b)-threatScore(a));
+  const total = RISK_CATS.reduce((s,c)=>s+riskCatScore(answers,c.id),0);
+  const maxTotal = RISK_CATS.reduce((s,c)=>s+c.maxScore,0);
+  const answered = Object.keys(answers).length;
+  const catLabel = (id) => (THREAT_CATEGORIES.find(c=>c.id===id)||{}).label || id;
+  const band = (s) => s>=20 ? {t:"Immediate",k:"vuln"} : s>=12 ? {t:"Elevated",k:"watch"} : {t:"Monitor",k:"strong"};
+
+  const H = ({children}) => <div style={{ fontSize:11, letterSpacing:"0.13em", textTransform:"uppercase", color:T.fgS, margin:"26px 0 12px", paddingBottom:6, borderBottom:`1px solid ${T.border}` }}>{children}</div>;
+
+  return (
+    <div>
+      <Head eyebrow="Farm Risk · Your plan" title="Farm risk plan" sub="Everything captured in the conversation, written up as one document. Print it, or read it out to whoever else needs to know what to do." />
+
+      <div style={cardStyle()}>
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"baseline", gap:14, flexWrap:"wrap", borderBottom:`2px solid ${T.navy}`, paddingBottom:12, marginBottom:4 }}>
+          <div>
+            <div style={{ fontSize:19, fontWeight:600, color:T.navy }}>{profile?.location ? `Farm risk plan · ${profile.location}` : "Farm risk plan"}</div>
+            <div style={{ fontSize:12.5, color:T.fgS, marginTop:2 }}>Prepared from the guided Farm Risk Ready conversation</div>
+          </div>
+          <button onClick={()=>window.print()} style={{ ...btnStyle("outline"), fontSize:12, padding:"6px 14px" }}>Print or save as PDF</button>
+        </div>
+
+        <H>Readiness</H>
+        {answered === 0 ? (
+          <p style={{ fontSize:13.5, color:T.fgS, fontStyle:"italic" }}>The readiness questions have not been answered yet.</p>
+        ) : (
+          <>
+            <div style={{ display:"flex", alignItems:"baseline", gap:10, marginBottom:12 }}>
+              <span style={{ fontSize:30, fontWeight:600, color:T.navy }}>{total}</span>
+              <span style={{ fontSize:14, color:T.fgS }}>of {maxTotal} across {answered} answered questions</span>
+            </div>
+            {RISK_CATS.map(c => {
+              const sc = riskCatScore(answers, c.id); const sl = riskScoreLabel(sc, c.maxScore);
+              return (
+                <div key={c.id} style={{ display:"flex", alignItems:"center", gap:12, padding:"7px 0", borderBottom:`1px dashed ${T.border}` }}>
+                  <span style={{ width:210, fontSize:13.5, color:T.fg, flexShrink:0 }}>{c.label}</span>
+                  <div style={{ flex:1, height:7, background:"#dde1e8", borderRadius:4, overflow:"hidden" }}>
+                    <div style={{ width:`${(sc/c.maxScore)*100}%`, height:"100%", background:scColor(sl.pill), borderRadius:4 }} />
+                  </div>
+                  <span style={{ width:56, textAlign:"right", fontSize:13.5, fontWeight:600, color:scColor(sl.pill), flexShrink:0 }}>{sc}/{c.maxScore}</span>
+                </div>
+              );
+            })}
+          </>
+        )}
+
+        <H>What this farm makes money from</H>
+        {ops.length === 0 ? <p style={{ fontSize:13.5, color:T.fgS, fontStyle:"italic" }}>No revenue operations recorded.</p> :
+          ops.map((o,k) => (
+            <div key={k} style={{ borderLeft:`2px solid ${T.moss}`, paddingLeft:14, marginBottom:14 }}>
+              <div style={{ fontSize:15, fontWeight:600, color:T.fg, marginBottom:5 }}>{o.name}</div>
+              {[["Depends on",o.assets],["Bought from",o.suppliers],["Worked by",o.employees],["Sold to",o.customers]].map(([lab,val],x) => val ? (
+                <div key={x} style={{ fontSize:13, color:T.fgM, marginBottom:2 }}><b style={{ color:T.fgS, fontWeight:600 }}>{lab}:</b> {val}</div>
+              ) : null)}
+            </div>
+          ))}
+
+        <H>Who to call</H>
+        {contacts.length === 0 ? <p style={{ fontSize:13.5, color:T.fgS, fontStyle:"italic" }}>No key contacts recorded.</p> :
+          contacts.map((c,k) => (
+            <div key={k} style={{ background:T.bgAlt, borderRadius:8, padding:"12px 15px", marginBottom:10 }}>
+              <div style={{ fontSize:14.5, fontWeight:600, color:T.fg }}>{c.name}</div>
+              {c.materials && <div style={{ fontSize:12.5, color:T.fgM, margin:"2px 0 7px" }}>{c.materials}</div>}
+              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, fontSize:12.5 }}>
+                <div><span style={{ color:T.fgS }}>Primary: </span>{c.primaryName || "—"}{c.primaryPhone ? ` · ${c.primaryPhone}` : ""}{c.primaryEmail ? ` · ${c.primaryEmail}` : ""}</div>
+                <div><span style={{ color:T.fgS }}>Backup: </span>{c.altName || "—"}{c.altPhone ? ` · ${c.altPhone}` : ""}{c.altEmail ? ` · ${c.altEmail}` : ""}</div>
+              </div>
+            </div>
+          ))}
+
+        <H>What could go wrong, ranked</H>
+        {threats.length === 0 ? <p style={{ fontSize:13.5, color:T.fgS, fontStyle:"italic" }}>No threats recorded.</p> : (
+          <>
+            <div style={{ display:"grid", gridTemplateColumns:"1fr 92px 74px 74px 96px", gap:8, padding:"7px 10px", background:T.navy, borderRadius:"6px 6px 0 0" }}>
+              {["Threat","Category","Likely","Impact","Priority"].map((h,x)=>(
+                <span key={x} style={{ fontSize:10.5, letterSpacing:"0.08em", fontWeight:600, color:"#fff", textTransform:"uppercase", textAlign:x>=2?"center":"left" }}>{h}</span>
+              ))}
+            </div>
+            {threats.map((t,k) => {
+              const sc = threatScore(t); const b = band(sc);
+              return (
+                <div key={t.id} style={{ display:"grid", gridTemplateColumns:"1fr 92px 74px 74px 96px", gap:8, padding:"9px 10px", alignItems:"center", background:k%2===0?T.bgAlt:"#fff", borderBottom:`1px solid ${T.border}` }}>
+                  <span style={{ fontSize:13.5, color:T.fg }}>{t.label}</span>
+                  <span style={{ fontSize:11.5, color:T.fgS }}>{catLabel(t.category)}</span>
+                  <span style={{ fontSize:13, textAlign:"center", color:T.fgM }}>{t.probability}</span>
+                  <span style={{ fontSize:13, textAlign:"center", color:T.fgM }}>{t.severity}</span>
+                  <span style={{ textAlign:"center" }}><span style={pillStyle(b.k)}>{b.t} {sc}</span></span>
+                </div>
+              );
+            })}
+            <p style={{ fontSize:12, color:T.fgS, marginTop:9 }}>Priority is likelihood multiplied by impact. Anything scoring 20 or above deserves a plan before the season starts.</p>
+          </>
+        )}
+
+        <H>What happens next</H>
+        {(() => {
+          const strat = plan.strategies || {};
+          const transfers = threats.filter(t => (strat[t.id]||{}).strategy === "transfer");
+          return (
+            <>
+              <ol style={{ fontSize:14, color:T.fgM, paddingLeft:20, margin:"0 0 14px", lineHeight:1.7 }}>
+                <li>Give a copy of this document to whoever would have to act if you could not.</li>
+                <li>Walk the top threats with whoever else is named in it, so the plan is not only in your head.</li>
+                <li>Revisit it once a year, or any time a revenue operation or key supplier changes.</li>
+              </ol>
+              {transfers.length > 0 && goCalc && (
+                <div style={{ background:T.greenL, border:"1px solid #dde7cd", borderRadius:9, padding:"13px 17px", display:"flex", justifyContent:"space-between", alignItems:"center", gap:16, flexWrap:"wrap" }}>
+                  <div>
+                    <p style={{ fontSize:14, fontWeight:600, color:T.dgreen, margin:0 }}>
+                      {transfers.length === 1 ? "One threat is set to transfer" : `${transfers.length} threats are set to transfer`}
+                    </p>
+                    <p style={{ fontSize:12.5, color:T.fgM, margin:"3px 0 0", maxWidth:520 }}>
+                      Now that the plan says what you are protecting against, size the coverage against your actual cost of production: {transfers.slice(0,3).map(t=>t.label).join(", ")}{transfers.length>3?", and others":""}.
+                    </p>
+                  </div>
+                  <button onClick={goCalc} style={btnStyle("primary")}>Size the coverage →</button>
+                </div>
+              )}
+            </>
+          );
+        })()}
+      </div>
+    </div>
+  );
+}
+
+function ConversationalRisk({ risk, setRisk, onExit, profile }) {
+  const [i, setI] = useState(0);
+  const [draft, setDraft] = useState("");
+  const [proposed, setProposed] = useState(null);
+  const script = useMemo(() => buildRiskScript(risk), [risk.plan?.revenueOps, risk.plan?.contacts, risk.plan?.threats]);
+  const step = script[i];
+  const speech = useSpeechInput((txt) => setDraft(d => (d ? d + " " : "") + txt));
+
+  const setPlan = (patch) => setRisk(s => ({ ...s, plan:{ ...(s.plan||{}), ...patch } }));
+
+  useEffect(() => {
+    if (!step) { setProposed(null); return; }
+    if (step.kind === "scale") setProposed(interpretScale(draft));
+    else if (step.kind === "rating") setProposed(interpretRating(draft, step.ratingKind));
+    else setProposed(null);
+  }, [draft, i]);
+
+  if (!step) {
+    return (
+      <div>
+        <Flag type="ok">Conversation complete. Everything you said has been scored and written into the plan below. Every field stays editable in the stage view.</Flag>
+        <RiskPlanDocument risk={risk} profile={profile} />
+        <div style={{ display:"flex", gap:10, marginTop:4, flexWrap:"wrap" }}>
+          {(risk.plan?.threats||[]).length > 0
+            ? <button onClick={()=>onExit(8)} style={btnStyle("primary")}>Build strategies for these threats →</button>
+            : <button onClick={()=>onExit(5)} style={btnStyle("primary")}>Open the stages to refine it</button>}
+          <button onClick={()=>onExit(5)} style={btnStyle("outline")}>See my results first</button>
+          <button onClick={()=>setI(0)} style={btnStyle("ghost")}>Start over</button>
+        </div>
+      </div>
+    );
+  }
+
+  const commit = () => {
+    const text = draft.trim();
+    if (step.kind === "scale") {
+      const idx = proposed && proposed.idx !== null ? proposed.idx : null;
+      if (idx === null) return;
+      setRisk(s => ({ ...s,
+        answers:{ ...(s.answers||{}), [step.qId]: idx },
+        transcripts:{ ...(s.transcripts||{}), [step.qId]: text } }));
+    } else if (step.kind === "oplist") {
+      const names = interpretList(text);
+      setPlan({ revenueOps: names.map(n => ({ name:n, assets:"", suppliers:"", employees:"", customers:"" })) });
+    } else if (step.kind === "opdeps") {
+      const seg = segmentDependencies(text);
+      const ops = (risk.plan?.revenueOps || []).map(o => o.name === step.opName ? { ...o, ...seg } : o);
+      setPlan({ revenueOps: ops });
+    } else if (step.kind === "contactlist") {
+      const names = interpretList(text);
+      setPlan({ contacts: names.map(n => ({ name:n, materials:"", primaryName:"", primaryPhone:"", primaryEmail:"", altName:"", altPhone:"", altEmail:"" })) });
+    } else if (step.kind === "ctfield") {
+      const cts = (risk.plan?.contacts || []).map(c => c.name === step.ctName ? { ...c, [step.field]: text } : c);
+      setPlan({ contacts: cts });
+    } else if (step.kind === "ctprimary" || step.kind === "ctalt") {
+      const d = extractContactDetail(text);
+      const pre = step.kind === "ctprimary" ? "primary" : "alt";
+      const cts = (risk.plan?.contacts || []).map(c => c.name === step.ctName
+        ? { ...c, [pre+"Name"]:d.name, [pre+"Phone"]:d.phone, [pre+"Email"]:d.email } : c);
+      setPlan({ contacts: cts });
+    } else if (step.kind === "threats" || step.kind === "threatgaps") {
+      const items = interpretList(text);
+      const existing = risk.plan?.threats || [];
+      setPlan({ threats: [...existing, ...items.map((label,k) => ({ id:Date.now()+k, label, category:categorizeThreat(label), probability:3, severity:3 }))] });
+    } else if (step.kind === "rating") {
+      const v = proposed && proposed.v ? proposed.v : 3;
+      const ths = (risk.plan?.threats || []).map(t => t.id === step.threatId ? { ...t, [step.ratingKind]: v } : t);
+      setPlan({ threats: ths });
+    }
+    setDraft(""); setProposed(null); speech.stop(); setI(n => n + 1);
+  };
+
+  const skip = () => { setDraft(""); setProposed(null); speech.stop(); setI(n => n + 1); };
+  const pct = Math.round((i / script.length) * 100);
+  const canCommit = step.kind === "scale" ? (proposed && proposed.idx !== null)
+    : step.kind === "rating" ? (proposed && proposed.v)
+    : step.kind === "threatgaps" ? true
+    : draft.trim().length > 1;
+
+  return (
+    <div>
+      <Head eyebrow="Farm Risk · Guided conversation" title="Talk it through, I will do the writing" sub="Answer out loud or type. Nothing is scored without showing you what it heard and letting you change it first." />
+
+      <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:18 }}>
+        <div style={{ flex:1, height:6, background:T.div, borderRadius:3, overflow:"hidden" }}>
+          <div style={{ width:`${pct}%`, height:"100%", background:T.green, borderRadius:3, transition:"width .3s" }} />
+        </div>
+        <span style={{ fontSize:11.5, color:T.fgS, whiteSpace:"nowrap" }}>{i+1} of {script.length}</span>
+        <button onClick={onExit} style={{ ...btnStyle("outline"), fontSize:11.5, padding:"5px 12px" }}>Use the forms instead</button>
+      </div>
+
+      <div style={cardStyle()}>
+        <div style={{ fontSize:10.5, letterSpacing:"0.13em", textTransform:"uppercase", color:T.fgS, marginBottom:10 }}>{step.section}</div>
+        <p style={{ fontSize:19, fontWeight:600, color:T.navy, lineHeight:1.4, margin:"0 0 6px" }}>{step.prompt}</p>
+        {step.hint && <p style={{ fontSize:13, color:T.fgS, fontStyle:"italic", margin:"0 0 16px" }}>{step.hint}</p>}
+        {!step.hint && <div style={{ height:12 }} />}
+
+        {/* mic + transcript */}
+        <div style={{ border:`1px solid ${speech.listening?T.green:T.border}`, background:speech.listening?T.greenL:"#fff", borderRadius:9, padding:14, marginBottom:12, transition:"all .2s" }}>
+          <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:10 }}>
+            {speech.supported ? (
+              <button onClick={speech.listening ? speech.stop : speech.start}
+                style={{ ...btnStyle(speech.listening ? "outline" : "primary"), fontSize:12.5, padding:"7px 14px" }}>
+                {speech.listening ? "■ Stop" : "● Speak your answer"}
+              </button>
+            ) : (
+              <span style={{ fontSize:12, color:T.fgS, fontStyle:"italic" }}>Speech input is not available in this browser. Chrome or Edge supports it. Typing works the same.</span>
+            )}
+            {speech.listening && <span style={{ fontSize:12, color:T.dgreen }}>Listening, speak naturally and pause when done.</span>}
+          </div>
+          <textarea
+            style={inputStyle({ minHeight:84, fontSize:14.5, lineHeight:1.6, border:"none", background:"transparent", padding:0, resize:"vertical" })}
+            value={draft + (speech.interim ? " " + speech.interim : "")}
+            onChange={e=>setDraft(e.target.value)}
+            placeholder="Your answer appears here as you speak, or type it yourself." />
+        </div>
+
+        {/* what it heard */}
+        {step.kind === "scale" && proposed && proposed.idx !== null && (
+          <div style={{ borderLeft:`2px solid ${T.blue}`, background:T.blueL, borderRadius:"0 5px 5px 0", padding:"11px 14px", marginBottom:12 }}>
+            <div style={{ fontSize:10, letterSpacing:"0.12em", fontWeight:600, color:T.blue, marginBottom:5 }}>WHAT I HEARD · {proposed.confidence.toUpperCase()} CONFIDENCE</div>
+            <div style={{ fontSize:13.5, color:T.navy, fontWeight:600, marginBottom:6 }}>{step.opts[proposed.idx]}</div>
+            {proposed.hits.length > 0 && <div style={{ fontSize:11.5, color:T.fgM }}>Based on: {proposed.hits.join(", ")}</div>}
+            <div style={{ marginTop:9, display:"flex", gap:6, flexWrap:"wrap" }}>
+              {step.opts.map((o,k) => (
+                <button key={k} onClick={()=>setProposed(p=>({ ...(p||{}), idx:k, confidence:"confirmed", hits:[] }))}
+                  style={{ background:proposed.idx===k?T.navy:"#fff", color:proposed.idx===k?"#fff":T.fgM, border:`1px solid ${proposed.idx===k?T.navy:T.border}`, borderRadius:4, padding:"5px 10px", fontSize:11.5, cursor:"pointer", font:"inherit", fontWeight:proposed.idx===k?600:400 }}>
+                  {k+1}
+                </button>
+              ))}
+              <span style={{ fontSize:11, color:T.fgS, alignSelf:"center" }}>tap a number to change it</span>
+            </div>
+          </div>
+        )}
+        {step.kind === "scale" && draft.trim() && (!proposed || proposed.idx === null) && (
+          <Flag type="warn">I could not tell which answer that maps to. Pick the closest one below, or say it another way.
+            <div style={{ marginTop:9, display:"flex", flexDirection:"column", gap:5 }}>
+              {step.opts.map((o,k) => (
+                <button key={k} onClick={()=>setProposed({ idx:k, confidence:"confirmed", hits:[] })}
+                  style={{ textAlign:"left", background:"#fff", border:`1px solid ${T.border}`, borderRadius:5, padding:"7px 10px", fontSize:12.5, cursor:"pointer", font:"inherit", color:T.fgM }}>
+                  {k+1}. {o}
+                </button>
+              ))}
+            </div>
+          </Flag>
+        )}
+        {step.kind === "rating" && draft.trim() && (
+          <div style={{ borderLeft:`2px solid ${proposed && proposed.v ? T.blue : T.amber}`, background:proposed && proposed.v ? T.blueL : T.amberL, borderRadius:"0 5px 5px 0", padding:"11px 14px", marginBottom:12 }}>
+            <div style={{ fontSize:10, letterSpacing:"0.12em", fontWeight:600, color:proposed && proposed.v ? T.blue : T.amberT, marginBottom:7 }}>
+              {proposed && proposed.v ? `WHAT I HEARD · ${step.ratingKind.toUpperCase()}` : "PICK A LEVEL"}
+            </div>
+            <div style={{ display:"flex", gap:6, flexWrap:"wrap", alignItems:"center" }}>
+              {[1,2,3,4,5].map(v => {
+                const on = proposed && proposed.v === v;
+                const lab = step.ratingKind === "probability"
+                  ? ["Very unlikely","Unlikely","Possible","Likely","Almost certain"][v-1]
+                  : ["Negligible","Minor","Moderate","Major","Severe"][v-1];
+                return (
+                  <button key={v} onClick={()=>setProposed({ v, hits:[] })} title={lab}
+                    style={{ background:on?T.navy:"#fff", color:on?"#fff":T.fgM, border:`1px solid ${on?T.navy:T.border}`, borderRadius:4, padding:"6px 11px", fontSize:12, cursor:"pointer", font:"inherit", fontWeight:on?600:400 }}>
+                    {v} · {lab}
+                  </button>
+                );
+              })}
+            </div>
+            {proposed && proposed.hits && proposed.hits.length > 0 && <div style={{ fontSize:11.5, color:T.fgM, marginTop:7 }}>Based on: {proposed.hits.join(", ")}</div>}
+          </div>
+        )}
+        {(step.kind === "threats" || step.kind === "threatgaps") && (() => {
+          const recorded = (risk.plan?.threats || []).filter(t => t.label);
+          const draftCats = new Set(interpretList(draft).map(categorizeThreat));
+          const savedCats = new Set(recorded.map(t => t.category));
+          return (
+            <div style={{ border:`1px solid ${T.border}`, borderRadius:9, padding:"13px 15px", marginBottom:14, background:T.bgAlt }}>
+              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"baseline", gap:10, flexWrap:"wrap", marginBottom:10 }}>
+                <span style={{ fontSize:10.5, letterSpacing:"0.13em", textTransform:"uppercase", color:T.fgS }}>Eight areas to think through</span>
+                <span style={{ fontSize:11.5, color:T.fgS }}>{savedCats.size + [...draftCats].filter(c=>!savedCats.has(c)).length} of 8 touched</span>
+              </div>
+              <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(230px,1fr))", gap:9 }}>
+                {THREAT_CATEGORIES.map(c => {
+                  const saved = savedCats.has(c.id), inDraft = draftCats.has(c.id);
+                  const on = saved || inDraft;
+                  return (
+                    <div key={c.id} style={{ background:on?T.greenL:"#fff", border:`1px solid ${on?"#dde7cd":T.border}`, borderRadius:7, padding:"9px 11px" }}>
+                      <div style={{ display:"flex", alignItems:"center", gap:6, marginBottom:4 }}>
+                        <span style={{ width:14, height:14, borderRadius:3, flexShrink:0, background:on?T.dgreen:"#e2e5ea", color:"#fff", fontSize:9.5, display:"flex", alignItems:"center", justifyContent:"center", fontWeight:700 }}>{on ? "\u2713" : ""}</span>
+                        <span style={{ fontSize:12.5, fontWeight:600, color:on?T.dgreen:T.fg }}>{c.label}</span>
+                        {saved && <span style={{ fontSize:10, color:T.fgS }}>recorded</span>}
+                      </div>
+                      <ul style={{ margin:0, paddingLeft:20, fontSize:11.5, color:T.fgM, lineHeight:1.5 }}>
+                        {(THREAT_PROMPTS[c.id]||[]).map((p,x) => <li key={x}>{p}</li>)}
+                      </ul>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })()}
+        {step.kind === "opdeps" && draft.trim() && (() => {
+          const seg = segmentDependencies(draft);
+          const rows = [["Depends on",seg.assets],["Bought from",seg.suppliers],["Worked by",seg.employees],["Sold to",seg.customers]];
+          const empty = rows.filter(r => !r[1]).map(r => r[0]);
+          return (
+            <div style={{ borderLeft:`2px solid ${T.moss}`, background:T.greenL, borderRadius:"0 5px 5px 0", padding:"11px 14px", marginBottom:12 }}>
+              <div style={{ fontSize:10, letterSpacing:"0.12em", fontWeight:600, color:T.dgreen, marginBottom:7 }}>HOW I SORTED THAT</div>
+              {rows.map(([lab,val],k) => (
+                <div key={k} style={{ display:"flex", gap:10, fontSize:12.5, padding:"3px 0", alignItems:"baseline" }}>
+                  <span style={{ width:88, color:T.fgS, flexShrink:0, fontWeight:600 }}>{lab}</span>
+                  <span style={{ color:val ? T.fg : T.fgS }}>{val || "nothing yet"}</span>
+                </div>
+              ))}
+              {empty.length > 0 && <div style={{ fontSize:11.5, color:T.fgM, marginTop:7 }}>Nothing landed under {empty.join(", ").toLowerCase()}. Keep talking to fill those in, or leave them and edit in the stage view.</div>}
+            </div>
+          );
+        })()}
+        {(step.kind === "ctprimary" || step.kind === "ctalt") && draft.trim() && (() => {
+          const d = extractContactDetail(draft);
+          return (
+            <div style={{ borderLeft:`2px solid ${T.moss}`, background:T.greenL, borderRadius:"0 5px 5px 0", padding:"11px 14px", marginBottom:12 }}>
+              <div style={{ fontSize:10, letterSpacing:"0.12em", fontWeight:600, color:T.dgreen, marginBottom:6 }}>I WILL RECORD</div>
+              <div style={{ fontSize:13, color:T.fg }}>
+                <div><b>Name:</b> {d.name || <span style={{ color:T.fgS }}>not caught, add it in the form later</span>}</div>
+                {d.phone && <div><b>Phone:</b> {d.phone}</div>}
+                {d.email && <div><b>Email:</b> {d.email}</div>}
+              </div>
+              {!d.phone && !d.email && <div style={{ fontSize:11.5, color:T.fgM, marginTop:6 }}>No number or email picked up. Phone digits are hard to catch by voice, so this is often quicker to type.</div>}
+            </div>
+          );
+        })()}
+        {(step.kind === "oplist" || step.kind === "threats" || step.kind === "threatgaps" || step.kind === "contactlist") && draft.trim() && (
+          <div style={{ borderLeft:`2px solid ${T.moss}`, background:T.greenL, borderRadius:"0 5px 5px 0", padding:"11px 14px", marginBottom:12 }}>
+            <div style={{ fontSize:10, letterSpacing:"0.12em", fontWeight:600, color:T.dgreen, marginBottom:6 }}>I WILL RECORD THESE</div>
+            <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
+              {interpretList(draft).map((x,k) => (
+                <span key={k} style={{ background:"#fff", border:`1px solid #dde7cd`, borderRadius:4, padding:"4px 9px", fontSize:12.5, color:T.fg }}>{x}</span>
+              ))}
+            </div>
+            {(step.kind === "threats" || step.kind === "threatgaps") && <div style={{ fontSize:11.5, color:T.fgM, marginTop:8 }}>I will ask how likely and how serious each one is next, then rank them for you.</div>}
+            {step.kind === "contactlist" && <div style={{ fontSize:11.5, color:T.fgM, marginTop:8 }}>For each one I will ask what they supply and who to call.</div>}
+          </div>
+        )}
+
+        <div style={{ display:"flex", gap:10, alignItems:"center" }}>
+          <button onClick={commit} disabled={!canCommit} style={{ ...btnStyle("primary"), opacity:canCommit?1:0.45, cursor:canCommit?"pointer":"default" }}>Next question →</button>
+          <button onClick={skip} style={btnStyle("ghost")}>{step.kind === "threatgaps" ? "Nothing else, move on" : "Skip"}</button>
+          {i > 0 && <button onClick={()=>{ setDraft(""); setI(n=>n-1); }} style={btnStyle("ghost")}>← Back</button>}
+        </div>
+      </div>
+
+      <Flag type="info">Speech runs in your browser, so nothing is sent anywhere to be transcribed. What it heard is a keyword read of your words, shown to you before anything is scored, never applied silently.</Flag>
+    </div>
+  );
+}
+
+
+// Turns a ranked threat into a first-draft strategy and contingency plan. Category
+// drives the default approach, score decides whether it is worth acting on at all,
+// and the people and contacts already captured in the conversation get pulled in so
+// the "who" fields are not blank. Everything here is a starting point to edit, never
+// a decision, and it never overwrites something the farmer has already written.
+const STRATEGY_SEED = {
+  price: { strategy:"transfer", action:"Size a Revenue Protection or LRP coverage level against actual cost of production using the insurance calculators, then decide how much of the remaining gap to carry.",
+           response:"Check the coverage floor against current cost of production, and confirm what the policy would actually pay at today's prices.", timeline:"Before the next sales closing date" },
+  yield: { strategy:"transfer", action:"Review APH and coverage level against breakeven yield. Confirm whether the current level covers full cost or only variable cost.",
+           response:"Document the loss, notify the crop insurance agent, and confirm the claim window before harvest pressure starts.", timeline:"Within 72 hours of the loss" },
+  facility: { strategy:"transfer", mitigationType:"consequences", action:"Confirm replacement-cost coverage and current limits on buildings and contents, then review detection and suppression on the highest-value structure.",
+           response:"Ensure people are safe, call emergency services, then notify the insurance agent before moving or clearing anything.", timeline:"Immediate, then within 24 hours" },
+  natural: { strategy:"transfer", action:"Confirm limits and deductibles for wind, hail, and flood exposure, and check whether any structure is excluded.",
+           response:"Document damage with photographs before cleanup, then notify the agent.", timeline:"Within 48 hours" },
+  personnel: { strategy:"mitigation", mitigationType:"duplication", action:"Cross-train a second person on the tasks only one person can do today, and write down the procedures for the two most critical.",
+           response:"Identify which jobs stop immediately, and who covers each one this week.", timeline:"Within the first week" },
+  technology: { strategy:"mitigation", mitigationType:"duplication", action:"Move farm records off a single machine, set an automatic backup, and confirm the backup actually restores.",
+           response:"Disconnect the affected machine, work from the backup copy, and change passwords on financial accounts.", timeline:"Same day" },
+  social: { strategy:"mitigation", mitigationType:"likelihood", action:"Agree in advance who speaks for the farm and what gets said, so the answer is not being invented under pressure.",
+           response:"Do not respond immediately. Agree the facts internally, then have one named person reply once.", timeline:"Within 24 hours, not sooner" },
+  operational: { strategy:"mitigation", mitigationType:"duplication", action:"Line up a named alternate supplier and an alternate buyer, and confirm each could actually take or supply the volume.",
+           response:"Contact the backup on the list, and confirm what volume and timing they can handle.", timeline:"Within 48 hours" },
+};
+
+const seedStrategyForThreat = (threat, plan) => {
+  const base = STRATEGY_SEED[threat.category] || STRATEGY_SEED.operational;
+  const score = threatScore(threat);
+  // Low-scoring threats do not warrant spend or effort; name that explicitly.
+  if (score < 8) {
+    return { strategy:"acceptance", mitigationType:"",
+      action:`Accept for now. At a score of ${score} this does not justify the cost of transferring or mitigating it. Revisit if probability or impact changes.`,
+      response:"Absorb and carry on. Note it if it happens so the score can be revisited.", who:"", roles:"", informed:"", timeline:"Review at the next annual check" };
+  }
+  const people = (plan.revenueOps || []).map(o => o.employees).filter(Boolean).join("; ").slice(0,120);
+  const contacts = (plan.contacts || []).map(c => c.name).filter(Boolean).slice(0,3).join(", ");
+  return {
+    strategy: base.strategy,
+    mitigationType: base.mitigationType || "",
+    action: base.action,
+    response: base.response,
+    who: people || "",
+    roles: people ? "Confirm who leads and who supports before it is needed, not during." : "",
+    informed: contacts || "",
+    timeline: base.timeline,
+  };
+};
 
 // Stage 6 of Farm Risk — Revenue operations & key contacts
 function RiskPlanRevenueOps({ risk, setRisk }) {
@@ -1036,7 +1744,7 @@ function RiskPlanRevenueOps({ risk, setRisk }) {
 }
 
 // Stage 7 of Farm Risk — Threat identification & ranking
-function RiskPlanThreats({ risk, setRisk }) {
+function RiskPlanThreats({ risk, setRisk, goStrategy }) {
   const plan = risk.plan || {};
   const threats = plan.threats || [];
   const setPlan = (patch) => setRisk(s => ({ ...s, plan:{ ...(s.plan||{}), ...patch } }));
@@ -1047,6 +1755,15 @@ function RiskPlanThreats({ risk, setRisk }) {
   return (
     <div>
       <Head eyebrow="Farm Risk · Plan Builder · Stage 2" title="Threat identification & ranking" sub="List potential threats across all eight categories, then score each on probability and severity. Threats scoring 10–25 are your most immediate concern — you'll build strategies and contingency plans for these next." />
+      {goStrategy && (threats||[]).length > 0 && (
+        <div style={{ background:T.greenL, border:"1px solid #dde7cd", borderRadius:9, padding:"13px 17px", display:"flex", justifyContent:"space-between", alignItems:"center", gap:16, flexWrap:"wrap", marginBottom:16 }}>
+          <div>
+            <p style={{ fontSize:14, fontWeight:600, color:T.dgreen, margin:0 }}>Ready to plan what you will do about these?</p>
+            <p style={{ fontSize:12.5, color:T.fgM, margin:"3px 0 0", maxWidth:520 }}>Your ranked threats, the people you named, and your key contacts all carry forward and prefill a first draft strategy for each one.</p>
+          </div>
+          <button onClick={goStrategy} style={btnStyle("primary")}>Build strategies →</button>
+        </div>
+      )}
       <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:8, marginBottom:16 }}>
         {THREAT_CATEGORIES.map(c => (<div key={c.id} style={{ background:c.colorL, borderRadius:8, padding:"10px 12px" }}><div style={{ fontSize:12, fontWeight:700, color:c.color }}>{c.label}</div><div style={{ fontSize:10.5, color:T.fgM, marginTop:2 }}>{c.desc}</div></div>))}
       </div>
@@ -1089,13 +1806,34 @@ function RiskPlanStrategy({ risk, setRisk }) {
   const strategies = plan.strategies || {};
   const contingency = plan.contingency || {};
   const setPlan = (patch) => setRisk(s => ({ ...s, plan:{ ...(s.plan||{}), ...patch } }));
-  const setStrategy = (id,field,val) => setPlan({ strategies:{ ...strategies, [id]:{ ...(strategies[id]||{}), [field]:val } } });
+  const setStrategy = (id,field,val) => setPlan({ strategies:{ ...strategies, [id]:{ ...(strategies[id]||{}), [field]:val, seeded:false } } });
   const setContingency = (id,field,val) => setPlan({ contingency:{ ...contingency, [id]:{ ...(contingency[id]||{}), [field]:val } } });
   const top = topRankedThreats(threats);
+
+  // Prefill a first draft for any ranked threat that has not been worked yet. Runs on
+  // arrival so the stage is never a wall of empty boxes, and skips anything already
+  // written so it can never overwrite the farmer's own words.
+  const unseeded = top.filter(t => !strategies[t.id]);
+  useEffect(() => {
+    if (!unseeded.length) return;
+    const nextS = { ...strategies }, nextC = { ...contingency };
+    unseeded.forEach(t => {
+      const s = seedStrategyForThreat(t, plan);
+      nextS[t.id] = { strategy:s.strategy, mitigationType:s.mitigationType, action:s.action, seeded:true };
+      nextC[t.id] = { ...(nextC[t.id]||{}), response:s.response, who:s.who, roles:s.roles, informed:s.informed, timeline:s.timeline };
+    });
+    setRisk(st => ({ ...st, plan:{ ...(st.plan||{}), strategies:nextS, contingency:nextC } }));
+  }, [unseeded.length]);
+
+  const seededCount = top.filter(t => (strategies[t.id]||{}).seeded).length;
+
   return (
     <div>
       <Head eyebrow="Farm Risk · Plan Builder · Stage 3" title="Strategy & contingency plans" sub="For each of your highest-ranked threats, choose a management strategy and build your Plan A for responding if it happens." />
       {top.length===0 && <Flag type="warn">No ranked threats yet. Go back to the previous stage and add at least one.</Flag>}
+      {seededCount > 0 && (
+        <Flag type="info">Everything below is carried forward from your threat ranking and prefilled as a first draft, including the people and contacts you named earlier. {seededCount === 1 ? "One threat is" : `${seededCount} threats are`} showing a suggested strategy based on category and score. Change anything that does not fit, it is a starting point rather than a recommendation.</Flag>
+      )}
       {top.map(t => {
         const cat = THREAT_CATEGORIES.find(c=>c.id===t.category); const s = strategies[t.id]||{}; const c2 = contingency[t.id]||{};
         return (
@@ -1230,6 +1968,23 @@ const parseStateFromLocation = (location) => {
   return null;
 };
 
+
+// What the plan says this calculator is answering, so the numbers are not abstract.
+const TransferContext = ({ risk, kinds }) => {
+  const plan = risk.plan || {};
+  const strat = plan.strategies || {};
+  const hits = (plan.threats || []).filter(t => (strat[t.id]||{}).strategy === "transfer" && kinds.includes(t.category));
+  if (!hits.length) return null;
+  return (
+    <div style={{ borderLeft:`2px solid ${T.moss}`, background:T.greenL, borderRadius:"0 5px 5px 0", padding:"11px 14px", marginBottom:16 }}>
+      <div style={{ fontSize:10, letterSpacing:"0.12em", fontWeight:600, color:T.dgreen, marginBottom:5 }}>FROM YOUR PLAN</div>
+      <div style={{ fontSize:13, color:T.fg }}>
+        You chose to transfer {hits.length === 1 ? "this threat" : "these threats"}: {hits.map(t=>t.label).join(", ")}. This is where you find out how much of the gap the coverage actually closes.
+      </div>
+    </div>
+  );
+};
+
 function CropInsuranceCalculator({ risk, setRisk, fa, profile }) {
   const calc = risk.cropCalc || {};
   const cropId = calc.crop || "corn";
@@ -1282,7 +2037,8 @@ function CropInsuranceCalculator({ risk, setRisk, fa, profile }) {
 
   return (
     <div>
-      <Head eyebrow="Farm Risk · Stage 8" title="Crop insurance calculator" sub="See how your Revenue Protection guarantee compares to your actual cost of production — and why insurance is a floor to keep the farm solvent, not a guarantee of profit." />
+      <Head eyebrow="Farm Risk · Stage 11" title="Crop insurance calculator" sub="See how your Revenue Protection guarantee compares to your actual cost of production — and why insurance is a floor to keep the farm solvent, not a guarantee of profit." />
+      <TransferContext risk={risk} kinds={["price","yield","natural"]} />
 
       <div style={{ display:"flex", gap:6, marginBottom:16 }}>
         {Object.entries(CROP_PRESETS).map(([id,c]) => (<button key={id} onClick={()=>loadCrop(id)} style={{ ...btnStyle(cropId===id?"primary":"outline"), fontSize:12, padding:"6px 16px" }}>{c.label}</button>))}
@@ -1406,7 +2162,8 @@ function LivestockInsuranceCalculator({ risk, setRisk }) {
 
   return (
     <div>
-      <Head eyebrow="Farm Risk · Stage 9" title="Livestock insurance calculator" sub="See how a Livestock Risk Protection (LRP) price floor compares to your cost of production — and how that relationship can look very different from crop insurance depending on the market." />
+      <Head eyebrow="Farm Risk · Stage 12" title="Livestock insurance calculator" sub="See how a Livestock Risk Protection (LRP) price floor compares to your cost of production — and how that relationship can look very different from crop insurance depending on the market." />
+      <TransferContext risk={risk} kinds={["price","yield","operational"]} />
 
       <div style={{ display:"flex", gap:6, marginBottom:16 }}>
         {Object.entries(LIVESTOCK_PRESETS).map(([id,c]) => (<button key={id} onClick={()=>loadType(id)} style={{ ...btnStyle(typeId===id?"primary":"outline"), fontSize:12, padding:"6px 16px" }}>{c.label}</button>))}
@@ -2451,8 +3208,8 @@ const AP_AREAS = [
   { n:8,  id:"adoption",   label:"Adoption & efficiency",        cat:"production",   score:3.4, weight:"standard",   module:null },
   { n:9,  id:"riskprot",   label:"Risk & protection",            cat:"production",   score:2.4, weight:"constraint", module:"risk" },
   { n:10, id:"ventures",   label:"Ventures beyond production",   cat:"production",   score:3.1, weight:"standard",   module:"rd" },
-  { n:11, id:"knowledge",  label:"Knowledge management",         cat:"legacy",       score:1.3, weight:"constraint", module:null },
-  { n:12, id:"succession", label:"Succession & transition",      cat:"legacy",       score:2.6, weight:"constraint", module:null },
+  { n:11, id:"knowledge",  label:"Knowledge management",         cat:"legacy",       score:1.3, weight:"constraint", module:"legacy" },
+  { n:12, id:"succession", label:"Succession & transition",      cat:"legacy",       score:2.6, weight:"constraint", module:"legacy" },
 ];
 
 const AP_WEIGHT_LABEL = { constraint:"constraint-weighted", value:"value-weighted", standard:"" };
@@ -2545,7 +3302,7 @@ const AP_FALLBACK = {
   tools:[], toolcount:"No partner tools in this area yet",
 };
 
-const AP_MODULE_LABEL = { fa:"Financial Analysis", rd:"Revenue Diversification", risk:"Farm Risk" };
+const AP_MODULE_LABEL = { fa:"Financial Analysis", rd:"Revenue Diversification", risk:"Farm Risk", legacy:"Legacy" };
 
 // Compact carry-forward of the four financial health categories, shown inside the
 // modules so the numbers travel with the farmer rather than living only on one page.
@@ -2567,7 +3324,7 @@ const FinancialHealthStrip = ({ fa }) => {
   );
 };
 
-function FarmProfilePage({ profile, setProfile, fa, rd, goFA, goRD, goRisk }) {
+function FarmProfilePage({ profile, setProfile, fa, rd, goFA, goRD, goRisk, goLegacy }) {
   const set = (field) => (e) => setProfile(s => ({ ...s, [field]: e.target.value }));
   const [pri, setPri] = useState(0);
   const [view, setView] = useState("actions");
@@ -2582,7 +3339,7 @@ function FarmProfilePage({ profile, setProfile, fa, rd, goFA, goRD, goRisk }) {
   const byScore = [...AP_AREAS].sort((a,b) => a.score - b.score);
   const posIdx = byScore.findIndex(a => a.id === area.id);
   const ordinal = ["1st","2nd","3rd","4th","5th","6th","7th","8th","9th","10th","11th","12th"][posIdx];
-  const startModule = () => { if (area.module==="fa") goFA(1); else if (area.module==="rd") goRD(1); else if (area.module==="risk") goRisk(1); };
+  const startModule = () => { if (area.module==="fa") goFA(1); else if (area.module==="rd") goRD(1); else if (area.module==="risk") goRisk(1); else if (area.module==="legacy") goLegacy(1); };
 
   const findColor = FIND_COLOR;
 
@@ -2901,6 +3658,1050 @@ function FarmProfilePage({ profile, setProfile, fa, rd, goFA, goRD, goRisk }) {
   );
 }
 
+
+// ═════════════════════════════════════════════════════════════════════════════
+// LEGACY — Transition readiness
+// ═════════════════════════════════════════════════════════════════════════════
+// Deliberately does NOT open with assets. Operational transition is about who runs
+// the business; succession is about who owns it. This module tests the operating
+// question so the ownership question can be answered honestly, and hands off to
+// Legacy Acres for the inventory only once the family is actually ready for it.
+//
+// Three rules this module holds to: the three transfers stay separated everywhere,
+// nothing here scores the family, and the tool is willing to say "not yet".
+
+const LEG_STAGES = [
+  { n:1,  label:"Where you are today" },
+  { n:2,  label:"The three transfers" },
+  { n:3,  label:"The next chapter" },
+  { n:4,  label:"Two households" },
+  { n:5,  label:"Successor readiness" },
+  { n:6,  label:"Who knows what" },
+  { n:7,  label:"Fair is not equal" },
+  { n:8,  label:"Triggers & contingencies" },
+  { n:9,  label:"Rented ground & relationships" },
+  { n:10, label:"Where this leaves you" },
+];
+
+const TRANSFERS = [
+  { id:"labor",      label:"Labor",      desc:"Who does the physical work" },
+  { id:"management", label:"Management", desc:"Who makes the decisions" },
+  { id:"ownership",  label:"Ownership",  desc:"Whose name is on the asset" },
+];
+const HORIZONS = [
+  { id:"now",  label:"Today" },
+  { id:"y3",   label:"In 3 years" },
+  { id:"y5",   label:"In 5 years" },
+  { id:"y10",  label:"In 10 years" },
+];
+
+// Exposure, not competence. Each unchecked item is a specific decision to hand over.
+const SUCCESSOR_EXPOSURE = [
+  { id:"lease",     label:"Negotiated a lease on their own" },
+  { id:"loan",      label:"Sat a loan meeting without you in the room" },
+  { id:"marketing", label:"Made a grain or livestock marketing decision alone" },
+  { id:"hire",      label:"Hired or let go of someone" },
+  { id:"capital",   label:"Chosen a capital purchase and lived with it" },
+  { id:"landlord",  label:"Handled a landlord conversation start to finish" },
+  { id:"budget",    label:"Built and managed a full crop or enterprise budget" },
+];
+
+const KNOWS_WHAT = [
+  { id:"successor",   label:"The successor" },
+  { id:"seniorSpouse",label:"Senior generation spouse" },
+  { id:"succSpouse",  label:"Successor's spouse or partner" },
+  { id:"offFarm",     label:"Off-farm children" },
+  { id:"advisors",    label:"Attorney, accountant, lender" },
+];
+const KNOWS_LEVEL = ["Not discussed", "Assumed but never said", "Talked about it", "In writing"];
+
+const FAIR_APPROACHES = [
+  { id:"insurance", label:"Life insurance funds the non-farm heirs", body:"Land stays whole and stays farmed. The off-farm heirs are made whole in cash rather than in acres." },
+  { id:"splitOwn",  label:"Separate ownership from operating rights", body:"Off-farm heirs hold land; the on-farm heir holds a long-term lease with a right of first refusal. Everyone owns something, one person farms it." },
+  { id:"buysell",   label:"Buy-sell agreement with an agreed formula", body:"The valuation method is settled now, in calm conditions, rather than argued later at the worst possible moment." },
+  { id:"sweat",     label:"Explicit credit for sweat equity", body:"The on-farm heir's years of below-market wages are written down as a number rather than left as an unspoken debt." },
+];
+
+const CONTINGENCIES = [
+  { id:"death",       label:"Death", note:"The one most plans are built around." },
+  { id:"disability",  label:"Disability", note:"More likely than death during the transition window and harder on the business. It consumes cash and attention at the same time while triggering none of the estate mechanisms.", weight:true },
+  { id:"divorce",     label:"Divorce", note:"Either generation. Can put farm assets in front of a court." },
+  { id:"disagreement",label:"Disagreement", note:"The two generations stop being able to work together." },
+  { id:"disinterest", label:"Disinterest", note:"The successor decides in five years that they do not want it after all." },
+];
+
+const READINESS_TIERS = {
+  conversation: { label:"Conversation stage", pill:"vuln",
+    signal:"Assumptions have not been voiced, successor clarity is missing, or the identity question is unanswered.",
+    rec:"Have the structured family conversation first. An asset inventory right now would be premature, and filling one out will not move anything." },
+  operational: { label:"Operational stage", pill:"watch",
+    signal:"A successor is identified, but management transfer has not started or is incomplete.",
+    rec:"Work the management handover list from the successor readiness stage. You can begin the asset inventory alongside it." },
+  structural: { label:"Structural stage", pill:"watch",
+    signal:"Management is genuinely transferring, the two-household math is done, and the family is broadly aligned.",
+    rec:"Full asset inventory and valuation in Legacy Acres, then take it to your advisors." },
+  execution: { label:"Execution stage", pill:"strong",
+    signal:"The decisions are made. What is missing is the paperwork.",
+    rec:"Take the output to your attorney, accountant, and lender. This module has done its job." },
+};
+
+// Tier is derived from process state, never from a judgement about the family.
+const legacyTier = (leg) => {
+  const d = leg.data || {};
+  const t = d.transfers || {};
+  const mgmtNow = Number((t.management||{}).now || 0);
+  const hasSuccessor = d.successorStatus === "identified" || d.successorStatus === "working";
+  const noSuccessorPath = d.successorStatus === "none" && !!d.noSuccessorPath;
+  const identityAnswered = !!(d.nextChapterWeek && d.nextChapterRole);
+  const householdsDone = !!d.householdModelled;
+  const toldKey = ["successor","seniorSpouse","offFarm"].every(k => { const v=(d.knows||{})[k]; return v === 2 || v === 3; });
+  const fairWritten = (d.fairParagraph||"").trim().length > 40;
+  const contingenciesDone = CONTINGENCIES.filter(c => ((d.contingency||{})[c.id]||"").trim().length > 3).length >= 3;
+
+  if (!(hasSuccessor || noSuccessorPath) || !identityAnswered || !toldKey) return "conversation";
+  if (mgmtNow < 30) return "operational";
+  if (!householdsDone || !fairWritten) return "structural";
+  if (contingenciesDone) return "execution";
+  return "structural";
+};
+
+const legRow = (label, children, sub) => (
+  <div style={{ marginBottom:16 }}>
+    <label style={labelStyle}>{label}</label>
+    {sub && <div style={{ fontSize:11.5, color:T.fgS, marginBottom:6, fontStyle:"italic" }}>{sub}</div>}
+    {children}
+  </div>
+);
+
+
+
+// ═════════════════════════════════════════════════════════════════════════════
+// LAND VALUATION — Phase 1 engine
+// ═════════════════════════════════════════════════════════════════════════════
+// Land class routes to a method rather than one model with adjustments bolted on.
+// Two independent methods run on income-producing classes and their divergence
+// sets confidence, so the tier is derived rather than asserted. Refer-out classes
+// return no number at all, which is the point: a tool that knows what it does not
+// know is worth more than one that returns a number for everything.
+//
+// WHAT IS NOT HERE: live USDA SDA soil queries and live NASS ingestion. The spec
+// is explicit that both belong in a scheduled batch job writing to our own table,
+// which needs a backend this app does not have yet. Benchmarks below are labelled
+// placeholders and every one is user-overridable. Provenance records which is which,
+// so a placeholder can never be mistaken for a USDA figure.
+
+const LAND_CLASSES = [
+  { id:"dryland",   label:"Dryland row crop",       methods:"both",   series:"cropland",   conf:"High",   note:"Soil-driven. The method works best here." },
+  { id:"irrigated", label:"Irrigated row crop",     methods:"both",   series:"irrigated",  conf:"Medium", note:"Water right is flagged separately and is not valued here." },
+  { id:"pasture",   label:"Pasture / rangeland",    methods:"both",   series:"pasture",    conf:"Medium", note:"Carrying capacity matters more than soil index in the West." },
+  { id:"crp",       label:"CRP / conservation",     methods:"incomeOnly", series:"cropland", conf:"Medium", note:"Valued off the contract payment, not a rental market." },
+  { id:"nontillable",label:"Non-tillable",          methods:"discount", series:"cropland",  conf:"Low",    note:"Woods, waste, wetland, roads. Discounted against the parcel's class." },
+  { id:"timber",    label:"Timberland",             methods:"refer",  series:null,         conf:"Refer",  note:"Value is standing volume and stumpage market. Not derivable from soil and a county average." },
+  { id:"permanent", label:"Permanent crops",        methods:"refer",  series:null,         conf:"Refer",  note:"Orchard, vineyard, grove. Value is in the trees, their age and variety, and the water." },
+  { id:"farmstead", label:"Farmstead / building site", methods:"refer", series:null,       conf:"Refer",  note:"Improvements dominate. Handled as a separate asset class." },
+];
+
+// PLACEHOLDER benchmarks. Approximate, round, and not USDA figures. They exist so
+// the engine runs and the maths is inspectable before the ingestion job is built.
+// Every one is editable per parcel and provenance marks the source as placeholder.
+const BENCH_PLACEHOLDER = {
+  IA:{cropland:11500,irrigated:12500,pasture:3900,rentCropland:280,rentIrrigated:300,rentPasture:60,nccpiMean:0.72},
+  IL:{cropland:9800, irrigated:10500,pasture:3400,rentCropland:265,rentIrrigated:285,rentPasture:55,nccpiMean:0.70},
+  IN:{cropland:8600, irrigated:9200, pasture:3100,rentCropland:245,rentIrrigated:265,rentPasture:52,nccpiMean:0.66},
+  MN:{cropland:8100, irrigated:8800, pasture:2600,rentCropland:225,rentIrrigated:245,rentPasture:45,nccpiMean:0.63},
+  NE:{cropland:6400, irrigated:9100, pasture:1300,rentCropland:175,rentIrrigated:275,rentPasture:32,nccpiMean:0.55},
+  OH:{cropland:7900, irrigated:8300, pasture:2900,rentCropland:215,rentIrrigated:230,rentPasture:48,nccpiMean:0.64},
+  SD:{cropland:4200, irrigated:5600, pasture:1500,rentCropland:145,rentIrrigated:190,rentPasture:35,nccpiMean:0.50},
+  ND:{cropland:3100, irrigated:4200, pasture:1000,rentCropland:110,rentIrrigated:150,rentPasture:25,nccpiMean:0.47},
+  KS:{cropland:3300, irrigated:5200, pasture:1600,rentCropland:105,rentIrrigated:180,rentPasture:28,nccpiMean:0.46},
+  MO:{cropland:5600, irrigated:6400, pasture:3000,rentCropland:165,rentIrrigated:195,rentPasture:45,nccpiMean:0.54},
+  WI:{cropland:6100, irrigated:6700, pasture:2700,rentCropland:160,rentIrrigated:180,rentPasture:48,nccpiMean:0.58},
+  KY:{cropland:5400, irrigated:5900, pasture:3600,rentCropland:160,rentIrrigated:175,rentPasture:42,nccpiMean:0.52},
+  TX:{cropland:2600, irrigated:4400, pasture:2200,rentCropland:45, rentIrrigated:130,rentPasture:8, nccpiMean:0.38},
+  MT:{cropland:1400, irrigated:3200, pasture:900, rentCropland:38, rentIrrigated:110,rentPasture:9, nccpiMean:0.34},
+  CO:{cropland:2400, irrigated:5100, pasture:900, rentCropland:55, rentIrrigated:160,rentPasture:10,nccpiMean:0.40},
+};
+const BENCH_STATES = Object.keys(BENCH_PLACEHOLDER);
+const NONTILLABLE_RATE = 0.35; // fraction of the parcel class rate applied to non-tillable acres
+
+const lcOf = (id) => LAND_CLASSES.find(c => c.id === id) || LAND_CLASSES[0];
+
+// Runs the routed valuation for one parcel and returns the numbers plus the
+// provenance needed to reproduce it later, which is the whole point of the design.
+const valueParcel = (p) => {
+  const cls = lcOf(p.landClass);
+  const bench = BENCH_PLACEHOLDER[p.state] || null;
+  const deeded = parseFloat(p.deededAcres) || 0;
+  const tillable = parseFloat(p.tillableAcres) || 0;
+  const nonTillable = Math.max(0, deeded - tillable);
+
+  const base = { cls, requiresAppraisal:false, methodA:null, methodB:null, divergence:null,
+                 confidence:cls.conf, low:null, mid:null, high:null, provenance:{} };
+
+  if (cls.methods === "refer") {
+    return { ...base, requiresAppraisal:true,
+      why:`${cls.label} is outside the model. ${cls.note}`,
+      provenance:{ landClass:cls.id, routed:"refer-out", reason:cls.note } };
+  }
+  if (!bench) {
+    return { ...base, requiresAppraisal:true,
+      why:"No benchmark is loaded for this state yet. Enter a value per acre manually, or wait for the benchmark ingestion job.",
+      provenance:{ landClass:cls.id, routed:"no-benchmark", state:p.state || "not set" } };
+  }
+
+  const seriesKey = cls.series === "irrigated" ? "irrigated" : cls.series === "pasture" ? "pasture" : "cropland";
+  const rentKey   = seriesKey === "irrigated" ? "rentIrrigated" : seriesKey === "pasture" ? "rentPasture" : "rentCropland";
+  const benchVal  = parseFloat(p.benchOverride) || bench[seriesKey];
+  const cashRent  = parseFloat(p.rentOverride)  || bench[rentKey];
+  const meanNccpi = bench.nccpiMean;
+  const parcelNccpi = parseFloat(p.nccpi) || meanNccpi;      // falls back to the state mean
+  const usedRegionalSoil = !p.nccpi;
+  const prodMult  = meanNccpi > 0 ? parcelNccpi / meanNccpi : 1;
+
+  // Method A — sales comparison proxy, productivity indexed
+  const methodA = benchVal * prodMult * tillable + nonTillable * (benchVal * NONTILLABLE_RATE);
+
+  // Cap rate is derived from the STATE table baseline, never from a parcel override.
+  // Deriving it from the overridden benchmark would make Method B track Method A
+  // algebraically (B reduces to benchmark x acres), and the convergence check would
+  // read zero on exactly the parcels it exists to catch. Anchoring the rate to the
+  // state baseline is what lets an override on one method contradict the other.
+  const baselineBench = bench[seriesKey];
+  const baselineRent  = bench[rentKey];
+  const derivedCap = baselineBench > 0 ? baselineRent / baselineBench : 0;
+  const capRate = parseFloat(p.capOverride) ? parseFloat(p.capOverride)/100 : derivedCap;
+  const capDerivation = parseFloat(p.capOverride) ? "user_supplied" : "derived_from_state_baseline";
+
+  // Method B — income capitalisation. CRP uses the contract payment as the stream.
+  let methodB = null;
+  if (cls.methods === "both" && capRate > 0) methodB = (cashRent * tillable) / capRate;
+  if (cls.methods === "incomeOnly" && capRate > 0) {
+    const crpRate = parseFloat(p.crpPayment) || 0;
+    methodB = crpRate > 0 ? (crpRate * tillable) / capRate : null;
+  }
+  if (cls.methods === "discount") methodB = null;
+
+  let divergence = null, confidence = cls.conf, requiresAppraisal = false, why = null;
+  if (methodA && methodB) {
+    divergence = Math.abs(methodA - methodB) / ((methodA + methodB) / 2);
+    if (divergence < 0.15) confidence = "High";
+    else if (divergence <= 0.35) confidence = "Medium";
+    else { confidence = "Low"; requiresAppraisal = true;
+      why = "Comparable-sales methods value this ground well above what its rental income supports, which often indicates non-agricultural development value. This parcel is a good candidate for a professional appraisal."; }
+  }
+
+  const vals = [methodA, methodB].filter(v => v && v > 0);
+  const mid = vals.length ? vals.reduce((a,b)=>a+b,0) / vals.length : null;
+  const low = vals.length ? Math.min(...vals) : null;
+  const high = vals.length ? Math.max(...vals) : null;
+
+  return {
+    cls, methodA, methodB, divergence, confidence, requiresAppraisal, why,
+    low, mid, high,
+    provenance: {
+      landClass: cls.id,
+      benchmark: benchVal, benchmarkSource: p.benchOverride ? "user_supplied" : "placeholder_table",
+      benchmarkVintage: p.benchOverride ? "entered by user" : "placeholder, pending NASS ingestion",
+      series: seriesKey, cashRent, cashRentSource: p.rentOverride ? "user_supplied" : "placeholder_table",
+      nccpi: parcelNccpi, nccpiSource: usedRegionalSoil ? "state mean, no boundary supplied" : "user_supplied",
+      stateMeanNccpi: meanNccpi, productivityMultiplier: prodMult,
+      capRate, capRateDerivation: capDerivation,
+      capRateCaveat: capDerivation === "derived_from_state_baseline" ? "Derived from the same benchmark series as Method A, so the two methods are only partially independent at state-average productivity. A published regional cap rate would separate them properly." : null,
+      tillableAcres: tillable, nonTillableAcres: nonTillable, nonTillableRate: NONTILLABLE_RATE,
+      methodVersion: "phase1-v1",
+    },
+  };
+};
+
+// ── Stage 1 — Where you are today ────────────────────────────────────────────
+function LEG1({ leg, setLegData }) {
+  const d = leg.data || {};
+  const v = (k) => d[k] || "";
+  const set = (k) => (e) => setLegData({ [k]: e.target.value });
+  return (
+    <div>
+      <Head eyebrow="Legacy · Stage 1" title="Where you are today" sub="Before anything hard, just the situation. Who is involved, who is on the farm, who is not, and whether anything is written down." />
+      <div style={cardStyle()}>
+        <div style={cardLblStyle()}>The people</div>
+        {legRow("Who is involved in the operation today, and what does each person do?",
+          <textarea style={inputStyle({ minHeight:78 })} value={v("people")} onChange={set("people")} placeholder="Names, roles, rough ages. Include anyone whose absence would be felt." />)}
+        {legRow("Who is off the farm but still part of the family picture?",
+          <textarea style={inputStyle({ minHeight:60 })} value={v("offFarmPeople")} onChange={set("offFarmPeople")} placeholder="Off-farm children, siblings with an interest in the ground, anyone with an expectation." />,
+          "These are the people most often left out and the most common source of trouble later.")}
+      </div>
+      <div style={cardStyle()}>
+        <div style={cardLblStyle()}>The successor question</div>
+        {legRow("Is there an identified successor?",
+          <select style={inputStyle()} value={v("successorStatus")} onChange={set("successorStatus")}>
+            <option value="">Select</option>
+            <option value="working">Yes, and they are already working in the business</option>
+            <option value="identified">Yes, identified but not yet involved day to day</option>
+            <option value="maybe">Maybe, more than one candidate or nobody has said it out loud</option>
+            <option value="none">No, there is no successor</option>
+          </select>)}
+        {d.successorStatus === "none" && (
+          <>
+            <Flag type="info">No successor is a legitimate path, not a failure. Families in this position are the worst served by most succession tools and often the most stuck. It has its own track and it deserves the same rigour.</Flag>
+            {legRow("Which direction makes most sense to explore?",
+              <select style={inputStyle()} value={v("noSuccessorPath")} onChange={set("noSuccessorPath")}>
+                <option value="">Select</option>
+                <option value="sale">Orderly sale of the operation</option>
+                <option value="lease">Lease the ground to a neighbouring operation</option>
+                <option value="employee">Transition to a non-family employee</option>
+                <option value="winddown">Planned wind-down over a set number of years</option>
+                <option value="unsure">Genuinely unsure, that is the question</option>
+              </select>)}
+          </>
+        )}
+        {d.successorStatus === "maybe" && (
+          <Flag type="warn">More than one candidate, or nobody having said it out loud, is the most common starting point. Naming it is the work of the next few stages rather than something to resolve here.</Flag>
+        )}
+      </div>
+      <div style={cardStyle()}>
+        <div style={cardLblStyle()}>What exists on paper</div>
+        {legRow("What is in writing today?",
+          <textarea style={inputStyle({ minHeight:64 })} value={v("inWriting")} onChange={set("inWriting")} placeholder="Wills, trusts, operating agreements, buy-sell, leases, anything. If the answer is nothing, that is a common and useful answer." />)}
+        {legRow("If you had to hand the whole thing over Monday morning, what would break first?",
+          <textarea style={inputStyle({ minHeight:64 })} value={v("breakFirst")} onChange={set("breakFirst")} placeholder="" />,
+          "This one question usually locates the real gap faster than anything else in the module.")}
+      </div>
+    </div>
+  );
+}
+
+// ── Stage 2 — The three transfers ────────────────────────────────────────────
+function LEG2({ leg, setLegData }) {
+  const d = leg.data || {};
+  const t = d.transfers || {};
+  const setT = (tid, hid, val) => setLegData({ transfers:{ ...t, [tid]:{ ...(t[tid]||{}), [hid]:val } } });
+  const gap = (tid) => {
+    const now = Number((t[tid]||{}).now || 0), y10 = Number((t[tid]||{}).y10 || 0);
+    return y10 - now;
+  };
+  return (
+    <div>
+      <Head eyebrow="Legacy · Stage 2" title="The three transfers" sub="Labor, management, and ownership move independently. Farmers experience transition as one event, which is what creates the standoff. Separating them is most of the work." />
+      <Flag type="info">Zero means entirely senior generation. One hundred means entirely successor. Set where each one sits today, then where it should sit at each horizon.</Flag>
+      {TRANSFERS.map(tr => (
+        <div key={tr.id} style={cardStyle()}>
+          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"baseline", gap:12, flexWrap:"wrap", marginBottom:4 }}>
+            <div>
+              <div style={{ fontSize:16, fontWeight:600, color:T.navy }}>{tr.label}</div>
+              <div style={{ fontSize:12.5, color:T.fgS }}>{tr.desc}</div>
+            </div>
+            {gap(tr.id) !== 0 && <span style={pillStyle(gap(tr.id) > 0 ? "info" : "watch")}>{gap(tr.id) > 0 ? `+${gap(tr.id)} points over ten years` : "moving backward"}</span>}
+          </div>
+          {HORIZONS.map(h => {
+            const val = Number((t[tr.id]||{})[h.id] || 0);
+            return (
+              <div key={h.id} style={{ display:"flex", alignItems:"center", gap:12, padding:"7px 0" }}>
+                <span style={{ width:82, fontSize:12.5, color:T.fgM, flexShrink:0 }}>{h.label}</span>
+                <input type="range" min="0" max="100" step="5" value={val} onChange={e=>setT(tr.id, h.id, e.target.value)} style={{ flex:1 }} />
+                <span style={{ width:74, textAlign:"right", fontSize:12.5, color:T.fgM, flexShrink:0 }}>{val}% successor</span>
+              </div>
+            );
+          })}
+        </div>
+      ))}
+      <div style={cardStyle({ borderTop:`4px solid ${T.navy}` })}>
+        <div style={cardLblStyle()}>What this looks like on a timeline</div>
+        <div style={{ display:"flex", gap:2, alignItems:"flex-end", height:120, padding:"0 4px", marginBottom:8 }}>
+          {HORIZONS.map(h => (
+            <div key={h.id} style={{ flex:1, display:"flex", flexDirection:"column", alignItems:"center", gap:4 }}>
+              <div style={{ display:"flex", gap:3, alignItems:"flex-end", height:96 }}>
+                {TRANSFERS.map((tr,k) => {
+                  const val = Number((t[tr.id]||{})[h.id] || 0);
+                  const col = [T.moss, T.blue, T.navy][k];
+                  return <div key={tr.id} title={`${tr.label} ${val}%`} style={{ width:16, height:`${Math.max(2,val)}%`, background:col, borderRadius:"2px 2px 0 0" }} />;
+                })}
+              </div>
+              <span style={{ fontSize:11, color:T.fgS }}>{h.label}</span>
+            </div>
+          ))}
+        </div>
+        <div style={{ display:"flex", gap:14, flexWrap:"wrap" }}>
+          {TRANSFERS.map((tr,k) => (
+            <span key={tr.id} style={{ display:"flex", alignItems:"center", gap:6, fontSize:12, color:T.fgM }}>
+              <span style={{ width:10, height:10, borderRadius:2, background:[T.moss,T.blue,T.navy][k] }} />{tr.label}
+            </span>
+          ))}
+        </div>
+        {Number((t.labor||{}).now||0) - Number((t.management||{}).now||0) >= 30 && (
+          <div style={{ marginTop:14 }}>
+            <Flag type="warn">Labor has transferred considerably further than management. This is the single most common pattern in stalled transitions: the successor has been doing the work for years without ever making the calls. It is also the most fixable, and the successor readiness stage turns it into a specific list.</Flag>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── Stage 3 — The next chapter ───────────────────────────────────────────────
+function LEG3({ leg, setLegData }) {
+  const d = leg.data || {};
+  const v = (k) => d[k] || "";
+  const set = (k) => (e) => setLegData({ [k]: e.target.value });
+  return (
+    <div>
+      <Head eyebrow="Legacy · Stage 3" title="The next chapter" sub="Asked before anything financial, because this is where most plans actually stall. For many operators the farm is not what they do, it is who they are, and transition can read as erasure." />
+      <div style={cardStyle()}>
+        <div style={cardLblStyle()}>For the senior generation</div>
+        {legRow("What does your week look like in the first year after transition?",
+          <textarea style={inputStyle({ minHeight:74 })} value={v("nextChapterWeek")} onChange={set("nextChapterWeek")} placeholder="Not what you will stop doing. What you will actually be doing." />)}
+        {legRow("What are you still responsible for?",
+          <textarea style={inputStyle({ minHeight:64 })} value={v("nextChapterRole")} onChange={set("nextChapterRole")} placeholder="Something real and specific. Marketing, the cattle, the landlord relationships, the books." />,
+          "A defined ongoing role, written down, is the artifact that unlocks conversations that otherwise never happen. Even a modest one.")}
+        {legRow("What would you miss most?",
+          <textarea style={inputStyle({ minHeight:60 })} value={v("missMost")} onChange={set("missMost")} placeholder="" />)}
+        {legRow("Have you told anyone what you just wrote here?",
+          <select style={inputStyle()} value={v("toldNextChapter")} onChange={set("toldNextChapter")}>
+            <option value="">Select</option>
+            <option value="no">No, this is the first time it has been said</option>
+            <option value="spouse">My spouse knows</option>
+            <option value="successor">The successor and I have discussed it</option>
+            <option value="family">The whole family has discussed it</option>
+          </select>)}
+      </div>
+      {v("nextChapterRole") && (
+        <div style={cardStyle({ borderTop:`4px solid ${T.moss}` })}>
+          <div style={cardLblStyle()}>Your ongoing role, in writing</div>
+          <div style={{ borderLeft:`2px solid ${T.moss}`, background:T.greenL, borderRadius:"0 5px 5px 0", padding:"13px 16px", fontSize:14, color:T.fg, lineHeight:1.6 }}>{v("nextChapterRole")}</div>
+          <p style={{ fontSize:12.5, color:T.fgM, marginTop:10, marginBottom:0 }}>This is a deliverable, not a note. It travels into the plan and it is worth reading out loud to the successor.</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Stage 4 — Two households ─────────────────────────────────────────────────
+function LEG4({ leg, setLegData, fa }) {
+  const d = leg.data || {};
+  const v = (k) => d[k] || "";
+  const set = (k) => (e) => setLegData({ [k]: e.target.value });
+  const n = (k) => parseFloat(d[k]) || 0;
+  const { hasData, nfifo } = computeFARatios(fa.s3vals);
+  const draws = n("seniorDraw") + n("succDraw");
+  const covered = hasData && nfifo !== null ? nfifo - draws : null;
+  const independent = n("seniorNonFarmIncome");
+  return (
+    <div>
+      <Head eyebrow="Legacy · Stage 4" title="Can the operation support two households?" sub="The financial question that governs everything else, and the honest answer is often no. Better to know that now than to discover it after the paperwork is signed." />
+      <FinancialHealthStrip fa={fa} />
+      <div style={cardStyle()}>
+        <div style={cardLblStyle()}>What each household needs</div>
+        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16 }}>
+          {legRow("Senior generation annual draw", <input type="number" style={inputStyle()} value={v("seniorDraw")} onChange={set("seniorDraw")} placeholder="$" />)}
+          {legRow("Successor household annual draw", <input type="number" style={inputStyle()} value={v("succDraw")} onChange={set("succDraw")} placeholder="$" />)}
+          {legRow("Senior non-farm income", <input type="number" style={inputStyle()} value={v("seniorNonFarmIncome")} onChange={set("seniorNonFarmIncome")} placeholder="$" />, "Off-farm work, social security, pension, investment income.")}
+          {legRow("Senior non-farm assets", <input type="number" style={inputStyle()} value={v("seniorNonFarmAssets")} onChange={set("seniorNonFarmAssets")} placeholder="$" />, "Anything not tied up in the operation.")}
+        </div>
+      </div>
+      {hasData && draws > 0 && (
+        <div style={cardStyle({ borderTop:`4px solid ${covered >= 0 ? T.moss : T.red}` })}>
+          <div style={cardLblStyle()}>Against what the operation actually earns</div>
+          <div style={{ display:"flex", gap:24, flexWrap:"wrap", marginBottom:12 }}>
+            {[["Net farm income from operations", fmt$(nfifo)],["Both households drawing", fmt$(draws)],["Left over", fmt$(covered)]].map(([lab,val],k)=>(
+              <div key={k}>
+                <div style={{ fontSize:11, color:T.fgS, marginBottom:3 }}>{lab}</div>
+                <div style={{ fontSize:20, fontWeight:600, color:k===2 ? (covered>=0?T.dgreen:T.red) : T.navy }}>{val}</div>
+              </div>
+            ))}
+          </div>
+          {covered < 0
+            ? <Flag type="danger">On these numbers the operation does not cover both households. That is not a reason to stop, it is the number the rest of the plan has to solve. The structures below exist precisely for this.</Flag>
+            : <Flag type="ok">On these numbers the operation covers both households with {fmt$(covered)} left over. Worth stress-testing against a bad year before treating it as settled.</Flag>}
+        </div>
+      )}
+      <div style={cardStyle()}>
+        <div style={cardLblStyle()}>The two failure modes, named</div>
+        <FindingBlock kind="t" tag="FAILURE MODE ONE" heading="The senior generation has no income independent of the operation" source={independent > 0 ? `You have recorded ${fmt$(independent)} of non-farm income` : "You have not recorded any non-farm income"}>
+          <p style={{ fontSize:13.5, color:T.fgM, margin:0, lineHeight:1.6 }}>The business gets bled to fund a retirement it was never sized for, and the successor inherits something hollowed out. The more the retirement depends on the farm, the more urgent the structures below become.</p>
+        </FindingBlock>
+        <FindingBlock kind="t" tag="FAILURE MODE TWO" heading="The senior generation retains everything to be safe" source="The mirror image, and just as common">
+          <p style={{ fontSize:13.5, color:T.fgM, margin:0, lineHeight:1.6 }}>The successor never builds equity, works fifteen years for wages on an asset they do not own, and eventually leaves. Retaining control feels like the cautious choice and is often the one that loses the operation.</p>
+        </FindingBlock>
+      </div>
+      <div style={cardStyle()}>
+        <div style={cardLblStyle()}>Structures worth considering</div>
+        <div style={{ fontSize:12.5, color:T.fgM, marginBottom:14 }}>Options, not prescriptions. Which of these fits is a conversation for your accountant and attorney, not something this tool should decide.</div>
+        {[["Land retained, cash-rented to the operating entity","The rent becomes the pension while the land stays in the family and stays farmed. This needs a defensible rent figure, which is exactly what county cash rent data provides."],
+          ["Machinery sold to the entity on terms","Converts equipment value into a predictable income stream without a lump-sum tax event."],
+          ["Off-farm income, deferred compensation, and life insurance","Fills the gap between what the operation can pay and what retirement actually costs."]].map(([h,b],k)=>(
+          <FindingBlock key={k} kind="o" tag={`OPTION ${k+1}`} heading={h}>
+            <p style={{ fontSize:13.5, color:T.fgM, margin:0, lineHeight:1.6 }}>{b}</p>
+          </FindingBlock>
+        ))}
+        {legRow("Which of these is worth exploring, and what is your reaction to the rest?",
+          <textarea style={inputStyle({ minHeight:70 })} value={v("structureNotes")} onChange={set("structureNotes")} placeholder="" />)}
+        <label style={{ display:"flex", alignItems:"center", gap:9, marginTop:6, cursor:"pointer", fontSize:13.5, color:T.fgM }}>
+          <input type="checkbox" checked={!!d.householdModelled} onChange={e=>setLegData({ householdModelled: e.target.checked })} />
+          We have actually run these numbers, not just estimated them
+        </label>
+      </div>
+    </div>
+  );
+}
+
+// ── Stage 5 — Successor readiness ────────────────────────────────────────────
+function LEG5({ leg, setLegData }) {
+  const d = leg.data || {};
+  const ex = d.exposure || {};
+  const toggle = (id) => setLegData({ exposure:{ ...ex, [id]: !ex[id] } });
+  const gaps = SUCCESSOR_EXPOSURE.filter(s => !ex[s.id]);
+  const done = SUCCESSOR_EXPOSURE.length - gaps.length;
+  return (
+    <div>
+      <Head eyebrow="Legacy · Stage 5" title="Successor readiness" sub="An exposure checklist, not a competence judgement. The question is only whether they have done a thing yet, and every unchecked box is a specific decision to hand over this year." />
+      <Flag type="info">This is a curriculum, not a report card. The senior generation is being asked to hand over specific decisions, which is a much easier ask than handing over "management".</Flag>
+      <div style={cardStyle()}>
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12, gap:12, flexWrap:"wrap" }}>
+          <div style={cardLblStyle({ marginBottom:0 })}>Has the successor independently</div>
+          <span style={{ fontSize:11.5, color:T.fgS }}>{done} of {SUCCESSOR_EXPOSURE.length} done</span>
+        </div>
+        {SUCCESSOR_EXPOSURE.map(s => {
+          const on = !!ex[s.id];
+          return (
+            <label key={s.id} style={{ display:"flex", alignItems:"center", gap:11, padding:"10px 0", borderBottom:`1px solid ${T.div}`, cursor:"pointer" }}>
+              <input type="checkbox" checked={on} onChange={()=>toggle(s.id)} />
+              <span style={{ fontSize:14, color:on?T.fgS:T.fg, textDecoration:on?"line-through":"none" }}>{s.label}</span>
+              {!on && <span style={{ ...pillStyle("watch"), marginLeft:"auto" }}>hand over</span>}
+            </label>
+          );
+        })}
+      </div>
+      {gaps.length > 0 && (
+        <div style={cardStyle({ borderTop:`4px solid ${T.blue}` })}>
+          <div style={cardLblStyle()}>The management handover list</div>
+          <div style={{ fontSize:12.5, color:T.fgM, marginBottom:12 }}>{gaps.length === 1 ? "One item" : `${gaps.length} items`} to work through. Pick the top two for this year rather than trying to move all of them.</div>
+          <ol style={{ margin:0, paddingLeft:20, fontSize:14, color:T.fgM, lineHeight:1.8 }}>
+            {gaps.map(g => <li key={g.id}>{g.label.replace(/^/, "This year: ")}</li>)}
+          </ol>
+        </div>
+      )}
+      {gaps.length === 0 && done > 0 && (
+        <Flag type="ok">The successor has independent exposure across all seven. Management transfer is real rather than nominal, which puts the ownership conversation genuinely within reach.</Flag>
+      )}
+      <div style={cardStyle()}>
+        {legRow("What is the last significant decision the successor made that you disagreed with, and what happened?",
+          <textarea style={inputStyle({ minHeight:74 })} value={d.disagreement || ""} onChange={e=>setLegData({ disagreement:e.target.value })} placeholder="" />,
+          "How this went tells you more about readiness than any checklist.")}
+        {legRow("Which decision would you find hardest to hand over?",
+          <textarea style={inputStyle({ minHeight:64 })} value={d.hardestToHand || ""} onChange={e=>setLegData({ hardestToHand:e.target.value })} placeholder="" />)}
+      </div>
+    </div>
+  );
+}
+
+// ── Stage 6 — Who knows what ─────────────────────────────────────────────────
+function LEG6({ leg, setLegData }) {
+  const d = leg.data || {};
+  const k = d.knows || {};
+  const setK = (id, val) => setLegData({ knows:{ ...k, [id]: val } });
+  const unvoiced = KNOWS_WHAT.filter(p => (k[p.id] === 0 || k[p.id] === 1));
+  return (
+    <div>
+      <Head eyebrow="Legacy · Stage 6" title="Who actually knows what" sub="The most common regret in farm succession is an assumption nobody voiced. One person assumed they would inherit the home place, the other assumed it would be bought, and neither asked for twenty years." />
+      <div style={cardStyle()}>
+        <div style={cardLblStyle()}>Where each person actually stands</div>
+        {KNOWS_WHAT.map(p => (
+          <div key={p.id} style={{ padding:"11px 0", borderBottom:`1px solid ${T.div}` }}>
+            <div style={{ fontSize:14, color:T.fg, marginBottom:7 }}>{p.label}</div>
+            <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
+              {KNOWS_LEVEL.map((lab,idx) => {
+                const on = k[p.id] === idx;
+                return (
+                  <button key={idx} onClick={()=>setK(p.id, idx)}
+                    style={{ background:on?T.navy:"#fff", color:on?"#fff":T.fgM, border:`1px solid ${on?T.navy:T.border}`, borderRadius:4, padding:"5px 11px", fontSize:12, cursor:"pointer", font:"inherit", fontWeight:on?600:400 }}>
+                    {lab}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </div>
+      <div style={cardStyle()}>
+        <div style={cardLblStyle()}>Two groups that get left out</div>
+        <FindingBlock kind="w" tag="SPOUSES" heading="Both generations, and they hold enormous influence" source="Frequently no seat at the table until something goes wrong">
+          <p style={{ fontSize:13.5, color:T.fgM, margin:0, lineHeight:1.6 }}>A plan the spouses have not agreed to is not a plan. This is the most common place a settled arrangement comes apart.</p>
+        </FindingBlock>
+        <FindingBlock kind="w" tag="OFF-FARM SIBLINGS" heading="Expectations stay unexamined until they are a problem" source="The most common source of family blowups in transition">
+          <p style={{ fontSize:13.5, color:T.fgM, margin:0, lineHeight:1.6 }}>They are usually not asked because the conversation is uncomfortable and they are not involved day to day. That is precisely why their assumptions go unchecked the longest.</p>
+        </FindingBlock>
+      </div>
+      <div style={cardStyle()}>
+        {legRow("What have you deliberately not talked about?",
+          <textarea style={inputStyle({ minHeight:74 })} value={d.notDiscussed || ""} onChange={e=>setLegData({ notDiscussed:e.target.value })} placeholder="" />,
+          "What has been avoided is usually more diagnostic than what has been decided.")}
+        {legRow("Is there an assumption you are making that you have never confirmed?",
+          <textarea style={inputStyle({ minHeight:64 })} value={d.assumption || ""} onChange={e=>setLegData({ assumption:e.target.value })} placeholder="" />)}
+      </div>
+      {unvoiced.length > 0 && (
+        <Flag type="warn">{unvoiced.length === 1 ? "One group" : `${unvoiced.length} groups`} still sit at unvoiced or assumed: {unvoiced.map(p=>p.label.toLowerCase()).join(", ")}. Until those move, the ownership conversation rests on guesses.</Flag>
+      )}
+    </div>
+  );
+}
+
+// ── Stage 7 — Fair is not equal ──────────────────────────────────────────────
+function LEG7({ leg, setLegData }) {
+  const d = leg.data || {};
+  const chosen = d.fairApproaches || {};
+  const toggle = (id) => setLegData({ fairApproaches:{ ...chosen, [id]: !chosen[id] } });
+  const para = d.fairParagraph || "";
+  return (
+    <div>
+      <Head eyebrow="Legacy · Stage 7" title="Fair is not equal" sub="One heir farms and three do not. Land is both the family's wealth and the business's means of production, so dividing it equally destroys the thing everyone says they want to preserve." />
+      <div style={cardStyle()}>
+        <div style={cardLblStyle()}>Approaches families use</div>
+        <div style={{ fontSize:12.5, color:T.fgM, marginBottom:14 }}>Presented, not recommended. Mark any worth exploring. Which one fits is a question for your attorney and accountant.</div>
+        {FAIR_APPROACHES.map(a => {
+          const on = !!chosen[a.id];
+          return (
+            <div key={a.id} onClick={()=>toggle(a.id)} style={{ border:`1px solid ${on?T.moss:T.border}`, background:on?T.greenL:"#fff", borderRadius:8, padding:"12px 15px", marginBottom:9, cursor:"pointer" }}>
+              <div style={{ display:"flex", alignItems:"center", gap:9, marginBottom:4 }}>
+                <input type="checkbox" checked={on} onChange={()=>toggle(a.id)} onClick={e=>e.stopPropagation()} />
+                <span style={{ fontSize:14.5, fontWeight:600, color:on?T.dgreen:T.fg }}>{a.label}</span>
+              </div>
+              <p style={{ fontSize:13, color:T.fgM, margin:"0 0 0 27px", lineHeight:1.6 }}>{a.body}</p>
+            </div>
+          );
+        })}
+      </div>
+      <div style={cardStyle({ borderTop:`4px solid ${T.navy}` })}>
+        <div style={cardLblStyle()}>The actual deliverable</div>
+        <p style={{ fontSize:14, color:T.fgM, marginTop:0, lineHeight:1.6 }}>Not an instrument. A paragraph. In your own words, why unequal is fair. This is the thing that either holds the family together or does not, and a plan the off-farm children first hear about at the reading of the will is a lawsuit.</p>
+        <textarea style={inputStyle({ minHeight:130, fontSize:14.5, lineHeight:1.7 })} value={para} onChange={e=>setLegData({ fairParagraph:e.target.value })} placeholder="Write it as if you were saying it to all of your children at the same table. Because eventually you will be." />
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", gap:12, marginTop:8, flexWrap:"wrap" }}>
+          <span style={{ fontSize:11.5, color:T.fgS }}>{para.trim() ? `${para.trim().split(/\s+/).length} words` : "Nothing written yet"}</span>
+          <label style={{ display:"flex", alignItems:"center", gap:8, fontSize:13, color:T.fgM, cursor:"pointer" }}>
+            <input type="checkbox" checked={!!d.fairSaid} onChange={e=>setLegData({ fairSaid:e.target.checked })} />
+            I have actually said this to them
+          </label>
+        </div>
+      </div>
+      {para.trim().length > 40 && !d.fairSaid && (
+        <Flag type="warn">Written but not said. The paragraph does its work in the room, not in the file. This is the step families most often stop one short of.</Flag>
+      )}
+    </div>
+  );
+}
+
+// ── Stage 8 — Triggers & contingencies ───────────────────────────────────────
+function LEG8({ leg, setLegData }) {
+  const d = leg.data || {};
+  const c = d.contingency || {};
+  const set = (id) => (e) => setLegData({ contingency:{ ...c, [id]: e.target.value } });
+  return (
+    <div>
+      <Head eyebrow="Legacy · Stage 8" title="Triggers and contingencies" sub="Plans without dates do not happen, and plans that only work if everyone stays healthy until seventy-five are not plans." />
+      <div style={cardStyle()}>
+        <div style={cardLblStyle()}>Target dates</div>
+        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16 }}>
+          {legRow("When should management transfer be complete?", <input style={inputStyle()} value={d.dateManagement||""} onChange={e=>setLegData({ dateManagement:e.target.value })} placeholder="A year, or a triggering event" />)}
+          {legRow("When should ownership transfer begin?", <input style={inputStyle()} value={d.dateOwnership||""} onChange={e=>setLegData({ dateOwnership:e.target.value })} placeholder="A year, or a triggering event" />)}
+        </div>
+      </div>
+      {CONTINGENCIES.map(sc => (
+        <div key={sc.id} style={cardStyle(sc.weight ? { borderLeft:`3px solid ${T.amber}` } : {})}>
+          <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:4, flexWrap:"wrap" }}>
+            <span style={{ fontSize:16, fontWeight:600, color:T.navy }}>{sc.label}</span>
+            {sc.weight && <span style={pillStyle("watch")}>weight this heavily</span>}
+          </div>
+          <p style={{ fontSize:12.5, color:T.fgM, margin:"0 0 11px", lineHeight:1.6 }}>{sc.note}</p>
+          <textarea style={inputStyle({ minHeight:64 })} value={c[sc.id]||""} onChange={set(sc.id)} placeholder="What happens to the operation, and who does what?" />
+        </div>
+      ))}
+      <Flag type="info">One factual point worth knowing, and a reason to get sequencing advice before moving anything: inherited land receives a stepped-up basis, and gifting appreciated farmland during life can be considerably worse than letting it pass at death, because the heir loses the step-up and inherits the capital gains exposure. Families who start transferring land early to be safe sometimes cost themselves a great deal. This is a reason to ask your accountant about order of operations, not advice about what to do.</Flag>
+    </div>
+  );
+}
+
+// ── Stage 9 — Rented ground & relationships ──────────────────────────────────
+function LEG9({ leg, setLegData }) {
+  const d = leg.data || {};
+  const ll = d.landlords || [];
+  const setLL = (i, field, val) => { const next = ll.map((x,k)=>k===i?{...x,[field]:val}:x); setLegData({ landlords:next }); };
+  const add = () => setLegData({ landlords:[...ll, { name:"", acres:"", written:"", relationship:"", met:"" }] });
+  const remove = (i) => setLegData({ landlords: ll.filter((_,k)=>k!==i) });
+  const notMet = ll.filter(x => x.name && x.met === "no");
+  return (
+    <div>
+      <Head eyebrow="Legacy · Stage 9" title="Rented ground and relationships" sub="If a meaningful share of the operation is rented, its viability rests on leases and relationships that do not transfer automatically. They are personal, often built over decades, and a successor who has never met the landlords can lose the acres." />
+      <div style={cardStyle()}>
+        {legRow("Roughly what share of the operation is rented ground?",
+          <select style={inputStyle()} value={d.rentedShare||""} onChange={e=>setLegData({ rentedShare:e.target.value })}>
+            <option value="">Select</option>
+            <option value="none">None, all owned</option>
+            <option value="under25">Under a quarter</option>
+            <option value="25to50">A quarter to half</option>
+            <option value="50to75">Half to three quarters</option>
+            <option value="over75">More than three quarters</option>
+          </select>)}
+        {(d.rentedShare === "over75" || d.rentedShare === "50to75") && (
+          <Flag type="warn">At this share, the leases are the business. A transition plan that covers the owned ground and not the rented relationships covers the smaller half of the operation.</Flag>
+        )}
+      </div>
+      {d.rentedShare && d.rentedShare !== "none" && (
+        <div style={cardStyle()}>
+          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12, gap:12, flexWrap:"wrap" }}>
+            <div style={cardLblStyle({ marginBottom:0 })}>Your landlords</div>
+            <button onClick={add} style={{ ...btnStyle("outline"), fontSize:12, padding:"6px 13px" }}>+ Add a landlord</button>
+          </div>
+          {ll.length === 0 && <p style={{ fontSize:13.5, color:T.fgS, fontStyle:"italic", margin:0 }}>None added yet. Even a partial list is useful, and the ones you hesitate over are usually the important ones.</p>}
+          {ll.map((x,i) => (
+            <div key={i} style={{ border:`1px solid ${T.border}`, borderRadius:8, padding:"13px 15px", marginBottom:10 }}>
+              <div style={{ display:"grid", gridTemplateColumns:"2fr 1fr", gap:12, marginBottom:10 }}>
+                <input style={inputStyle()} value={x.name} onChange={e=>setLL(i,"name",e.target.value)} placeholder="Landlord name" />
+                <input style={inputStyle()} value={x.acres} onChange={e=>setLL(i,"acres",e.target.value)} placeholder="Acres" />
+              </div>
+              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:12 }}>
+                <select style={inputStyle()} value={x.written} onChange={e=>setLL(i,"written",e.target.value)}>
+                  <option value="">Lease in writing?</option>
+                  <option value="written">Written lease</option>
+                  <option value="handshake">Handshake</option>
+                </select>
+                <select style={inputStyle()} value={x.relationship} onChange={e=>setLL(i,"relationship",e.target.value)}>
+                  <option value="">Whose relationship?</option>
+                  <option value="senior">Senior generation's</option>
+                  <option value="both">Both generations</option>
+                  <option value="successor">Successor's</option>
+                </select>
+                <select style={inputStyle()} value={x.met} onChange={e=>setLL(i,"met",e.target.value)}>
+                  <option value="">Successor met them?</option>
+                  <option value="yes">Yes, knows them</option>
+                  <option value="briefly">Met once or twice</option>
+                  <option value="no">Never met</option>
+                </select>
+              </div>
+              <button onClick={()=>remove(i)} style={{ ...btnStyle("ghost"), marginTop:9, fontSize:11.5 }}>Remove</button>
+            </div>
+          ))}
+        </div>
+      )}
+      {notMet.length > 0 && (
+        <div style={cardStyle({ borderTop:`4px solid ${T.moss}` })}>
+          <div style={cardLblStyle()}>Landlord introduction list</div>
+          <div style={{ fontSize:12.5, color:T.fgM, marginBottom:12 }}>Concrete transition work that costs nothing and is almost universally skipped. Take the successor along to each of these before the next lease renewal.</div>
+          <ol style={{ margin:0, paddingLeft:20, fontSize:14, color:T.fgM, lineHeight:1.8 }}>
+            {notMet.map((x,i) => <li key={i}>{x.name}{x.acres ? ` · ${x.acres} acres` : ""}{x.written === "handshake" ? " · handshake lease, worth putting in writing at the same time" : ""}</li>)}
+          </ol>
+        </div>
+      )}
+    </div>
+  );
+}
+
+
+// ── Stage 11 — Parcels and land valuation ────────────────────────────────────
+function LEG11({ leg, setLegData, profile }) {
+  const d = leg.data || {};
+  const parcels = d.parcels || [];
+  const tierKey = legacyTier(leg);
+  const ready = tierKey === "structural" || tierKey === "execution";
+  const [open, setOpen] = useState(null);
+
+  const setP = (i, field, val) => setLegData({ parcels: parcels.map((x,k)=>k===i?{...x,[field]:val}:x) });
+  const add = () => { setLegData({ parcels:[...parcels, { label:"", state:(profile?.location||"").slice(-2).toUpperCase(), county:"", landClass:"dryland", deededAcres:"", tillableAcres:"", nccpi:"", irrigated:"", waterRight:"", useValue:"", boundary:"acreage" }] }); setOpen(parcels.length); };
+  const remove = (i) => setLegData({ parcels: parcels.filter((_,k)=>k!==i) });
+
+  const results = parcels.map(valueParcel);
+  const totalMid = results.reduce((s,r,i) => s + (parseFloat(parcels[i].overrideValue) || r.mid || 0), 0);
+  const needAppraisal = results.filter(r => r.requiresAppraisal).length;
+  const noBoundary = parcels.filter(p => !p.nccpi).length;
+
+  const confPill = (c) => c==="High" ? "strong" : c==="Medium" ? "watch" : c==="Refer" ? "info" : "vuln";
+
+  return (
+    <div>
+      <Head eyebrow="Legacy · Stage 11" title="Parcels and land valuation" sub="A value for every parcel the family owns. That number flows into estate size, buy-sell funding, insurance sizing, and the equalisation maths between heirs, so if it is wrong everything downstream is wrong." />
+
+      {!ready && (
+        <Flag type="warn">The readiness stages put this family at {READINESS_TIERS[tierKey].label.toLowerCase()}. You can value parcels here, but the numbers will sit in front of decisions that have not been made yet. {READINESS_TIERS[tierKey].rec}</Flag>
+      )}
+
+      <Flag type="danger">These are planning estimates, not qualified appraisals. Estate and gift tax filings require a qualified appraisal. No use-value or assessed figure appears anywhere in this module as an asset value, because those are tax figures and routinely sit thirty to eighty percent below market.</Flag>
+
+      <div style={cardStyle({ borderTop:`4px solid ${T.amber}` })}>
+        <div style={cardLblStyle()}>Before you trust these numbers</div>
+        <p style={{ fontSize:13.5, color:T.fgM, margin:"0 0 10px", lineHeight:1.6 }}>The benchmark values behind this engine are <b>placeholders</b>, not USDA figures. Live SSURGO soil queries and the NASS land value and cash rent series belong in a scheduled ingestion job writing to our own table, which needs a backend this app does not have yet.</p>
+        <p style={{ fontSize:13.5, color:T.fgM, margin:0, lineHeight:1.6 }}>Every benchmark, cash rent, and cap rate below is editable per parcel. Provenance records whether each figure came from the placeholder table or from you, so a placeholder can never be mistaken for a survey figure.</p>
+      </div>
+
+      <div style={cardStyle()}>
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", gap:12, flexWrap:"wrap", marginBottom:12 }}>
+          <div style={cardLblStyle({ marginBottom:0 })}>Parcels</div>
+          <button onClick={add} style={{ ...btnStyle("outline"), fontSize:12, padding:"6px 13px" }}>+ Add a parcel</button>
+        </div>
+        {parcels.length === 0 && <p style={{ fontSize:13.5, color:T.fgS, fontStyle:"italic", margin:0 }}>No parcels yet. Add the ground the family owns, one parcel per deed where you can.</p>}
+
+        {parcels.map((p,i) => {
+          const r = results[i];
+          const isOpen = open === i;
+          const override = parseFloat(p.overrideValue) || null;
+          return (
+            <div key={i} style={{ border:`1px solid ${r.requiresAppraisal?T.amber:T.border}`, borderRadius:9, marginBottom:11, overflow:"hidden" }}>
+              <div onClick={()=>setOpen(isOpen?null:i)} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", gap:12, padding:"12px 15px", cursor:"pointer", background:isOpen?T.bgAlt:"#fff", flexWrap:"wrap" }}>
+                <div>
+                  <div style={{ fontSize:14.5, fontWeight:600, color:T.navy }}>{p.label || `Parcel ${i+1}`}</div>
+                  <div style={{ fontSize:12, color:T.fgS }}>{r.cls.label}{p.deededAcres?` · ${p.deededAcres} acres`:""}{p.state?` · ${p.state}`:""}</div>
+                </div>
+                <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+                  <span style={pillStyle(confPill(r.confidence))}>{r.confidence}</span>
+                  <span style={{ fontSize:16, fontWeight:600, color:override?T.blue:T.navy }}>
+                    {override ? fmt$(override) : r.mid ? fmt$(r.mid) : "—"}
+                  </span>
+                </div>
+              </div>
+
+              {isOpen && (
+                <div style={{ padding:"14px 15px", borderTop:`1px solid ${T.border}` }}>
+                  <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:12, marginBottom:12 }}>
+                    <div><label style={labelStyle}>Label</label><input style={inputStyle()} value={p.label} onChange={e=>setP(i,"label",e.target.value)} placeholder="Home place, north 80" /></div>
+                    <div><label style={labelStyle}>State</label>
+                      <select style={inputStyle()} value={p.state} onChange={e=>setP(i,"state",e.target.value)}>
+                        <option value="">Select</option>
+                        {BENCH_STATES.map(s=><option key={s} value={s}>{s}</option>)}
+                      </select></div>
+                    <div><label style={labelStyle}>County</label><input style={inputStyle()} value={p.county} onChange={e=>setP(i,"county",e.target.value)} /></div>
+                  </div>
+
+                  <div style={{ marginBottom:12 }}>
+                    <label style={labelStyle}>Land class</label>
+                    <select style={inputStyle()} value={p.landClass} onChange={e=>setP(i,"landClass",e.target.value)}>
+                      {LAND_CLASSES.map(c=><option key={c.id} value={c.id}>{c.label}</option>)}
+                    </select>
+                    <div style={{ fontSize:11.5, color:T.fgS, marginTop:5, fontStyle:"italic" }}>{r.cls.note}</div>
+                  </div>
+
+                  <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:12, marginBottom:12 }}>
+                    <div><label style={labelStyle}>Deeded acres</label><input type="number" style={inputStyle()} value={p.deededAcres} onChange={e=>setP(i,"deededAcres",e.target.value)} /></div>
+                    <div><label style={labelStyle}>Tillable acres</label><input type="number" style={inputStyle()} value={p.tillableAcres} onChange={e=>setP(i,"tillableAcres",e.target.value)} /></div>
+                    <div><label style={labelStyle}>Productivity index</label><input type="number" step="0.01" min="0" max="1" style={inputStyle()} value={p.nccpi} onChange={e=>setP(i,"nccpi",e.target.value)} placeholder="state mean" />
+                      <div style={{ fontSize:11, color:T.fgS, marginTop:4 }}>NCCPI 0 to 1. Blank uses the state mean.</div></div>
+                  </div>
+
+                  <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:12, marginBottom:12 }}>
+                    <div><label style={labelStyle}>Irrigated</label>
+                      <select style={inputStyle()} value={p.irrigated} onChange={e=>setP(i,"irrigated",e.target.value)}>
+                        <option value="">Unknown</option><option value="yes">Yes</option><option value="no">No</option></select></div>
+                    <div><label style={labelStyle}>Water right</label>
+                      <select style={inputStyle()} value={p.waterRight} onChange={e=>setP(i,"waterRight",e.target.value)}>
+                        <option value="">Unknown</option><option value="conveyed">Conveys with the land</option>
+                        <option value="separate">Separately held</option><option value="na">Not applicable</option></select></div>
+                    <div><label style={labelStyle}>Use-value enrolled</label>
+                      <select style={inputStyle()} value={p.useValue} onChange={e=>setP(i,"useValue",e.target.value)}>
+                        <option value="">Unknown</option><option value="yes">Yes</option><option value="no">No</option></select></div>
+                  </div>
+
+                  {p.landClass === "crp" && (
+                    <div style={{ marginBottom:12 }}><label style={labelStyle}>CRP contract payment per acre</label>
+                      <input type="number" style={inputStyle()} value={p.crpPayment||""} onChange={e=>setP(i,"crpPayment",e.target.value)} placeholder="$ per acre per year" /></div>
+                  )}
+
+                  <details style={{ marginBottom:12 }}>
+                    <summary style={{ fontSize:12.5, color:T.blue, cursor:"pointer", marginBottom:8 }}>Override the benchmark figures for this parcel</summary>
+                    <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:12, marginTop:8 }}>
+                      <div><label style={labelStyle}>Value per acre</label><input type="number" style={inputStyle()} value={p.benchOverride||""} onChange={e=>setP(i,"benchOverride",e.target.value)} placeholder={r.provenance.benchmark ? String(Math.round(r.provenance.benchmark)) : ""} /></div>
+                      <div><label style={labelStyle}>Cash rent per acre</label><input type="number" style={inputStyle()} value={p.rentOverride||""} onChange={e=>setP(i,"rentOverride",e.target.value)} placeholder={r.provenance.cashRent ? String(Math.round(r.provenance.cashRent)) : ""} /></div>
+                      <div><label style={labelStyle}>Cap rate %</label><input type="number" step="0.1" style={inputStyle()} value={p.capOverride||""} onChange={e=>setP(i,"capOverride",e.target.value)} placeholder={r.provenance.capRate ? (r.provenance.capRate*100).toFixed(2) : ""} /></div>
+                    </div>
+                  </details>
+
+                  {/* the two methods and their divergence */}
+                  {r.requiresAppraisal && r.why && !r.methodA ? (
+                    <Flag type="warn">{r.why}</Flag>
+                  ) : (
+                    <div style={{ background:T.bgAlt, borderRadius:8, padding:"13px 15px", marginBottom:12 }}>
+                      <div style={{ fontSize:10.5, letterSpacing:"0.13em", textTransform:"uppercase", color:T.fgS, marginBottom:10 }}>Two methods, compared</div>
+                      <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:12 }}>
+                        {[["Market comparison", r.methodA, "Benchmark per acre, indexed by soil productivity"],
+                          ["Income capitalisation", r.methodB, "County cash rent divided by the cap rate"],
+                          ["Divergence", r.divergence!=null ? Math.round(r.divergence*100)+"%" : null, "How far apart the two methods land"]].map(([lab,val,sub],k)=>(
+                          <div key={k}>
+                            <div style={{ fontSize:11, color:T.fgS, marginBottom:3 }}>{lab}</div>
+                            <div style={{ fontSize:17, fontWeight:600, color:k===2?(r.divergence>0.35?T.red:r.divergence>0.15?T.amberT:T.dgreen):T.navy }}>
+                              {k===2 ? (val||"—") : (val ? fmt$(val) : "not run")}
+                            </div>
+                            <div style={{ fontSize:10.5, color:T.fgS, marginTop:3, lineHeight:1.4 }}>{sub}</div>
+                          </div>
+                        ))}
+                      </div>
+                      {r.mid && (
+                        <div style={{ marginTop:12, paddingTop:11, borderTop:`1px solid ${T.border}` }}>
+                          <div style={{ fontSize:11, color:T.fgS, marginBottom:3 }}>Working range</div>
+                          <div style={{ fontSize:15, color:T.fg }}>{fmt$(r.low)} to {fmt$(r.high)}, midpoint <b>{fmt$(r.mid)}</b></div>
+                        </div>
+                      )}
+                      {r.why && <div style={{ marginTop:11 }}><Flag type="warn">{r.why}</Flag></div>}
+                      {r.divergence === 0 && r.methodB && (
+                        <div style={{ marginTop:9, fontSize:11.5, color:T.fgS, fontStyle:"italic" }}>
+                          Zero divergence here is a limitation, not a result. At state-average productivity with a derived cap rate, the two methods reduce to the same expression. The check only does real work once soil differs from the state mean or a benchmark is overridden.
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {p.waterRight === "separate" && (
+                    <Flag type="warn">The water right on this parcel is held separately from the land. A family dividing ground among heirs can strand the water on the wrong parcel. This module flags it and does not value it. Take it to counsel.</Flag>
+                  )}
+                  {p.useValue === "yes" && (
+                    <Flag type="info">This parcel is enrolled in current-use assessment. Transfer can trigger rollback or recoupment, which varies by state and routinely blindsides families. The tax bill's figure is not the estate's figure.</Flag>
+                  )}
+
+                  <div style={{ display:"grid", gridTemplateColumns:"1fr 2fr", gap:12, marginBottom:10 }}>
+                    <div><label style={labelStyle}>Override the value</label><input type="number" style={inputStyle()} value={p.overrideValue||""} onChange={e=>setP(i,"overrideValue",e.target.value)} placeholder="$ total" /></div>
+                    <div><label style={labelStyle}>Reason for the override</label><input style={inputStyle()} value={p.overrideReason||""} onChange={e=>setP(i,"overrideReason",e.target.value)} placeholder="Required. An appraisal, a recent offer, a known sale next door." /></div>
+                  </div>
+
+                  <details>
+                    <summary style={{ fontSize:12.5, color:T.blue, cursor:"pointer" }}>Provenance, every input and where it came from</summary>
+                    <div style={{ marginTop:9, background:"#fff", border:`1px solid ${T.border}`, borderRadius:6, padding:"11px 13px" }}>
+                      {Object.entries(r.provenance).filter(([,v])=>v!==null&&v!==undefined).map(([k,v])=>(
+                        <div key={k} style={{ display:"flex", gap:10, fontSize:11.5, padding:"3px 0", borderBottom:`1px dashed ${T.div}` }}>
+                          <span style={{ width:170, color:T.fgS, flexShrink:0 }}>{k}</span>
+                          <span style={{ color:T.fg }}>{typeof v === "number" ? (v<1 && v>0 ? v.toFixed(4) : Math.round(v).toLocaleString()) : String(v)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </details>
+
+                  <button onClick={()=>remove(i)} style={{ ...btnStyle("ghost"), marginTop:11, fontSize:11.5 }}>Remove this parcel</button>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {parcels.length > 0 && (
+        <div style={cardStyle({ borderTop:`4px solid ${T.navy}` })}>
+          <div style={cardLblStyle()}>Portfolio</div>
+          <div style={{ display:"flex", gap:26, flexWrap:"wrap", marginBottom:14 }}>
+            {[["Parcels", parcels.length],
+              ["Total acres", parcels.reduce((s,p)=>s+(parseFloat(p.deededAcres)||0),0).toLocaleString()],
+              ["Working value", fmt$(totalMid)],
+              ["Need an appraisal", needAppraisal]].map(([lab,val],k)=>(
+              <div key={k}>
+                <div style={{ fontSize:11, color:T.fgS, marginBottom:3 }}>{lab}</div>
+                <div style={{ fontSize:21, fontWeight:600, color:k===3&&needAppraisal>0?T.amberT:T.navy }}>{val}</div>
+              </div>
+            ))}
+          </div>
+          {needAppraisal > 0 && <Flag type="warn">{needAppraisal === 1 ? "One parcel needs" : `${needAppraisal} parcels need`} professional appraisal before the number is usable in a plan. That is the engine working, not failing.</Flag>}
+          {noBoundary > 0 && <Flag type="info">{noBoundary === 1 ? "One parcel is" : `${noBoundary} parcels are`} using the state mean productivity index because no soil index was entered. Adding a real index is the single biggest improvement available to these estimates.</Flag>}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Stage 10 — Where this leaves you ─────────────────────────────────────────
+function LEG10({ leg, profile }) {
+  const d = leg.data || {};
+  const tierKey = legacyTier(leg);
+  const tier = READINESS_TIERS[tierKey];
+  const t = d.transfers || {};
+  const gaps = SUCCESSOR_EXPOSURE.filter(s => !(d.exposure||{})[s.id]);
+  const notMet = (d.landlords||[]).filter(x => x.name && x.met === "no");
+  const unvoiced = KNOWS_WHAT.filter(p => ((d.knows||{})[p.id] === 0 || (d.knows||{})[p.id] === 1));
+  const ready = tierKey === "structural" || tierKey === "execution";
+
+  const H = ({children}) => <div style={{ fontSize:11, letterSpacing:"0.13em", textTransform:"uppercase", color:T.fgS, margin:"24px 0 11px", paddingBottom:6, borderBottom:`1px solid ${T.border}` }}>{children}</div>;
+
+  return (
+    <div>
+      <Head eyebrow="Legacy · Stage 10" title="Where this leaves you" sub="Not a plan. A readiness profile, and a sequenced list of what to actually do next." />
+
+      <div style={cardStyle({ borderTop:`4px solid ${tierKey==="execution"?T.moss:tierKey==="conversation"?T.red:T.amber}` })}>
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", gap:12, flexWrap:"wrap", marginBottom:10 }}>
+          <div style={{ fontSize:22, fontWeight:600, color:T.navy }}>{tier.label}</div>
+          <span style={pillStyle(tier.pill)}>{tierKey}</span>
+        </div>
+        <p style={{ fontSize:14, color:T.fgM, margin:"0 0 12px", lineHeight:1.6 }}>{tier.signal}</p>
+        <div style={{ borderLeft:`2px solid ${T.blue}`, background:T.blueL, borderRadius:"0 5px 5px 0", padding:"12px 15px" }}>
+          <div style={{ fontSize:10, letterSpacing:"0.12em", fontWeight:600, color:T.blue, marginBottom:5 }}>WHAT TO DO NEXT</div>
+          <p style={{ fontSize:13.5, color:T.navy, margin:0, lineHeight:1.6 }}>{tier.rec}</p>
+        </div>
+        <p style={{ fontSize:12, color:T.fgS, marginTop:12, marginBottom:0, fontStyle:"italic" }}>This describes where the process is, not the people in it.</p>
+      </div>
+
+      <div style={cardStyle()}>
+        <H>The three transfers, today</H>
+        {TRANSFERS.map((tr,k) => {
+          const now = Number((t[tr.id]||{}).now || 0), y10 = Number((t[tr.id]||{}).y10 || 0);
+          return (
+            <div key={tr.id} style={{ display:"flex", alignItems:"center", gap:12, padding:"8px 0", borderBottom:`1px dashed ${T.border}` }}>
+              <span style={{ width:110, fontSize:13.5, fontWeight:600, color:T.fg, flexShrink:0 }}>{tr.label}</span>
+              <div style={{ flex:1, height:8, background:"#dde1e8", borderRadius:4, overflow:"hidden", position:"relative" }}>
+                <div style={{ width:`${now}%`, height:"100%", background:[T.moss,T.blue,T.navy][k], borderRadius:4 }} />
+              </div>
+              <span style={{ width:150, textAlign:"right", fontSize:12.5, color:T.fgM, flexShrink:0 }}>{now}% now, {y10}% at ten years</span>
+            </div>
+          );
+        })}
+
+        {gaps.length > 0 && (<>
+          <H>Management to hand over</H>
+          <ol style={{ margin:0, paddingLeft:20, fontSize:14, color:T.fgM, lineHeight:1.8 }}>
+            {gaps.slice(0,3).map(g => <li key={g.id}>{g.label}</li>)}
+          </ol>
+          {gaps.length > 3 && <p style={{ fontSize:12.5, color:T.fgS, marginTop:8, marginBottom:0 }}>Plus {gaps.length-3} more. Two per year is a realistic pace.</p>}
+        </>)}
+
+        {unvoiced.length > 0 && (<>
+          <H>Conversations not yet had</H>
+          <ul style={{ margin:0, paddingLeft:20, fontSize:14, color:T.fgM, lineHeight:1.8 }}>
+            {unvoiced.map(p => <li key={p.id}>{p.label}</li>)}
+          </ul>
+        </>)}
+
+        {d.nextChapterRole && (<>
+          <H>The senior generation's ongoing role</H>
+          <div style={{ borderLeft:`2px solid ${T.moss}`, background:T.greenL, borderRadius:"0 5px 5px 0", padding:"12px 15px", fontSize:13.5, color:T.fg, lineHeight:1.6 }}>{d.nextChapterRole}</div>
+        </>)}
+
+        {(d.fairParagraph||"").trim() && (<>
+          <H>Why unequal is fair, in their words</H>
+          <div style={{ borderLeft:`2px solid ${T.navy}`, background:T.bgAlt, borderRadius:"0 5px 5px 0", padding:"12px 15px", fontSize:13.5, color:T.fg, lineHeight:1.7 }}>{d.fairParagraph}</div>
+          {!d.fairSaid && <p style={{ fontSize:12.5, color:T.amberT, marginTop:8, marginBottom:0 }}>Written but not yet said out loud.</p>}
+        </>)}
+
+        {notMet.length > 0 && (<>
+          <H>Landlords to introduce</H>
+          <ul style={{ margin:0, paddingLeft:20, fontSize:14, color:T.fgM, lineHeight:1.8 }}>
+            {notMet.map((x,i) => <li key={i}>{x.name}{x.acres?` · ${x.acres} acres`:""}</li>)}
+          </ul>
+        </>)}
+      </div>
+
+      <div style={cardStyle({ borderTop:`4px solid ${ready?T.moss:T.silver}` })}>
+        <div style={cardLblStyle()}>Asset inventory and valuation</div>
+        {ready ? (
+          <>
+            <p style={{ fontSize:14, color:T.fgM, marginTop:0, lineHeight:1.6 }}>The operating question has been tested far enough that the ownership question can be answered intelligently. Legacy Acres picks up here, and it opens with context rather than a blank form: which ground is operationally central, which is exposed to the fair-versus-equal problem, and which is rented out versus farmed.</p>
+            <a href="https://legacyacres.co/" target="_blank" rel="noopener noreferrer" style={{ ...btnStyle("primary"), display:"inline-block", textDecoration:"none" }}>Continue in Legacy Acres →</a>
+          </>
+        ) : (
+          <>
+            <Flag type="warn">Not yet. Filling out an asset inventory from here would produce a tidy document that changes nothing, and it is the most common way succession software gets opened once and abandoned.</Flag>
+            <p style={{ fontSize:14, color:T.fgM, marginBottom:0, lineHeight:1.6 }}>Work the recommendation above first. Come back to this page afterwards and the handoff will open on its own.</p>
+          </>
+        )}
+      </div>
+
+      <div style={cardStyle()}>
+        <div style={cardLblStyle()}>What this module does not do</div>
+        <ul style={{ margin:0, paddingLeft:20, fontSize:13.5, color:T.fgM, lineHeight:1.9 }}>
+          <li>No legal documents. No operating agreements, buy-sells, or wills.</li>
+          <li>No tax advice. Sequencing questions go to your accountant before assets move.</li>
+          <li>No scoring of your family. The tier above describes the process, never the people.</li>
+        </ul>
+      </div>
+    </div>
+  );
+}
+
 // ═════════════════════════════════════════════════════════════════════════════
 // ROOT APP
 // ═════════════════════════════════════════════════════════════════════════════
@@ -2944,24 +4745,29 @@ export default function App() {
   const [fa, setFA] = useState({ stage:1, enterprises:[], goals:{}, wholeFarm:{}, ratioVals:{}, s3vals:{ ...GENERIC_FARM_FINANCIALS }, s4bench:{}, s5:{}, actionChecked:{} });
   const [rd, setRD] = useState({ stage:1, data:{} });
   const [risk, setRisk] = useState({ stage:1, answers:{} });
+  const [leg, setLeg] = useState({ stage:1, data:{} });
+  const [riskConvo, setRiskConvo] = useState(false);
   const [profile, setProfile] = useState({ ...GENERIC_FARM_SWOT, ...GENERIC_FARM_STRATEGY });
 
   const setRData = (fn) => setRD(s => ({ ...s, data: fn(s.data||{}) }));
   const goFA = (n) => { setModule("fa"); setFA(s => ({ ...s, stage:n })); };
   const goRD = (n) => { setModule("rd"); setRD(s => ({ ...s, stage:n })); };
   const goRisk = (n) => { setModule("risk"); setRisk(s => ({ ...s, stage:n })); };
+  const goLegacy = (n) => { setModule("legacy"); setLeg(s => ({ ...s, stage:n })); };
+  const setLegData = (patch) => setLeg(s => ({ ...s, data:{ ...(s.data||{}), ...patch } }));
 
-  const isFA = module === "fa", isRD = module === "rd", isRisk = module === "risk", isProfile = module === "profile";
-  const faTotal = FA_STAGES.length, rdTotal = RD_STAGES.length, riskTotal = RISK_STAGES.length;
-  const stage = isFA ? fa.stage : isRD ? rd.stage : risk.stage;
-  const total = isFA ? faTotal : isRD ? rdTotal : riskTotal;
-  const stageDefs = isFA ? FA_STAGES : isRD ? RD_STAGES : RISK_STAGES;
+  const isFA = module === "fa", isRD = module === "rd", isRisk = module === "risk", isProfile = module === "profile", isLeg = module === "legacy";
+  const faTotal = FA_STAGES.length, rdTotal = RD_STAGES.length, riskTotal = RISK_STAGES.length, legTotal = LEG_STAGES.length;
+  const stage = isFA ? fa.stage : isRD ? rd.stage : isLeg ? leg.stage : risk.stage;
+  const total = isFA ? faTotal : isRD ? rdTotal : isLeg ? legTotal : riskTotal;
+  const stageDefs = isFA ? FA_STAGES : isRD ? RD_STAGES : isLeg ? LEG_STAGES : RISK_STAGES;
   const faPct = Math.round(Math.min(fa.stage,faTotal)/faTotal*100);
   const rdPct = Math.round(Math.min(rd.stage,rdTotal)/rdTotal*100);
   const riskPct = Math.round(Math.min(risk.stage,riskTotal)/riskTotal*100);
   const PROFILE_FIELDS = ["location","size","productionMix","ventures","grossIncome","nearTerm","longTerm","advantage","values","swotStrengths","swotWeaknesses","swotOpportunities","swotThreats"];
   const profilePct = Math.round((PROFILE_FIELDS.filter(f=>(profile[f]||"").trim()).length / PROFILE_FIELDS.length) * 100);
-  const pct = isFA ? faPct : isRD ? rdPct : riskPct;
+  const legPct = Math.round(Math.min(leg.stage,legTotal)/legTotal*100);
+  const pct = isFA ? faPct : isRD ? rdPct : isLeg ? legPct : riskPct;
 
   const canAdvance = useMemo(() => {
     if (isFA) { if (fa.stage===1) return fa.enterprises.length>0; if (fa.stage===2) { const g=fa.goals; return !!(g.trigger&&g.concern&&g.outcome); } return true; }
@@ -2977,18 +4783,26 @@ export default function App() {
 
   const chips = isFA ? fa.enterprises.map(e => ({ label: ENT[e]?ENT[e].label:e }))
     : isRD ? (rd.data.selectedOpps||[]).slice(0,3).map(id => { const o=OPPS.find(x=>x.id===id); return { label:o?o.label:id }; })
+    : isLeg ? [{ label: READINESS_TIERS[legacyTier(leg)].label }]
     : [{ label:`${riskAnsweredTotal}/32 answered` }];
 
-  let backLabel = "← Back"; let backDisabled = isRisk && risk.stage===1;
-  const onBack = () => { if (isFA) { if (fa.stage>1) goFA(fa.stage-1); else setModule("profile"); } else if (isRD) { if (rd.stage>1) goRD(rd.stage-1); else goFA(FA_STAGES.length); } else { if (risk.stage>1) goRisk(risk.stage-1); } };
+  let backLabel = "← Back"; let backDisabled = (isRisk && risk.stage===1) || (isLeg && leg.stage===1);
+  const onBack = () => { if (isFA) { if (fa.stage>1) goFA(fa.stage-1); else setModule("profile"); } else if (isRD) { if (rd.stage>1) goRD(rd.stage-1); else goFA(FA_STAGES.length); } else if (isLeg) { if (leg.stage>1) goLegacy(leg.stage-1); } else { if (risk.stage>1) goRisk(risk.stage-1); } };
   if (isFA && fa.stage===1) backLabel = "← Farm Profile";
   if (isRD && rd.stage===1) backLabel = "← Financial Analysis";
 
   let nextLabel = "Continue →";
-  const onNext = () => { if (!canAdvance) return; if (isFA) { if (fa.stage<faTotal) goFA(fa.stage+1); else goRD(1); } else if (isRD) { if (rd.stage<rdTotal) goRD(rd.stage+1); else { setModule("fa"); setFA(s=>({...s,stage:1})); } } else { if (risk.stage<riskTotal) goRisk(risk.stage+1); else setRisk(s=>({...s,stage:1})); } };
+  const onNext = () => {
+    if (!canAdvance) return;
+    if (isFA) { if (fa.stage<faTotal) goFA(fa.stage+1); else goRD(1); }
+    else if (isRD) { if (rd.stage<rdTotal) goRD(rd.stage+1); else { setModule("fa"); setFA(s=>({...s,stage:1})); } }
+    else if (isLeg) { if (leg.stage<legTotal) goLegacy(leg.stage+1); else setLeg(s=>({...s,stage:1})); }
+    else { if (risk.stage<riskTotal) goRisk(risk.stage+1); else setRisk(s=>({...s,stage:1})); }
+  };
   if (isFA && fa.stage===faTotal) nextLabel = "Revenue Diversification →";
   if (isRD && rd.stage===rdTotal) nextLabel = "Start over ↺";
   if (isRisk && risk.stage===riskTotal) nextLabel = "Start over ↺";
+  if (isLeg && leg.stage===legTotal) nextLabel = "Start over ↺";
 
   const FA_BODY = [
     <FA1 fa={fa} setFA={setFA} />, <FA2 fa={fa} setFA={setFA} />, <FA3 fa={fa} setFA={setFA} />,
@@ -3000,19 +4814,31 @@ export default function App() {
     <RD6 rd={rd} setRData={setRData} profile={profile} />, <RD7 rd={rd} setRData={setRData} fa={fa} />, <RD8 rd={rd} fa={fa} />,
   ];
   const RISK_BODY = [
-    ...RISK_CATS.map((c,i) => <RiskCategoryStage key={c.id} risk={risk} setRisk={setRisk} catIndex={i} fa={fa} />),
+    ...RISK_CATS.map((c,i) => <RiskCategoryStage key={c.id} risk={risk} setRisk={setRisk} catIndex={i} fa={fa} onStartConvo={i===0?()=>setRiskConvo(true):null} />),
     <RiskResultsStage risk={risk} />,
-    <RiskPlanRevenueOps risk={risk} setRisk={setRisk} />, <RiskPlanThreats risk={risk} setRisk={setRisk} />,
-    <CropInsuranceCalculator risk={risk} setRisk={setRisk} fa={fa} profile={profile} />, <LivestockInsuranceCalculator risk={risk} setRisk={setRisk} />,
+    <RiskPlanRevenueOps risk={risk} setRisk={setRisk} />, <RiskPlanThreats risk={risk} setRisk={setRisk} goStrategy={()=>goRisk(8)} />,
     <RiskPlanStrategy risk={risk} setRisk={setRisk} />, <RiskPlanReview risk={risk} setRisk={setRisk} />,
+    <RiskPlanDocument risk={risk} profile={profile} goCalc={()=>goRisk(11)} />,
+    <CropInsuranceCalculator risk={risk} setRisk={setRisk} fa={fa} profile={profile} />, <LivestockInsuranceCalculator risk={risk} setRisk={setRisk} />,
   ];
-  const body = isFA ? FA_BODY[stage-1] : isRD ? RD_BODY[stage-1] : RISK_BODY[stage-1];
+  const riskConvoActive = isRisk && riskConvo;
+  const LEG_BODY = [
+    <LEG1 leg={leg} setLegData={setLegData} />, <LEG2 leg={leg} setLegData={setLegData} />,
+    <LEG3 leg={leg} setLegData={setLegData} />, <LEG4 leg={leg} setLegData={setLegData} fa={fa} />,
+    <LEG5 leg={leg} setLegData={setLegData} />, <LEG6 leg={leg} setLegData={setLegData} />,
+    <LEG7 leg={leg} setLegData={setLegData} />, <LEG8 leg={leg} setLegData={setLegData} />,
+    <LEG9 leg={leg} setLegData={setLegData} />, <LEG10 leg={leg} profile={profile} />,
+  ];
+  const body = riskConvoActive
+    ? <ConversationalRisk risk={risk} setRisk={setRisk} profile={profile} onExit={(stage)=>{ setRiskConvo(false); setRisk(s=>({ ...s, stage: stage || 5 })); }} />
+    : isFA ? FA_BODY[stage-1] : isRD ? RD_BODY[stage-1] : isLeg ? LEG_BODY[stage-1] : RISK_BODY[stage-1];
 
   const tabBase = { display:"flex", alignItems:"center", gap:11, padding:"8px 14px", borderRadius:8, cursor:"pointer", transition:"all .15s", border:"1.5px solid transparent" };
   const faTabStyle = isFA ? { ...tabBase, background:T.blueL, border:`1.5px solid ${T.blue}` } : { ...tabBase, background:"transparent" };
   const rdTabStyle = isRD ? { ...tabBase, background:T.blueL, border:`1.5px solid ${T.blue}` } : { ...tabBase, background:"transparent" };
   const riskTabStyle = isRisk ? { ...tabBase, background:T.blueL, border:`1.5px solid ${T.blue}` } : { ...tabBase, background:"transparent" };
   const profileTabStyle = isProfile ? { ...tabBase, background:T.blueL, border:`1.5px solid ${T.blue}` } : { ...tabBase, background:"transparent" };
+  const legTabStyle = isLeg ? { ...tabBase, background:T.blueL, border:`1.5px solid ${T.blue}` } : { ...tabBase, background:"transparent" };
   const lblOn = { fontSize:14.5, fontWeight:700, color:T.navy, letterSpacing:"0.01em" };
   const lblOff = { ...lblOn, fontWeight:600, color:T.fgS };
 
@@ -3068,6 +4894,16 @@ export default function App() {
               </div>
             </div>
           </div>
+          <div onClick={()=>setModule("legacy")} style={legTabStyle}>
+            <IconProfile />
+            <div>
+              <div style={isLeg?lblOn:lblOff}>Legacy</div>
+              <div style={{ display:"flex", alignItems:"center", gap:7, marginTop:3 }}>
+                <div style={{ width:62, height:4, background:T.border, borderRadius:2, overflow:"hidden" }}><div style={{ height:"100%", width:`${legPct}%`, background:T.green, borderRadius:2 }} /></div>
+                <span style={{ fontSize:11, color:T.fgS, whiteSpace:"nowrap" }}>{legPct}%</span>
+              </div>
+            </div>
+          </div>
         </div>
         <div style={{ marginLeft:"auto", display:"flex", alignItems:"center", gap:16 }}>
           <span style={{ fontSize:11, color:T.fgS, maxWidth:190, textAlign:"right", lineHeight:1.4 }}>Your farm profile carries across all modules</span>
@@ -3097,7 +4933,7 @@ export default function App() {
               </div>
               <div style={{ height:3, background:T.div, flexShrink:0 }}><div style={{ height:"100%", width:`${profilePct}%`, background:T.green, transition:"width .4s" }} /></div>
               <div style={{ flex:1, padding:"30px 34px", maxWidth:960, width:"100%", margin:"0 auto", boxSizing:"border-box" }}>
-                <div key="profile" className="mfp-body-anim"><FarmProfilePage profile={profile} setProfile={setProfile} fa={fa} rd={rd} goFA={goFA} goRD={goRD} goRisk={goRisk} /></div>
+                <div key="profile" className="mfp-body-anim"><FarmProfilePage profile={profile} setProfile={setProfile} fa={fa} rd={rd} goFA={goFA} goRD={goRD} goRisk={goRisk} goLegacy={goLegacy} /></div>
                 <div style={{ display:"flex", justifyContent:"flex-end", alignItems:"center", paddingTop:22, borderTop:`1px solid ${T.border}`, marginTop:26 }}>
                   <button onClick={()=>goFA(1)} style={btnStyle("primary")}>Continue to Financial Analysis →</button>
                 </div>
@@ -3148,11 +4984,13 @@ export default function App() {
           <div style={{ height:3, background:T.div, flexShrink:0 }}><div style={{ height:"100%", width:`${pct}%`, background:T.green, transition:"width .4s" }} /></div>
 
           <div style={{ flex:1, padding:"30px 34px", maxWidth:960, width:"100%", margin:"0 auto", boxSizing:"border-box" }}>
-            <div key={`${module}-${stage}`} className="mfp-body-anim">{body}</div>
-            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", paddingTop:22, borderTop:`1px solid ${T.border}`, marginTop:26 }}>
-              <button onClick={onBack} style={{ ...btnStyle("outline"), opacity:backDisabled?0.4:1, pointerEvents:backDisabled?"none":"auto" }}>{backLabel}</button>
-              <button onClick={onNext} style={{ ...btnStyle("primary"), opacity:canAdvance?1:0.4, pointerEvents:canAdvance?"auto":"none" }}>{nextLabel}</button>
-            </div>
+            <div key={riskConvoActive ? "risk-convo" : `${module}-${stage}`} className="mfp-body-anim">{body}</div>
+            {!riskConvoActive && (
+              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", paddingTop:22, borderTop:`1px solid ${T.border}`, marginTop:26 }}>
+                <button onClick={onBack} style={{ ...btnStyle("outline"), opacity:backDisabled?0.4:1, pointerEvents:backDisabled?"none":"auto" }}>{backLabel}</button>
+                <button onClick={onNext} style={{ ...btnStyle("primary"), opacity:canAdvance?1:0.4, pointerEvents:canAdvance?"auto":"none" }}>{nextLabel}</button>
+              </div>
+            )}
           </div>
         </div>
         </>
