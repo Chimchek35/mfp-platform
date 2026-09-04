@@ -3913,6 +3913,145 @@ const valueParcel = (p) => {
   };
 };
 
+
+// ═════════════════════════════════════════════════════════════════════════════
+// BLIND COMPARE — the same questions, answered independently
+// ═════════════════════════════════════════════════════════════════════════════
+// One array drives both sides and the comparison, so the two generations are
+// provably answering the same question rather than two similar ones.
+//
+// Three rules this holds to. Neither side sees the other's answer until both have
+// finished AND both have consented, because a comparison one party can read early
+// becomes a negotiating advantage. Gaps are presented as conversation material and
+// never as one side being right. And nothing here is scored, because the moment a
+// family can lose at this, they stop telling it the truth.
+
+const MIRROR = [
+  { id:"labor", kind:"pct", topic:"Labor",
+    senior:"What share of the physical work does the successor do today?",
+    succ:"What share of the physical work do you do today?",
+    gapNote:"Labor almost always transfers first, so agreement here is common and not very informative." },
+  { id:"management", kind:"pct", topic:"Management",
+    senior:"What share of the decisions does the successor make today?",
+    succ:"What share of the decisions do you actually make today?",
+    gapNote:"This is the gap that matters most. Senior generations consistently read management as further transferred than the successor experiences it." },
+  { id:"ownership", kind:"pct", topic:"Ownership",
+    senior:"What share of the assets does the successor own today?",
+    succ:"What share of the assets do you own today?",
+    gapNote:"Usually the smallest number on both sides. Disagreement here often means an informal promise was heard as a commitment." },
+  { id:"mgmtDate", kind:"text", topic:"Management timeline",
+    senior:"When should management transfer be complete?",
+    succ:"When do you expect to be running this business?",
+    gapNote:"A difference of a few years here is the difference between a successor who waits and one who leaves." },
+  { id:"ownDate", kind:"text", topic:"Ownership timeline",
+    senior:"When should ownership transfer begin?",
+    succ:"When do you expect to start owning part of this?",
+    gapNote:"" },
+  { id:"seniorRole", kind:"text", topic:"The senior's ongoing role",
+    senior:"After transition, what are you still responsible for?",
+    succ:"After transition, what do you think they want to stay responsible for?",
+    gapNote:"The successor guessing this wrong is extremely common, and it is the cheapest misunderstanding on this list to fix." },
+  { id:"discussed", kind:"select", topic:"How much has been said",
+    options:["Barely at all","Assumed but never said plainly","Talked about it","Written down and agreed"],
+    senior:"How much of this has actually been discussed with the successor?",
+    succ:"How much of this has actually been discussed with you?",
+    gapNote:"Someone who has assumed for twenty years will often report it as discussed. This is the question self-reporting cannot answer alone." },
+  { id:"viable", kind:"select", topic:"Is the business viable",
+    options:["No, not as it stands","Only with significant change","Yes, with normal management","Yes, clearly"],
+    senior:"Is this business viable for another generation?",
+    succ:"Is this business viable for you to build a life on?",
+    gapNote:"If the successor is less confident than the senior generation, that is worth knowing before ownership moves." },
+  { id:"exposure", kind:"checklist", topic:"What the successor has actually done",
+    senior:"Which of these has the successor done independently?",
+    succ:"Which of these have you actually done on your own?",
+    gapNote:"Sitting in on a decision and making it are different things, and the two sides routinely score this differently." },
+];
+
+const GAP_BANDS = { aligned:{ label:"Aligned", pill:"strong" }, notable:{ label:"Worth a conversation", pill:"watch" }, wide:{ label:"Wide gap", pill:"vuln" } };
+
+const mirrorSeniorVal = (leg, m) => {
+  const d = leg.data || {};
+  if (m.kind === "pct") return (d.transfers||{})[m.id] ? (d.transfers[m.id].now ?? "") : "";
+  if (m.id === "mgmtDate") return d.dateManagement || "";
+  if (m.id === "ownDate") return d.dateOwnership || "";
+  if (m.id === "seniorRole") return d.nextChapterRole || "";
+  if (m.id === "discussed") return d.mirrorDiscussed ?? "";
+  if (m.id === "viable") return d.mirrorViable ?? "";
+  if (m.id === "exposure") return d.exposure || {};
+  return "";
+};
+const mirrorSuccVal = (leg, m) => {
+  const s = leg.succ || {};
+  if (m.kind === "pct") return (s.transfers||{})[m.id] ?? "";
+  if (m.id === "exposure") return s.exposure || {};
+  return s[m.id] ?? "";
+};
+
+const hasVal = (m, v) => {
+  if (m.kind === "checklist") return Object.keys(v||{}).length > 0;
+  return v !== "" && v !== null && v !== undefined;
+};
+
+// Gap classification per question kind. Percentages band on distance, text and
+// select on whether they match, checklist on how many items disagree.
+const mirrorGap = (m, a, b) => {
+  if (!hasVal(m,a) || !hasVal(m,b)) return { band:null, detail:"One side has not answered this yet." };
+  if (m.kind === "pct") {
+    const diff = Math.abs(Number(a) - Number(b));
+    const band = diff < 15 ? "aligned" : diff <= 34 ? "notable" : "wide";
+    return { band, diff, detail:`${diff} points apart` };
+  }
+  if (m.kind === "select") {
+    const diff = Math.abs(Number(a) - Number(b));
+    const band = diff === 0 ? "aligned" : diff === 1 ? "notable" : "wide";
+    return { band, diff, detail: diff === 0 ? "Same answer" : `${diff} step${diff>1?"s":""} apart` };
+  }
+  if (m.kind === "checklist") {
+    const disagree = SUCCESSOR_EXPOSURE.filter(x => !!a[x.id] !== !!b[x.id]);
+    const band = disagree.length === 0 ? "aligned" : disagree.length <= 2 ? "notable" : "wide";
+    return { band, diff:disagree.length, items:disagree, detail: disagree.length === 0 ? "Same reading on all seven" : `${disagree.length} of 7 read differently` };
+  }
+  const norm = (x) => String(x).trim().toLowerCase().replace(/[^a-z0-9 ]/g,"");
+  const same = norm(a) === norm(b);
+  return { band: same ? "aligned" : "notable", detail: same ? "Effectively the same" : "Different answers" };
+};
+
+const mirrorProgress = (leg) => {
+  let sen = 0, suc = 0;
+  MIRROR.forEach(m => {
+    if (hasVal(m, mirrorSeniorVal(leg,m))) sen++;
+    if (hasVal(m, mirrorSuccVal(leg,m))) suc++;
+  });
+  return { sen, suc, total: MIRROR.length };
+};
+
+// Ordered by gap size, so the comparison doubles as the conversation agenda.
+const compareRows = (leg) => {
+  const order = { wide:0, notable:1, aligned:2 };
+  return MIRROR.map(m => {
+    const a = mirrorSeniorVal(leg,m), b = mirrorSuccVal(leg,m);
+    return { m, a, b, gap: mirrorGap(m,a,b) };
+  }).sort((x,y) => {
+    const xo = x.gap.band ? order[x.gap.band] : 3, yo = y.gap.band ? order[y.gap.band] : 3;
+    if (xo !== yo) return xo - yo;
+    return (y.gap.diff||0) - (x.gap.diff||0);
+  });
+};
+
+const compareUnlocked = (leg) => {
+  const p = mirrorProgress(leg);
+  return p.sen >= 6 && p.suc >= 6 && !!(leg.data||{}).consentCompare && !!(leg.succ||{}).consentCompare;
+};
+
+const SUCC_STAGES = [
+  { n:1, label:"Your read on the transfers" },
+  { n:2, label:"What you would build" },
+  { n:3, label:"What you have actually done" },
+  { n:4, label:"Sweat equity" },
+  { n:5, label:"What you think they want" },
+  { n:6, label:"What you need to commit" },
+];
+
 // ── Stage 1 — Where you are today ────────────────────────────────────────────
 function LEG1({ leg, setLegData }) {
   const d = leg.data || {};
@@ -4235,6 +4374,26 @@ function LEG6({ leg, setLegData }) {
           "What has been avoided is usually more diagnostic than what has been decided.")}
         {legRow("Is there an assumption you are making that you have never confirmed?",
           <textarea style={inputStyle({ minHeight:64 })} value={d.assumption || ""} onChange={e=>setLegData({ assumption:e.target.value })} placeholder="" />)}
+      </div>
+      <div style={cardStyle({ borderTop:`4px solid ${T.blue}` })}>
+        <div style={cardLblStyle()}>For the blind compare</div>
+        <div style={{ fontSize:12.5, color:T.fgM, marginBottom:14, lineHeight:1.55 }}>The successor is answering these same two questions separately. Neither of you sees the other's answer until you have both finished and both agreed.</div>
+        {[MIRROR.find(x=>x.id==="discussed"), MIRROR.find(x=>x.id==="viable")].map(m => (
+          <div key={m.id} style={{ marginBottom:16 }}>
+            <label style={labelStyle}>{m.senior}</label>
+            <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
+              {m.options.map((o,i) => {
+                const key = m.id === "discussed" ? "mirrorDiscussed" : "mirrorViable";
+                const on = Number(d[key]) === i;
+                return <button key={i} onClick={()=>setLegData({ [key]: i })} style={{ textAlign:"left", background:on?T.navy:"#fff", color:on?"#fff":T.fgM, border:`1px solid ${on?T.navy:T.border}`, borderRadius:5, padding:"9px 13px", fontSize:13.5, cursor:"pointer", font:"inherit" }}>{o}</button>;
+              })}
+            </div>
+          </div>
+        ))}
+        <label style={{ display:"flex", alignItems:"center", gap:9, fontSize:14, color:T.fg, cursor:"pointer" }}>
+          <input type="checkbox" checked={!!d.consentCompare} onChange={e=>setLegData({ consentCompare:e.target.checked })} />
+          I am willing to compare my answers with the successor's
+        </label>
       </div>
       {unvoiced.length > 0 && (
         <Flag type="warn">{unvoiced.length === 1 ? "One group" : `${unvoiced.length} groups`} still sit at unvoiced or assumed: {unvoiced.map(p=>p.label.toLowerCase()).join(", ")}. Until those move, the ownership conversation rests on guesses.</Flag>
@@ -4596,6 +4755,323 @@ function LEG11({ leg, setLegData, profile }) {
   );
 }
 
+
+// ═════════════════════════════════════════════════════════════════════════════
+// SUCCESSOR TRACK
+// ═════════════════════════════════════════════════════════════════════════════
+// Written to the successor, not about them. Their entry point is not "help plan a
+// retirement" but "find out what you would be inheriting and put your version on
+// the table". Nothing in this track is visible to the senior generation until the
+// compare view unlocks, and the successor controls that consent themselves.
+
+function SUCC1({ leg, setSucc }) {
+  const s = leg.succ || {};
+  const t = s.transfers || {};
+  const setT = (id,val) => setSucc({ transfers:{ ...t, [id]:val } });
+  return (
+    <div>
+      <Head eyebrow="Successor track · Stage 1" title="Your read on where things stand" sub="Answer as it actually is, not as it is supposed to be. Nobody sees this until you both finish and you both agree to compare." />
+      <Flag type="info">The senior generation is answering these same three questions separately. The point is not who is right. It is that the two answers are almost never the same, and the difference is usually the thing nobody has said out loud.</Flag>
+      {TRANSFERS.map(tr => {
+        const m = MIRROR.find(x => x.id === tr.id);
+        const val = Number(t[tr.id] ?? 0);
+        return (
+          <div key={tr.id} style={cardStyle()}>
+            <div style={{ fontSize:16, fontWeight:600, color:T.navy }}>{tr.label}</div>
+            <div style={{ fontSize:13, color:T.fgM, margin:"3px 0 14px" }}>{m ? m.succ : tr.desc}</div>
+            <div style={{ display:"flex", alignItems:"center", gap:12 }}>
+              <input type="range" min="0" max="100" step="5" value={val} onChange={e=>setT(tr.id, e.target.value)} style={{ flex:1 }} />
+              <span style={{ width:52, textAlign:"right", fontSize:15, fontWeight:600, color:T.navy }}>{val}%</span>
+            </div>
+            <div style={{ display:"flex", justifyContent:"space-between", fontSize:11, color:T.fgS, marginTop:4 }}>
+              <span>None of it is mine</span><span>All of it is mine</span>
+            </div>
+          </div>
+        );
+      })}
+      <div style={cardStyle()}>
+        {legRow("On the day you make a decision the senior generation disagrees with, what happens?",
+          <textarea style={inputStyle({ minHeight:70 })} value={s.decisionReality||""} onChange={e=>setSucc({ decisionReality:e.target.value })} placeholder="" />,
+          "This tells you more about where management actually sits than any percentage.")}
+      </div>
+    </div>
+  );
+}
+
+function SUCC2({ leg, setSucc }) {
+  const s = leg.succ || {};
+  const set = (k) => (e) => setSucc({ [k]: e.target.value });
+  return (
+    <div>
+      <Head eyebrow="Successor track · Stage 2" title="What you would build" sub="Every other question in succession planning is about preserving what exists. This one is about what does not exist yet, and it is the only question in this module where your answer is the whole point." />
+      <div style={cardStyle()}>
+        {legRow("If this were fully yours tomorrow, what is the first thing you would change?",
+          <textarea style={inputStyle({ minHeight:78 })} value={s.firstChange||""} onChange={set("firstChange")} placeholder="" />)}
+        {legRow("What would you build here that does not exist today?",
+          <textarea style={inputStyle({ minHeight:78 })} value={s.wouldBuild||""} onChange={set("wouldBuild")} placeholder="An enterprise, a market, a way of operating. It does not have to be modest." />,
+          "Worth taking to Revenue Diversification, which will rank whether the operation can actually support it.")}
+        {legRow("What are you not willing to give up to farm?",
+          <textarea style={inputStyle({ minHeight:64 })} value={s.notWilling||""} onChange={set("notWilling")} placeholder="Income, time, where you live, a spouse's career, something else." />,
+          "Rarely asked, and the answer often explains a successor who quietly disengages years later.")}
+        {legRow("Ten years in, what does a good outcome look like?",
+          <textarea style={inputStyle({ minHeight:70 })} value={s.goodOutcome||""} onChange={set("goodOutcome")} placeholder="" />)}
+      </div>
+      <div style={cardStyle()}>
+        <div style={cardLblStyle()}>Is this a business worth committing to</div>
+        <div style={{ fontSize:12.5, color:T.fgM, marginBottom:14 }}>An honest answer here is more useful than a loyal one.</div>
+        {(() => { const m = MIRROR.find(x=>x.id==="viable"); return (
+          <>
+            <label style={labelStyle}>{m.succ}</label>
+            <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
+              {m.options.map((o,i) => {
+                const on = Number(s.viable) === i;
+                return <button key={i} onClick={()=>setSucc({ viable:i })} style={{ textAlign:"left", background:on?T.navy:"#fff", color:on?"#fff":T.fgM, border:`1px solid ${on?T.navy:T.border}`, borderRadius:5, padding:"9px 13px", fontSize:13.5, cursor:"pointer", font:"inherit" }}>{o}</button>;
+              })}
+            </div>
+          </>
+        ); })()}
+      </div>
+    </div>
+  );
+}
+
+function SUCC3({ leg, setSucc }) {
+  const s = leg.succ || {};
+  const ex = s.exposure || {};
+  const toggle = (id) => setSucc({ exposure:{ ...ex, [id]: !ex[id] } });
+  const done = SUCCESSOR_EXPOSURE.filter(x=>ex[x.id]).length;
+  return (
+    <div>
+      <Head eyebrow="Successor track · Stage 3" title="What you have actually done" sub="On your own, start to finish, with the outcome landing on you. Sitting in on a decision does not count, and the distinction is the entire value of this list." />
+      <Flag type="info">The senior generation is ticking this same list about you. Where the two readings differ is worth more than either reading alone.</Flag>
+      <div style={cardStyle()}>
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12, gap:12, flexWrap:"wrap" }}>
+          <div style={cardLblStyle({ marginBottom:0 })}>Have you independently</div>
+          <span style={{ fontSize:11.5, color:T.fgS }}>{done} of {SUCCESSOR_EXPOSURE.length}</span>
+        </div>
+        {SUCCESSOR_EXPOSURE.map(x => {
+          const on = !!ex[x.id];
+          return (
+            <label key={x.id} style={{ display:"flex", alignItems:"center", gap:11, padding:"10px 0", borderBottom:`1px solid ${T.div}`, cursor:"pointer" }}>
+              <input type="checkbox" checked={on} onChange={()=>toggle(x.id)} />
+              <span style={{ fontSize:14, color:T.fg }}>{x.label.replace(/^Negotiated/,"Negotiated").replace(/^Sat/,"Sat").replace(/^Made/,"Made").replace(/^Hired/,"Hired").replace(/^Chosen/,"Chosen").replace(/^Handled/,"Handled").replace(/^Built/,"Built")}</span>
+            </label>
+          );
+        })}
+      </div>
+      <div style={cardStyle()}>
+        {legRow("Which of these do you most want handed over next?",
+          <textarea style={inputStyle({ minHeight:64 })} value={s.wantNext||""} onChange={e=>setSucc({ wantNext:e.target.value })} placeholder="" />,
+          "Naming one specific decision is a far easier ask than asking for management.")}
+      </div>
+    </div>
+  );
+}
+
+function SUCC4({ leg, setSucc }) {
+  const s = leg.succ || {};
+  const set = (k) => (e) => setSucc({ [k]: e.target.value });
+  const yrs = parseFloat(s.sweatYears) || 0;
+  const gap = parseFloat(s.sweatGap) || 0;
+  const total = yrs * gap;
+  return (
+    <div>
+      <Head eyebrow="Successor track · Stage 4" title="Sweat equity" sub="Years of below-market wages are the most common unspoken debt in farm succession. Left as a feeling it breeds resentment. Written as a number it becomes something a family can actually settle." />
+      <div style={cardStyle()}>
+        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16 }}>
+          {legRow("Years worked in the operation", <input type="number" style={inputStyle()} value={s.sweatYears||""} onChange={set("sweatYears")} />)}
+          {legRow("Estimated annual gap to market wage", <input type="number" style={inputStyle()} value={s.sweatGap||""} onChange={set("sweatGap")} placeholder="$" />, "What a comparable job off the farm would have paid, minus what you took.")}
+        </div>
+        {total > 0 && (
+          <div style={{ background:T.bgAlt, borderRadius:8, padding:"14px 17px", marginTop:4 }}>
+            <div style={{ fontSize:11, color:T.fgS, marginBottom:3 }}>Cumulative contribution, before any interest</div>
+            <div style={{ fontSize:26, fontWeight:600, color:T.navy }}>{fmt$(total)}</div>
+            <div style={{ fontSize:12, color:T.fgM, marginTop:6, lineHeight:1.6 }}>An estimate, not a claim. Its value is that it turns an unspoken sense of being owed into a figure the family can look at together, and it is one of the recognised approaches to the fair-versus-equal problem.</div>
+          </div>
+        )}
+        {legRow("Other contributions that are not wages",
+          <textarea style={inputStyle({ minHeight:64 })} value={s.otherContribution||""} onChange={set("otherContribution")} placeholder="Capital you put in, equipment you bought, a spouse's off-farm income carrying the household." />)}
+        {legRow("Has any of this ever been acknowledged out loud?",
+          <select style={inputStyle()} value={s.sweatAcknowledged||""} onChange={set("sweatAcknowledged")}>
+            <option value="">Select</option>
+            <option value="never">Never come up</option>
+            <option value="joked">Joked about, never seriously</option>
+            <option value="discussed">Discussed seriously</option>
+            <option value="written">Written into something</option>
+          </select>)}
+      </div>
+    </div>
+  );
+}
+
+function SUCC5({ leg, setSucc }) {
+  const s = leg.succ || {};
+  const set = (k) => (e) => setSucc({ [k]: e.target.value });
+  const disc = MIRROR.find(x=>x.id==="discussed");
+  return (
+    <div>
+      <Head eyebrow="Successor track · Stage 5" title="What you think they want" sub="You are guessing here, and that is deliberate. How close the guess lands is one of the most useful things this module can show either of you." />
+      <div style={cardStyle()}>
+        {legRow("After transition, what do you think they want to stay responsible for?",
+          <textarea style={inputStyle({ minHeight:74 })} value={s.seniorRole||""} onChange={set("seniorRole")} placeholder="" />,
+          "They have answered this about themselves. Successors guess it wrong very often, and it is the cheapest misunderstanding on the list to fix.")}
+        {legRow("What do you think worries them most about handing this over?",
+          <textarea style={inputStyle({ minHeight:64 })} value={s.seniorWorry||""} onChange={set("seniorWorry")} placeholder="" />)}
+        {legRow("When do you expect to be running this business?",
+          <input style={inputStyle()} value={s.mgmtDate||""} onChange={set("mgmtDate")} placeholder="A year, or an event" />)}
+        {legRow("When do you expect to start owning part of it?",
+          <input style={inputStyle()} value={s.ownDate||""} onChange={set("ownDate")} placeholder="A year, or an event" />)}
+      </div>
+      <div style={cardStyle()}>
+        <label style={labelStyle}>{disc.succ}</label>
+        <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
+          {disc.options.map((o,i) => {
+            const on = Number(s.discussed) === i;
+            return <button key={i} onClick={()=>setSucc({ discussed:i })} style={{ textAlign:"left", background:on?T.navy:"#fff", color:on?"#fff":T.fgM, border:`1px solid ${on?T.navy:T.border}`, borderRadius:5, padding:"9px 13px", fontSize:13.5, cursor:"pointer", font:"inherit" }}>{o}</button>;
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SUCC6({ leg, setSucc }) {
+  const s = leg.succ || {};
+  const set = (k) => (e) => setSucc({ [k]: e.target.value });
+  const p = mirrorProgress(leg);
+  return (
+    <div>
+      <Head eyebrow="Successor track · Stage 6" title="What you need to commit" sub="The senior generation is being asked what they need to let go. This is the other half of that question, and it rarely gets asked." />
+      <div style={cardStyle()}>
+        {legRow("What would you need to see to commit the next twenty years to this?",
+          <textarea style={inputStyle({ minHeight:78 })} value={s.needToCommit||""} onChange={set("needToCommit")} placeholder="Be specific. A timeline, a title, an ownership stake, a decision that becomes yours." />)}
+        {legRow("What is the one thing that would make you walk away?",
+          <textarea style={inputStyle({ minHeight:64 })} value={s.walkAway||""} onChange={set("walkAway")} placeholder="" />)}
+        {legRow("Is there anything you have never said about this?",
+          <textarea style={inputStyle({ minHeight:64 })} value={s.neverSaid||""} onChange={set("neverSaid")} placeholder="Stays private unless you choose to share the comparison." />)}
+      </div>
+      <div style={cardStyle({ borderTop:`4px solid ${T.blue}` })}>
+        <div style={cardLblStyle()}>Ready to compare</div>
+        <div style={{ display:"flex", gap:26, flexWrap:"wrap", marginBottom:13 }}>
+          <div><div style={{ fontSize:11, color:T.fgS }}>Senior generation answered</div><div style={{ fontSize:20, fontWeight:600, color:T.navy }}>{p.sen} of {p.total}</div></div>
+          <div><div style={{ fontSize:11, color:T.fgS }}>You answered</div><div style={{ fontSize:20, fontWeight:600, color:T.navy }}>{p.suc} of {p.total}</div></div>
+        </div>
+        <p style={{ fontSize:13.5, color:T.fgM, marginTop:0, lineHeight:1.6 }}>The comparison stays locked until you have both answered at least six and you have both agreed to it. Either of you can decline and nothing is shown.</p>
+        <label style={{ display:"flex", alignItems:"center", gap:9, fontSize:14, color:T.fg, cursor:"pointer", marginTop:6 }}>
+          <input type="checkbox" checked={!!s.consentCompare} onChange={e=>setSucc({ consentCompare:e.target.checked })} />
+          I am willing to compare my answers with theirs
+        </label>
+      </div>
+    </div>
+  );
+}
+
+// ── The comparison ───────────────────────────────────────────────────────────
+function LegCompare({ leg, setLegData, setSucc }) {
+  const p = mirrorProgress(leg);
+  const unlocked = compareUnlocked(leg);
+  const rows = compareRows(leg);
+  const wide = rows.filter(r => r.gap.band === "wide").length;
+  const notable = rows.filter(r => r.gap.band === "notable").length;
+
+  const showVal = (m, v) => {
+    if (!hasVal(m,v)) return <span style={{ color:T.fgS, fontStyle:"italic" }}>not answered</span>;
+    if (m.kind === "pct") return `${v}% successor`;
+    if (m.kind === "select") return m.options[Number(v)];
+    if (m.kind === "checklist") return `${SUCCESSOR_EXPOSURE.filter(x=>v[x.id]).length} of 7`;
+    return String(v);
+  };
+
+  if (!unlocked) {
+    return (
+      <div>
+        <Head eyebrow="Legacy · Blind compare" title="Locked until you have both finished" sub="Neither side sees the other's answers early. A comparison one party can read first stops being a conversation and becomes a negotiating position." />
+        <div style={cardStyle()}>
+          <div style={cardLblStyle()}>Progress</div>
+          {[["Senior generation", p.sen, (leg.data||{}).consentCompare],["Successor", p.suc, (leg.succ||{}).consentCompare]].map(([lab,n,consent],k)=>(
+            <div key={k} style={{ display:"flex", alignItems:"center", gap:12, padding:"10px 0", borderBottom:`1px dashed ${T.border}` }}>
+              <span style={{ width:160, fontSize:14, fontWeight:600, color:T.fg, flexShrink:0 }}>{lab}</span>
+              <div style={{ flex:1, height:7, background:"#dde1e8", borderRadius:4, overflow:"hidden" }}>
+                <div style={{ width:`${(n/p.total)*100}%`, height:"100%", background:n>=6?T.moss:T.amber, borderRadius:4 }} />
+              </div>
+              <span style={{ width:66, textAlign:"right", fontSize:13, color:T.fgM, flexShrink:0 }}>{n} of {p.total}</span>
+              <span style={pillStyle(consent?"strong":"blank")}>{consent?"agreed":"not yet"}</span>
+            </div>
+          ))}
+          <p style={{ fontSize:13, color:T.fgM, marginTop:14, marginBottom:0, lineHeight:1.6 }}>Both sides need at least six answers and both need to agree. Nothing about the other side's answers is shown on this screen.</p>
+        </div>
+        <div style={cardStyle()}>
+          <div style={cardLblStyle()}>Consent</div>
+          <label style={{ display:"flex", alignItems:"center", gap:9, fontSize:14, color:T.fg, cursor:"pointer", marginBottom:9 }}>
+            <input type="checkbox" checked={!!(leg.data||{}).consentCompare} onChange={e=>setLegData({ consentCompare:e.target.checked })} />
+            Senior generation agrees to compare
+          </label>
+          <label style={{ display:"flex", alignItems:"center", gap:9, fontSize:14, color:T.fg, cursor:"pointer" }}>
+            <input type="checkbox" checked={!!(leg.succ||{}).consentCompare} onChange={e=>setSucc({ consentCompare:e.target.checked })} />
+            Successor agrees to compare
+          </label>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <Head eyebrow="Legacy · Blind compare" title="Where you agree, and where you do not" sub="Ordered by how far apart the two answers are, so this doubles as the agenda for the conversation. Nothing here says either of you is wrong." />
+
+      <div style={cardStyle({ borderTop:`4px solid ${wide>0?T.amber:T.moss}` })}>
+        <div style={{ display:"flex", gap:26, flexWrap:"wrap" }}>
+          {[["Wide gaps", wide, wide>0?T.red:T.fgS],["Worth a conversation", notable, notable>0?T.amberT:T.fgS],["Aligned", rows.filter(r=>r.gap.band==="aligned").length, T.dgreen]].map(([lab,n,col],k)=>(
+            <div key={k}><div style={{ fontSize:11, color:T.fgS, marginBottom:3 }}>{lab}</div><div style={{ fontSize:24, fontWeight:600, color:col }}>{n}</div></div>
+          ))}
+        </div>
+        {wide === 0 && notable === 0 && <div style={{ marginTop:13 }}><Flag type="ok">The two of you read this operation the same way. That is genuinely uncommon and it means the ownership conversation can move faster than most.</Flag></div>}
+      </div>
+
+      {rows.map(({ m, a, b, gap }) => (
+        <div key={m.id} style={cardStyle(gap.band==="wide" ? { borderLeft:`3px solid ${T.red}` } : gap.band==="notable" ? { borderLeft:`3px solid ${T.amber}` } : {})}>
+          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"baseline", gap:12, flexWrap:"wrap", marginBottom:11 }}>
+            <div style={{ fontSize:16, fontWeight:600, color:T.navy }}>{m.topic}</div>
+            {gap.band ? <span style={pillStyle(GAP_BANDS[gap.band].pill)}>{GAP_BANDS[gap.band].label} · {gap.detail}</span>
+                      : <span style={pillStyle("blank")}>{gap.detail}</span>}
+          </div>
+          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12, marginBottom:11 }}>
+            {[["Senior generation", m.senior, a],["Successor", m.succ, b]].map(([who,q,val],k)=>(
+              <div key={k} style={{ background:T.bgAlt, borderRadius:8, padding:"12px 14px" }}>
+                <div style={{ fontSize:10, letterSpacing:"0.12em", fontWeight:600, color:T.fgS, marginBottom:5 }}>{who.toUpperCase()}</div>
+                <div style={{ fontSize:11.5, color:T.fgS, marginBottom:7, fontStyle:"italic", lineHeight:1.4 }}>{q}</div>
+                <div style={{ fontSize:14.5, color:T.fg, fontWeight:m.kind==="text"?400:600, lineHeight:1.5 }}>{showVal(m,val)}</div>
+              </div>
+            ))}
+          </div>
+          {m.kind === "checklist" && gap.items && gap.items.length > 0 && (
+            <div style={{ borderLeft:`2px solid ${T.amber}`, background:T.amberL, borderRadius:"0 5px 5px 0", padding:"10px 13px", marginBottom:9 }}>
+              <div style={{ fontSize:10, letterSpacing:"0.12em", fontWeight:600, color:T.amberT, marginBottom:5 }}>READ DIFFERENTLY</div>
+              <ul style={{ margin:0, paddingLeft:18, fontSize:13, color:T.amberT, lineHeight:1.6 }}>
+                {gap.items.map(x => <li key={x.id}>{x.label}</li>)}
+              </ul>
+            </div>
+          )}
+          {gap.band !== "aligned" && m.gapNote && (
+            <p style={{ fontSize:13, color:T.fgM, margin:0, lineHeight:1.6, fontStyle:"italic" }}>{m.gapNote}</p>
+          )}
+        </div>
+      ))}
+
+      <div style={cardStyle()}>
+        <div style={cardLblStyle()}>How to use this</div>
+        <ol style={{ margin:0, paddingLeft:20, fontSize:14, color:T.fgM, lineHeight:1.9 }}>
+          <li>Start at the top. The widest gap is the most useful thing on this page.</li>
+          <li>Neither answer is the correct one. Both are honest reports of the same operation from different seats.</li>
+          <li>Ask what led to the difference rather than which figure is right.</li>
+          <li>If a third party would help, this page is the agenda to hand them.</li>
+        </ol>
+      </div>
+      <Flag type="info">Nothing here is scored and nothing is stored as a judgement about either of you. If it would be more useful to answer again after talking, do that. The point is the conversation, not the record.</Flag>
+    </div>
+  );
+}
+
 // ── Stage 10 — Where this leaves you ─────────────────────────────────────────
 function LEG10({ leg, profile }) {
   const d = leg.data || {};
@@ -4745,7 +5221,9 @@ export default function App() {
   const [fa, setFA] = useState({ stage:1, enterprises:[], goals:{}, wholeFarm:{}, ratioVals:{}, s3vals:{ ...GENERIC_FARM_FINANCIALS }, s4bench:{}, s5:{}, actionChecked:{} });
   const [rd, setRD] = useState({ stage:1, data:{} });
   const [risk, setRisk] = useState({ stage:1, answers:{} });
-  const [leg, setLeg] = useState({ stage:1, data:{} });
+  const [leg, setLeg] = useState({ stage:1, data:{}, succ:{}, role:"senior" });
+  const setSucc = (patch) => setLeg(s => ({ ...s, succ:{ ...(s.succ||{}), ...patch } }));
+  const setLegRole = (r) => setLeg(s => ({ ...s, role:r, stage:1 }));
   const [riskConvo, setRiskConvo] = useState(false);
   const [profile, setProfile] = useState({ ...GENERIC_FARM_SWOT, ...GENERIC_FARM_STRATEGY });
 
@@ -4757,10 +5235,13 @@ export default function App() {
   const setLegData = (patch) => setLeg(s => ({ ...s, data:{ ...(s.data||{}), ...patch } }));
 
   const isFA = module === "fa", isRD = module === "rd", isRisk = module === "risk", isProfile = module === "profile", isLeg = module === "legacy";
-  const faTotal = FA_STAGES.length, rdTotal = RD_STAGES.length, riskTotal = RISK_STAGES.length, legTotal = LEG_STAGES.length;
+  const faTotal = FA_STAGES.length, rdTotal = RD_STAGES.length, riskTotal = RISK_STAGES.length;
+  const legRole = leg.role || "senior";
+  const legStageDefs = legRole === "successor" ? SUCC_STAGES : LEG_STAGES;
+  const legTotal = legStageDefs.length;
   const stage = isFA ? fa.stage : isRD ? rd.stage : isLeg ? leg.stage : risk.stage;
   const total = isFA ? faTotal : isRD ? rdTotal : isLeg ? legTotal : riskTotal;
-  const stageDefs = isFA ? FA_STAGES : isRD ? RD_STAGES : isLeg ? LEG_STAGES : RISK_STAGES;
+  const stageDefs = isFA ? FA_STAGES : isRD ? RD_STAGES : isLeg ? legStageDefs : RISK_STAGES;
   const faPct = Math.round(Math.min(fa.stage,faTotal)/faTotal*100);
   const rdPct = Math.round(Math.min(rd.stage,rdTotal)/rdTotal*100);
   const riskPct = Math.round(Math.min(risk.stage,riskTotal)/riskTotal*100);
@@ -4783,7 +5264,11 @@ export default function App() {
 
   const chips = isFA ? fa.enterprises.map(e => ({ label: ENT[e]?ENT[e].label:e }))
     : isRD ? (rd.data.selectedOpps||[]).slice(0,3).map(id => { const o=OPPS.find(x=>x.id===id); return { label:o?o.label:id }; })
-    : isLeg ? [{ label: READINESS_TIERS[legacyTier(leg)].label }]
+    : isLeg ? (legRole === "successor"
+        ? [{ label:`${mirrorProgress(leg).suc} of ${mirrorProgress(leg).total} answered` }]
+        : legRole === "compare"
+        ? [{ label: compareUnlocked(leg) ? "unlocked" : "locked" }]
+        : [{ label: READINESS_TIERS[legacyTier(leg)].label }])
     : [{ label:`${riskAnsweredTotal}/32 answered` }];
 
   let backLabel = "← Back"; let backDisabled = (isRisk && risk.stage===1) || (isLeg && leg.stage===1);
@@ -4822,6 +5307,7 @@ export default function App() {
     <CropInsuranceCalculator risk={risk} setRisk={setRisk} fa={fa} profile={profile} />, <LivestockInsuranceCalculator risk={risk} setRisk={setRisk} />,
   ];
   const riskConvoActive = isRisk && riskConvo;
+  const legCompareActive = isLeg && legRole === "compare";
   const LEG_BODY = [
     <LEG1 leg={leg} setLegData={setLegData} />, <LEG2 leg={leg} setLegData={setLegData} />,
     <LEG3 leg={leg} setLegData={setLegData} />, <LEG4 leg={leg} setLegData={setLegData} fa={fa} />,
@@ -4829,9 +5315,17 @@ export default function App() {
     <LEG7 leg={leg} setLegData={setLegData} />, <LEG8 leg={leg} setLegData={setLegData} />,
     <LEG9 leg={leg} setLegData={setLegData} />, <LEG10 leg={leg} profile={profile} />,
   ];
+  const SUCC_BODY = [
+    <SUCC1 leg={leg} setSucc={setSucc} />, <SUCC2 leg={leg} setSucc={setSucc} />,
+    <SUCC3 leg={leg} setSucc={setSucc} />, <SUCC4 leg={leg} setSucc={setSucc} />,
+    <SUCC5 leg={leg} setSucc={setSucc} />, <SUCC6 leg={leg} setSucc={setSucc} />,
+  ];
+  const legBodyForRole = legRole === "successor" ? SUCC_BODY[stage-1]
+    : legRole === "compare" ? <LegCompare leg={leg} setLegData={setLegData} setSucc={setSucc} />
+    : LEG_BODY[stage-1];
   const body = riskConvoActive
     ? <ConversationalRisk risk={risk} setRisk={setRisk} profile={profile} onExit={(stage)=>{ setRiskConvo(false); setRisk(s=>({ ...s, stage: stage || 5 })); }} />
-    : isFA ? FA_BODY[stage-1] : isRD ? RD_BODY[stage-1] : isLeg ? LEG_BODY[stage-1] : RISK_BODY[stage-1];
+    : isFA ? FA_BODY[stage-1] : isRD ? RD_BODY[stage-1] : isLeg ? legBodyForRole : RISK_BODY[stage-1];
 
   const tabBase = { display:"flex", alignItems:"center", gap:11, padding:"8px 14px", borderRadius:8, cursor:"pointer", transition:"all .15s", border:"1.5px solid transparent" };
   const faTabStyle = isFA ? { ...tabBase, background:T.blueL, border:`1.5px solid ${T.blue}` } : { ...tabBase, background:"transparent" };
@@ -4984,8 +5478,22 @@ export default function App() {
           <div style={{ height:3, background:T.div, flexShrink:0 }}><div style={{ height:"100%", width:`${pct}%`, background:T.green, transition:"width .4s" }} /></div>
 
           <div style={{ flex:1, padding:"30px 34px", maxWidth:960, width:"100%", margin:"0 auto", boxSizing:"border-box" }}>
-            <div key={riskConvoActive ? "risk-convo" : `${module}-${stage}`} className="mfp-body-anim">{body}</div>
-            {!riskConvoActive && (
+            {isLeg && (
+              <div style={{ display:"flex", gap:8, alignItems:"center", borderBottom:`1px solid ${T.border}`, marginBottom:20, flexWrap:"wrap" }}>
+                {[["senior","Senior generation"],["successor","Successor"],["compare","Blind compare"]].map(([k,lab]) => {
+                  const on = legRole === k;
+                  const locked = k === "compare" && !compareUnlocked(leg);
+                  return (
+                    <button key={k} onClick={()=>setLegRole(k)} style={{ background:"none", border:"none", borderBottom:`2px solid ${on?T.navy:"transparent"}`, padding:"9px 4px", marginBottom:-1, marginRight:14, cursor:"pointer", font:"inherit", fontSize:14, fontWeight:on?600:500, color:on?T.navy:T.fgS, display:"flex", alignItems:"center", gap:7 }}>
+                      {lab}
+                      {locked && <span style={{ ...pillStyle("blank"), fontSize:8.5 }}>locked</span>}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+            <div key={riskConvoActive ? "risk-convo" : `${module}-${legRole}-${stage}`} className="mfp-body-anim">{body}</div>
+            {!riskConvoActive && !legCompareActive && (
               <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", paddingTop:22, borderTop:`1px solid ${T.border}`, marginTop:26 }}>
                 <button onClick={onBack} style={{ ...btnStyle("outline"), opacity:backDisabled?0.4:1, pointerEvents:backDisabled?"none":"auto" }}>{backLabel}</button>
                 <button onClick={onNext} style={{ ...btnStyle("primary"), opacity:canAdvance?1:0.4, pointerEvents:canAdvance?"auto":"none" }}>{nextLabel}</button>
