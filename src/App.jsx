@@ -5869,6 +5869,153 @@ function VIS8({ vis, profile }) {
   );
 }
 
+
+// ═════════════════════════════════════════════════════════════════════════════
+// LOCAL PERSISTENCE — the farm record stays on the farmer's own machine
+// ═════════════════════════════════════════════════════════════════════════════
+// Everything a farmer enters saves to their browser automatically and reloads
+// next time. Nothing is transmitted. For this data in particular — succession
+// tensions, sweat equity figures, who the operator thinks is not ready — that is
+// a feature rather than a limitation, and it is a real answer to a question
+// farmers will ask.
+//
+// Export produces a single file they can back up, move to another machine, or
+// hand to a lender, an accountant, a facilitator, or the next generation.
+
+const MFP_STORE_KEY = "mfp-farm-record-v1";
+const MFP_SCHEMA = 1;
+
+const storageAvailable = () => {
+  try {
+    const k = "__mfp_probe__";
+    window.localStorage.setItem(k, "1");
+    window.localStorage.removeItem(k);
+    return true;
+  } catch (e) { return false; }
+};
+
+const buildRecord = (s) => ({
+  schema: MFP_SCHEMA,
+  savedAt: new Date().toISOString(),
+  module: s.module,
+  profile: s.profile, fa: s.fa, rd: s.rd, risk: s.risk, leg: s.leg, vis: s.vis,
+});
+
+const saveRecord = (s) => {
+  try {
+    window.localStorage.setItem(MFP_STORE_KEY, JSON.stringify(buildRecord(s)));
+    return { ok:true };
+  } catch (e) {
+    // Quota is the realistic failure here, not a missing API.
+    return { ok:false, reason: e && e.name === "QuotaExceededError" ? "full" : "blocked" };
+  }
+};
+
+const loadRecord = () => {
+  try {
+    const raw = window.localStorage.getItem(MFP_STORE_KEY);
+    if (!raw) return null;
+    const p = JSON.parse(raw);
+    if (!p || typeof p !== "object") return null;
+    if (p.schema !== MFP_SCHEMA) return { ...p, _schemaMismatch:true };
+    return p;
+  } catch (e) { return null; }
+};
+
+const clearRecord = () => { try { window.localStorage.removeItem(MFP_STORE_KEY); } catch(e){} };
+
+// Validates an imported file before it is allowed to replace anything.
+const validateRecord = (p) => {
+  if (!p || typeof p !== "object") return "That file is not a readable farm record.";
+  if (typeof p.schema !== "number") return "That file is missing its version marker, so it is probably not an MFP record.";
+  if (p.schema > MFP_SCHEMA) return "That record was saved by a newer version of MFP than this one. Update first, then import.";
+  const known = ["profile","fa","rd","risk","leg","vis"];
+  if (!known.some(k => p[k] && typeof p[k] === "object")) return "That record has no module data in it.";
+  return null;
+};
+
+const downloadRecord = (s, label) => {
+  const rec = buildRecord(s);
+  const stamp = new Date().toISOString().slice(0,10);
+  const safe = String(label||"farm").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,40) || "farm";
+  const blob = new Blob([JSON.stringify(rec, null, 2)], { type:"application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = `mfp-${safe}-${stamp}.json`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url), 1000);
+};
+
+const relTime = (iso) => {
+  if (!iso) return "";
+  const secs = Math.floor((Date.now() - new Date(iso).getTime())/1000);
+  if (secs < 5) return "just now";
+  if (secs < 60) return `${secs}s ago`;
+  if (secs < 3600) return `${Math.floor(secs/60)}m ago`;
+  if (secs < 86400) return `${Math.floor(secs/3600)}h ago`;
+  return new Date(iso).toLocaleDateString();
+};
+
+// Header control: save state, export, import, and start over.
+function DataControls({ state, savedAt, storageOk, onImport, onClear }) {
+  const [open, setOpen] = useState(false);
+  const [err, setErr] = useState("");
+  const fileRef = useRef(null);
+
+  const pick = () => { setErr(""); fileRef.current && fileRef.current.click(); };
+  const handleFile = (e) => {
+    const f = e.target.files && e.target.files[0];
+    e.target.value = "";
+    if (!f) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      let parsed = null;
+      try { parsed = JSON.parse(reader.result); }
+      catch (x) { setErr("That file could not be read as JSON."); return; }
+      const bad = validateRecord(parsed);
+      if (bad) { setErr(bad); return; }
+      const when = parsed.savedAt ? new Date(parsed.savedAt).toLocaleString() : "an unknown date";
+      if (!window.confirm(`Load the record saved ${when}?\n\nThis replaces everything currently entered.`)) return;
+      onImport(parsed); setErr(""); setOpen(false);
+    };
+    reader.onerror = () => setErr("That file could not be read.");
+    reader.readAsText(f);
+  };
+
+  return (
+    <div style={{ position:"relative" }}>
+      <button onClick={()=>setOpen(o=>!o)} style={{ background:"none", border:`1px solid ${T.border}`, borderRadius:5, padding:"6px 12px", cursor:"pointer", font:"inherit", fontSize:12, color:T.fgM, display:"flex", alignItems:"center", gap:7 }}>
+        <span style={{ width:7, height:7, borderRadius:"50%", background: storageOk ? (savedAt ? T.green : T.silver) : T.amber }} />
+        {storageOk ? (savedAt ? `Saved ${relTime(savedAt)}` : "Not saved yet") : "Not saving"}
+      </button>
+      {open && (
+        <>
+          <div onClick={()=>setOpen(false)} style={{ position:"fixed", inset:0, zIndex:40 }} />
+          <div style={{ position:"absolute", right:0, top:"calc(100% + 6px)", width:310, background:"#fff", border:`1px solid ${T.border}`, borderRadius:9, boxShadow:"0 6px 24px rgba(14,28,57,.12)", padding:14, zIndex:41 }}>
+            <div style={{ fontSize:10.5, letterSpacing:"0.13em", textTransform:"uppercase", color:T.fgS, marginBottom:9 }}>Your farm record</div>
+            {storageOk ? (
+              <p style={{ fontSize:12.5, color:T.fgM, margin:"0 0 12px", lineHeight:1.55 }}>
+                Saved on this computer as you work. Nothing is sent anywhere. Close the tab and come back whenever you like.
+              </p>
+            ) : (
+              <div style={{ marginBottom:12 }}><Flag type="warn">This browser is blocking local storage, which usually means private browsing. Your work will be lost on refresh. Export before you close the tab.</Flag></div>
+            )}
+            <button onClick={()=>{ downloadRecord(state, (state.profile||{}).location); setOpen(false); }} style={{ ...btnStyle("primary"), width:"100%", marginBottom:8 }}>Export to a file</button>
+            <button onClick={pick} style={{ ...btnStyle("outline"), width:"100%", marginBottom:8 }}>Import a file</button>
+            <input ref={fileRef} type="file" accept=".json,application/json" onChange={handleFile} style={{ display:"none" }} />
+            {err && <div style={{ marginBottom:8 }}><Flag type="danger">{err}</Flag></div>}
+            <button onClick={()=>{ if (window.confirm("Clear everything on this computer and start over?\n\nExport first if you want a copy.")) { onClear(); setOpen(false); } }}
+              style={{ ...btnStyle("ghost"), width:"100%" }}>Start over</button>
+            <p style={{ fontSize:11, color:T.fgS, margin:"11px 0 0", lineHeight:1.5 }}>
+              The exported file is the whole record. Back it up, move it to another computer, or hand it to your lender, accountant, or facilitator.
+            </p>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 // ═════════════════════════════════════════════════════════════════════════════
 // ROOT APP
 // ═════════════════════════════════════════════════════════════════════════════
@@ -5909,12 +6056,63 @@ const GENERIC_FARM_FINANCIALS = {
 
 export default function App() {
   const [module, setModule] = useState("profile");
+  // Persistence. `restored` gates the autosave so the initial empty state can
+  // never overwrite a saved record before the load has finished.
+  const [restored, setRestored] = useState(false);
+  const [savedAt, setSavedAt] = useState(null);
+  const [storageOk] = useState(() => storageAvailable());
+  const [schemaWarn, setSchemaWarn] = useState(false);
   const [fa, setFA] = useState({ stage:1, enterprises:[], goals:{}, wholeFarm:{}, ratioVals:{}, s3vals:{ ...GENERIC_FARM_FINANCIALS }, s4bench:{}, s5:{}, actionChecked:{} });
   const [rd, setRD] = useState({ stage:1, data:{} });
   const [risk, setRisk] = useState({ stage:1, answers:{} });
   const [leg, setLeg] = useState({ stage:1, data:{}, succ:{}, role:"senior" });
   const [vis, setVisState] = useState({ stage:1, items:[], rules:[], holders:{}, published:{}, approved:{} });
   const setVis = (patch) => setVisState(s => ({ ...s, ...patch }));
+
+  // Restore once on mount.
+  useEffect(() => {
+    if (!storageOk) { setRestored(true); return; }
+    const rec = loadRecord();
+    if (rec) {
+      if (rec._schemaMismatch) setSchemaWarn(true);
+      if (rec.profile) setProfile(rec.profile);
+      if (rec.fa) setFA(rec.fa);
+      if (rec.rd) setRD(rec.rd);
+      if (rec.risk) setRisk(rec.risk);
+      if (rec.leg) setLeg(rec.leg);
+      if (rec.vis) setVisState(rec.vis);
+      if (rec.module) setModule(rec.module);
+      if (rec.savedAt) setSavedAt(rec.savedAt);
+    }
+    setRestored(true);
+  }, []);
+
+  // Autosave, debounced so it does not write on every keystroke.
+  useEffect(() => {
+    if (!restored || !storageOk) return;
+    const t = setTimeout(() => {
+      const r = saveRecord({ module, profile, fa, rd, risk, leg, vis });
+      if (r.ok) setSavedAt(new Date().toISOString());
+    }, 800);
+    return () => clearTimeout(t);
+  }, [restored, storageOk, module, profile, fa, rd, risk, leg, vis]);
+
+  const applyRecord = (rec) => {
+    setProfile(rec.profile || {});
+    setFA(rec.fa || { stage:1, enterprises:[], goals:{}, wholeFarm:{}, ratioVals:{}, s3vals:{}, s4bench:{}, s5:{}, actionChecked:{} });
+    setRD(rec.rd || { stage:1, data:{} });
+    setRisk(rec.risk || { stage:1, answers:{} });
+    setLeg(rec.leg || { stage:1, data:{}, succ:{}, role:"senior" });
+    setVisState(rec.vis || { stage:1, items:[], rules:[], holders:{}, published:{}, approved:{} });
+    if (rec.module) setModule(rec.module);
+  };
+
+  const resetAll = () => {
+    clearRecord();
+    applyRecord({});
+    setModule("profile");
+    setSavedAt(null);
+  };
   const setSucc = (patch) => setLeg(s => ({ ...s, succ:{ ...(s.succ||{}), ...patch } }));
   const setLegRole = (r) => setLeg(s => ({ ...s, role:r, stage:1 }));
   const [riskConvo, setRiskConvo] = useState(false);
@@ -6116,6 +6314,14 @@ export default function App() {
             </div>
           </div>
         </div>
+        <div style={{ marginLeft:"auto" }}>
+          <DataControls
+            state={{ module, profile, fa, rd, risk, leg, vis }}
+            savedAt={savedAt}
+            storageOk={storageOk}
+            onImport={applyRecord}
+            onClear={resetAll} />
+        </div>
         <div style={{ marginLeft:"auto", display:"flex", alignItems:"center", gap:16 }}>
           <span style={{ fontSize:11, color:T.fgS, maxWidth:190, textAlign:"right", lineHeight:1.4 }}>Your farm profile carries across all modules</span>
           <div style={{ width:38, height:38, borderRadius:"50%", background:T.blue, color:"#fff", display:"flex", alignItems:"center", justifyContent:"center", fontWeight:700, fontSize:15 }}>RM</div>
@@ -6207,6 +6413,11 @@ export default function App() {
                     </button>
                   );
                 })}
+              </div>
+            )}
+            {schemaWarn && (
+              <div style={{ marginBottom:16 }}>
+                <Flag type="warn">A saved record from a different version of MFP was found. It has been loaded, but some fields may not line up. If anything looks wrong, export a copy and then start over.</Flag>
               </div>
             )}
             <div key={riskConvoActive ? "risk-convo" : `${module}-${legRole}-${stage}`} className="mfp-body-anim">{body}</div>
