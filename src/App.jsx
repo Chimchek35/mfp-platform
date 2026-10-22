@@ -6056,6 +6056,7 @@ const GENERIC_FARM_FINANCIALS = {
 
 export default function App() {
   const [module, setModule] = useState("profile");
+  const [profile, setProfile] = useState({ ...GENERIC_FARM_SWOT, ...GENERIC_FARM_STRATEGY });
   // Persistence. `restored` gates the autosave so the initial empty state can
   // never overwrite a saved record before the load has finished.
   const [restored, setRestored] = useState(false);
@@ -6116,7 +6117,6 @@ export default function App() {
   const setSucc = (patch) => setLeg(s => ({ ...s, succ:{ ...(s.succ||{}), ...patch } }));
   const setLegRole = (r) => setLeg(s => ({ ...s, role:r, stage:1 }));
   const [riskConvo, setRiskConvo] = useState(false);
-  const [profile, setProfile] = useState({ ...GENERIC_FARM_SWOT, ...GENERIC_FARM_STRATEGY });
 
   const setRData = (fn) => setRD(s => ({ ...s, data: fn(s.data||{}) }));
   const goFA = (n) => { setModule("fa"); setFA(s => ({ ...s, stage:n })); };
