@@ -1,4 +1,5 @@
 import { useState, useMemo, useRef, useEffect } from "react";
+import { loadSavedWork, syncSavedWork } from "./backend.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // FONTS  (system stack, matching the MFP action plan design language)
@@ -6070,7 +6071,7 @@ export default function App() {
   const [vis, setVisState] = useState({ stage:1, items:[], rules:[], holders:{}, published:{}, approved:{} });
   const setVis = (patch) => setVisState(s => ({ ...s, ...patch }));
 
-  // Restore once on mount.
+  // Restore the local record first, then prefer a signed-in server record when available.
   useEffect(() => {
     if (!storageOk) { setRestored(true); return; }
     const rec = loadRecord();
@@ -6086,14 +6087,19 @@ export default function App() {
       if (rec.savedAt) setSavedAt(rec.savedAt);
     }
     setRestored(true);
+    loadSavedWork().then(serverRecord => {
+      if (serverRecord) applyRecord(serverRecord);
+    });
   }, []);
 
   // Autosave, debounced so it does not write on every keystroke.
   useEffect(() => {
     if (!restored || !storageOk) return;
     const t = setTimeout(() => {
-      const r = saveRecord({ module, profile, fa, rd, risk, leg, vis });
+      const record = { module, profile, fa, rd, risk, leg, vis };
+      const r = saveRecord(record);
       if (r.ok) setSavedAt(new Date().toISOString());
+      syncSavedWork({ ...buildRecord(record), savedAt: new Date().toISOString() }, profile.location || "Farm record");
     }, 800);
     return () => clearTimeout(t);
   }, [restored, storageOk, module, profile, fa, rd, risk, leg, vis]);
