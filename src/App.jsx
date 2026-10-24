@@ -2225,7 +2225,7 @@ function LivestockInsuranceCalculator({ risk, setRisk }) {
   );
 }
 
-// ─────��───────────────────────────────────────────────────────────────────────
+// ─────���───────────────────────────────────────────────────────────────────────
 // RD helpers
 // ─────────────────────────────────────────────────────────────────────────────
 // Each lever category is now built from specific, measurable items rather than one
@@ -2413,7 +2413,7 @@ const scoredOpps = (rd, faEnterprises, faS3vals) => { const d=rd.data||{}; const
 
     return { ...o, leverMatch:Math.round(Math.min(100,leverMatch)), capOk, timeOk, sizeMatch, entMatch, isRelevant, isExcluded, faAdj, score:leverMatch*(capOk?1:0.3)*(timeOk?1:0.7)*(entMatch?1:0.1)*faAdj }; }).sort((a,b)=>b.score-a.score); };
 
-// ─────────��───────────────────────────────────────────────────────────────────
+// ────────����───────────────────────────────────────────────────────────────────
 // RD STAGE 1 — Baseline & readiness
 // ─────────────────────────────────────────────────────────────────────────────
 function RD1({ rd, setRData, fa }) {
@@ -2490,7 +2490,7 @@ function PeerIncomeBenchmark({ revTier }) {
   );
 }
 
-// ─────────────────────────────��───────────────────────────────────────────────
+// ───────────────────────────��─��───────────────────────────────────────────────
 // RD STAGE 2 — Goal alignment
 // ─────────────────────────────────────────────────────────────────────────────
 function RD2({ rd, setRData }) {
@@ -3802,7 +3802,7 @@ function LegacyVoiceGuide({ stage, role }) {
     recognition.onerror = () => setListening(false);
     recognitionRef.current = recognition;
     return () => { recognition.stop(); recognitionRef.current = null; };
-  }, [onTranscript]);
+  }, []);
 
   const toggleListening = () => {
     if (!supported) return;
