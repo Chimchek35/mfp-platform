@@ -2225,7 +2225,7 @@ function LivestockInsuranceCalculator({ risk, setRisk }) {
   );
 }
 
-// ───������─�����───────────────────────────────────────────────────────────────────────
+// ───�������─�����───────────────────────────────────────────────────────────────────────
 // RD helpers
 // ─────────────────────────────────────────────────────────────────────────────
 // Each lever category is now built from specific, measurable items rather than one
@@ -6164,8 +6164,11 @@ function DataControls({ state, savedAt, storageOk, onImport, onImportProfile, on
               </div>
               <button type="button" aria-label="Close import dialog" onClick={() => setProfileImportOpen(false)} style={{ ...btnStyle("ghost"), padding:"4px 9px", fontSize:18, lineHeight:1 }}>×</button>
             </div>
-            <button type="button" onClick={() => profileFileRef.current?.click()} style={{ ...btnStyle("outline"), width:"100%", marginBottom:12 }}>Choose Maximum Farm Potential JSON file</button>
-            <textarea aria-label="Paste Maximum Farm Potential JSON" value={profileJson} onChange={(e) => setProfileJson(e.target.value)} placeholder={'Paste the exported JSON here'} style={{ ...inputStyle(), minHeight:150, resize:"vertical", fontFamily:"ui-monospace, SFMono-Regular, Menlo, monospace", fontSize:12 }} />
+  <label style={{ display:"block", border:`1px dashed ${T.blue}`, borderRadius:6, padding:"12px 14px", marginBottom:12, background:T.blueL, color:T.blue, cursor:"pointer", fontSize:13, fontWeight:600, textAlign:"center" }}>
+  Choose Maximum Farm Potential JSON file
+  <input ref={profileFileRef} type="file" accept=".json,application/json" onChange={handleProfileFile} style={{ display:"block", width:"100%", marginTop:8, fontSize:12, fontWeight:400, color:T.fg, cursor:"pointer" }} />
+  </label>
+  <textarea aria-label="Paste Maximum Farm Potential JSON" value={profileJson} onChange={(e) => setProfileJson(e.target.value)} placeholder={'Paste the exported JSON here'} style={{ ...inputStyle(), minHeight:150, resize:"vertical", fontFamily:"ui-monospace, SFMono-Regular, Menlo, monospace", fontSize:12 }} />
             {err && <div style={{ marginTop:10 }}><Flag type="danger">{err}</Flag></div>}
             <div style={{ display:"flex", justifyContent:"flex-end", gap:8, marginTop:14 }}>
               <button type="button" onClick={() => setProfileImportOpen(false)} style={btnStyle("ghost")}>Cancel</button>
@@ -6199,8 +6202,7 @@ function DataControls({ state, savedAt, storageOk, onImport, onImportProfile, on
             <button onClick={pick} style={{ ...btnStyle("outline"), width:"100%", marginBottom:8 }}>Import a file</button>
             <button onClick={pickProfile} style={{ ...btnStyle("outline"), width:"100%", marginBottom:8 }}>Import Maximum Farm Potential profile</button>
             <input ref={fileRef} type="file" accept=".json,application/json" onChange={handleFile} style={{ display:"none" }} />
-            <input id="mfp-profile-import-input" data-mfp-profile-import ref={profileFileRef} type="file" accept=".json,application/json" onChange={handleProfileFile} style={{ display:"none" }} />
-            {profileStatus && <div style={{ marginBottom:8 }}><Flag type="ok">{profileStatus}. Your Legacy, Financial Analysis, and Revenue Diversification modules can now use the imported profile.</Flag></div>}
+                      {profileStatus && <div style={{ marginBottom:8 }}><Flag type="ok">{profileStatus}. Your Legacy, Financial Analysis, and Revenue Diversification modules can now use the imported profile.</Flag></div>}
             {err && <div style={{ marginBottom:8 }}><Flag type="danger">{err}</Flag></div>}
             <button onClick={()=>{ if (window.confirm("Clear everything on this computer and start over?\n\nExport first if you want a copy.")) { onClear(); setOpen(false); } }}
               style={{ ...btnStyle("ghost"), width:"100%" }}>Start over</button>
