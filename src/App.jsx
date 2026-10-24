@@ -95,7 +95,7 @@ const IconCheckSm = ({ color = "#fff", size = 11 }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>
 );
 
-// ─────────────────────────────────────────────────���───────────────────────────
+// ─────────────────────────────────────────────────�����───────────────────────────
 // STYLE HELPERS
 // ─────────────────────────────────────────────────────────────────────────────
 const cardStyle = (extra={}) => ({ background:"#fff", border:`1px solid ${T.border}`, borderRadius:10, padding:"24px 28px", marginBottom:14, ...extra });
@@ -816,7 +816,7 @@ function FA4({ fa, setFA }) {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // FARM RISK — quiz categories & question bank
-// ──────────────────────────────────────────────────────────��─����────────────────
+// ──────────────────────────────────────────────────────────���─����────────────────
 // Adapted from the Nationwide Farm Risk Ready℠ framework (risk identification,
 // managing/preventing risk, contingency planning, communicating the plan).
 const RISK_CATS = [
@@ -2408,7 +2408,7 @@ const scoredOpps = (rd, faEnterprises, faS3vals) => { const d=rd.data||{}; const
 
 // ��������──��������───────────────────────────────────────────────────────────────────
 // RD STAGE 1 — Baseline & readiness
-// ─────────────────────────────────────────────────────────────────────���──���────
+// ───────────────────────────────────────────────────────────────────���─���──���────
 function RD1({ rd, setRData, fa }) {
   const d = rd.data; const b = d.baseline || {};
   const set = (f,v) => setRData(s => ({ ...s, baseline:{ ...(s.baseline||{}), [f]:v } }));
@@ -2485,7 +2485,7 @@ function PeerIncomeBenchmark({ revTier }) {
 
 // ─────────��──�����───��─��───��───��─��───────────────────────────────────���───────────
 // RD STAGE 2 — Goal alignment
-// ─────────────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────��───
 function RD2({ rd, setRData }) {
   const g = rd.data.goals2 || {};
   const set = (f,v) => setRData(s => ({ ...s, goals2:{ ...(s.goals2||{}), [f]:v } }));
@@ -2576,7 +2576,7 @@ function RD3({ rd, setRData }) {
   );
 }
 
-// ─────────────────────────────────────────────���────���──────────────────────────
+// ─────────────────────────────────────────���───���────���──────────────────────────
 // RD STAGE 4 — Opportunity mapping
 // ─────────────────────────────────────────────────────────────────────────────
 const GROWTH_TIER_LABEL = { 1:"Tier 1 · Fastest structural growth", 2:"Tier 2 · Strong growth", 3:"Tier 3 · Steady & selective" };
@@ -3135,7 +3135,7 @@ function EfficiencyValueImpact({ sel, lev }) {
   );
 }
 
-// ══════════════════════════════════════════════════════════════════��══════��═══
+// ════════════════════════════════════════════════════════════��═════��══════��═══
 // FARM PROFILE — a single 360° farm view that fills in as the farmer completes
 // onboarding and assessments, and feeds relevant fields back into FA, RD, and Risk
 // so nothing has to be entered twice.
@@ -3180,7 +3180,7 @@ const FindingBlock = ({ kind, tag, heading, source, children }) => {
 
 // ═══════════════════��══��════════���═════════════════════════════════════════════
 // ACTION PLAN — twelve business areas, ranked into three priorities
-// ═════════════════════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════════════���══════
 // Areas map to one of the four MFP categories, and some map to a guided module.
 // Ranking is weight-aware: a constraint area gates everything downstream, a value
 // area produces the largest near-term lift, so neither is ranked on raw score alone.
@@ -6084,37 +6084,14 @@ function DataControls({ state, savedAt, storageOk, onImport, onImportProfile, on
     setProfileImportOpen(false);
     setOpen(false);
   };
-  const handleProfileFile = async (e) => {
+  const handleProfileFile = (e) => {
     const f = e.target.files && e.target.files[0];
     e.target.value = "";
     if (!f) return;
     setErr("");
-    if (f.type === "application/pdf" || f.name.toLowerCase().endsWith(".pdf")) {
-      try {
-        const pdfjs = await import("pdfjs-dist");
-        const data = new Uint8Array(await f.arrayBuffer());
-        const pdf = await pdfjs.getDocument({ data, disableWorker: true }).promise;
-        let text = "";
-        for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
-          const page = await pdf.getPage(pageNumber);
-          const content = await page.getTextContent();
-          text += `${content.items.map(item => item.str).join(" ")}\\n`;
-        }
-        const profile = profileFromMFPText(text);
-        if (!profile) { setErr("No recognizable farm profile fields were found in that PDF. Use a text-based MFP profile PDF or export JSON."); return; }
-        if (!window.confirm("Import this Maximum Farm Potential profile? Matching profile fields will be replaced; your module answers will stay intact.")) return;
-        onImportProfile(profile);
-        setProfileStatus(`${Object.keys(profile).length} profile fields imported from PDF`);
-        setProfileImportOpen(false);
-        setOpen(false);
-      } catch (error) {
-        setErr("That PDF could not be read. It may be scanned or image-only; try a text-based PDF.");
-      }
-      return;
-    }
     const reader = new FileReader();
     reader.onload = () => importProfileJson(reader.result);
-    reader.onerror = () => setErr("That profile file could not be read.");
+    reader.onerror = () => setErr("That profile file could not be read as JSON.");
     reader.readAsText(f);
   };
   const handleFile = (e) => {
@@ -6145,7 +6122,7 @@ function DataControls({ state, savedAt, storageOk, onImport, onImportProfile, on
               <div>
                 <div style={eyebrowStyle}>Maximum Farm Potential</div>
                 <h2 id="mfp-import-title" style={{ ...h1Style, fontSize:20 }}>Import your farm profile</h2>
-                <p style={{ ...subStyle, marginBottom:16 }}>Choose a PDF profile report from Maximum Farm Potential, or use the JSON fallback. Your existing module answers will stay intact.</p>
+                <p style={{ ...subStyle, marginBottom:16 }}>Choose a JSON profile export from Maximum Farm Potential, or paste the JSON below. Your existing module answers will stay intact.</p>
               </div>
               <button type="button" aria-label="Close import dialog" onClick={() => setProfileImportOpen(false)} style={{ ...btnStyle("ghost"), padding:"4px 9px", fontSize:18, lineHeight:1 }}>×</button>
             </div>
