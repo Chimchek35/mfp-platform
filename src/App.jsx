@@ -990,7 +990,7 @@ function RiskResultsStage({ risk }) {
 }
 
 
-// ═════════════════════════════════════════════════════════════════════════════
+// ═════════════════════════���═══════════════════════════════════════════════════
 // CONVERSATIONAL CAPTURE — Farm Risk Ready, steps 1 through 7
 // ═════════════════════════════════════════════════════════════════════════════
 // Speech capture runs entirely in the browser through the Web Speech API, so it
@@ -2225,7 +2225,7 @@ function LivestockInsuranceCalculator({ risk, setRisk }) {
   );
 }
 
-// ─────����───────────────────────────────────────────────────────────────────────
+// ─────�����───────────────────────────────────────────────────────────────────────
 // RD helpers
 // ─────────────────────────────────────────────────────────────────────────────
 // Each lever category is now built from specific, measurable items rather than one
@@ -2413,7 +2413,7 @@ const scoredOpps = (rd, faEnterprises, faS3vals) => { const d=rd.data||{}; const
 
     return { ...o, leverMatch:Math.round(Math.min(100,leverMatch)), capOk, timeOk, sizeMatch, entMatch, isRelevant, isExcluded, faAdj, score:leverMatch*(capOk?1:0.3)*(timeOk?1:0.7)*(entMatch?1:0.1)*faAdj }; }).sort((a,b)=>b.score-a.score); };
 
-// ───────������───────────────────────────────────────────────────────────────────
+// ──────��������───────────────────────────────────────────────────────────────────
 // RD STAGE 1 — Baseline & readiness
 // ─────────────────────────────────────────────────────────────────────────────
 function RD1({ rd, setRData, fa }) {
@@ -2490,7 +2490,7 @@ function PeerIncomeBenchmark({ revTier }) {
   );
 }
 
-// ───────────────────────────��─��───────────────────────────────────────────────
+// ───────────────────────��───��─��───────────────────────────────────────────────
 // RD STAGE 2 — Goal alignment
 // ─────────────────────────────────────────────────────────────────────────────
 function RD2({ rd, setRData }) {
@@ -6037,6 +6037,39 @@ const validateRecord = (p) => {
   return null;
 };
 
+// Accepts a Maximum Farm Potential profile export without requiring the two tools
+// to share an internal schema. Field aliases keep this first integration test
+// useful while the production contract is finalized.
+const profileFromMFPExport = (raw) => {
+  const source = raw?.profile || raw?.farmProfile || raw?.farm?.profile || raw;
+  const value = (...keys) => {
+    for (const key of keys) {
+      const parts = key.split(".");
+      let current = source;
+      for (const part of parts) current = current?.[part];
+      if (current !== undefined && current !== null && current !== "") return String(current);
+    }
+    return "";
+  };
+  const profile = {
+    location: value("location", "farmLocation", "address", "farm.location"),
+    size: value("size", "farmSize", "acreage", "acres", "land.acres"),
+    productionMix: value("productionMix", "production", "commodities", "enterprises", "farmType"),
+    ventures: value("ventures", "diversification", "otherIncome", "businesses"),
+    grossIncome: value("grossIncome", "revenue", "grossRevenue", "financials.grossIncome", "financial.grossRevenue"),
+    nearTerm: value("nearTerm", "nearTermObjectives", "objectives.nearTerm", "goals.shortTerm"),
+    longTerm: value("longTerm", "longTermObjectives", "objectives.longTerm", "goals.longTerm"),
+    advantage: value("advantage", "competitiveAdvantage", "strengths", "strategy.advantage"),
+    values: value("values", "coreValues", "familyValues", "strategy.values"),
+    swotStrengths: value("swotStrengths", "swot.strengths", "strengths"),
+    swotWeaknesses: value("swotWeaknesses", "swot.weaknesses", "weaknesses"),
+    swotOpportunities: value("swotOpportunities", "swot.opportunities", "opportunities"),
+    swotThreats: value("swotThreats", "swot.threats", "threats"),
+  };
+  const populated = Object.fromEntries(Object.entries(profile).filter(([, v]) => v));
+  return Object.keys(populated).length ? populated : null;
+};
+
 const downloadRecord = (s, label) => {
   const rec = buildRecord(s);
   const stamp = new Date().toISOString().slice(0,10);
@@ -6060,12 +6093,34 @@ const relTime = (iso) => {
 };
 
 // Header control: save state, export, import, and start over.
-function DataControls({ state, savedAt, storageOk, onImport, onClear }) {
+function DataControls({ state, savedAt, storageOk, onImport, onImportProfile, onClear }) {
   const [open, setOpen] = useState(false);
   const [err, setErr] = useState("");
+  const [profileStatus, setProfileStatus] = useState("");
   const fileRef = useRef(null);
+  const profileFileRef = useRef(null);
 
   const pick = () => { setErr(""); fileRef.current && fileRef.current.click(); };
+  const pickProfile = () => { setErr(""); setProfileStatus(""); profileFileRef.current && profileFileRef.current.click(); };
+  const handleProfileFile = (e) => {
+    const f = e.target.files && e.target.files[0];
+    e.target.value = "";
+    if (!f) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      let parsed = null;
+      try { parsed = JSON.parse(reader.result); }
+      catch (x) { setErr("That profile file could not be read as JSON."); return; }
+      const profile = profileFromMFPExport(parsed);
+      if (!profile) { setErr("No recognizable farm profile fields were found in that file."); return; }
+      if (!window.confirm("Import this Maximum Farm Potential profile? Matching profile fields will be replaced; your module answers will stay intact.")) return;
+      onImportProfile(profile);
+      setProfileStatus(`${Object.keys(profile).length} profile fields imported`);
+      setOpen(false);
+    };
+    reader.onerror = () => setErr("That profile file could not be read.");
+    reader.readAsText(f);
+  };
   const handleFile = (e) => {
     const f = e.target.files && e.target.files[0];
     e.target.value = "";
@@ -6105,7 +6160,10 @@ function DataControls({ state, savedAt, storageOk, onImport, onClear }) {
             )}
             <button onClick={()=>{ downloadRecord(state, (state.profile||{}).location); setOpen(false); }} style={{ ...btnStyle("primary"), width:"100%", marginBottom:8 }}>Export to a file</button>
             <button onClick={pick} style={{ ...btnStyle("outline"), width:"100%", marginBottom:8 }}>Import a file</button>
+            <button onClick={pickProfile} style={{ ...btnStyle("outline"), width:"100%", marginBottom:8 }}>Import Maximum Farm Potential profile</button>
             <input ref={fileRef} type="file" accept=".json,application/json" onChange={handleFile} style={{ display:"none" }} />
+            <input ref={profileFileRef} type="file" accept=".json,application/json" onChange={handleProfileFile} style={{ display:"none" }} />
+            {profileStatus && <div style={{ marginBottom:8 }}><Flag type="ok">{profileStatus}. Your Legacy, Financial Analysis, and Revenue Diversification modules can now use the imported profile.</Flag></div>}
             {err && <div style={{ marginBottom:8 }}><Flag type="danger">{err}</Flag></div>}
             <button onClick={()=>{ if (window.confirm("Clear everything on this computer and start over?\n\nExport first if you want a copy.")) { onClear(); setOpen(false); } }}
               style={{ ...btnStyle("ghost"), width:"100%" }}>Start over</button>
@@ -6428,6 +6486,7 @@ export default function App() {
             savedAt={savedAt}
             storageOk={storageOk}
             onImport={applyRecord}
+            onImportProfile={(importedProfile) => setProfile(current => ({ ...current, ...importedProfile }))}
             onClear={resetAll} />
         </div>
         <div style={{ marginLeft:"auto", display:"flex", alignItems:"center", gap:16 }}>
