@@ -2225,7 +2225,7 @@ function LivestockInsuranceCalculator({ risk, setRisk }) {
   );
 }
 
-// ─────���───────────────────────────────────────────────────────────────────────
+// ─────����───────────────────────────────────────────────────────────────────────
 // RD helpers
 // ─────────────────────────────────────────────────────────────────────────────
 // Each lever category is now built from specific, measurable items rather than one
@@ -2413,7 +2413,7 @@ const scoredOpps = (rd, faEnterprises, faS3vals) => { const d=rd.data||{}; const
 
     return { ...o, leverMatch:Math.round(Math.min(100,leverMatch)), capOk, timeOk, sizeMatch, entMatch, isRelevant, isExcluded, faAdj, score:leverMatch*(capOk?1:0.3)*(timeOk?1:0.7)*(entMatch?1:0.1)*faAdj }; }).sort((a,b)=>b.score-a.score); };
 
-// ────────����───────────────────────────────────────────────────────────────────
+// ───────������───────────────────────────────────────────────────────────────────
 // RD STAGE 1 — Baseline & readiness
 // ─────────────────────────────────────────────────────────────────────────────
 function RD1({ rd, setRData, fa }) {
@@ -3766,13 +3766,61 @@ const legacyTier = (leg) => {
   return "structural";
 };
 
-const legRow = (label, children, sub) => (
-  <div style={{ marginBottom:16 }}>
-    <label style={labelStyle}>{label}</label>
-    {sub && <div style={{ fontSize:11.5, color:T.fgS, marginBottom:6, fontStyle:"italic" }}>{sub}</div>}
-    {children}
-  </div>
-);
+function LegacyVoiceField({ children }) {
+  const [listening, setListening] = useState(false);
+  const [supported, setSupported] = useState(true);
+  const recognitionRef = useRef(null);
+
+  useEffect(() => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) { setSupported(false); return undefined; }
+    const recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = "en-US";
+    recognition.onresult = (event) => {
+      const spoken = event.results?.[0]?.[0]?.transcript?.trim();
+      if (!spoken || !children?.props?.onChange) return;
+      const current = children.props.value || "";
+      children.props.onChange({ target: { value: `${current}${current ? " " : ""}${spoken}` } });
+    };
+    recognition.onend = () => setListening(false);
+    recognition.onerror = () => setListening(false);
+    recognitionRef.current = recognition;
+    return () => { recognition.stop(); recognitionRef.current = null; };
+  }, [children]);
+
+  const toggleListening = () => {
+    if (!supported) return;
+    if (listening) { recognitionRef.current?.stop(); setListening(false); return; }
+    recognitionRef.current?.start();
+    setListening(true);
+  };
+
+  return (
+    <div>
+      <div style={{ display:"flex", alignItems:"flex-start", gap:8 }}>
+        <div style={{ flex:1 }}>{children}</div>
+        <button type="button" onClick={toggleListening} disabled={!supported} aria-label={listening ? "Stop voice input" : "Answer by voice"} aria-pressed={listening} style={{ ...btnStyle(listening ? "primary" : "outline", T.blue), fontSize:11.5, padding:"7px 10px", whiteSpace:"nowrap", opacity:supported?1:.5 }}>
+          {listening ? "Stop" : "Speak"}
+        </button>
+      </div>
+      {listening && <div role="status" style={{ marginTop:5, fontSize:11.5, color:T.blue }}>Listening… pause when you&apos;re finished.</div>}
+      {!supported && <div style={{ marginTop:4, fontSize:11, color:T.fgS }}>Voice input is unavailable in this browser.</div>}
+    </div>
+  );
+}
+
+const legRow = (label, children, sub) => {
+  const isVoiceAnswer = children?.type === "textarea" || (children?.type === "input" && children?.props?.type === "text");
+  return (
+    <div style={{ marginBottom:16 }}>
+      <label style={labelStyle}>{label}</label>
+      {sub && <div style={{ fontSize:11.5, color:T.fgS, marginBottom:6, fontStyle:"italic" }}>{sub}</div>}
+      {isVoiceAnswer ? <LegacyVoiceField>{children}</LegacyVoiceField> : children}
+    </div>
+  );
+};
 
 function LegacyVoiceGuide({ stage, role }) {
   const [listening, setListening] = useState(false);
@@ -3824,8 +3872,7 @@ function LegacyVoiceGuide({ stage, role }) {
       </div>
       {!supported && <div style={{ marginTop:8, fontSize:12, color:T.fgS }}>Voice input is not available in this browser. You can still type normally.</div>}
       {listening && <div role="status" style={{ marginTop:8, fontSize:12, color:T.blue, fontWeight:600 }}>Listening… speak naturally, then pause.</div>}
-      <textarea aria-label="Voice response draft" value={transcript} onChange={e=>setTranscript(e.target.value)} placeholder="Your spoken response will appear here. Edit it, then paste it into the question below." style={{ ...inputStyle({ minHeight:76, marginTop:10, resize:"vertical", background:"#fff" }) }} />
-      {transcript && <button type="button" onClick={()=>navigator.clipboard?.writeText(transcript)} style={{ ...btnStyle("outline", T.blue), fontSize:12, padding:"6px 10px", marginTop:8 }}>Copy response</button>}
+      <textarea aria-label="Voice response draft" value={transcript} onChange={e=>setTranscript(e.target.value)} placeholder="Speak here, or use the Speak button beside any question below. Edit your response before continuing." style={{ ...inputStyle({ minHeight:76, marginTop:10, resize:"vertical", background:"#fff" }) }} />
     </div>
   );
 }
