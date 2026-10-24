@@ -9,15 +9,21 @@ import { loadSavedWork, syncSavedWork } from "./backend.js";
 const FontStyles = () => (
   <style>{`
     *{box-sizing:border-box;}
-    .mfp-root{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;color:#181c24;font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased;}
-    .mfp-root h1,.mfp-root h2,.mfp-root h3,.mfp-root h4{margin:0;font-weight:600;line-height:1.25;}
+    .mfp-root{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;color:#181c24;font-size:16px;line-height:1.65;-webkit-font-smoothing:antialiased;}
+    .mfp-root h1,.mfp-root h2,.mfp-root h3,.mfp-root h4{margin:0;font-weight:650;line-height:1.28;}
+    .mfp-root h1{font-size:clamp(24px,2.2vw,30px);}
+    .mfp-root h2{font-size:clamp(20px,1.8vw,25px);}
+    .mfp-root h3{font-size:18px;}
     .mfp-root a{color:#0C4477;text-decoration:none;}
     .mfp-root input,.mfp-root select,.mfp-root textarea,.mfp-root button{font-family:inherit;}
-    .mfp-root input:focus,.mfp-root select:focus,.mfp-root textarea:focus{border-color:#0C4477!important;box-shadow:0 0 0 3px rgba(12,68,119,0.10);outline:none;}
+    .mfp-root input,.mfp-root select,.mfp-root textarea{font-size:16px;min-height:44px;}
+    .mfp-root input:focus,.mfp-root select:focus,.mfp-root textarea:focus{border-color:#0C4477!important;box-shadow:0 0 0 3px rgba(12,68,119,0.14);outline:none;}
+    .mfp-root button{min-height:42px;}
     .mfp-root input[type=range]{accent-color:#0C4477;}
     .mfp-root ::-webkit-scrollbar{width:10px;height:10px;}
     .mfp-root ::-webkit-scrollbar-thumb{background:#d3d8e0;border-radius:5px;}
     .mfp-root ::-webkit-scrollbar-track{background:transparent;}
+    @media (max-width:760px){.mfp-root{font-size:16px}.mfp-root button{min-height:46px}.mfp-body-shell{padding:20px 16px!important}.mfp-stage-rail{overflow-x:auto!important;padding-bottom:8px}.mfp-stage-rail>div{min-width:145px}}
     @keyframes mfpFade{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
     .mfp-body-anim{animation:mfpFade .32s cubic-bezier(0.16,1,0.3,1);}
   `}</style>
@@ -93,17 +99,17 @@ const IconCheckSm = ({ color = "#fff", size = 11 }) => (
 // STYLE HELPERS
 // ─────────────────────────────────────────────────────────────────────────────
 const cardStyle = (extra={}) => ({ background:"#fff", border:`1px solid ${T.border}`, borderRadius:10, padding:"24px 28px", marginBottom:14, ...extra });
-const h1Style = { fontSize:21, fontWeight:600, color:T.navy, margin:"0 0 4px", letterSpacing:"-0.01em", lineHeight:1.25 };
-const eyebrowStyle = { fontSize:10.5, fontWeight:400, letterSpacing:"0.15em", textTransform:"uppercase", color:T.fgS, marginBottom:6 };
-const subStyle = { fontSize:13.5, color:T.fgM, margin:"6px 0 22px", maxWidth:640, lineHeight:1.6 };
-const cardLblStyle = (extra={}) => ({ fontSize:11, fontWeight:600, letterSpacing:"0.13em", textTransform:"uppercase", color:T.fgS, marginBottom:12, display:"flex", alignItems:"center", gap:8, ...extra });
-const inputStyle = (extra={}) => ({ width:"100%", padding:"9px 11px", border:`1px solid ${T.border}`, borderRadius:5, fontSize:14, background:"#fff", color:T.fg, boxSizing:"border-box", ...extra });
-const labelStyle = { fontSize:12, fontWeight:600, color:T.fgM, marginBottom:5, display:"block" };
+const h1Style = { fontSize:26, fontWeight:650, color:T.navy, margin:"0 0 6px", letterSpacing:"-0.01em", lineHeight:1.28 };
+const eyebrowStyle = { fontSize:12, fontWeight:650, letterSpacing:"0.12em", textTransform:"uppercase", color:T.fgS, marginBottom:8 };
+const subStyle = { fontSize:16, color:T.fgM, margin:"8px 0 24px", maxWidth:700, lineHeight:1.65 };
+const cardLblStyle = (extra={}) => ({ fontSize:13, fontWeight:650, letterSpacing:"0.08em", textTransform:"uppercase", color:T.fgS, marginBottom:14, display:"flex", alignItems:"center", gap:8, ...extra });
+const inputStyle = (extra={}) => ({ width:"100%", padding:"11px 13px", border:`1px solid ${T.border}`, borderRadius:6, fontSize:16, minHeight:44, background:"#fff", color:T.fg, boxSizing:"border-box", ...extra });
+const labelStyle = { fontSize:14, fontWeight:650, color:T.fgM, marginBottom:7, display:"block" };
 const btnStyle = (variant, color) => {
   const col = color || T.green;
-  if (variant === "outline") return { padding:"8px 16px", borderRadius:5, cursor:"pointer", fontSize:13, fontWeight:500, background:"#fff", color:T.blue, border:`1px solid #cbd6e2`, transition:"all .15s" };
-  if (variant === "ghost") return { padding:"5px 12px", borderRadius:5, cursor:"pointer", fontSize:12, fontWeight:500, background:T.div, color:T.fgM, border:"none" };
-  return { padding:"9px 17px", borderRadius:5, border:"none", cursor:"pointer", fontSize:13.5, fontWeight:500, background:col, color:"#fff", transition:"all .15s" };
+  if (variant === "outline") return { padding:"10px 18px", minHeight:44, borderRadius:6, cursor:"pointer", fontSize:15, fontWeight:600, background:"#fff", color:T.blue, border:`1px solid #cbd6e2`, transition:"all .15s" };
+  if (variant === "ghost") return { padding:"9px 14px", minHeight:42, borderRadius:6, cursor:"pointer", fontSize:14, fontWeight:600, background:T.div, color:T.fgM, border:"none" };
+  return { padding:"11px 19px", minHeight:44, borderRadius:6, border:"none", cursor:"pointer", fontSize:15, fontWeight:650, background:col, color:"#fff", transition:"all .15s" };
 };
 const pillStyle = (s) => {
   const m = { strong:{bg:T.greenL,c:T.dgreen}, ready:{bg:T.greenL,c:T.dgreen}, watch:{bg:T.amberL,c:T.amberT}, caution:{bg:T.amberL,c:T.amberT}, vuln:{bg:T.redL,c:T.redD}, foundation:{bg:T.redL,c:T.redD}, info:{bg:T.blueL,c:T.blue}, blank:{bg:"#eceef2",c:T.fgS} };
@@ -2225,7 +2231,7 @@ function LivestockInsuranceCalculator({ risk, setRisk }) {
   );
 }
 
-// ───�������─�����───────────────────────────────────────────────────────────────────────
+// ───��������─�����───────────────────────────────────────────────────────────────────────
 // RD helpers
 // ─────────────────────────────────────────────────────────────────────────────
 // Each lever category is now built from specific, measurable items rather than one
@@ -2490,7 +2496,7 @@ function PeerIncomeBenchmark({ revTier }) {
   );
 }
 
-// ────────────�����───��─��───��───��─��───────────────────────────────────────────────
+// ─────────��──�����───��─��───��───��─��───────────────────────────────────────────────
 // RD STAGE 2 — Goal alignment
 // ─────────────────────────────────────────────────────────────────────────────
 function RD2({ rd, setRData }) {
