@@ -2225,7 +2225,7 @@ function LivestockInsuranceCalculator({ risk, setRisk }) {
   );
 }
 
-// ───���─�����───────────────────────────────────────────────────────────────────────
+// ───����─�����───────────────────────────────────────────────────────────────────────
 // RD helpers
 // ─────────────────────────────────────────────────────────────────────────────
 // Each lever category is now built from specific, measurable items rather than one
@@ -2413,7 +2413,7 @@ const scoredOpps = (rd, faEnterprises, faS3vals) => { const d=rd.data||{}; const
 
     return { ...o, leverMatch:Math.round(Math.min(100,leverMatch)), capOk, timeOk, sizeMatch, entMatch, isRelevant, isExcluded, faAdj, score:leverMatch*(capOk?1:0.3)*(timeOk?1:0.7)*(entMatch?1:0.1)*faAdj }; }).sort((a,b)=>b.score-a.score); };
 
-// ──����──��������───────────────────────────────────────────────────────────────────
+// ─������──��������───────────────────────────────────────────────────────────────────
 // RD STAGE 1 — Baseline & readiness
 // ─────────────────────────────────────────────────────────────────────────────
 function RD1({ rd, setRData, fa }) {
@@ -6167,7 +6167,7 @@ function DataControls({ state, savedAt, storageOk, onImport, onImportProfile, on
             <button onClick={pick} style={{ ...btnStyle("outline"), width:"100%", marginBottom:8 }}>Import a file</button>
             <button onClick={pickProfile} style={{ ...btnStyle("outline"), width:"100%", marginBottom:8 }}>Import Maximum Farm Potential profile</button>
             <input ref={fileRef} type="file" accept=".json,application/json" onChange={handleFile} style={{ display:"none" }} />
-            <input data-mfp-profile-import ref={profileFileRef} type="file" accept=".json,application/json" onChange={handleProfileFile} style={{ display:"none" }} />
+            <input id="mfp-profile-import-input" data-mfp-profile-import ref={profileFileRef} type="file" accept=".json,application/json" onChange={handleProfileFile} style={{ display:"none" }} />
             {profileStatus && <div style={{ marginBottom:8 }}><Flag type="ok">{profileStatus}. Your Legacy, Financial Analysis, and Revenue Diversification modules can now use the imported profile.</Flag></div>}
             {err && <div style={{ marginBottom:8 }}><Flag type="danger">{err}</Flag></div>}
             <button onClick={()=>{ if (window.confirm("Clear everything on this computer and start over?\n\nExport first if you want a copy.")) { onClear(); setOpen(false); } }}
@@ -6417,7 +6417,7 @@ export default function App() {
       <FontStyles />
 
       {/* Header */}
-      <header style={{ background:"#fff", borderBottom:`1px solid ${T.border}`, height:66, display:"flex", alignItems:"center", gap:18, padding:"0 22px", flexShrink:0, zIndex:5 }}>
+      <header style={{ background:"#fff", borderBottom:`1px solid ${T.border}`, minHeight:66, display:"flex", alignItems:"center", gap:18, padding:"0 22px", flexShrink:0, zIndex:5, overflowX:"auto" }}>
         <div style={{ display:"flex", alignItems:"center", gap:8 }}>
           <svg width="26" height="26" viewBox="0 0 24 24"><polygon points="12,2 22,20 2,20" fill={T.navy} /><polygon points="12,8 17,20 7,20" fill={T.green} /></svg>
           <span style={{ fontWeight:700, fontSize:15, color:T.navy, letterSpacing:"0.01em", whiteSpace:"nowrap" }}>MAXIMUM FARM POTENTIAL</span>
@@ -6485,7 +6485,7 @@ export default function App() {
             </div>
           </div>
         </div>
-        <div style={{ marginLeft:"auto" }}>
+        <div style={{ marginLeft:"auto", flexShrink:0 }}>
           <DataControls
             state={{ module, profile, fa, rd, risk, leg, vis }}
             savedAt={savedAt}
@@ -6494,7 +6494,7 @@ export default function App() {
             onImportProfile={(importedProfile) => setProfile(current => ({ ...current, ...importedProfile }))}
             onClear={resetAll} />
         </div>
-        <div style={{ marginLeft:"auto", display:"flex", alignItems:"center", gap:16 }}>
+        <div style={{ display:"flex", alignItems:"center", gap:16, flexShrink:0 }}>
           <span style={{ fontSize:11, color:T.fgS, maxWidth:190, textAlign:"right", lineHeight:1.4 }}>Your farm profile carries across all modules</span>
           <div style={{ width:38, height:38, borderRadius:"50%", background:T.blue, color:"#fff", display:"flex", alignItems:"center", justifyContent:"center", fontWeight:700, fontSize:15 }}>RM</div>
         </div>
@@ -6512,9 +6512,9 @@ export default function App() {
               <div style={{ height:1, background:"rgba(255,255,255,0.09)", margin:"0 0 8px" }} />
               <div style={{ padding:"10px 16px", fontSize:12.5, color:"rgba(255,255,255,0.7)", lineHeight:1.6 }}>Fill this in once — Financial Analysis and Revenue Diversification each pull matching fields from here instead of asking twice.</div>
               <div style={{ padding:"14px 16px 0" }}>
-                <button onClick={() => document.querySelector('[data-mfp-profile-import]')?.click()} style={{ width:"100%", ...btnStyle("outline"), borderColor:"rgba(255,255,255,0.35)", color:"#fff", background:"rgba(255,255,255,0.08)", fontSize:12, padding:"9px 10px" }}>
+                <label htmlFor="mfp-profile-import-input" style={{ width:"100%", boxSizing:"border-box", ...btnStyle("outline"), borderColor:"rgba(255,255,255,0.35)", color:"#fff", background:"rgba(255,255,255,0.08)", fontSize:12, padding:"9px 10px", display:"block", textAlign:"center" }}>
                   Import MFP profile JSON
-                </button>
+                </label>
                 <div style={{ marginTop:7, fontSize:10.5, color:"rgba(255,255,255,0.5)", lineHeight:1.4 }}>Load a profile exported from Maximum Farm Potential.</div>
               </div>
               <div style={{ marginTop:"auto", padding:"14px 18px 20px" }}>
