@@ -95,7 +95,7 @@ const IconCheckSm = ({ color = "#fff", size = 11 }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>
 );
 
-// ─────────────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────���───────────────────────────
 // STYLE HELPERS
 // ─────────────────────────────────────────────────────────────────────────────
 const cardStyle = (extra={}) => ({ background:"#fff", border:`1px solid ${T.border}`, borderRadius:10, padding:"24px 28px", marginBottom:14, ...extra });
@@ -816,7 +816,7 @@ function FA4({ fa, setFA }) {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // FARM RISK — quiz categories & question bank
-// ────────────────────────────────────────────────────────────���────────────────
+// ────────────────────────────────────────────────────────────����────────────────
 // Adapted from the Nationwide Farm Risk Ready℠ framework (risk identification,
 // managing/preventing risk, contingency planning, communicating the plan).
 const RISK_CATS = [
@@ -2408,7 +2408,7 @@ const scoredOpps = (rd, faEnterprises, faS3vals) => { const d=rd.data||{}; const
 
 // ��������──��������───────────────────────────────────────────────────────────────────
 // RD STAGE 1 — Baseline & readiness
-// ─────────────────────────────────────────────────────────────────────────────
+// ────────────────────────────────────────────────────────────────────────���────
 function RD1({ rd, setRData, fa }) {
   const d = rd.data; const b = d.baseline || {};
   const set = (f,v) => setRData(s => ({ ...s, baseline:{ ...(s.baseline||{}), [f]:v } }));
@@ -2576,7 +2576,7 @@ function RD3({ rd, setRData }) {
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// ──────────────────────────────────────────────────���──────────────────────────
 // RD STAGE 4 — Opportunity mapping
 // ─────────────────────────────────────────────────────────────────────────────
 const GROWTH_TIER_LABEL = { 1:"Tier 1 · Fastest structural growth", 2:"Tier 2 · Strong growth", 3:"Tier 3 · Steady & selective" };
@@ -3135,7 +3135,7 @@ function EfficiencyValueImpact({ sel, lev }) {
   );
 }
 
-// ═════════════════════════════════════════════════════════════════════════════
+// ═════════════════════════════════════════════════════════════════════════��═══
 // FARM PROFILE — a single 360° farm view that fills in as the farmer completes
 // onboarding and assessments, and feeds relevant fields back into FA, RD, and Risk
 // so nothing has to be entered twice.
@@ -3815,62 +3815,6 @@ const legRow = (label, children, sub) => {
   );
 };
 
-function LegacyVoiceGuide({ stage, role }) {
-  const [listening, setListening] = useState(false);
-  const [supported, setSupported] = useState(true);
-  const [transcript, setTranscript] = useState("");
-  const recognitionRef = useRef(null);
-  const prompts = role === "successor"
-    ? "Answer in your own words. There is no right answer, and your response stays with this assessment."
-    : stage === 1
-      ? "Start with where the operation is today. Say what is working, what is changing, and what feels unresolved."
-      : stage === 2
-        ? "Think about labor, management, and ownership separately. Say who handles each one today and who should handle it later."
-        : "Take this one question at a time. Speak naturally; you can edit the words before continuing.";
-
-  useEffect(() => {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) { setSupported(false); return undefined; }
-    const recognition = new SpeechRecognition();
-    recognition.continuous = false;
-    recognition.interimResults = false;
-    recognition.lang = "en-US";
-    recognition.onresult = (event) => {
-      const spoken = event.results?.[0]?.[0]?.transcript?.trim();
-      if (spoken) setTranscript((current) => `${current}${current ? " " : ""}${spoken}`);
-    };
-    recognition.onend = () => setListening(false);
-    recognition.onerror = () => setListening(false);
-    recognitionRef.current = recognition;
-    return () => { recognition.stop(); recognitionRef.current = null; };
-  }, []);
-
-  const toggleListening = () => {
-    if (!supported) return;
-    if (listening) { recognitionRef.current?.stop(); setListening(false); return; }
-    recognitionRef.current?.start();
-    setListening(true);
-  };
-
-  return (
-    <div style={{ ...cardStyle({ borderLeft:`3px solid ${T.blue}`, background:T.blueL }), marginBottom:18 }}>
-      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", gap:14, flexWrap:"wrap" }}>
-        <div style={{ flex:1, minWidth:240 }}>
-          <div style={{ ...cardLblStyle({ marginBottom:5, color:T.blue }) }}>Talk through this stage</div>
-          <p style={{ margin:0, color:T.navy, fontSize:13.5, lineHeight:1.55 }}>{prompts}</p>
-        </div>
-        <button type="button" onClick={toggleListening} disabled={!supported} aria-pressed={listening} style={{ ...btnStyle(listening ? "primary" : "outline", T.blue), whiteSpace:"nowrap", opacity:supported?1:.55 }}>
-          {listening ? "Stop listening" : "Speak an answer"}
-        </button>
-      </div>
-      {!supported && <div style={{ marginTop:8, fontSize:12, color:T.fgS }}>Voice input is not available in this browser. You can still type normally.</div>}
-      {listening && <div role="status" style={{ marginTop:8, fontSize:12, color:T.blue, fontWeight:600 }}>Listening… speak naturally, then pause.</div>}
-      <textarea aria-label="Voice response draft" value={transcript} onChange={e=>setTranscript(e.target.value)} placeholder="Speak here, or use the Speak button beside any question below. Edit your response before continuing." style={{ ...inputStyle({ minHeight:76, marginTop:10, resize:"vertical", background:"#fff" }) }} />
-    </div>
-  );
-}
-
-
 // ═════════════════════════════════════════════════════════════════════════════
 // LAND VALUATION �� Phase 1 engine
 // ═════════════════════════════════════════════════════════════════════════════
@@ -4012,7 +3956,7 @@ const valueParcel = (p) => {
 
 // ═════════════════════════════════════════════════════════════════════════════
 // BLIND COMPARE — the same questions, answered independently
-// ═════════════════════════════════════════════════════════════════════════════
+// ═════��═══════════════════════════════════════════════════════════════════════
 // One array drives both sides and the comparison, so the two generations are
 // provably answering the same question rather than two similar ones.
 //
@@ -4271,7 +4215,7 @@ function LEG2({ leg, setLegData }) {
   );
 }
 
-// ── Stage 3 — The next chapter ───────────────────────────────────────────────
+// ── Stage 3 — The next chapter ────────────���──────────────────────────────────
 function LEG3({ leg, setLegData }) {
   const d = leg.data || {};
   const v = (k) => d[k] || "";
@@ -6427,7 +6371,7 @@ export default function App() {
   ];
   const body = riskConvoActive
     ? <ConversationalRisk risk={risk} setRisk={setRisk} profile={profile} onExit={(stage)=>{ setRiskConvo(false); setRisk(s=>({ ...s, stage: stage || 5 })); }} />
-    : isFA ? FA_BODY[stage-1] : isRD ? RD_BODY[stage-1] : isLeg ? <><LegacyVoiceGuide stage={stage} role={legRole} /><div>{legBodyForRole}</div></> : isVis ? VIS_BODY[stage-1] : RISK_BODY[stage-1];
+    : isFA ? FA_BODY[stage-1] : isRD ? RD_BODY[stage-1] : isLeg ? <div>{legBodyForRole}</div> : isVis ? VIS_BODY[stage-1] : RISK_BODY[stage-1];
 
   const tabBase = { display:"flex", alignItems:"center", gap:11, padding:"8px 14px", borderRadius:8, cursor:"pointer", transition:"all .15s", border:"1.5px solid transparent" };
   const faTabStyle = isFA ? { ...tabBase, background:T.blueL, border:`1.5px solid ${T.blue}` } : { ...tabBase, background:"transparent" };
