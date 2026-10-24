@@ -2225,7 +2225,7 @@ function LivestockInsuranceCalculator({ risk, setRisk }) {
   );
 }
 
-// ───����─�����───────────────────────────────────────────────────────────────────────
+// ───�����─�����───────────────────────────────────────────────────────────────────────
 // RD helpers
 // ─────────────────────────────────────────────────────────────────────────────
 // Each lever category is now built from specific, measurable items rather than one
@@ -2413,7 +2413,7 @@ const scoredOpps = (rd, faEnterprises, faS3vals) => { const d=rd.data||{}; const
 
     return { ...o, leverMatch:Math.round(Math.min(100,leverMatch)), capOk, timeOk, sizeMatch, entMatch, isRelevant, isExcluded, faAdj, score:leverMatch*(capOk?1:0.3)*(timeOk?1:0.7)*(entMatch?1:0.1)*faAdj }; }).sort((a,b)=>b.score-a.score); };
 
-// ─������──��������───────────────────────────────────────────────────────────────────
+// ��������──��������───────────────────────────────────────────────────────────────────
 // RD STAGE 1 — Baseline & readiness
 // ─────────────────────────────────────────────────────────────────────────────
 function RD1({ rd, setRData, fa }) {
@@ -2490,7 +2490,7 @@ function PeerIncomeBenchmark({ revTier }) {
   );
 }
 
-// ─────────────────��─��───��───��─��───────────────────────────────────────────────
+// ─────────────��───��─��───��───��─��───────────────────────────────────────────────
 // RD STAGE 2 — Goal alignment
 // ─────────────────────────────────────────────────────────────────────────────
 function RD2({ rd, setRData }) {
@@ -3185,7 +3185,7 @@ const FindingBlock = ({ kind, tag, heading, source, children }) => {
   );
 };
 
-// ═══════════════════════════════���═════════════════════════════════════════════
+// ══════════════════════��════════���═════════════════════════════════════════════
 // ACTION PLAN — twelve business areas, ranked into three priorities
 // ═════════════════════════════════════════════════════════════════════════════
 // Areas map to one of the four MFP categories, and some map to a guided module.
@@ -3879,7 +3879,7 @@ function LegacyVoiceGuide({ stage, role }) {
 
 
 // ═════════════════════════════════════════════════════════════════════════════
-// LAND VALUATION — Phase 1 engine
+// LAND VALUATION �� Phase 1 engine
 // ═════════════════════════════════════════════════════════════════════════════
 // Land class routes to a method rather than one model with adjustments bolted on.
 // Two independent methods run on income-producing classes and their divergence
@@ -6512,9 +6512,9 @@ export default function App() {
               <div style={{ height:1, background:"rgba(255,255,255,0.09)", margin:"0 0 8px" }} />
               <div style={{ padding:"10px 16px", fontSize:12.5, color:"rgba(255,255,255,0.7)", lineHeight:1.6 }}>Fill this in once — Financial Analysis and Revenue Diversification each pull matching fields from here instead of asking twice.</div>
               <div style={{ padding:"14px 16px 0" }}>
-                <label htmlFor="mfp-profile-import-input" style={{ width:"100%", boxSizing:"border-box", ...btnStyle("outline"), borderColor:"rgba(255,255,255,0.35)", color:"#fff", background:"rgba(255,255,255,0.08)", fontSize:12, padding:"9px 10px", display:"block", textAlign:"center" }}>
-                  Import MFP profile JSON
-                </label>
+  <button type="button" onClick={() => document.getElementById("mfp-profile-import-input")?.click()} style={{ width:"100%", boxSizing:"border-box", ...btnStyle("outline"), borderColor:"rgba(255,255,255,0.35)", color:"#fff", background:"rgba(255,255,255,0.08)", fontSize:12, padding:"9px 10px", display:"block", textAlign:"center" }}>
+  Import MFP profile JSON
+  </button>
                 <div style={{ marginTop:7, fontSize:10.5, color:"rgba(255,255,255,0.5)", lineHeight:1.4 }}>Load a profile exported from Maximum Farm Potential.</div>
               </div>
               <div style={{ marginTop:"auto", padding:"14px 18px 20px" }}>
