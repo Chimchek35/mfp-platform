@@ -2225,7 +2225,7 @@ function LivestockInsuranceCalculator({ risk, setRisk }) {
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// ─────��───────────────────────────────────────────────────────────────────────
 // RD helpers
 // ─────────────────────────────────────────────────────────────────────────────
 // Each lever category is now built from specific, measurable items rather than one
@@ -2413,7 +2413,7 @@ const scoredOpps = (rd, faEnterprises, faS3vals) => { const d=rd.data||{}; const
 
     return { ...o, leverMatch:Math.round(Math.min(100,leverMatch)), capOk, timeOk, sizeMatch, entMatch, isRelevant, isExcluded, faAdj, score:leverMatch*(capOk?1:0.3)*(timeOk?1:0.7)*(entMatch?1:0.1)*faAdj }; }).sort((a,b)=>b.score-a.score); };
 
-// ─────────────────────────────────────────────────────────────────────────────
+// ─────────��───────────────────────────────────────────────────────────────────
 // RD STAGE 1 — Baseline & readiness
 // ─────────────────────────────────────────────────────────────────────────────
 function RD1({ rd, setRData, fa }) {
@@ -2490,7 +2490,7 @@ function PeerIncomeBenchmark({ revTier }) {
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// ─────────────────────────────��───────────────────────────────────────────────
 // RD STAGE 2 — Goal alignment
 // ─────────────────────────────────────────────────────────────────────────────
 function RD2({ rd, setRData }) {
@@ -3774,6 +3774,61 @@ const legRow = (label, children, sub) => (
   </div>
 );
 
+function LegacyVoiceGuide({ stage, role }) {
+  const [listening, setListening] = useState(false);
+  const [supported, setSupported] = useState(true);
+  const [transcript, setTranscript] = useState("");
+  const recognitionRef = useRef(null);
+  const prompts = role === "successor"
+    ? "Answer in your own words. There is no right answer, and your response stays with this assessment."
+    : stage === 1
+      ? "Start with where the operation is today. Say what is working, what is changing, and what feels unresolved."
+      : stage === 2
+        ? "Think about labor, management, and ownership separately. Say who handles each one today and who should handle it later."
+        : "Take this one question at a time. Speak naturally; you can edit the words before continuing.";
+
+  useEffect(() => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) { setSupported(false); return undefined; }
+    const recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = "en-US";
+    recognition.onresult = (event) => {
+      const spoken = event.results?.[0]?.[0]?.transcript?.trim();
+      if (spoken) setTranscript((current) => `${current}${current ? " " : ""}${spoken}`);
+    };
+    recognition.onend = () => setListening(false);
+    recognition.onerror = () => setListening(false);
+    recognitionRef.current = recognition;
+    return () => { recognition.stop(); recognitionRef.current = null; };
+  }, [onTranscript]);
+
+  const toggleListening = () => {
+    if (!supported) return;
+    if (listening) { recognitionRef.current?.stop(); setListening(false); return; }
+    recognitionRef.current?.start();
+    setListening(true);
+  };
+
+  return (
+    <div style={{ ...cardStyle({ borderLeft:`3px solid ${T.blue}`, background:T.blueL }), marginBottom:18 }}>
+      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", gap:14, flexWrap:"wrap" }}>
+        <div style={{ flex:1, minWidth:240 }}>
+          <div style={{ ...cardLblStyle({ marginBottom:5, color:T.blue }) }}>Talk through this stage</div>
+          <p style={{ margin:0, color:T.navy, fontSize:13.5, lineHeight:1.55 }}>{prompts}</p>
+        </div>
+        <button type="button" onClick={toggleListening} disabled={!supported} aria-pressed={listening} style={{ ...btnStyle(listening ? "primary" : "outline", T.blue), whiteSpace:"nowrap", opacity:supported?1:.55 }}>
+          {listening ? "Stop listening" : "Speak an answer"}
+        </button>
+      </div>
+      {!supported && <div style={{ marginTop:8, fontSize:12, color:T.fgS }}>Voice input is not available in this browser. You can still type normally.</div>}
+      {listening && <div role="status" style={{ marginTop:8, fontSize:12, color:T.blue, fontWeight:600 }}>Listening… speak naturally, then pause.</div>}
+      <textarea aria-label="Voice response draft" value={transcript} onChange={e=>setTranscript(e.target.value)} placeholder="Your spoken response will appear here. Edit it, then paste it into the question below." style={{ ...inputStyle({ minHeight:76, marginTop:10, resize:"vertical", background:"#fff" }) }} />
+      {transcript && <button type="button" onClick={()=>navigator.clipboard?.writeText(transcript)} style={{ ...btnStyle("outline", T.blue), fontSize:12, padding:"6px 10px", marginTop:8 }}>Copy response</button>}
+    </div>
+  );
+}
 
 
 // ═════════════════════════════════════════════════════════════════════════════
@@ -5570,7 +5625,7 @@ function VIS5({ vis, setVis, goLegacy }) {
   );
 }
 
-// ── Vision 6 — Where it binds ────────────────────────────────────────────────
+// ── Vision 6 — Where it binds ───────────────────────────────��────────────────
 function VIS6({ vis, setVis }) {
   const rules = vis.rules || [];
   const toggle = (i, bindId) => {
@@ -6235,7 +6290,7 @@ export default function App() {
   ];
   const body = riskConvoActive
     ? <ConversationalRisk risk={risk} setRisk={setRisk} profile={profile} onExit={(stage)=>{ setRiskConvo(false); setRisk(s=>({ ...s, stage: stage || 5 })); }} />
-    : isFA ? FA_BODY[stage-1] : isRD ? RD_BODY[stage-1] : isLeg ? legBodyForRole : isVis ? VIS_BODY[stage-1] : RISK_BODY[stage-1];
+    : isFA ? FA_BODY[stage-1] : isRD ? RD_BODY[stage-1] : isLeg ? <><LegacyVoiceGuide stage={stage} role={legRole} /><div>{legBodyForRole}</div></> : isVis ? VIS_BODY[stage-1] : RISK_BODY[stage-1];
 
   const tabBase = { display:"flex", alignItems:"center", gap:11, padding:"8px 14px", borderRadius:8, cursor:"pointer", transition:"all .15s", border:"1.5px solid transparent" };
   const faTabStyle = isFA ? { ...tabBase, background:T.blueL, border:`1.5px solid ${T.blue}` } : { ...tabBase, background:"transparent" };
