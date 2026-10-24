@@ -816,7 +816,7 @@ function FA4({ fa, setFA }) {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // FARM RISK — quiz categories & question bank
-// ─────────────────────────────────────────────────────────────────────────────
+// ────────────────────────────────────────────────────────────��────────────────
 // Adapted from the Nationwide Farm Risk Ready℠ framework (risk identification,
 // managing/preventing risk, contingency planning, communicating the plan).
 const RISK_CATS = [
@@ -4244,7 +4244,7 @@ function LEG2({ leg, setLegData }) {
             return (
               <div key={h.id} style={{ display:"flex", alignItems:"center", gap:12, padding:"7px 0" }}>
                 <span style={{ width:82, fontSize:12.5, color:T.fgM, flexShrink:0 }}>{h.label}</span>
-                <input type="range" min="0" max="100" step="5" value={val} onChange={e=>setT(tr.id, h.id, e.target.value)} style={{ flex:1 }} />
+                <input type="range" min="0" max="100" step="20" value={val} onChange={e=>setT(tr.id, h.id, e.target.value)} style={{ flex:1 }} aria-label={`${tr.label} — ${h.label}`} />
                 <span style={{ width:74, textAlign:"right", fontSize:12.5, color:T.fgM, flexShrink:0 }}>{val}% successor</span>
               </div>
             );
@@ -5981,7 +5981,7 @@ function VIS8({ vis, profile }) {
 
 // ═════════════════════════════════════════════════════════════════════════════
 // LOCAL PERSISTENCE — the farm record stays on the farmer's own machine
-// ═════════════════════════════════════════════════════════════════════════════
+// ═════════════════════════���═══════════════════════════════════════════════════
 // Everything a farmer enters saves to their browser automatically and reloads
 // next time. Nothing is transmitted. For this data in particular — succession
 // tensions, sweat equity figures, who the operator thinks is not ready — that is
