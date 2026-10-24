@@ -2225,7 +2225,7 @@ function LivestockInsuranceCalculator({ risk, setRisk }) {
   );
 }
 
-// ─────�����───────────────────────────────────────────────────────────────────────
+// ───��─�����───────────────────────────────────────────────────────────────────────
 // RD helpers
 // ─────────────────────────────────────────────────────────────────────────────
 // Each lever category is now built from specific, measurable items rather than one
@@ -2413,7 +2413,7 @@ const scoredOpps = (rd, faEnterprises, faS3vals) => { const d=rd.data||{}; const
 
     return { ...o, leverMatch:Math.round(Math.min(100,leverMatch)), capOk, timeOk, sizeMatch, entMatch, isRelevant, isExcluded, faAdj, score:leverMatch*(capOk?1:0.3)*(timeOk?1:0.7)*(entMatch?1:0.1)*faAdj }; }).sort((a,b)=>b.score-a.score); };
 
-// ──────��������───────────────────────────────────────────────────────────────────
+// ───��──��������───────────────────────────────────────────────────────────────────
 // RD STAGE 1 — Baseline & readiness
 // ─────────────────────────────────────────────────────────────────────────────
 function RD1({ rd, setRData, fa }) {
@@ -2490,7 +2490,7 @@ function PeerIncomeBenchmark({ revTier }) {
   );
 }
 
-// ───────────────────────��───��─��───────────────────────────────────────────────
+// ───────────────────��───��───��─��───────────────────────────────────────────────
 // RD STAGE 2 — Goal alignment
 // ─────────────────────────────────────────────────────────────────────────────
 function RD2({ rd, setRData }) {
@@ -3185,7 +3185,7 @@ const FindingBlock = ({ kind, tag, heading, source, children }) => {
   );
 };
 
-// ═════════════════════════════════════════════════════════════════════════════
+// ═══════════════════════════════���═════════════════════════════════════════════
 // ACTION PLAN — twelve business areas, ranked into three priorities
 // ═════════════════════════════════════════════════════════════════════════════
 // Areas map to one of the four MFP categories, and some map to a guided module.
@@ -6142,10 +6142,15 @@ function DataControls({ state, savedAt, storageOk, onImport, onImportProfile, on
 
   return (
     <div style={{ position:"relative" }}>
-      <button onClick={()=>setOpen(o=>!o)} style={{ background:"none", border:`1px solid ${T.border}`, borderRadius:5, padding:"6px 12px", cursor:"pointer", font:"inherit", fontSize:12, color:T.fgM, display:"flex", alignItems:"center", gap:7 }}>
-        <span style={{ width:7, height:7, borderRadius:"50%", background: storageOk ? (savedAt ? T.green : T.silver) : T.amber }} />
-        {storageOk ? (savedAt ? `Saved ${relTime(savedAt)}` : "Not saved yet") : "Not saving"}
-      </button>
+      <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+        <button onClick={pickProfile} style={{ ...btnStyle("outline"), padding:"6px 12px", fontSize:12, whiteSpace:"nowrap" }}>
+          Import MFP profile
+        </button>
+        <button onClick={()=>setOpen(o=>!o)} style={{ background:"none", border:`1px solid ${T.border}`, borderRadius:5, padding:"6px 12px", cursor:"pointer", font:"inherit", fontSize:12, color:T.fgM, display:"flex", alignItems:"center", gap:7 }}>
+          <span style={{ width:7, height:7, borderRadius:"50%", background: storageOk ? (savedAt ? T.green : T.silver) : T.amber }} />
+          {storageOk ? (savedAt ? `Saved ${relTime(savedAt)}` : "Not saved yet") : "Not saving"}
+        </button>
+      </div>
       {open && (
         <>
           <div onClick={()=>setOpen(false)} style={{ position:"fixed", inset:0, zIndex:40 }} />
