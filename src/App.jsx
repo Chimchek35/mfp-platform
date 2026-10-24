@@ -816,7 +816,7 @@ function FA4({ fa, setFA }) {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // FARM RISK — quiz categories & question bank
-// ────────────────────────────────────────────────────────────��────────────────
+// ────────────────────────────────────────────────────────────���────────────────
 // Adapted from the Nationwide Farm Risk Ready℠ framework (risk identification,
 // managing/preventing risk, contingency planning, communicating the plan).
 const RISK_CATS = [
@@ -1381,7 +1381,6 @@ function ConversationalRisk({ risk, setRisk, onExit, profile }) {
   const [proposed, setProposed] = useState(null);
   const script = useMemo(() => buildRiskScript(risk), [risk.plan?.revenueOps, risk.plan?.contacts, risk.plan?.threats]);
   const step = script[i];
-  const speech = useSpeechInput((txt) => setDraft(d => (d ? d + " " : "") + txt));
 
   const setPlan = (patch) => setRisk(s => ({ ...s, plan:{ ...(s.plan||{}), ...patch } }));
 
@@ -1444,10 +1443,10 @@ function ConversationalRisk({ risk, setRisk, onExit, profile }) {
       const ths = (risk.plan?.threats || []).map(t => t.id === step.threatId ? { ...t, [step.ratingKind]: v } : t);
       setPlan({ threats: ths });
     }
-    setDraft(""); setProposed(null); speech.stop(); setI(n => n + 1);
+    setDraft(""); setProposed(null); setI(n => n + 1);
   };
 
-  const skip = () => { setDraft(""); setProposed(null); speech.stop(); setI(n => n + 1); };
+  const skip = () => { setDraft(""); setProposed(null); setI(n => n + 1); };
   const pct = Math.round((i / script.length) * 100);
   const canCommit = step.kind === "scale" ? (proposed && proposed.idx !== null)
     : step.kind === "rating" ? (proposed && proposed.v)
@@ -1456,7 +1455,7 @@ function ConversationalRisk({ risk, setRisk, onExit, profile }) {
 
   return (
     <div>
-      <Head eyebrow="Farm Risk · Guided conversation" title="Talk it through, I will do the writing" sub="Answer out loud or type. Nothing is scored without showing you what it heard and letting you change it first." />
+      <Head eyebrow="Farm Risk · Guided conversation" title="Talk it through, I will do the writing" sub="Type your answer below. Nothing is scored without showing you the proposed result and letting you change it first." />
 
       <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:18 }}>
         <div style={{ flex:1, height:6, background:T.div, borderRadius:3, overflow:"hidden" }}>
@@ -1472,24 +1471,12 @@ function ConversationalRisk({ risk, setRisk, onExit, profile }) {
         {step.hint && <p style={{ fontSize:13, color:T.fgS, fontStyle:"italic", margin:"0 0 16px" }}>{step.hint}</p>}
         {!step.hint && <div style={{ height:12 }} />}
 
-        {/* mic + transcript */}
-        <div style={{ border:`1px solid ${speech.listening?T.green:T.border}`, background:speech.listening?T.greenL:"#fff", borderRadius:9, padding:14, marginBottom:12, transition:"all .2s" }}>
-          <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:10 }}>
-            {speech.supported ? (
-              <button onClick={speech.listening ? speech.stop : speech.start}
-                style={{ ...btnStyle(speech.listening ? "outline" : "primary"), fontSize:12.5, padding:"7px 14px" }}>
-                {speech.listening ? "■ Stop" : "● Speak your answer"}
-              </button>
-            ) : (
-              <span style={{ fontSize:12, color:T.fgS, fontStyle:"italic" }}>Speech input is not available in this browser. Chrome or Edge supports it. Typing works the same.</span>
-            )}
-            {speech.listening && <span style={{ fontSize:12, color:T.dgreen }}>Listening, speak naturally and pause when done.</span>}
-          </div>
+        <div style={{ border:`1px solid ${T.border}`, background:"#fff", borderRadius:9, padding:14, marginBottom:12 }}>
           <textarea
             style={inputStyle({ minHeight:84, fontSize:14.5, lineHeight:1.6, border:"none", background:"transparent", padding:0, resize:"vertical" })}
-            value={draft + (speech.interim ? " " + speech.interim : "")}
+            value={draft}
             onChange={e=>setDraft(e.target.value)}
-            placeholder="Your answer appears here as you speak, or type it yourself." />
+            placeholder="Type your answer here." />
         </div>
 
         {/* what it heard */}
@@ -2496,7 +2483,7 @@ function PeerIncomeBenchmark({ revTier }) {
   );
 }
 
-// ─────────��──�����───��─��───��───��─��───────────────────────────────────────────────
+// ─────────��──�����───��─��───��───��─��───────────────────────────────────���───────────
 // RD STAGE 2 — Goal alignment
 // ─────────────────────────────────────────────────────────────────────────────
 function RD2({ rd, setRData }) {
