@@ -2225,7 +2225,7 @@ function LivestockInsuranceCalculator({ risk, setRisk }) {
   );
 }
 
-// ───����─�����───────────────────────────────────────────────────────────────────────
+// ───�������─�����───────────────────────────────────────────────────────────────────────
 // RD helpers
 // ─────────────────────────────────────────────────────────────────────────────
 // Each lever category is now built from specific, measurable items rather than one
@@ -2413,7 +2413,7 @@ const scoredOpps = (rd, faEnterprises, faS3vals) => { const d=rd.data||{}; const
 
     return { ...o, leverMatch:Math.round(Math.min(100,leverMatch)), capOk, timeOk, sizeMatch, entMatch, isRelevant, isExcluded, faAdj, score:leverMatch*(capOk?1:0.3)*(timeOk?1:0.7)*(entMatch?1:0.1)*faAdj }; }).sort((a,b)=>b.score-a.score); };
 
-// ─������──��������───────────────────────────────────────────────────────────────────
+// ��������──��������───────────────────────────────────────────────────────────────────
 // RD STAGE 1 — Baseline & readiness
 // ─────────────────────────────────────────────────────────────────────────────
 function RD1({ rd, setRData, fa }) {
@@ -2490,7 +2490,7 @@ function PeerIncomeBenchmark({ revTier }) {
   );
 }
 
-// ─────────────────��─��───��───��─��───────────────────────────────────────────────
+// ────────────�����───��─��───��───��─��───────────────────────────────────────────────
 // RD STAGE 2 — Goal alignment
 // ─────────────────────────────────────────────────────────────────────────────
 function RD2({ rd, setRData }) {
@@ -3185,7 +3185,7 @@ const FindingBlock = ({ kind, tag, heading, source, children }) => {
   );
 };
 
-// ═══════════════════════════════���═════════════════════════════════════════════
+// ═══════════════════��══��════════���═════════════════════════════════════════════
 // ACTION PLAN — twelve business areas, ranked into three priorities
 // ═════════════════════════════════════════════════════════════════════════════
 // Areas map to one of the four MFP categories, and some map to a guided module.
@@ -3879,7 +3879,7 @@ function LegacyVoiceGuide({ stage, role }) {
 
 
 // ═════════════════════════════════════════════════════════════════════════════
-// LAND VALUATION — Phase 1 engine
+// LAND VALUATION �� Phase 1 engine
 // ═════════════════════════════════════════════════════════════════════════════
 // Land class routes to a method rather than one model with adjustments bolted on.
 // Two independent methods run on income-producing classes and their divergence
@@ -6097,27 +6097,38 @@ function DataControls({ state, savedAt, storageOk, onImport, onImportProfile, on
   const [open, setOpen] = useState(false);
   const [err, setErr] = useState("");
   const [profileStatus, setProfileStatus] = useState("");
+  const [profileImportOpen, setProfileImportOpen] = useState(false);
+  const [profileJson, setProfileJson] = useState("");
   const fileRef = useRef(null);
   const profileFileRef = useRef(null);
 
+  useEffect(() => {
+    const openImport = () => { setErr(""); setProfileStatus(""); setProfileImportOpen(true); };
+    window.addEventListener("mfp:open-profile-import", openImport);
+    return () => window.removeEventListener("mfp:open-profile-import", openImport);
+  }, []);
+
   const pick = () => { setErr(""); fileRef.current && fileRef.current.click(); };
-  const pickProfile = () => { setErr(""); setProfileStatus(""); profileFileRef.current && profileFileRef.current.click(); };
+  const pickProfile = () => { setErr(""); setProfileStatus(""); setProfileImportOpen(true); };
+  const importProfileJson = (text) => {
+    let parsed = null;
+    try { parsed = JSON.parse(text); }
+    catch (x) { setErr("That profile file could not be read as JSON."); return; }
+    const profile = profileFromMFPExport(parsed);
+    if (!profile) { setErr("No recognizable farm profile fields were found in that file."); return; }
+    if (!window.confirm("Import this Maximum Farm Potential profile? Matching profile fields will be replaced; your module answers will stay intact.")) return;
+    onImportProfile(profile);
+    setProfileStatus(`${Object.keys(profile).length} profile fields imported`);
+    setProfileJson("");
+    setProfileImportOpen(false);
+    setOpen(false);
+  };
   const handleProfileFile = (e) => {
     const f = e.target.files && e.target.files[0];
     e.target.value = "";
     if (!f) return;
     const reader = new FileReader();
-    reader.onload = () => {
-      let parsed = null;
-      try { parsed = JSON.parse(reader.result); }
-      catch (x) { setErr("That profile file could not be read as JSON."); return; }
-      const profile = profileFromMFPExport(parsed);
-      if (!profile) { setErr("No recognizable farm profile fields were found in that file."); return; }
-      if (!window.confirm("Import this Maximum Farm Potential profile? Matching profile fields will be replaced; your module answers will stay intact.")) return;
-      onImportProfile(profile);
-      setProfileStatus(`${Object.keys(profile).length} profile fields imported`);
-      setOpen(false);
-    };
+    reader.onload = () => importProfileJson(reader.result);
     reader.onerror = () => setErr("That profile file could not be read.");
     reader.readAsText(f);
   };
@@ -6142,6 +6153,30 @@ function DataControls({ state, savedAt, storageOk, onImport, onImportProfile, on
 
   return (
     <div style={{ position:"relative" }}>
+      {profileImportOpen && (
+        <div role="dialog" aria-modal="true" aria-labelledby="mfp-import-title" style={{ position:"fixed", inset:0, zIndex:100, background:"rgba(14,28,57,.42)", display:"flex", alignItems:"center", justifyContent:"center", padding:20 }}>
+          <div style={{ width:"min(560px, 100%)", background:"#fff", borderRadius:12, boxShadow:"0 18px 60px rgba(14,28,57,.28)", padding:24 }}>
+            <div style={{ display:"flex", justifyContent:"space-between", gap:16, alignItems:"flex-start" }}>
+              <div>
+                <div style={eyebrowStyle}>Maximum Farm Potential</div>
+                <h2 id="mfp-import-title" style={{ ...h1Style, fontSize:20 }}>Import your farm profile</h2>
+                <p style={{ ...subStyle, marginBottom:16 }}>Choose the JSON export from Maximum Farm Potential, or paste its contents below. Your existing module answers will stay intact.</p>
+              </div>
+              <button type="button" aria-label="Close import dialog" onClick={() => setProfileImportOpen(false)} style={{ ...btnStyle("ghost"), padding:"4px 9px", fontSize:18, lineHeight:1 }}>×</button>
+            </div>
+  <label style={{ display:"block", border:`1px dashed ${T.blue}`, borderRadius:6, padding:"12px 14px", marginBottom:12, background:T.blueL, color:T.blue, cursor:"pointer", fontSize:13, fontWeight:600, textAlign:"center" }}>
+  Choose Maximum Farm Potential JSON file
+  <input ref={profileFileRef} type="file" accept=".json,application/json" onChange={handleProfileFile} style={{ display:"block", width:"100%", marginTop:8, fontSize:12, fontWeight:400, color:T.fg, cursor:"pointer" }} />
+  </label>
+  <textarea aria-label="Paste Maximum Farm Potential JSON" value={profileJson} onChange={(e) => setProfileJson(e.target.value)} placeholder={'Paste the exported JSON here'} style={{ ...inputStyle(), minHeight:150, resize:"vertical", fontFamily:"ui-monospace, SFMono-Regular, Menlo, monospace", fontSize:12 }} />
+            {err && <div style={{ marginTop:10 }}><Flag type="danger">{err}</Flag></div>}
+            <div style={{ display:"flex", justifyContent:"flex-end", gap:8, marginTop:14 }}>
+              <button type="button" onClick={() => setProfileImportOpen(false)} style={btnStyle("ghost")}>Cancel</button>
+              <button type="button" disabled={!profileJson.trim()} onClick={() => importProfileJson(profileJson)} style={{ ...btnStyle("primary"), opacity: profileJson.trim() ? 1 : .5, cursor: profileJson.trim() ? "pointer" : "not-allowed" }}>Import pasted profile</button>
+            </div>
+          </div>
+        </div>
+      )}
       <div style={{ display:"flex", alignItems:"center", gap:8 }}>
         <button onClick={pickProfile} style={{ ...btnStyle("outline"), padding:"6px 12px", fontSize:12, whiteSpace:"nowrap" }}>
           Import MFP profile
@@ -6167,8 +6202,7 @@ function DataControls({ state, savedAt, storageOk, onImport, onImportProfile, on
             <button onClick={pick} style={{ ...btnStyle("outline"), width:"100%", marginBottom:8 }}>Import a file</button>
             <button onClick={pickProfile} style={{ ...btnStyle("outline"), width:"100%", marginBottom:8 }}>Import Maximum Farm Potential profile</button>
             <input ref={fileRef} type="file" accept=".json,application/json" onChange={handleFile} style={{ display:"none" }} />
-            <input id="mfp-profile-import-input" data-mfp-profile-import ref={profileFileRef} type="file" accept=".json,application/json" onChange={handleProfileFile} style={{ display:"none" }} />
-            {profileStatus && <div style={{ marginBottom:8 }}><Flag type="ok">{profileStatus}. Your Legacy, Financial Analysis, and Revenue Diversification modules can now use the imported profile.</Flag></div>}
+                      {profileStatus && <div style={{ marginBottom:8 }}><Flag type="ok">{profileStatus}. Your Legacy, Financial Analysis, and Revenue Diversification modules can now use the imported profile.</Flag></div>}
             {err && <div style={{ marginBottom:8 }}><Flag type="danger">{err}</Flag></div>}
             <button onClick={()=>{ if (window.confirm("Clear everything on this computer and start over?\n\nExport first if you want a copy.")) { onClear(); setOpen(false); } }}
               style={{ ...btnStyle("ghost"), width:"100%" }}>Start over</button>
@@ -6512,9 +6546,9 @@ export default function App() {
               <div style={{ height:1, background:"rgba(255,255,255,0.09)", margin:"0 0 8px" }} />
               <div style={{ padding:"10px 16px", fontSize:12.5, color:"rgba(255,255,255,0.7)", lineHeight:1.6 }}>Fill this in once — Financial Analysis and Revenue Diversification each pull matching fields from here instead of asking twice.</div>
               <div style={{ padding:"14px 16px 0" }}>
-                <label htmlFor="mfp-profile-import-input" style={{ width:"100%", boxSizing:"border-box", ...btnStyle("outline"), borderColor:"rgba(255,255,255,0.35)", color:"#fff", background:"rgba(255,255,255,0.08)", fontSize:12, padding:"9px 10px", display:"block", textAlign:"center" }}>
-                  Import MFP profile JSON
-                </label>
+  <button type="button" onClick={() => window.dispatchEvent(new Event("mfp:open-profile-import"))} style={{ width:"100%", boxSizing:"border-box", ...btnStyle("outline"), borderColor:"rgba(255,255,255,0.35)", color:"#fff", background:"rgba(255,255,255,0.08)", fontSize:12, padding:"9px 10px", display:"block", textAlign:"center" }}>
+  Import MFP profile JSON
+  </button>
                 <div style={{ marginTop:7, fontSize:10.5, color:"rgba(255,255,255,0.5)", lineHeight:1.4 }}>Load a profile exported from Maximum Farm Potential.</div>
               </div>
               <div style={{ marginTop:"auto", padding:"14px 18px 20px" }}>
