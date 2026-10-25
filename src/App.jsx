@@ -26,6 +26,8 @@ const FontStyles = () => (
     @media (max-width:760px){.mfp-root{font-size:16px}.mfp-root button{min-height:46px}.mfp-body-shell{padding:20px 16px!important}.mfp-stage-rail{overflow-x:auto!important;padding-bottom:8px}.mfp-stage-rail>div{min-width:145px}}
     @keyframes mfpFade{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
     .mfp-body-anim{animation:mfpFade .32s cubic-bezier(0.16,1,0.3,1);}
+    .mfp-stage-card{max-width:960px;margin:0 auto;width:100%;}
+    .mfp-stage-card>*{scroll-margin-top:20px;}
   `}</style>
 );
 
@@ -95,7 +97,7 @@ const IconCheckSm = ({ color = "#fff", size = 11 }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>
 );
 
-// ─────────────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────�������───────────────────────────
 // STYLE HELPERS
 // ─────────────────────────────────────────────────────────────────────────────
 const cardStyle = (extra={}) => ({ background:"#fff", border:`1px solid ${T.border}`, borderRadius:10, padding:"24px 28px", marginBottom:14, ...extra });
@@ -816,7 +818,7 @@ function FA4({ fa, setFA }) {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // FARM RISK — quiz categories & question bank
-// ─────────────────────────────────────────────────────────────────────────────
+// ────────────────────────────────────────────────────────��─���─����────────────────
 // Adapted from the Nationwide Farm Risk Ready℠ framework (risk identification,
 // managing/preventing risk, contingency planning, communicating the plan).
 const RISK_CATS = [
@@ -904,7 +906,7 @@ function RiskCategoryStage({ risk, setRisk, catIndex, fa, onStartConvo }) {
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// ───────────────────────────────��─────────────────────────────────────────────
 // FARM RISK READY℠ PLAN BUILDER — shared data
 // ─────────────────────────────────────────────────────────────────────────────
 const THREAT_CATEGORIES = [
@@ -1381,7 +1383,6 @@ function ConversationalRisk({ risk, setRisk, onExit, profile }) {
   const [proposed, setProposed] = useState(null);
   const script = useMemo(() => buildRiskScript(risk), [risk.plan?.revenueOps, risk.plan?.contacts, risk.plan?.threats]);
   const step = script[i];
-  const speech = useSpeechInput((txt) => setDraft(d => (d ? d + " " : "") + txt));
 
   const setPlan = (patch) => setRisk(s => ({ ...s, plan:{ ...(s.plan||{}), ...patch } }));
 
@@ -1444,10 +1445,10 @@ function ConversationalRisk({ risk, setRisk, onExit, profile }) {
       const ths = (risk.plan?.threats || []).map(t => t.id === step.threatId ? { ...t, [step.ratingKind]: v } : t);
       setPlan({ threats: ths });
     }
-    setDraft(""); setProposed(null); speech.stop(); setI(n => n + 1);
+    setDraft(""); setProposed(null); setI(n => n + 1);
   };
 
-  const skip = () => { setDraft(""); setProposed(null); speech.stop(); setI(n => n + 1); };
+  const skip = () => { setDraft(""); setProposed(null); setI(n => n + 1); };
   const pct = Math.round((i / script.length) * 100);
   const canCommit = step.kind === "scale" ? (proposed && proposed.idx !== null)
     : step.kind === "rating" ? (proposed && proposed.v)
@@ -1456,7 +1457,7 @@ function ConversationalRisk({ risk, setRisk, onExit, profile }) {
 
   return (
     <div>
-      <Head eyebrow="Farm Risk · Guided conversation" title="Talk it through, I will do the writing" sub="Answer out loud or type. Nothing is scored without showing you what it heard and letting you change it first." />
+      <Head eyebrow="Farm Risk · Guided conversation" title="Talk it through, I will do the writing" sub="Type your answer below. Nothing is scored without showing you the proposed result and letting you change it first." />
 
       <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:18 }}>
         <div style={{ flex:1, height:6, background:T.div, borderRadius:3, overflow:"hidden" }}>
@@ -1472,24 +1473,12 @@ function ConversationalRisk({ risk, setRisk, onExit, profile }) {
         {step.hint && <p style={{ fontSize:13, color:T.fgS, fontStyle:"italic", margin:"0 0 16px" }}>{step.hint}</p>}
         {!step.hint && <div style={{ height:12 }} />}
 
-        {/* mic + transcript */}
-        <div style={{ border:`1px solid ${speech.listening?T.green:T.border}`, background:speech.listening?T.greenL:"#fff", borderRadius:9, padding:14, marginBottom:12, transition:"all .2s" }}>
-          <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:10 }}>
-            {speech.supported ? (
-              <button onClick={speech.listening ? speech.stop : speech.start}
-                style={{ ...btnStyle(speech.listening ? "outline" : "primary"), fontSize:12.5, padding:"7px 14px" }}>
-                {speech.listening ? "■ Stop" : "● Speak your answer"}
-              </button>
-            ) : (
-              <span style={{ fontSize:12, color:T.fgS, fontStyle:"italic" }}>Speech input is not available in this browser. Chrome or Edge supports it. Typing works the same.</span>
-            )}
-            {speech.listening && <span style={{ fontSize:12, color:T.dgreen }}>Listening, speak naturally and pause when done.</span>}
-          </div>
+        <div style={{ border:`1px solid ${T.border}`, background:"#fff", borderRadius:9, padding:14, marginBottom:12 }}>
           <textarea
             style={inputStyle({ minHeight:84, fontSize:14.5, lineHeight:1.6, border:"none", background:"transparent", padding:0, resize:"vertical" })}
-            value={draft + (speech.interim ? " " + speech.interim : "")}
+            value={draft}
             onChange={e=>setDraft(e.target.value)}
-            placeholder="Your answer appears here as you speak, or type it yourself." />
+            placeholder="Type your answer here." />
         </div>
 
         {/* what it heard */}
@@ -2421,7 +2410,7 @@ const scoredOpps = (rd, faEnterprises, faS3vals) => { const d=rd.data||{}; const
 
 // ��������──��������───────────────────────────────────────────────────────────────────
 // RD STAGE 1 — Baseline & readiness
-// ─────────────────────────────────────────────────────────────────────────────
+// ────────────────────────────────────────────────────────────────���──���─���──���────
 function RD1({ rd, setRData, fa }) {
   const d = rd.data; const b = d.baseline || {};
   const set = (f,v) => setRData(s => ({ ...s, baseline:{ ...(s.baseline||{}), [f]:v } }));
@@ -2496,9 +2485,9 @@ function PeerIncomeBenchmark({ revTier }) {
   );
 }
 
-// ─────────��──�����───��─��───��───��─��───────────────────────────────────────────────
+// ─────────��──�����───��─��───��───��─��───────────────────────────────────���───────────
 // RD STAGE 2 — Goal alignment
-// ─────────────────────────────────────────────────────────────────────────────
+// ────────────────────────────────────────────────────────────────────��────��───
 function RD2({ rd, setRData }) {
   const g = rd.data.goals2 || {};
   const set = (f,v) => setRData(s => ({ ...s, goals2:{ ...(s.goals2||{}), [f]:v } }));
@@ -2589,7 +2578,7 @@ function RD3({ rd, setRData }) {
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// ───────────────────────────────────���─────���───���────���──────────────────────────
 // RD STAGE 4 — Opportunity mapping
 // ─────────────────────────────────────────────────────────────────────────────
 const GROWTH_TIER_LABEL = { 1:"Tier 1 · Fastest structural growth", 2:"Tier 2 · Strong growth", 3:"Tier 3 · Steady & selective" };
@@ -2924,7 +2913,7 @@ function OpportunityCostLens({ financialSel, physicalSel, setRData }) {
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// ───────────────────────────────────────────────────────────────────���─────────
 // RD STAGE 7 — Financial reserves & sequencing
 // ─────────────────────────────────────────────────────────────────────────────
 // Distinct from Stage 4 (which opportunity to pursue): this stage is about capital
@@ -3148,7 +3137,7 @@ function EfficiencyValueImpact({ sel, lev }) {
   );
 }
 
-// ═════════════════════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════��═══════��═════��══════��═══
 // FARM PROFILE — a single 360° farm view that fills in as the farmer completes
 // onboarding and assessments, and feeds relevant fields back into FA, RD, and Risk
 // so nothing has to be entered twice.
@@ -3193,7 +3182,7 @@ const FindingBlock = ({ kind, tag, heading, source, children }) => {
 
 // ═══════════════════��══��════════���═════════════════════════════════════════════
 // ACTION PLAN — twelve business areas, ranked into three priorities
-// ═════════════════════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════════════���══════
 // Areas map to one of the four MFP categories, and some map to a guided module.
 // Ranking is weight-aware: a constraint area gates everything downstream, a value
 // area produces the largest near-term lift, so neither is ranked on raw score alone.
@@ -3828,62 +3817,6 @@ const legRow = (label, children, sub) => {
   );
 };
 
-function LegacyVoiceGuide({ stage, role }) {
-  const [listening, setListening] = useState(false);
-  const [supported, setSupported] = useState(true);
-  const [transcript, setTranscript] = useState("");
-  const recognitionRef = useRef(null);
-  const prompts = role === "successor"
-    ? "Answer in your own words. There is no right answer, and your response stays with this assessment."
-    : stage === 1
-      ? "Start with where the operation is today. Say what is working, what is changing, and what feels unresolved."
-      : stage === 2
-        ? "Think about labor, management, and ownership separately. Say who handles each one today and who should handle it later."
-        : "Take this one question at a time. Speak naturally; you can edit the words before continuing.";
-
-  useEffect(() => {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) { setSupported(false); return undefined; }
-    const recognition = new SpeechRecognition();
-    recognition.continuous = false;
-    recognition.interimResults = false;
-    recognition.lang = "en-US";
-    recognition.onresult = (event) => {
-      const spoken = event.results?.[0]?.[0]?.transcript?.trim();
-      if (spoken) setTranscript((current) => `${current}${current ? " " : ""}${spoken}`);
-    };
-    recognition.onend = () => setListening(false);
-    recognition.onerror = () => setListening(false);
-    recognitionRef.current = recognition;
-    return () => { recognition.stop(); recognitionRef.current = null; };
-  }, []);
-
-  const toggleListening = () => {
-    if (!supported) return;
-    if (listening) { recognitionRef.current?.stop(); setListening(false); return; }
-    recognitionRef.current?.start();
-    setListening(true);
-  };
-
-  return (
-    <div style={{ ...cardStyle({ borderLeft:`3px solid ${T.blue}`, background:T.blueL }), marginBottom:18 }}>
-      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", gap:14, flexWrap:"wrap" }}>
-        <div style={{ flex:1, minWidth:240 }}>
-          <div style={{ ...cardLblStyle({ marginBottom:5, color:T.blue }) }}>Talk through this stage</div>
-          <p style={{ margin:0, color:T.navy, fontSize:13.5, lineHeight:1.55 }}>{prompts}</p>
-        </div>
-        <button type="button" onClick={toggleListening} disabled={!supported} aria-pressed={listening} style={{ ...btnStyle(listening ? "primary" : "outline", T.blue), whiteSpace:"nowrap", opacity:supported?1:.55 }}>
-          {listening ? "Stop listening" : "Speak an answer"}
-        </button>
-      </div>
-      {!supported && <div style={{ marginTop:8, fontSize:12, color:T.fgS }}>Voice input is not available in this browser. You can still type normally.</div>}
-      {listening && <div role="status" style={{ marginTop:8, fontSize:12, color:T.blue, fontWeight:600 }}>Listening… speak naturally, then pause.</div>}
-      <textarea aria-label="Voice response draft" value={transcript} onChange={e=>setTranscript(e.target.value)} placeholder="Speak here, or use the Speak button beside any question below. Edit your response before continuing." style={{ ...inputStyle({ minHeight:76, marginTop:10, resize:"vertical", background:"#fff" }) }} />
-    </div>
-  );
-}
-
-
 // ═════════════════════════════════════════════════════════════════════════════
 // LAND VALUATION �� Phase 1 engine
 // ═════════════════════════════════════════════════════════════════════════════
@@ -4025,7 +3958,7 @@ const valueParcel = (p) => {
 
 // ═════════════════════════════════════════════════════════════════════════════
 // BLIND COMPARE — the same questions, answered independently
-// ═════════════════════════════════════════════════════════════════════════════
+// ═════��═══════════════════════════════════════════════════════════════════════
 // One array drives both sides and the comparison, so the two generations are
 // provably answering the same question rather than two similar ones.
 //
@@ -4244,7 +4177,7 @@ function LEG2({ leg, setLegData }) {
             return (
               <div key={h.id} style={{ display:"flex", alignItems:"center", gap:12, padding:"7px 0" }}>
                 <span style={{ width:82, fontSize:12.5, color:T.fgM, flexShrink:0 }}>{h.label}</span>
-                <input type="range" min="0" max="100" step="5" value={val} onChange={e=>setT(tr.id, h.id, e.target.value)} style={{ flex:1 }} />
+                <input type="range" min="0" max="100" step="20" value={val} onChange={e=>setT(tr.id, h.id, e.target.value)} style={{ flex:1 }} aria-label={`${tr.label} — ${h.label}`} />
                 <span style={{ width:74, textAlign:"right", fontSize:12.5, color:T.fgM, flexShrink:0 }}>{val}% successor</span>
               </div>
             );
@@ -4284,7 +4217,7 @@ function LEG2({ leg, setLegData }) {
   );
 }
 
-// ── Stage 3 — The next chapter ───────────────────────────────────────────────
+// ── Stage 3 — The next chapter ────────────���──────────────────────────────────
 function LEG3({ leg, setLegData }) {
   const d = leg.data || {};
   const v = (k) => d[k] || "";
@@ -4511,7 +4444,7 @@ function LEG6({ leg, setLegData }) {
   );
 }
 
-// ── Stage 7 — Fair is not equal ──────────────────────────────────────────────
+// ── Stage 7 — Fair is not equal ───────────────────────────────────────────��──
 function LEG7({ leg, setLegData }) {
   const d = leg.data || {};
   const chosen = d.fairApproaches || {};
@@ -5981,7 +5914,7 @@ function VIS8({ vis, profile }) {
 
 // ═════════════════════════════════════════════════════════════════════════════
 // LOCAL PERSISTENCE — the farm record stays on the farmer's own machine
-// ═════════════════════════════════════════════════════════════════════════════
+// ═════════════════════════���═══════════════════════════════════════════════════
 // Everything a farmer enters saves to their browser automatically and reloads
 // next time. Nothing is transmitted. For this data in particular — succession
 // tensions, sweat equity figures, who the operator thinks is not ready — that is
@@ -6076,6 +6009,30 @@ const profileFromMFPExport = (raw) => {
   return Object.keys(populated).length ? populated : null;
 };
 
+const profileFromMFPText = (text) => {
+  const aliases = {
+    location: "location|farm location|address",
+    size: "size|farm size|acreage|acres",
+    productionMix: "production mix|production|commodities|enterprises|farm type",
+    ventures: "ventures|diversification|other income|businesses",
+    grossIncome: "gross income|revenue|gross revenue",
+    nearTerm: "near-term objectives|near term objectives|short-term goals|short term goals",
+    longTerm: "long-term objectives|long term objectives|long-term goals|long term goals",
+    advantage: "competitive advantage|advantage|strengths",
+    values: "core values|family values|values",
+    swotStrengths: "swot strengths",
+    swotWeaknesses: "swot weaknesses",
+    swotOpportunities: "swot opportunities",
+    swotThreats: "swot threats",
+  };
+  const profile = {};
+  for (const [field, pattern] of Object.entries(aliases)) {
+    const match = String(text).match(new RegExp(`(?:^|\\n)\\s*(?:${pattern})\\s*[:—-]\\s*(.+)`, "im"));
+    if (match?.[1]?.trim()) profile[field] = match[1].trim();
+  }
+  return Object.keys(profile).length ? profile : null;
+};
+
 const downloadRecord = (s, label) => {
   const rec = buildRecord(s);
   const stamp = new Date().toISOString().slice(0,10);
@@ -6133,9 +6090,10 @@ function DataControls({ state, savedAt, storageOk, onImport, onImportProfile, on
     const f = e.target.files && e.target.files[0];
     e.target.value = "";
     if (!f) return;
+    setErr("");
     const reader = new FileReader();
     reader.onload = () => importProfileJson(reader.result);
-    reader.onerror = () => setErr("That profile file could not be read.");
+    reader.onerror = () => setErr("That profile file could not be read as JSON.");
     reader.readAsText(f);
   };
   const handleFile = (e) => {
@@ -6166,7 +6124,7 @@ function DataControls({ state, savedAt, storageOk, onImport, onImportProfile, on
               <div>
                 <div style={eyebrowStyle}>Maximum Farm Potential</div>
                 <h2 id="mfp-import-title" style={{ ...h1Style, fontSize:20 }}>Import your farm profile</h2>
-                <p style={{ ...subStyle, marginBottom:16 }}>Choose the JSON export from Maximum Farm Potential, or paste its contents below. Your existing module answers will stay intact.</p>
+                <p style={{ ...subStyle, marginBottom:16 }}>Choose a JSON profile export from Maximum Farm Potential, or paste the JSON below. Your existing module answers will stay intact.</p>
               </div>
               <button type="button" aria-label="Close import dialog" onClick={() => setProfileImportOpen(false)} style={{ ...btnStyle("ghost"), padding:"4px 9px", fontSize:18, lineHeight:1 }}>×</button>
             </div>
@@ -6378,24 +6336,24 @@ export default function App() {
     : [{ label:`${riskAnsweredTotal}/32 answered` }];
 
   let backLabel = "← Back"; let backDisabled = (isRisk && risk.stage===1) || (isLeg && leg.stage===1) || (isVis && vis.stage===1);
-  const onBack = () => { if (isFA) { if (fa.stage>1) goFA(fa.stage-1); else setModule("profile"); } else if (isRD) { if (rd.stage>1) goRD(rd.stage-1); else goFA(FA_STAGES.length); } else if (isLeg) { if (leg.stage>1) goLegacy(leg.stage-1); } else if (isVis) { if (vis.stage>1) goVision(vis.stage-1); } else { if (risk.stage>1) goRisk(risk.stage-1); } };
+  const onBack = () => { if (isVis) { if (vis.stage>1) goVision(vis.stage-1); else setModule("profile"); } else if (isFA) { if (fa.stage>1) goFA(fa.stage-1); else goVision(visTotal); } else if (isLeg) { if (leg.stage>1) goLegacy(leg.stage-1); else goFA(FA_STAGES.length); } else if (isRD) { if (rd.stage>1) goRD(rd.stage-1); else goLegacy(legTotal); } else if (isRisk) { if (risk.stage>1) goRisk(risk.stage-1); else goRD(rdTotal); } };
   if (isFA && fa.stage===1) backLabel = "← Farm Profile";
   if (isRD && rd.stage===1) backLabel = "← Financial Analysis";
 
   let nextLabel = "Continue →";
   const onNext = () => {
     if (!canAdvance) return;
-    if (isFA) { if (fa.stage<faTotal) goFA(fa.stage+1); else goRD(1); }
-    else if (isRD) { if (rd.stage<rdTotal) goRD(rd.stage+1); else { setModule("fa"); setFA(s=>({...s,stage:1})); } }
-    else if (isLeg) { if (leg.stage<legTotal) goLegacy(leg.stage+1); else setLeg(s=>({...s,stage:1})); }
-    else if (isVis) { if (vis.stage<visTotal) goVision(vis.stage+1); else setVisState(s=>({...s,stage:1})); }
+    if (isVis) { if (vis.stage<visTotal) goVision(vis.stage+1); else goFA(1); }
+    else if (isFA) { if (fa.stage<faTotal) goFA(fa.stage+1); else goLegacy(1); }
+    else if (isLeg) { if (leg.stage<legTotal) goLegacy(leg.stage+1); else goRD(1); }
+    else if (isRD) { if (rd.stage<rdTotal) goRD(rd.stage+1); else goRisk(1); }
     else { if (risk.stage<riskTotal) goRisk(risk.stage+1); else setRisk(s=>({...s,stage:1})); }
   };
-  if (isFA && fa.stage===faTotal) nextLabel = "Revenue Diversification →";
-  if (isRD && rd.stage===rdTotal) nextLabel = "Start over ↺";
+  if (isVis && vis.stage===visTotal) nextLabel = "Financial Analysis →";
+  if (isFA && fa.stage===faTotal) nextLabel = "Legacy →";
+  if (isLeg && leg.stage===legTotal) nextLabel = "Revenue Diversification →";
+  if (isRD && rd.stage===rdTotal) nextLabel = "Farm Risk →";
   if (isRisk && risk.stage===riskTotal) nextLabel = "Start over ↺";
-  if (isLeg && leg.stage===legTotal) nextLabel = "Start over ↺";
-  if (isVis && vis.stage===visTotal) nextLabel = "Start over ↺";
 
   const FA_BODY = [
     <FA1 fa={fa} setFA={setFA} />, <FA2 fa={fa} setFA={setFA} />, <FA3 fa={fa} setFA={setFA} />,
@@ -6440,7 +6398,8 @@ export default function App() {
   ];
   const body = riskConvoActive
     ? <ConversationalRisk risk={risk} setRisk={setRisk} profile={profile} onExit={(stage)=>{ setRiskConvo(false); setRisk(s=>({ ...s, stage: stage || 5 })); }} />
-    : isFA ? FA_BODY[stage-1] : isRD ? RD_BODY[stage-1] : isLeg ? <><LegacyVoiceGuide stage={stage} role={legRole} /><div>{legBodyForRole}</div></> : isVis ? VIS_BODY[stage-1] : RISK_BODY[stage-1];
+    : isFA ? FA_BODY[stage-1] : isRD ? RD_BODY[stage-1] : isLeg ? <div>{legBodyForRole}</div> : isVis ? VIS_BODY[stage-1] : RISK_BODY[stage-1];
+  const stageCard = <div className="mfp-stage-card">{body}</div>;
 
   const tabBase = { display:"flex", alignItems:"center", gap:11, padding:"8px 14px", borderRadius:8, cursor:"pointer", transition:"all .15s", border:"1.5px solid transparent" };
   const faTabStyle = isFA ? { ...tabBase, background:T.blueL, border:`1.5px solid ${T.blue}` } : { ...tabBase, background:"transparent" };
@@ -6477,7 +6436,7 @@ export default function App() {
           <div onClick={()=>setModule("vision")} style={visTabStyle}>
             <IconProfile />
             <div>
-              <div style={isVis?lblOn:lblOff}>Strategic Vision</div>
+              <div style={isVis?lblOn:lblOff}>1. Strategic Vision</div>
               <div style={{ display:"flex", alignItems:"center", gap:7, marginTop:3 }}>
                 <div style={{ width:62, height:4, background:T.border, borderRadius:2, overflow:"hidden" }}><div style={{ height:"100%", width:`${visPct}%`, background:T.green, borderRadius:2 }} /></div>
                 <span style={{ fontSize:11, color:T.fgS, whiteSpace:"nowrap" }}>{visPct}%</span>
@@ -6487,17 +6446,27 @@ export default function App() {
           <div onClick={()=>setModule("fa")} style={faTabStyle}>
             <IconChart />
             <div>
-              <div style={isFA?lblOn:lblOff}>Financial Analysis</div>
+              <div style={isFA?lblOn:lblOff}>2. Financial Analysis</div>
               <div style={{ display:"flex", alignItems:"center", gap:7, marginTop:3 }}>
                 <div style={{ width:62, height:4, background:T.border, borderRadius:2, overflow:"hidden" }}><div style={{ height:"100%", width:`${faPct}%`, background:T.green, borderRadius:2 }} /></div>
                 <span style={{ fontSize:11, color:T.fgS, whiteSpace:"nowrap" }}>{faPct}%</span>
               </div>
             </div>
           </div>
+          <div onClick={()=>setModule("legacy")} style={legTabStyle}>
+            <IconProfile />
+            <div>
+              <div style={isLeg?lblOn:lblOff}>3. Legacy</div>
+              <div style={{ display:"flex", alignItems:"center", gap:7, marginTop:3 }}>
+                <div style={{ width:62, height:4, background:T.border, borderRadius:2, overflow:"hidden" }}><div style={{ height:"100%", width:`${legPct}%`, background:T.green, borderRadius:2 }} /></div>
+                <span style={{ fontSize:11, color:T.fgS, whiteSpace:"nowrap" }}>{legPct}%</span>
+              </div>
+            </div>
+          </div>
           <div onClick={()=>setModule("rd")} style={rdTabStyle}>
             <IconSprout />
             <div>
-              <div style={isRD?lblOn:lblOff}>Revenue Diversification</div>
+              <div style={isRD?lblOn:lblOff}>4. Revenue Diversification</div>
               <div style={{ display:"flex", alignItems:"center", gap:7, marginTop:3 }}>
                 <div style={{ width:62, height:4, background:T.border, borderRadius:2, overflow:"hidden" }}><div style={{ height:"100%", width:`${rdPct}%`, background:T.green, borderRadius:2 }} /></div>
                 <span style={{ fontSize:11, color:T.fgS, whiteSpace:"nowrap" }}>{rd.stage===1 && Object.keys(rd.data).length===0 ? "Continues from FA" : `${rdPct}%`}</span>
@@ -6507,20 +6476,10 @@ export default function App() {
           <div onClick={()=>setModule("risk")} style={riskTabStyle}>
             <IconShield />
             <div>
-              <div style={isRisk?lblOn:lblOff}>Farm Risk</div>
+              <div style={isRisk?lblOn:lblOff}>5. Farm Risk</div>
               <div style={{ display:"flex", alignItems:"center", gap:7, marginTop:3 }}>
                 <div style={{ width:62, height:4, background:T.border, borderRadius:2, overflow:"hidden" }}><div style={{ height:"100%", width:`${riskPct}%`, background:T.green, borderRadius:2 }} /></div>
                 <span style={{ fontSize:11, color:T.fgS, whiteSpace:"nowrap" }}>{riskPct}%</span>
-              </div>
-            </div>
-          </div>
-          <div onClick={()=>setModule("legacy")} style={legTabStyle}>
-            <IconProfile />
-            <div>
-              <div style={isLeg?lblOn:lblOff}>Legacy</div>
-              <div style={{ display:"flex", alignItems:"center", gap:7, marginTop:3 }}>
-                <div style={{ width:62, height:4, background:T.border, borderRadius:2, overflow:"hidden" }}><div style={{ height:"100%", width:`${legPct}%`, background:T.green, borderRadius:2 }} /></div>
-                <span style={{ fontSize:11, color:T.fgS, whiteSpace:"nowrap" }}>{legPct}%</span>
               </div>
             </div>
           </div>
@@ -6570,7 +6529,7 @@ export default function App() {
               <div style={{ flex:1, padding:"30px 34px", maxWidth:960, width:"100%", margin:"0 auto", boxSizing:"border-box" }}>
                 <div key="profile" className="mfp-body-anim"><FarmProfilePage profile={profile} setProfile={setProfile} fa={fa} rd={rd} goFA={goFA} goRD={goRD} goRisk={goRisk} goLegacy={goLegacy} /></div>
                 <div style={{ display:"flex", justifyContent:"flex-end", alignItems:"center", paddingTop:22, borderTop:`1px solid ${T.border}`, marginTop:26 }}>
-                  <button onClick={()=>goFA(1)} style={btnStyle("primary")}>Continue to Financial Analysis →</button>
+                  <button onClick={()=>goVision(1)} style={btnStyle("primary")}>Continue to Strategic Vision →</button>
                 </div>
               </div>
             </div>
@@ -6580,15 +6539,15 @@ export default function App() {
         {/* Rail */}
         <aside style={{ width:240, background:T.navy, display:"flex", flexDirection:"column", flexShrink:0, overflowY:"auto" }}>
           <div style={{ padding:"22px 18px 14px" }}>
-            <div style={{ fontWeight:700, fontSize:11, letterSpacing:"0.16em", textTransform:"uppercase", color:T.green, display:"flex", alignItems:"center", gap:7, marginBottom:4 }}>{isFA?"Financial Analysis":isRD?"Revenue Diversification":"Farm Risk Assessment"}</div>
-            <div style={{ fontSize:12, color:"rgba(255,255,255,0.55)" }}>{isFA?"6-stage diagnostic":isRD?"7-stage planning":"10-stage risk review"}</div>
+            <div style={{ fontWeight:700, fontSize:11, letterSpacing:"0.16em", textTransform:"uppercase", color:T.green, display:"flex", alignItems:"center", gap:7, marginBottom:4 }}>{isVis?"Strategic Vision":isFA?"Financial Analysis":isLeg?"Legacy":isRD?"Revenue Diversification":"Farm Risk Assessment"}</div>
+            <div style={{ fontSize:12, color:"rgba(255,255,255,0.55)" }}>{isVis?`${visTotal}-stage planning`:isFA?"4-stage diagnostic":isLeg?`${legTotal}-stage transition plan`:isRD?"9-stage planning":"12-stage risk review"}</div>
           </div>
           <div style={{ height:1, background:"rgba(255,255,255,0.09)", margin:"0 0 8px" }} />
           <nav style={{ flex:1 }}>
             {stageDefs.map(s => {
               const active = s.n===stage, done = s.n<stage;
               return (
-                <div key={s.n} onClick={()=>{ if (s.n<=stage) { isFA?goFA(s.n):isRD?goRD(s.n):goRisk(s.n); } }} style={{ display:"flex", alignItems:"flex-start", gap:11, padding:"10px 16px", cursor:s.n<=stage?"pointer":"default", background:active?"rgba(123,191,50,0.12)":"transparent", borderLeft:active?`3px solid ${T.green}`:"3px solid transparent" }}>
+                <div key={s.n} onClick={()=>{ if (s.n<=stage) { isVis?goVision(s.n):isFA?goFA(s.n):isLeg?goLegacy(s.n):isRD?goRD(s.n):goRisk(s.n); } }} style={{ display:"flex", alignItems:"flex-start", gap:11, padding:"10px 16px", cursor:s.n<=stage?"pointer":"default", background:active?"rgba(123,191,50,0.12)":"transparent", borderLeft:active?`3px solid ${T.green}`:"3px solid transparent" }}>
                   <div style={{ width:21, height:21, borderRadius:"50%", flexShrink:0, marginTop:1, display:"flex", alignItems:"center", justifyContent:"center", fontSize:11, fontWeight:700, background:done?T.green:active?T.blue:"rgba(255,255,255,0.12)", color:done||active?"#fff":"rgba(255,255,255,0.5)" }}>
                     {done ? <IconCheckSm size={11} /> : s.n}
                   </div>
@@ -6605,7 +6564,7 @@ export default function App() {
             </div>
           )}
           <div style={{ padding:"14px 18px 20px" }}>
-            <div style={{ display:"flex", justifyContent:"space-between", fontSize:10, color:"rgba(255,255,255,0.4)", marginBottom:5 }}><span>{isFA?"Financial Analysis":isRD?"Revenue Diversification":"Farm Risk"} progress</span><span>{pct}%</span></div>
+            <div style={{ display:"flex", justifyContent:"space-between", fontSize:10, color:"rgba(255,255,255,0.4)", marginBottom:5 }}><span>{isVis?"Strategic Vision":isFA?"Financial Analysis":isLeg?"Legacy":isRD?"Revenue Diversification":"Farm Risk"} progress</span><span>{pct}%</span></div>
             <div style={{ height:4, background:"rgba(255,255,255,0.12)", borderRadius:2, overflow:"hidden" }}><div style={{ height:"100%", width:`${pct}%`, background:T.green, borderRadius:2, transition:"width .4s" }} /></div>
           </div>
         </aside>
@@ -6638,7 +6597,7 @@ export default function App() {
                 <Flag type="warn">A saved record from a different version of MFP was found. It has been loaded, but some fields may not line up. If anything looks wrong, export a copy and then start over.</Flag>
               </div>
             )}
-            <div key={riskConvoActive ? "risk-convo" : `${module}-${legRole}-${stage}`} className="mfp-body-anim">{body}</div>
+            <div key={riskConvoActive ? "risk-convo" : `${module}-${legRole}-${stage}`} className="mfp-body-anim">{stageCard}</div>
             {!riskConvoActive && !legCompareActive && (
               <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", paddingTop:22, borderTop:`1px solid ${T.border}`, marginTop:26 }}>
                 <button onClick={onBack} style={{ ...btnStyle("outline"), opacity:backDisabled?0.4:1, pointerEvents:backDisabled?"none":"auto" }}>{backLabel}</button>
