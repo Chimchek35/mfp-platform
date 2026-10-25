@@ -35,7 +35,9 @@ const FontStyles = () => (
   .mfp-root.mfp-turbotax-flow .mfp-flow-header>div:nth-child(3){gap:4px!important;flex:1;justify-content:center;}
   .mfp-root.mfp-turbotax-flow .mfp-flow-header>div:nth-child(3)>div{padding:8px 13px!important;border-radius:8px!important;}
   .mfp-root.mfp-turbotax-flow .mfp-flow-header>div:nth-child(3)>div:not([style*="rgb"]){background:transparent!important;}
-  .mfp-root.mfp-turbotax-flow .mfp-flow-rail{width:230px!important;background:#fff!important;border-right:1px solid #d5e0ea;}
+  .mfp-root.mfp-turbotax-flow .mfp-flow-rail{width:230px!important;background:linear-gradient(180deg,#083d62 0%,#0b5577 48%,#083d62 100%)!important;border-right:1px solid #062f4b;color:#fff!important;}
+  .mfp-root.mfp-turbotax-flow .mfp-flow-rail div,.mfp-root.mfp-turbotax-flow .mfp-flow-rail span{color:#fff!important;}
+  .mfp-root.mfp-turbotax-flow .mfp-flow-rail nav>div[style*="background: transparent"]{color:#d9edf4!important;}
   .mfp-root.mfp-turbotax-flow .mfp-flow-rail>div:first-child{padding:28px 22px 18px!important;background:linear-gradient(145deg,#083d62 0%,#0c7390 62%,#20afd2 100%)!important;color:#fff;}
   .mfp-root.mfp-turbotax-flow .mfp-flow-rail nav{padding:8px 10px;}
   .mfp-root.mfp-turbotax-flow .mfp-flow-rail nav>div{border-left:0!important;border-radius:8px;padding:11px 12px!important;margin:3px 0;}
@@ -339,7 +341,7 @@ const REV_RAMP = { energy:[0,0,0,0,0,0,0,0,0,0,0,0], specialty:[0,0,0,0,0,0,0,2,
   addBeefHerd:[0,0,0,0,0,0,0,0,0,1,2,3], growFeedCrops:[0,0,0,0,0,0,0,0,3,5,3,0], vegetableCrops:[0,0,0,0,0,2,4,5,4,2,0,0], perennialCrops:[0,0,0,0,0,0,0,0,0,0,0,0],
   annuity:[3,3,3,3,3,3,3,3,3,3,3,3], wholeLife:[0,0,0,0,0,0,1,1,1,1,1,1], selfInsurance:[0,0,0,0,1,1,1,2,2,2,2,2], retirementPlan:[2,2,2,2,2,2,2,2,2,2,2,2], sellerFinancing:[4,4,4,4,4,4,4,4,4,4,4,4], agReit:[0,0,0,2,2,2,2,2,2,2,2,2] };
 
-// ─────────────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────��───────────────────────────────────────────
 // FA STAGE 1 — Enterprise dashboard
 // ─────────────────────────────────────────────────────────────────────────────
 function FA1({ fa, setFA }) {
@@ -6538,7 +6540,7 @@ export default function App() {
 
         {isProfile ? (
           <>
-            <aside className="mfp-flow-rail" style={{ width:240, background:"#fff", borderRight:`1px solid ${T.border}`, display:"flex", flexDirection:"column", flexShrink:0, overflowY:"auto" }}>
+            <aside className="mfp-flow-rail" style={{ width:240, background:"#0b5577", borderRight:`1px solid #062f4b`, display:"flex", flexDirection:"column", flexShrink:0, overflowY:"auto" }}>
               <div style={{ padding:"22px 18px 14px" }}>
                 <div style={{ fontWeight:700, fontSize:11, letterSpacing:"0.16em", textTransform:"uppercase", color:T.green, display:"flex", alignItems:"center", gap:7, marginBottom:4 }}>Farm Profile</div>
                 <div style={{ fontSize:12, color:"rgba(255,255,255,0.55)" }}>360° farm business view</div>
@@ -6572,7 +6574,7 @@ export default function App() {
         ) : (
         <>
         {/* Rail */}
-        <aside className="mfp-flow-rail" style={{ width:240, background:"#fff", borderRight:`1px solid ${T.border}`, display:"flex", flexDirection:"column", flexShrink:0, overflowY:"auto" }}>
+        <aside className="mfp-flow-rail" style={{ width:240, background:"#0b5577", borderRight:`1px solid #062f4b`, display:"flex", flexDirection:"column", flexShrink:0, overflowY:"auto" }}>
           <div style={{ padding:"22px 18px 14px" }}>
 <div style={{ fontWeight:700, fontSize:11, letterSpacing:"0.16em", textTransform:"uppercase", color:T.blue, display:"flex", alignItems:"center", gap:7, marginBottom:4 }}>{isVis?"Strategic Vision":isFA?"Financial Analysis":isLeg?"Legacy":isRD?"Revenue Diversification":"Farm Risk Assessment"}</div>
   <div style={{ fontSize:12, color:T.fgM }}>{isVis?`${visTotal}-stage planning`:isFA?"4-stage diagnostic":isLeg?`${legTotal}-stage transition plan`:isRD?"9-stage planning":"12-stage risk review"}</div>
