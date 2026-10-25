@@ -26,6 +26,8 @@ const FontStyles = () => (
     @media (max-width:760px){.mfp-root{font-size:16px}.mfp-root button{min-height:46px}.mfp-body-shell{padding:20px 16px!important}.mfp-stage-rail{overflow-x:auto!important;padding-bottom:8px}.mfp-stage-rail>div{min-width:145px}}
     @keyframes mfpFade{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
     .mfp-body-anim{animation:mfpFade .32s cubic-bezier(0.16,1,0.3,1);}
+    .mfp-stage-card{max-width:960px;margin:0 auto;width:100%;}
+    .mfp-stage-card>*{scroll-margin-top:20px;}
   `}</style>
 );
 
@@ -95,7 +97,7 @@ const IconCheckSm = ({ color = "#fff", size = 11 }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>
 );
 
-// ─────────────────────────────────────────────────�����───────────────────────────
+// ─────────────────────────────────────────────────�������───────────────────────────
 // STYLE HELPERS
 // ─────────────────────────────────────────────────────────────────────────────
 const cardStyle = (extra={}) => ({ background:"#fff", border:`1px solid ${T.border}`, borderRadius:10, padding:"24px 28px", marginBottom:14, ...extra });
@@ -816,7 +818,7 @@ function FA4({ fa, setFA }) {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // FARM RISK — quiz categories & question bank
-// ──────────────────────────────────────────────────────────���─����────────────────
+// ────────────────────────────────────────────────────────��─���─����────────────────
 // Adapted from the Nationwide Farm Risk Ready℠ framework (risk identification,
 // managing/preventing risk, contingency planning, communicating the plan).
 const RISK_CATS = [
@@ -2408,7 +2410,7 @@ const scoredOpps = (rd, faEnterprises, faS3vals) => { const d=rd.data||{}; const
 
 // ��������──��������───────────────────────────────────────────────────────────────────
 // RD STAGE 1 — Baseline & readiness
-// ───────────────────────────────────────────────────────────────────���─���──���────
+// ────────────────────────────────────────────────────────────────���──���─���──���────
 function RD1({ rd, setRData, fa }) {
   const d = rd.data; const b = d.baseline || {};
   const set = (f,v) => setRData(s => ({ ...s, baseline:{ ...(s.baseline||{}), [f]:v } }));
@@ -2485,7 +2487,7 @@ function PeerIncomeBenchmark({ revTier }) {
 
 // ─────────��──�����───��─��───��───��─��───────────────────────────────────���───────────
 // RD STAGE 2 — Goal alignment
-// ─────────────────────────────────────────────────────────────────────────��───
+// ────────────────────────────────────────────────────────────────────��────��───
 function RD2({ rd, setRData }) {
   const g = rd.data.goals2 || {};
   const set = (f,v) => setRData(s => ({ ...s, goals2:{ ...(s.goals2||{}), [f]:v } }));
@@ -2576,7 +2578,7 @@ function RD3({ rd, setRData }) {
   );
 }
 
-// ─────────────────────────────────────────���───���────���──────────────────────────
+// ───────────────────────────────────���─────���───���────���──────────────────────────
 // RD STAGE 4 — Opportunity mapping
 // ─────────────────────────────────────────────────────────────────────────────
 const GROWTH_TIER_LABEL = { 1:"Tier 1 · Fastest structural growth", 2:"Tier 2 · Strong growth", 3:"Tier 3 · Steady & selective" };
@@ -2911,7 +2913,7 @@ function OpportunityCostLens({ financialSel, physicalSel, setRData }) {
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// ───────────────────────────────────────────────────────────────────���─────────
 // RD STAGE 7 — Financial reserves & sequencing
 // ─────────────────────────────────────────────────────────────────────────────
 // Distinct from Stage 4 (which opportunity to pursue): this stage is about capital
@@ -3135,7 +3137,7 @@ function EfficiencyValueImpact({ sel, lev }) {
   );
 }
 
-// ════════════════════════════════════════════════════════════��═════��══════��═══
+// ════════════════════════════════════════════════════��═══════��═════��══════��═══
 // FARM PROFILE — a single 360° farm view that fills in as the farmer completes
 // onboarding and assessments, and feeds relevant fields back into FA, RD, and Risk
 // so nothing has to be entered twice.
@@ -4442,7 +4444,7 @@ function LEG6({ leg, setLegData }) {
   );
 }
 
-// ── Stage 7 — Fair is not equal ──────────────────────────────────────────────
+// ── Stage 7 — Fair is not equal ───────────────────────────────────────────��──
 function LEG7({ leg, setLegData }) {
   const d = leg.data || {};
   const chosen = d.fairApproaches || {};
@@ -6334,24 +6336,24 @@ export default function App() {
     : [{ label:`${riskAnsweredTotal}/32 answered` }];
 
   let backLabel = "← Back"; let backDisabled = (isRisk && risk.stage===1) || (isLeg && leg.stage===1) || (isVis && vis.stage===1);
-  const onBack = () => { if (isFA) { if (fa.stage>1) goFA(fa.stage-1); else setModule("profile"); } else if (isRD) { if (rd.stage>1) goRD(rd.stage-1); else goFA(FA_STAGES.length); } else if (isLeg) { if (leg.stage>1) goLegacy(leg.stage-1); } else if (isVis) { if (vis.stage>1) goVision(vis.stage-1); } else { if (risk.stage>1) goRisk(risk.stage-1); } };
+  const onBack = () => { if (isVis) { if (vis.stage>1) goVision(vis.stage-1); else setModule("profile"); } else if (isFA) { if (fa.stage>1) goFA(fa.stage-1); else goVision(visTotal); } else if (isLeg) { if (leg.stage>1) goLegacy(leg.stage-1); else goFA(FA_STAGES.length); } else if (isRD) { if (rd.stage>1) goRD(rd.stage-1); else goLegacy(legTotal); } else if (isRisk) { if (risk.stage>1) goRisk(risk.stage-1); else goRD(rdTotal); } };
   if (isFA && fa.stage===1) backLabel = "← Farm Profile";
   if (isRD && rd.stage===1) backLabel = "← Financial Analysis";
 
   let nextLabel = "Continue →";
   const onNext = () => {
     if (!canAdvance) return;
-    if (isFA) { if (fa.stage<faTotal) goFA(fa.stage+1); else goRD(1); }
-    else if (isRD) { if (rd.stage<rdTotal) goRD(rd.stage+1); else { setModule("fa"); setFA(s=>({...s,stage:1})); } }
-    else if (isLeg) { if (leg.stage<legTotal) goLegacy(leg.stage+1); else setLeg(s=>({...s,stage:1})); }
-    else if (isVis) { if (vis.stage<visTotal) goVision(vis.stage+1); else setVisState(s=>({...s,stage:1})); }
+    if (isVis) { if (vis.stage<visTotal) goVision(vis.stage+1); else goFA(1); }
+    else if (isFA) { if (fa.stage<faTotal) goFA(fa.stage+1); else goLegacy(1); }
+    else if (isLeg) { if (leg.stage<legTotal) goLegacy(leg.stage+1); else goRD(1); }
+    else if (isRD) { if (rd.stage<rdTotal) goRD(rd.stage+1); else goRisk(1); }
     else { if (risk.stage<riskTotal) goRisk(risk.stage+1); else setRisk(s=>({...s,stage:1})); }
   };
-  if (isFA && fa.stage===faTotal) nextLabel = "Revenue Diversification →";
-  if (isRD && rd.stage===rdTotal) nextLabel = "Start over ↺";
+  if (isVis && vis.stage===visTotal) nextLabel = "Financial Analysis →";
+  if (isFA && fa.stage===faTotal) nextLabel = "Legacy →";
+  if (isLeg && leg.stage===legTotal) nextLabel = "Revenue Diversification →";
+  if (isRD && rd.stage===rdTotal) nextLabel = "Farm Risk →";
   if (isRisk && risk.stage===riskTotal) nextLabel = "Start over ↺";
-  if (isLeg && leg.stage===legTotal) nextLabel = "Start over ↺";
-  if (isVis && vis.stage===visTotal) nextLabel = "Start over ↺";
 
   const FA_BODY = [
     <FA1 fa={fa} setFA={setFA} />, <FA2 fa={fa} setFA={setFA} />, <FA3 fa={fa} setFA={setFA} />,
@@ -6397,6 +6399,7 @@ export default function App() {
   const body = riskConvoActive
     ? <ConversationalRisk risk={risk} setRisk={setRisk} profile={profile} onExit={(stage)=>{ setRiskConvo(false); setRisk(s=>({ ...s, stage: stage || 5 })); }} />
     : isFA ? FA_BODY[stage-1] : isRD ? RD_BODY[stage-1] : isLeg ? <div>{legBodyForRole}</div> : isVis ? VIS_BODY[stage-1] : RISK_BODY[stage-1];
+  const stageCard = <div className="mfp-stage-card">{body}</div>;
 
   const tabBase = { display:"flex", alignItems:"center", gap:11, padding:"8px 14px", borderRadius:8, cursor:"pointer", transition:"all .15s", border:"1.5px solid transparent" };
   const faTabStyle = isFA ? { ...tabBase, background:T.blueL, border:`1.5px solid ${T.blue}` } : { ...tabBase, background:"transparent" };
@@ -6433,7 +6436,7 @@ export default function App() {
           <div onClick={()=>setModule("vision")} style={visTabStyle}>
             <IconProfile />
             <div>
-              <div style={isVis?lblOn:lblOff}>Strategic Vision</div>
+              <div style={isVis?lblOn:lblOff}>1. Strategic Vision</div>
               <div style={{ display:"flex", alignItems:"center", gap:7, marginTop:3 }}>
                 <div style={{ width:62, height:4, background:T.border, borderRadius:2, overflow:"hidden" }}><div style={{ height:"100%", width:`${visPct}%`, background:T.green, borderRadius:2 }} /></div>
                 <span style={{ fontSize:11, color:T.fgS, whiteSpace:"nowrap" }}>{visPct}%</span>
@@ -6443,17 +6446,27 @@ export default function App() {
           <div onClick={()=>setModule("fa")} style={faTabStyle}>
             <IconChart />
             <div>
-              <div style={isFA?lblOn:lblOff}>Financial Analysis</div>
+              <div style={isFA?lblOn:lblOff}>2. Financial Analysis</div>
               <div style={{ display:"flex", alignItems:"center", gap:7, marginTop:3 }}>
                 <div style={{ width:62, height:4, background:T.border, borderRadius:2, overflow:"hidden" }}><div style={{ height:"100%", width:`${faPct}%`, background:T.green, borderRadius:2 }} /></div>
                 <span style={{ fontSize:11, color:T.fgS, whiteSpace:"nowrap" }}>{faPct}%</span>
               </div>
             </div>
           </div>
+          <div onClick={()=>setModule("legacy")} style={legTabStyle}>
+            <IconProfile />
+            <div>
+              <div style={isLeg?lblOn:lblOff}>3. Legacy</div>
+              <div style={{ display:"flex", alignItems:"center", gap:7, marginTop:3 }}>
+                <div style={{ width:62, height:4, background:T.border, borderRadius:2, overflow:"hidden" }}><div style={{ height:"100%", width:`${legPct}%`, background:T.green, borderRadius:2 }} /></div>
+                <span style={{ fontSize:11, color:T.fgS, whiteSpace:"nowrap" }}>{legPct}%</span>
+              </div>
+            </div>
+          </div>
           <div onClick={()=>setModule("rd")} style={rdTabStyle}>
             <IconSprout />
             <div>
-              <div style={isRD?lblOn:lblOff}>Revenue Diversification</div>
+              <div style={isRD?lblOn:lblOff}>4. Revenue Diversification</div>
               <div style={{ display:"flex", alignItems:"center", gap:7, marginTop:3 }}>
                 <div style={{ width:62, height:4, background:T.border, borderRadius:2, overflow:"hidden" }}><div style={{ height:"100%", width:`${rdPct}%`, background:T.green, borderRadius:2 }} /></div>
                 <span style={{ fontSize:11, color:T.fgS, whiteSpace:"nowrap" }}>{rd.stage===1 && Object.keys(rd.data).length===0 ? "Continues from FA" : `${rdPct}%`}</span>
@@ -6463,20 +6476,10 @@ export default function App() {
           <div onClick={()=>setModule("risk")} style={riskTabStyle}>
             <IconShield />
             <div>
-              <div style={isRisk?lblOn:lblOff}>Farm Risk</div>
+              <div style={isRisk?lblOn:lblOff}>5. Farm Risk</div>
               <div style={{ display:"flex", alignItems:"center", gap:7, marginTop:3 }}>
                 <div style={{ width:62, height:4, background:T.border, borderRadius:2, overflow:"hidden" }}><div style={{ height:"100%", width:`${riskPct}%`, background:T.green, borderRadius:2 }} /></div>
                 <span style={{ fontSize:11, color:T.fgS, whiteSpace:"nowrap" }}>{riskPct}%</span>
-              </div>
-            </div>
-          </div>
-          <div onClick={()=>setModule("legacy")} style={legTabStyle}>
-            <IconProfile />
-            <div>
-              <div style={isLeg?lblOn:lblOff}>Legacy</div>
-              <div style={{ display:"flex", alignItems:"center", gap:7, marginTop:3 }}>
-                <div style={{ width:62, height:4, background:T.border, borderRadius:2, overflow:"hidden" }}><div style={{ height:"100%", width:`${legPct}%`, background:T.green, borderRadius:2 }} /></div>
-                <span style={{ fontSize:11, color:T.fgS, whiteSpace:"nowrap" }}>{legPct}%</span>
               </div>
             </div>
           </div>
@@ -6526,7 +6529,7 @@ export default function App() {
               <div style={{ flex:1, padding:"30px 34px", maxWidth:960, width:"100%", margin:"0 auto", boxSizing:"border-box" }}>
                 <div key="profile" className="mfp-body-anim"><FarmProfilePage profile={profile} setProfile={setProfile} fa={fa} rd={rd} goFA={goFA} goRD={goRD} goRisk={goRisk} goLegacy={goLegacy} /></div>
                 <div style={{ display:"flex", justifyContent:"flex-end", alignItems:"center", paddingTop:22, borderTop:`1px solid ${T.border}`, marginTop:26 }}>
-                  <button onClick={()=>goFA(1)} style={btnStyle("primary")}>Continue to Financial Analysis →</button>
+                  <button onClick={()=>goVision(1)} style={btnStyle("primary")}>Continue to Strategic Vision →</button>
                 </div>
               </div>
             </div>
@@ -6536,15 +6539,15 @@ export default function App() {
         {/* Rail */}
         <aside style={{ width:240, background:T.navy, display:"flex", flexDirection:"column", flexShrink:0, overflowY:"auto" }}>
           <div style={{ padding:"22px 18px 14px" }}>
-            <div style={{ fontWeight:700, fontSize:11, letterSpacing:"0.16em", textTransform:"uppercase", color:T.green, display:"flex", alignItems:"center", gap:7, marginBottom:4 }}>{isFA?"Financial Analysis":isRD?"Revenue Diversification":"Farm Risk Assessment"}</div>
-            <div style={{ fontSize:12, color:"rgba(255,255,255,0.55)" }}>{isFA?"6-stage diagnostic":isRD?"7-stage planning":"10-stage risk review"}</div>
+            <div style={{ fontWeight:700, fontSize:11, letterSpacing:"0.16em", textTransform:"uppercase", color:T.green, display:"flex", alignItems:"center", gap:7, marginBottom:4 }}>{isVis?"Strategic Vision":isFA?"Financial Analysis":isLeg?"Legacy":isRD?"Revenue Diversification":"Farm Risk Assessment"}</div>
+            <div style={{ fontSize:12, color:"rgba(255,255,255,0.55)" }}>{isVis?`${visTotal}-stage planning`:isFA?"4-stage diagnostic":isLeg?`${legTotal}-stage transition plan`:isRD?"9-stage planning":"12-stage risk review"}</div>
           </div>
           <div style={{ height:1, background:"rgba(255,255,255,0.09)", margin:"0 0 8px" }} />
           <nav style={{ flex:1 }}>
             {stageDefs.map(s => {
               const active = s.n===stage, done = s.n<stage;
               return (
-                <div key={s.n} onClick={()=>{ if (s.n<=stage) { isFA?goFA(s.n):isRD?goRD(s.n):goRisk(s.n); } }} style={{ display:"flex", alignItems:"flex-start", gap:11, padding:"10px 16px", cursor:s.n<=stage?"pointer":"default", background:active?"rgba(123,191,50,0.12)":"transparent", borderLeft:active?`3px solid ${T.green}`:"3px solid transparent" }}>
+                <div key={s.n} onClick={()=>{ if (s.n<=stage) { isVis?goVision(s.n):isFA?goFA(s.n):isLeg?goLegacy(s.n):isRD?goRD(s.n):goRisk(s.n); } }} style={{ display:"flex", alignItems:"flex-start", gap:11, padding:"10px 16px", cursor:s.n<=stage?"pointer":"default", background:active?"rgba(123,191,50,0.12)":"transparent", borderLeft:active?`3px solid ${T.green}`:"3px solid transparent" }}>
                   <div style={{ width:21, height:21, borderRadius:"50%", flexShrink:0, marginTop:1, display:"flex", alignItems:"center", justifyContent:"center", fontSize:11, fontWeight:700, background:done?T.green:active?T.blue:"rgba(255,255,255,0.12)", color:done||active?"#fff":"rgba(255,255,255,0.5)" }}>
                     {done ? <IconCheckSm size={11} /> : s.n}
                   </div>
@@ -6561,7 +6564,7 @@ export default function App() {
             </div>
           )}
           <div style={{ padding:"14px 18px 20px" }}>
-            <div style={{ display:"flex", justifyContent:"space-between", fontSize:10, color:"rgba(255,255,255,0.4)", marginBottom:5 }}><span>{isFA?"Financial Analysis":isRD?"Revenue Diversification":"Farm Risk"} progress</span><span>{pct}%</span></div>
+            <div style={{ display:"flex", justifyContent:"space-between", fontSize:10, color:"rgba(255,255,255,0.4)", marginBottom:5 }}><span>{isVis?"Strategic Vision":isFA?"Financial Analysis":isLeg?"Legacy":isRD?"Revenue Diversification":"Farm Risk"} progress</span><span>{pct}%</span></div>
             <div style={{ height:4, background:"rgba(255,255,255,0.12)", borderRadius:2, overflow:"hidden" }}><div style={{ height:"100%", width:`${pct}%`, background:T.green, borderRadius:2, transition:"width .4s" }} /></div>
           </div>
         </aside>
@@ -6594,7 +6597,7 @@ export default function App() {
                 <Flag type="warn">A saved record from a different version of MFP was found. It has been loaded, but some fields may not line up. If anything looks wrong, export a copy and then start over.</Flag>
               </div>
             )}
-            <div key={riskConvoActive ? "risk-convo" : `${module}-${legRole}-${stage}`} className="mfp-body-anim">{body}</div>
+            <div key={riskConvoActive ? "risk-convo" : `${module}-${legRole}-${stage}`} className="mfp-body-anim">{stageCard}</div>
             {!riskConvoActive && !legCompareActive && (
               <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", paddingTop:22, borderTop:`1px solid ${T.border}`, marginTop:26 }}>
                 <button onClick={onBack} style={{ ...btnStyle("outline"), opacity:backDisabled?0.4:1, pointerEvents:backDisabled?"none":"auto" }}>{backLabel}</button>
