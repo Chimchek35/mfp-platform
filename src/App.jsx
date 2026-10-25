@@ -9,8 +9,8 @@ import { loadSavedWork, syncSavedWork } from "./backend.js";
 const FontStyles = () => (
   <style>{`
     *{box-sizing:border-box;}
-    .mfp-root{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;color:#181c24;font-size:16px;line-height:1.65;-webkit-font-smoothing:antialiased;}
-    .mfp-root h1,.mfp-root h2,.mfp-root h3,.mfp-root h4{margin:0;font-weight:650;line-height:1.28;}
+  .mfp-root{font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;color:#17233d;font-size:16px;line-height:1.65;-webkit-font-smoothing:antialiased;}
+  .mfp-root h1,.mfp-root h2,.mfp-root h3,.mfp-root h4{margin:0;font-family:"Arial Narrow",Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-weight:700;line-height:1.18;letter-spacing:-.015em;}
     .mfp-root h1{font-size:clamp(24px,2.2vw,30px);}
     .mfp-root h2{font-size:clamp(20px,1.8vw,25px);}
     .mfp-root h3{font-size:18px;}
@@ -28,24 +28,27 @@ const FontStyles = () => (
     .mfp-body-anim{animation:mfpFade .32s cubic-bezier(0.16,1,0.3,1);}
   .mfp-stage-card{max-width:760px;margin:0 auto;width:100%;}
   .mfp-stage-card>*{scroll-margin-top:20px;}
-  .mfp-root.mfp-turbotax-flow{background:#f7f8fb!important;color:#17233d;}
-  .mfp-root.mfp-turbotax-flow .mfp-flow-header{min-height:72px!important;padding:0 34px!important;border-bottom:1px solid #dfe5ed!important;box-shadow:0 1px 8px rgba(14,28,57,.05);}
+  .mfp-root.mfp-turbotax-flow{background:#f3f6fb!important;color:#17233d;}
+  .mfp-root.mfp-turbotax-flow .mfp-flow-header{min-height:74px!important;padding:0 34px!important;border-bottom:1px solid #d5e0ea!important;box-shadow:0 1px 10px rgba(14,28,57,.06);background:#fff!important;}
   .mfp-root.mfp-turbotax-flow .mfp-flow-header>div:nth-child(2){display:none;}
-  .mfp-root.mfp-turbotax-flow .mfp-flow-header>div:nth-child(1){min-width:220px;}
+  .mfp-root.mfp-turbotax-flow .mfp-flow-header>div:nth-child(1){min-width:260px;}
   .mfp-root.mfp-turbotax-flow .mfp-flow-header>div:nth-child(3){gap:4px!important;flex:1;justify-content:center;}
-  .mfp-root.mfp-turbotax-flow .mfp-flow-header>div:nth-child(3)>div{padding:7px 12px!important;border-radius:7px!important;}
+  .mfp-root.mfp-turbotax-flow .mfp-flow-header>div:nth-child(3)>div{padding:8px 13px!important;border-radius:8px!important;}
   .mfp-root.mfp-turbotax-flow .mfp-flow-header>div:nth-child(3)>div:not([style*="rgb"]){background:transparent!important;}
-  .mfp-root.mfp-turbotax-flow .mfp-flow-rail{width:230px!important;background:#fff!important;border-right:1px solid #dfe5ed;}
-  .mfp-root.mfp-turbotax-flow .mfp-flow-rail>div:first-child{padding:28px 22px 18px!important;background:#fff;}
+  .mfp-root.mfp-turbotax-flow .mfp-flow-rail{width:230px!important;background:linear-gradient(180deg,#083d62 0%,#0b5577 48%,#083d62 100%)!important;border-right:1px solid #062f4b;color:#fff!important;}
+  .mfp-root.mfp-turbotax-flow .mfp-flow-rail div,.mfp-root.mfp-turbotax-flow .mfp-flow-rail span{color:#fff!important;}
+  .mfp-root.mfp-turbotax-flow .mfp-flow-rail nav>div[style*="background: transparent"]{color:#d9edf4!important;}
+  .mfp-root.mfp-turbotax-flow .mfp-flow-rail>div:first-child{padding:28px 22px 18px!important;background:linear-gradient(145deg,#083d62 0%,#0c7390 62%,#20afd2 100%)!important;color:#fff;}
   .mfp-root.mfp-turbotax-flow .mfp-flow-rail nav{padding:8px 10px;}
   .mfp-root.mfp-turbotax-flow .mfp-flow-rail nav>div{border-left:0!important;border-radius:8px;padding:11px 12px!important;margin:3px 0;}
-  .mfp-root.mfp-turbotax-flow .mfp-flow-main{background:#f7f8fb;}
-  .mfp-root.mfp-turbotax-flow .mfp-flow-main>div:first-child{height:64px!important;padding:0 42px!important;background:#fff!important;}
-  .mfp-root.mfp-turbotax-flow .mfp-flow-main>div:nth-child(2){height:5px!important;background:#e8edf3!important;}
-  .mfp-root.mfp-turbotax-flow .mfp-flow-main>div:nth-child(2)>div{background:#2878d0!important;}
-  .mfp-root.mfp-turbotax-flow .mfp-stage-card{background:#fff;border:1px solid #dfe5ed;border-radius:14px;padding:34px 38px;box-shadow:0 5px 18px rgba(14,28,57,.06);}
-  .mfp-root.mfp-turbotax-flow .mfp-stage-card h1{font-size:32px!important;line-height:1.2!important;letter-spacing:-.02em!important;}
+  .mfp-root.mfp-turbotax-flow .mfp-flow-main{background:#f3f6fb;}
+  .mfp-root.mfp-turbotax-flow .mfp-flow-main>div:first-child{height:66px!important;padding:0 42px!important;background:#fff!important;}
+  .mfp-root.mfp-turbotax-flow .mfp-flow-main>div:nth-child(2){height:5px!important;background:#dfe8f0!important;}
+  .mfp-root.mfp-turbotax-flow .mfp-flow-main>div:nth-child(2)>div{background:linear-gradient(90deg,#0c4477,#1ca8c9)!important;}
+  .mfp-root.mfp-turbotax-flow .mfp-stage-card{background:#fff;border:1px solid #d5e0ea;border-radius:14px;padding:34px 38px;box-shadow:0 7px 22px rgba(14,28,57,.07);}
+  .mfp-root.mfp-turbotax-flow .mfp-stage-card h1{font-size:32px!important;line-height:1.2!important;letter-spacing:-.02em!important;color:#17233d;}
   .mfp-root.mfp-turbotax-flow .mfp-stage-card button{border-radius:8px;}
+  .mfp-root.mfp-turbotax-flow .mfp-stage-card button[style*="background"]{box-shadow:0 2px 5px rgba(12,68,119,.14);}
   @media(max-width:760px){.mfp-root.mfp-turbotax-flow .mfp-flow-header{padding:0 16px!important}.mfp-root.mfp-turbotax-flow .mfp-flow-header>div:nth-child(3){display:none}.mfp-root.mfp-turbotax-flow .mfp-flow-rail{display:none}.mfp-root.mfp-turbotax-flow .mfp-flow-main>div:first-child{padding:0 18px!important}.mfp-root.mfp-turbotax-flow .mfp-stage-card{padding:25px 20px;border-radius:10px}}
 
   `}</style>
@@ -338,7 +341,7 @@ const REV_RAMP = { energy:[0,0,0,0,0,0,0,0,0,0,0,0], specialty:[0,0,0,0,0,0,0,2,
   addBeefHerd:[0,0,0,0,0,0,0,0,0,1,2,3], growFeedCrops:[0,0,0,0,0,0,0,0,3,5,3,0], vegetableCrops:[0,0,0,0,0,2,4,5,4,2,0,0], perennialCrops:[0,0,0,0,0,0,0,0,0,0,0,0],
   annuity:[3,3,3,3,3,3,3,3,3,3,3,3], wholeLife:[0,0,0,0,0,0,1,1,1,1,1,1], selfInsurance:[0,0,0,0,1,1,1,2,2,2,2,2], retirementPlan:[2,2,2,2,2,2,2,2,2,2,2,2], sellerFinancing:[4,4,4,4,4,4,4,4,4,4,4,4], agReit:[0,0,0,2,2,2,2,2,2,2,2,2] };
 
-// ─────────────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────��───────────────────────────────────────────
 // FA STAGE 1 — Enterprise dashboard
 // ─────────────────────────────────────────────────────────────────────────────
 function FA1({ fa, setFA }) {
@@ -5353,7 +5356,7 @@ const visStats = (vis) => {
 };
 
 
-// ── Vision 1 — What you have already said ────────────────────────────────�����───
+// ── Vision 1 — What you have already said ────────────────────────────────�������───
 function VIS1({ vis, setVis, profile, goProfile }) {
   const items = vis.items || [];
   const seeded = !!vis.seeded;
@@ -6449,8 +6452,11 @@ export default function App() {
       {/* Header */}
       <header className="mfp-flow-header" style={{ background:"#fff", borderBottom:`1px solid ${T.border}`, minHeight:66, display:"flex", alignItems:"center", gap:18, padding:"0 22px", flexShrink:0, zIndex:5, overflowX:"auto" }}>
         <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-          <svg width="26" height="26" viewBox="0 0 24 24"><polygon points="12,2 22,20 2,20" fill={T.navy} /><polygon points="12,8 17,20 7,20" fill={T.green} /></svg>
-          <span style={{ fontWeight:700, fontSize:15, color:T.navy, letterSpacing:"0.01em", whiteSpace:"nowrap" }}>MAXIMUM FARM POTENTIAL</span>
+          <div style={{ width:30, height:30, borderRadius:"50% 50% 45% 45%", background:"linear-gradient(150deg,#0c4477,#1ca8c9)", display:"grid", placeItems:"center", color:"#fff", fontWeight:800, fontSize:13, letterSpacing:"-.08em" }}>MFP</div>
+          <div style={{ display:"flex", flexDirection:"column", lineHeight:1.05 }}>
+            <span style={{ fontFamily:"Arial Narrow, sans-serif", fontWeight:800, fontSize:16, color:T.navy, letterSpacing:".01em", whiteSpace:"nowrap" }}>MAXIMUM FARM POTENTIAL</span>
+            <span style={{ fontSize:9, color:T.blue, letterSpacing:".18em", fontWeight:700 }}>POWERED BY IDEALYST INNOVATION</span>
+          </div>
         </div>
         <div style={{ width:1, height:30, background:T.border }} />
         <div style={{ display:"flex", gap:8, alignItems:"center" }}>
@@ -6534,7 +6540,7 @@ export default function App() {
 
         {isProfile ? (
           <>
-            <aside className="mfp-flow-rail" style={{ width:240, background:"#fff", borderRight:`1px solid ${T.border}`, display:"flex", flexDirection:"column", flexShrink:0, overflowY:"auto" }}>
+            <aside className="mfp-flow-rail" style={{ width:240, background:"#0b5577", borderRight:`1px solid #062f4b`, display:"flex", flexDirection:"column", flexShrink:0, overflowY:"auto" }}>
               <div style={{ padding:"22px 18px 14px" }}>
                 <div style={{ fontWeight:700, fontSize:11, letterSpacing:"0.16em", textTransform:"uppercase", color:T.green, display:"flex", alignItems:"center", gap:7, marginBottom:4 }}>Farm Profile</div>
                 <div style={{ fontSize:12, color:"rgba(255,255,255,0.55)" }}>360° farm business view</div>
@@ -6568,7 +6574,7 @@ export default function App() {
         ) : (
         <>
         {/* Rail */}
-        <aside className="mfp-flow-rail" style={{ width:240, background:"#fff", borderRight:`1px solid ${T.border}`, display:"flex", flexDirection:"column", flexShrink:0, overflowY:"auto" }}>
+        <aside className="mfp-flow-rail" style={{ width:240, background:"#0b5577", borderRight:`1px solid #062f4b`, display:"flex", flexDirection:"column", flexShrink:0, overflowY:"auto" }}>
           <div style={{ padding:"22px 18px 14px" }}>
 <div style={{ fontWeight:700, fontSize:11, letterSpacing:"0.16em", textTransform:"uppercase", color:T.blue, display:"flex", alignItems:"center", gap:7, marginBottom:4 }}>{isVis?"Strategic Vision":isFA?"Financial Analysis":isLeg?"Legacy":isRD?"Revenue Diversification":"Farm Risk Assessment"}</div>
   <div style={{ fontSize:12, color:T.fgM }}>{isVis?`${visTotal}-stage planning`:isFA?"4-stage diagnostic":isLeg?`${legTotal}-stage transition plan`:isRD?"9-stage planning":"12-stage risk review"}</div>
