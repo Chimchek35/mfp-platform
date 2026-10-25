@@ -26,8 +26,28 @@ const FontStyles = () => (
     @media (max-width:760px){.mfp-root{font-size:16px}.mfp-root button{min-height:46px}.mfp-body-shell{padding:20px 16px!important}.mfp-stage-rail{overflow-x:auto!important;padding-bottom:8px}.mfp-stage-rail>div{min-width:145px}}
     @keyframes mfpFade{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
     .mfp-body-anim{animation:mfpFade .32s cubic-bezier(0.16,1,0.3,1);}
-    .mfp-stage-card{max-width:960px;margin:0 auto;width:100%;}
-    .mfp-stage-card>*{scroll-margin-top:20px;}
+  .mfp-stage-card{max-width:760px;margin:0 auto;width:100%;}
+  .mfp-stage-card>*{scroll-margin-top:20px;}
+  .mfp-root.mfp-turbotax-flow{background:#f7f8fb!important;color:#17233d;}
+  .mfp-root.mfp-turbotax-flow .mfp-flow-header{min-height:72px!important;padding:0 34px!important;border-bottom:1px solid #dfe5ed!important;box-shadow:0 1px 8px rgba(14,28,57,.05);}
+  .mfp-root.mfp-turbotax-flow .mfp-flow-header>div:nth-child(2){display:none;}
+  .mfp-root.mfp-turbotax-flow .mfp-flow-header>div:nth-child(1){min-width:220px;}
+  .mfp-root.mfp-turbotax-flow .mfp-flow-header>div:nth-child(3){gap:4px!important;flex:1;justify-content:center;}
+  .mfp-root.mfp-turbotax-flow .mfp-flow-header>div:nth-child(3)>div{padding:7px 12px!important;border-radius:7px!important;}
+  .mfp-root.mfp-turbotax-flow .mfp-flow-header>div:nth-child(3)>div:not([style*="rgb"]){background:transparent!important;}
+  .mfp-root.mfp-turbotax-flow .mfp-flow-rail{width:230px!important;background:#fff!important;border-right:1px solid #dfe5ed;}
+  .mfp-root.mfp-turbotax-flow .mfp-flow-rail>div:first-child{padding:28px 22px 18px!important;background:#fff;}
+  .mfp-root.mfp-turbotax-flow .mfp-flow-rail nav{padding:8px 10px;}
+  .mfp-root.mfp-turbotax-flow .mfp-flow-rail nav>div{border-left:0!important;border-radius:8px;padding:11px 12px!important;margin:3px 0;}
+  .mfp-root.mfp-turbotax-flow .mfp-flow-main{background:#f7f8fb;}
+  .mfp-root.mfp-turbotax-flow .mfp-flow-main>div:first-child{height:64px!important;padding:0 42px!important;background:#fff!important;}
+  .mfp-root.mfp-turbotax-flow .mfp-flow-main>div:nth-child(2){height:5px!important;background:#e8edf3!important;}
+  .mfp-root.mfp-turbotax-flow .mfp-flow-main>div:nth-child(2)>div{background:#2878d0!important;}
+  .mfp-root.mfp-turbotax-flow .mfp-stage-card{background:#fff;border:1px solid #dfe5ed;border-radius:14px;padding:34px 38px;box-shadow:0 5px 18px rgba(14,28,57,.06);}
+  .mfp-root.mfp-turbotax-flow .mfp-stage-card h1{font-size:32px!important;line-height:1.2!important;letter-spacing:-.02em!important;}
+  .mfp-root.mfp-turbotax-flow .mfp-stage-card button{border-radius:8px;}
+  @media(max-width:760px){.mfp-root.mfp-turbotax-flow .mfp-flow-header{padding:0 16px!important}.mfp-root.mfp-turbotax-flow .mfp-flow-header>div:nth-child(3){display:none}.mfp-root.mfp-turbotax-flow .mfp-flow-rail{display:none}.mfp-root.mfp-turbotax-flow .mfp-flow-main>div:first-child{padding:0 18px!important}.mfp-root.mfp-turbotax-flow .mfp-stage-card{padding:25px 20px;border-radius:10px}}
+
   `}</style>
 );
 
@@ -544,7 +564,7 @@ const computeFARatios = (s3) => {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // FA STAGE 3 — Document upload & AI-assisted extraction (placeholder / demo)
-// ─────────────────────────────────────────────────────────────────────────────
+// ──────────────────────────────────��──────────────────────────────────────────
 // This UI is fully built and clickable end-to-end, but the actual scan step below
 // returns realistic MOCK data rather than calling a real extraction service. Real
 // document scanning requires a server-side component: an uploaded file can never be
@@ -2410,7 +2430,7 @@ const scoredOpps = (rd, faEnterprises, faS3vals) => { const d=rd.data||{}; const
 
 // ��������──��������───────────────────────────────────────────────────────────────────
 // RD STAGE 1 — Baseline & readiness
-// ────────────────────────────────────────────────────────────────���──���─���──���────
+// ────────────────────────��───────────────────────────────────────���──���─���──���────
 function RD1({ rd, setRData, fa }) {
   const d = rd.data; const b = d.baseline || {};
   const set = (f,v) => setRData(s => ({ ...s, baseline:{ ...(s.baseline||{}), [f]:v } }));
@@ -2487,7 +2507,7 @@ function PeerIncomeBenchmark({ revTier }) {
 
 // ─────────��──�����───��─��───��───��─��───────────────────────────────────���───────────
 // RD STAGE 2 — Goal alignment
-// ────────────────────────────────────────────────────────────────────��────��───
+// ───────────────────────────��────────────────────────────────────────��────��───
 function RD2({ rd, setRData }) {
   const g = rd.data.goals2 || {};
   const set = (f,v) => setRData(s => ({ ...s, goals2:{ ...(s.goals2||{}), [f]:v } }));
@@ -3137,7 +3157,7 @@ function EfficiencyValueImpact({ sel, lev }) {
   );
 }
 
-// ════════════════════════════════════════════════════��═══════��═════��══════��═══
+// ══════���═════════════════════════════════════════════��═══════��═════��══════��═══
 // FARM PROFILE — a single 360° farm view that fills in as the farmer completes
 // onboarding and assessments, and feeds relevant fields back into FA, RD, and Risk
 // so nothing has to be entered twice.
@@ -5333,7 +5353,7 @@ const visStats = (vis) => {
 };
 
 
-// ── Vision 1 — What you have already said ────────────────────────────────────
+// ── Vision 1 — What you have already said ────────────────────────────────���───
 function VIS1({ vis, setVis, profile, goProfile }) {
   const items = vis.items || [];
   const seeded = !!vis.seeded;
@@ -6337,8 +6357,11 @@ export default function App() {
 
   let backLabel = "← Back"; let backDisabled = (isRisk && risk.stage===1) || (isLeg && leg.stage===1) || (isVis && vis.stage===1);
   const onBack = () => { if (isVis) { if (vis.stage>1) goVision(vis.stage-1); else setModule("profile"); } else if (isFA) { if (fa.stage>1) goFA(fa.stage-1); else goVision(visTotal); } else if (isLeg) { if (leg.stage>1) goLegacy(leg.stage-1); else goFA(FA_STAGES.length); } else if (isRD) { if (rd.stage>1) goRD(rd.stage-1); else goLegacy(legTotal); } else if (isRisk) { if (risk.stage>1) goRisk(risk.stage-1); else goRD(rdTotal); } };
-  if (isFA && fa.stage===1) backLabel = "← Farm Profile";
-  if (isRD && rd.stage===1) backLabel = "← Financial Analysis";
+  if (isVis && vis.stage===1) backLabel = "← Farm Profile";
+  if (isFA && fa.stage===1) backLabel = "← Strategic Vision";
+  if (isLeg && leg.stage===1) backLabel = "← Financial Analysis";
+  if (isRD && rd.stage===1) backLabel = "← Legacy";
+  if (isRisk && risk.stage===1) backLabel = "← Revenue Diversification";
 
   let nextLabel = "Continue →";
   const onNext = () => {
@@ -6399,7 +6422,15 @@ export default function App() {
   const body = riskConvoActive
     ? <ConversationalRisk risk={risk} setRisk={setRisk} profile={profile} onExit={(stage)=>{ setRiskConvo(false); setRisk(s=>({ ...s, stage: stage || 5 })); }} />
     : isFA ? FA_BODY[stage-1] : isRD ? RD_BODY[stage-1] : isLeg ? <div>{legBodyForRole}</div> : isVis ? VIS_BODY[stage-1] : RISK_BODY[stage-1];
-  const stageCard = <div className="mfp-stage-card">{body}</div>;
+  const stageCard = (
+    <section className="mfp-stage-card" aria-label={`${isVis ? "Strategic Vision" : isFA ? "Financial Analysis" : isLeg ? "Legacy" : isRD ? "Revenue Diversification" : "Farm Risk"} question ${stage} of ${total}`}>
+      <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:12, marginBottom:18, color:T.fgS, fontSize:13, fontWeight:650 }}>
+        <span>{isVis ? "Strategic Vision" : isFA ? "Financial Analysis" : isLeg ? "Legacy" : isRD ? "Revenue Diversification" : "Farm Risk"}</span>
+        <span>Question {stage} of {total}</span>
+      </div>
+      {body}
+    </section>
+  );
 
   const tabBase = { display:"flex", alignItems:"center", gap:11, padding:"8px 14px", borderRadius:8, cursor:"pointer", transition:"all .15s", border:"1.5px solid transparent" };
   const faTabStyle = isFA ? { ...tabBase, background:T.blueL, border:`1.5px solid ${T.blue}` } : { ...tabBase, background:"transparent" };
@@ -6412,11 +6443,11 @@ export default function App() {
   const lblOff = { ...lblOn, fontWeight:600, color:T.fgS };
 
   return (
-    <div className="mfp-root" style={{ display:"flex", flexDirection:"column", height:"100vh", overflow:"hidden", background:T.bgAlt }}>
+    <div className="mfp-root mfp-turbotax-flow" style={{ display:"flex", flexDirection:"column", height:"100vh", overflow:"hidden", background:T.bgAlt }}>
       <FontStyles />
 
       {/* Header */}
-      <header style={{ background:"#fff", borderBottom:`1px solid ${T.border}`, minHeight:66, display:"flex", alignItems:"center", gap:18, padding:"0 22px", flexShrink:0, zIndex:5, overflowX:"auto" }}>
+      <header className="mfp-flow-header" style={{ background:"#fff", borderBottom:`1px solid ${T.border}`, minHeight:66, display:"flex", alignItems:"center", gap:18, padding:"0 22px", flexShrink:0, zIndex:5, overflowX:"auto" }}>
         <div style={{ display:"flex", alignItems:"center", gap:8 }}>
           <svg width="26" height="26" viewBox="0 0 24 24"><polygon points="12,2 22,20 2,20" fill={T.navy} /><polygon points="12,8 17,20 7,20" fill={T.green} /></svg>
           <span style={{ fontWeight:700, fontSize:15, color:T.navy, letterSpacing:"0.01em", whiteSpace:"nowrap" }}>MAXIMUM FARM POTENTIAL</span>
@@ -6503,7 +6534,7 @@ export default function App() {
 
         {isProfile ? (
           <>
-            <aside style={{ width:240, background:T.navy, display:"flex", flexDirection:"column", flexShrink:0, overflowY:"auto" }}>
+            <aside className="mfp-flow-rail" style={{ width:240, background:T.navy, display:"flex", flexDirection:"column", flexShrink:0, overflowY:"auto" }}>
               <div style={{ padding:"22px 18px 14px" }}>
                 <div style={{ fontWeight:700, fontSize:11, letterSpacing:"0.16em", textTransform:"uppercase", color:T.green, display:"flex", alignItems:"center", gap:7, marginBottom:4 }}>Farm Profile</div>
                 <div style={{ fontSize:12, color:"rgba(255,255,255,0.55)" }}>360° farm business view</div>
@@ -6521,7 +6552,7 @@ export default function App() {
                 <div style={{ height:4, background:"rgba(255,255,255,0.12)", borderRadius:2, overflow:"hidden" }}><div style={{ height:"100%", width:`${profilePct}%`, background:T.green, borderRadius:2, transition:"width .4s" }} /></div>
               </div>
             </aside>
-            <div style={{ flex:1, overflowY:"auto", display:"flex", flexDirection:"column" }}>
+            <div className="mfp-flow-main" style={{ flex:1, overflowY:"auto", display:"flex", flexDirection:"column" }}>
               <div style={{ background:"#fff", borderBottom:`1px solid ${T.border}`, padding:"0 28px", height:50, display:"flex", alignItems:"center", flexShrink:0 }}>
                 <div style={{ fontSize:13, fontWeight:700, letterSpacing:"0.06em", textTransform:"uppercase", color:T.fgM }}>Farm Profile</div>
               </div>
@@ -6537,7 +6568,7 @@ export default function App() {
         ) : (
         <>
         {/* Rail */}
-        <aside style={{ width:240, background:T.navy, display:"flex", flexDirection:"column", flexShrink:0, overflowY:"auto" }}>
+        <aside className="mfp-flow-rail" style={{ width:240, background:T.navy, display:"flex", flexDirection:"column", flexShrink:0, overflowY:"auto" }}>
           <div style={{ padding:"22px 18px 14px" }}>
             <div style={{ fontWeight:700, fontSize:11, letterSpacing:"0.16em", textTransform:"uppercase", color:T.green, display:"flex", alignItems:"center", gap:7, marginBottom:4 }}>{isVis?"Strategic Vision":isFA?"Financial Analysis":isLeg?"Legacy":isRD?"Revenue Diversification":"Farm Risk Assessment"}</div>
             <div style={{ fontSize:12, color:"rgba(255,255,255,0.55)" }}>{isVis?`${visTotal}-stage planning`:isFA?"4-stage diagnostic":isLeg?`${legTotal}-stage transition plan`:isRD?"9-stage planning":"12-stage risk review"}</div>
@@ -6570,7 +6601,7 @@ export default function App() {
         </aside>
 
         {/* Main */}
-        <div style={{ flex:1, overflowY:"auto", display:"flex", flexDirection:"column" }}>
+        <div className="mfp-flow-main" style={{ flex:1, overflowY:"auto", display:"flex", flexDirection:"column" }}>
           <div style={{ background:"#fff", borderBottom:`1px solid ${T.border}`, padding:"0 28px", height:50, display:"flex", alignItems:"center", justifyContent:"space-between", flexShrink:0 }}>
             <div style={{ fontSize:13, fontWeight:700, letterSpacing:"0.06em", textTransform:"uppercase", color:T.fgM }}>Stage {stage} of {total} · {stageDefs[stage-1].label}</div>
             <div style={{ display:"flex", gap:6 }}>{chips.map((c,i) => (<span key={i} style={{ fontSize:11, fontWeight:600, padding:"3px 10px", borderRadius:999, background:T.greenL, color:"#2F6E28", whiteSpace:"nowrap" }}>{c.label}</span>))}</div>
