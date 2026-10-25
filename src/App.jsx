@@ -5353,7 +5353,7 @@ const visStats = (vis) => {
 };
 
 
-// ── Vision 1 — What you have already said ────────────────────────────────────
+// ── Vision 1 — What you have already said ────────────────────────────────���───
 function VIS1({ vis, setVis, profile, goProfile }) {
   const items = vis.items || [];
   const seeded = !!vis.seeded;
@@ -6357,8 +6357,11 @@ export default function App() {
 
   let backLabel = "← Back"; let backDisabled = (isRisk && risk.stage===1) || (isLeg && leg.stage===1) || (isVis && vis.stage===1);
   const onBack = () => { if (isVis) { if (vis.stage>1) goVision(vis.stage-1); else setModule("profile"); } else if (isFA) { if (fa.stage>1) goFA(fa.stage-1); else goVision(visTotal); } else if (isLeg) { if (leg.stage>1) goLegacy(leg.stage-1); else goFA(FA_STAGES.length); } else if (isRD) { if (rd.stage>1) goRD(rd.stage-1); else goLegacy(legTotal); } else if (isRisk) { if (risk.stage>1) goRisk(risk.stage-1); else goRD(rdTotal); } };
-  if (isFA && fa.stage===1) backLabel = "← Farm Profile";
-  if (isRD && rd.stage===1) backLabel = "← Financial Analysis";
+  if (isVis && vis.stage===1) backLabel = "← Farm Profile";
+  if (isFA && fa.stage===1) backLabel = "← Strategic Vision";
+  if (isLeg && leg.stage===1) backLabel = "← Financial Analysis";
+  if (isRD && rd.stage===1) backLabel = "← Legacy";
+  if (isRisk && risk.stage===1) backLabel = "← Revenue Diversification";
 
   let nextLabel = "Continue →";
   const onNext = () => {
@@ -6419,7 +6422,15 @@ export default function App() {
   const body = riskConvoActive
     ? <ConversationalRisk risk={risk} setRisk={setRisk} profile={profile} onExit={(stage)=>{ setRiskConvo(false); setRisk(s=>({ ...s, stage: stage || 5 })); }} />
     : isFA ? FA_BODY[stage-1] : isRD ? RD_BODY[stage-1] : isLeg ? <div>{legBodyForRole}</div> : isVis ? VIS_BODY[stage-1] : RISK_BODY[stage-1];
-  const stageCard = <div className="mfp-stage-card">{body}</div>;
+  const stageCard = (
+    <section className="mfp-stage-card" aria-label={`${isVis ? "Strategic Vision" : isFA ? "Financial Analysis" : isLeg ? "Legacy" : isRD ? "Revenue Diversification" : "Farm Risk"} question ${stage} of ${total}`}>
+      <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:12, marginBottom:18, color:T.fgS, fontSize:13, fontWeight:650 }}>
+        <span>{isVis ? "Strategic Vision" : isFA ? "Financial Analysis" : isLeg ? "Legacy" : isRD ? "Revenue Diversification" : "Farm Risk"}</span>
+        <span>Question {stage} of {total}</span>
+      </div>
+      {body}
+    </section>
+  );
 
   const tabBase = { display:"flex", alignItems:"center", gap:11, padding:"8px 14px", borderRadius:8, cursor:"pointer", transition:"all .15s", border:"1.5px solid transparent" };
   const faTabStyle = isFA ? { ...tabBase, background:T.blueL, border:`1.5px solid ${T.blue}` } : { ...tabBase, background:"transparent" };
