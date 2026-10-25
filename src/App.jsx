@@ -5353,7 +5353,7 @@ const visStats = (vis) => {
 };
 
 
-// ── Vision 1 — What you have already said ────────────────────────────────���───
+// ── Vision 1 — What you have already said ────────────────────────────────�����───
 function VIS1({ vis, setVis, profile, goProfile }) {
   const items = vis.items || [];
   const seeded = !!vis.seeded;
@@ -5578,7 +5578,7 @@ function VIS4({ vis, setVis }) {
   );
 }
 
-// ── Vision 5 — Who holds this ────────────────────────────────────────────────
+// ── Vision 5 — Who holds this ─────────────────────��──────────────────────────
 function VIS5({ vis, setVis, goLegacy }) {
   const h = vis.holders || {};
   const setH = (id,val) => setVis({ holders:{ ...h, [id]:val } });
@@ -6534,13 +6534,13 @@ export default function App() {
 
         {isProfile ? (
           <>
-            <aside className="mfp-flow-rail" style={{ width:240, background:T.navy, display:"flex", flexDirection:"column", flexShrink:0, overflowY:"auto" }}>
+            <aside className="mfp-flow-rail" style={{ width:240, background:"#fff", borderRight:`1px solid ${T.border}`, display:"flex", flexDirection:"column", flexShrink:0, overflowY:"auto" }}>
               <div style={{ padding:"22px 18px 14px" }}>
                 <div style={{ fontWeight:700, fontSize:11, letterSpacing:"0.16em", textTransform:"uppercase", color:T.green, display:"flex", alignItems:"center", gap:7, marginBottom:4 }}>Farm Profile</div>
                 <div style={{ fontSize:12, color:"rgba(255,255,255,0.55)" }}>360° farm business view</div>
               </div>
               <div style={{ height:1, background:"rgba(255,255,255,0.09)", margin:"0 0 8px" }} />
-              <div style={{ padding:"10px 16px", fontSize:12.5, color:"rgba(255,255,255,0.7)", lineHeight:1.6 }}>Fill this in once — Financial Analysis and Revenue Diversification each pull matching fields from here instead of asking twice.</div>
+              <div style={{ padding:"10px 16px", fontSize:12.5, color:T.fgM, lineHeight:1.6 }}>Fill this in once — Financial Analysis and Revenue Diversification each pull matching fields from here instead of asking twice.</div>
               <div style={{ padding:"14px 16px 0" }}>
   <button type="button" onClick={() => window.dispatchEvent(new Event("mfp:open-profile-import"))} style={{ width:"100%", boxSizing:"border-box", ...btnStyle("outline"), borderColor:"rgba(255,255,255,0.35)", color:"#fff", background:"rgba(255,255,255,0.08)", fontSize:12, padding:"9px 10px", display:"block", textAlign:"center" }}>
   Import MFP profile JSON
@@ -6568,10 +6568,10 @@ export default function App() {
         ) : (
         <>
         {/* Rail */}
-        <aside className="mfp-flow-rail" style={{ width:240, background:T.navy, display:"flex", flexDirection:"column", flexShrink:0, overflowY:"auto" }}>
+        <aside className="mfp-flow-rail" style={{ width:240, background:"#fff", borderRight:`1px solid ${T.border}`, display:"flex", flexDirection:"column", flexShrink:0, overflowY:"auto" }}>
           <div style={{ padding:"22px 18px 14px" }}>
-            <div style={{ fontWeight:700, fontSize:11, letterSpacing:"0.16em", textTransform:"uppercase", color:T.green, display:"flex", alignItems:"center", gap:7, marginBottom:4 }}>{isVis?"Strategic Vision":isFA?"Financial Analysis":isLeg?"Legacy":isRD?"Revenue Diversification":"Farm Risk Assessment"}</div>
-            <div style={{ fontSize:12, color:"rgba(255,255,255,0.55)" }}>{isVis?`${visTotal}-stage planning`:isFA?"4-stage diagnostic":isLeg?`${legTotal}-stage transition plan`:isRD?"9-stage planning":"12-stage risk review"}</div>
+<div style={{ fontWeight:700, fontSize:11, letterSpacing:"0.16em", textTransform:"uppercase", color:T.blue, display:"flex", alignItems:"center", gap:7, marginBottom:4 }}>{isVis?"Strategic Vision":isFA?"Financial Analysis":isLeg?"Legacy":isRD?"Revenue Diversification":"Farm Risk Assessment"}</div>
+  <div style={{ fontSize:12, color:T.fgM }}>{isVis?`${visTotal}-stage planning`:isFA?"4-stage diagnostic":isLeg?`${legTotal}-stage transition plan`:isRD?"9-stage planning":"12-stage risk review"}</div>
           </div>
           <div style={{ height:1, background:"rgba(255,255,255,0.09)", margin:"0 0 8px" }} />
           <nav style={{ flex:1 }}>
@@ -6582,7 +6582,7 @@ export default function App() {
                   <div style={{ width:21, height:21, borderRadius:"50%", flexShrink:0, marginTop:1, display:"flex", alignItems:"center", justifyContent:"center", fontSize:11, fontWeight:700, background:done?T.green:active?T.blue:"rgba(255,255,255,0.12)", color:done||active?"#fff":"rgba(255,255,255,0.5)" }}>
                     {done ? <IconCheckSm size={11} /> : s.n}
                   </div>
-                  <div style={{ fontSize:12.5, fontWeight:active?600:400, color:done?"rgba(255,255,255,0.7)":active?"#fff":"rgba(255,255,255,0.42)", lineHeight:1.4 }}>{s.label}</div>
+                  <div style={{ fontSize:12.5, fontWeight:active?600:400, color:done?T.blue:active?T.navy:T.fgS, lineHeight:1.4 }}>{s.label}</div>
                 </div>
               );
             })}
