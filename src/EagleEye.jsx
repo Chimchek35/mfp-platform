@@ -27,7 +27,7 @@ export default function EagleEye({ profile = {}, onBack }) {
   }, [query, selectedDriver]);
 
   return (
-    <div style={{ minHeight: "100%", background: "#f3f6fb", color: "#17233d", padding: "34px 40px 60px" }}>
+    <div style={{ flex: 1, minWidth: 0, minHeight: 0, height: "100%", overflowY: "auto", background: "#f3f6fb", color: "#17233d", padding: "34px 40px 60px" }}>
       <div style={{ maxWidth: 1180, margin: "0 auto" }}>
         <button type="button" onClick={onBack} style={{ border: 0, background: "transparent", color: "#0c4477", fontWeight: 700, cursor: "pointer", padding: 0, marginBottom: 20 }}>← Back to modules</button>
         <div style={{ background: "linear-gradient(125deg,#083d62,#0b7390 65%,#20afd2)", color: "#fff", borderRadius: 18, padding: "34px 38px", boxShadow: "0 10px 30px rgba(8,61,98,.18)" }}>
