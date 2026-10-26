@@ -1706,7 +1706,7 @@ function RiskPlanRevenueOps({ risk, setRisk }) {
   const removeContact = (i) => setPlan({ contacts: contacts.filter((_,idx)=>idx!==i) });
   return (
     <div>
-      <Head eyebrow="Farm Risk ���� Plan Builder · Stage 1" title="Revenue operations & key contacts" sub="Document each primary revenue operation and the assets, suppliers, employees, and customers it depends on — then record backup contacts for your key suppliers, vendors, and customers." />
+      <Head eyebrow="Farm Risk ������ Plan Builder · Stage 1" title="Revenue operations & key contacts" sub="Document each primary revenue operation and the assets, suppliers, employees, and customers it depends on — then record backup contacts for your key suppliers, vendors, and customers." />
       <div style={cardStyle()}>
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:14 }}>
           <div style={cardLblStyle({ marginBottom:0 })}>Primary revenue operations</div>
@@ -5277,14 +5277,15 @@ function LEG10({ leg, profile }) {
 // than the owner cannot invoke it to stop something, it is not institutional yet.
 
 const VIS_STAGES = [
-  { n:1, label:"What you have already said" },
-  { n:2, label:"Test it" },
-  { n:3, label:"What it has cost you" },
-  { n:4, label:"Turn it into rules" },
-  { n:5, label:"Who holds this" },
-  { n:6, label:"Where it binds" },
-  { n:7, label:"The statement" },
-  { n:8, label:"The document" },
+  { n:1, label:"Competitive advantage" },
+  { n:2, label:"Core values" },
+  { n:3, label:"Test it" },
+  { n:4, label:"What it has cost you" },
+  { n:5, label:"Turn it into rules" },
+  { n:6, label:"Who holds this" },
+  { n:7, label:"Where it binds" },
+  { n:8, label:"The statement" },
+  { n:9, label:"The document" },
 ];
 
 // The four tests. Most answers fail at least one, which is the point of running them.
@@ -5379,17 +5380,21 @@ const visStats = (vis) => {
 
 // ── Vision 1 — What you have already said ────────────────────────────────�������───
 function VIS1({ vis, setVis, profile, goProfile }) {
-  const items = vis.items || [];
+  const items = (vis.items || []).filter(i => i.kind === "advantage");
   const seeded = !!vis.seeded;
-  const seed = () => setVis({ items: visSeedItems(profile), seeded:true });
-  const setItem = (id, patch) => setVis({ items: items.map(i => i.id===id ? {...i,...patch} : i) });
-  const add = () => setVis({ items:[...items, { id:"custom-"+Date.now(), kind:"advantage", sourceLabel:"Added here", text:"", tests:{}, verdict:"untested" }], seeded:true });
+  const seed = () => setVis({ items: visSeedItems(profile).filter(i => i.kind === "advantage"), seeded:true });
+  const setItem = (id, patch) => setVis({ items: (vis.items || []).map(i => i.id===id ? {...i,...patch} : i) });
+  const add = () => setVis({ items:[...(vis.items || []), { id:"custom-"+Date.now(), kind:"advantage", sourceLabel:"Added here", text:"", tests:{}, verdict:"untested" }], seeded:true });
   const remove = (id) => setVis({ items: items.filter(i => i.id!==id) });
   const hasProfile = ["advantage","values","nearTerm","longTerm"].some(f => (profile||{})[f] && String(profile[f]).trim());
 
   return (
     <div>
-      <Head eyebrow="Strategic vision · Stage 1" title="What you have already said" sub="You have written some of this down before. Nothing here asks you to start over. This pulls it forward so the rest of the module can make it harder." />
+      <Head eyebrow="Strategic vision · Stage 1" title="Competitive advantage" sub="Start with the reason customers, employees, landlords, or partners choose this operation over another." />
+      <div style={cardStyle({ borderTop:`4px solid ${T.moss}` })}>
+        <div style={cardLblStyle()}>Why this matters</div>
+        <p style={{ fontSize:14, color:T.fgM, lineHeight:1.65, margin:0 }}>A competitive advantage is more than working hard or producing quality. It is a capability, relationship, reputation, location, or way of operating that creates value and is difficult for another farm to copy. Naming it clearly helps you protect it, invest in it, and make better decisions about where the business is headed.</p>
+      </div>
       {!hasProfile && (
         <Flag type="warn">Your Farm Profile does not have competitive advantage, core values, or objectives filled in yet. You can add items here directly, but filling the profile first gives this module something to work with.
           {goProfile && <div style={{ marginTop:9 }}><button onClick={goProfile} style={{ ...btnStyle("outline"), fontSize:12, padding:"6px 13px" }}>Open Farm Profile</button></div>}
@@ -5414,8 +5419,6 @@ function VIS1({ vis, setVis, profile, goProfile }) {
               <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", gap:10, marginBottom:8, flexWrap:"wrap" }}>
                 <select style={{ ...inputStyle(), width:"auto", fontSize:12, padding:"4px 9px" }} value={it.kind} onChange={e=>setItem(it.id,{kind:e.target.value})}>
                   <option value="advantage">Competitive advantage</option>
-                  <option value="value">Core value</option>
-                  <option value="goal">Objective</option>
                 </select>
                 <span style={{ fontSize:11, color:T.fgS }}>from {it.sourceLabel}</span>
               </div>
@@ -5436,17 +5439,34 @@ function VIS1({ vis, setVis, profile, goProfile }) {
   );
 }
 
-// ── Vision 2 — Test it ───────────────────────────────────────────────────────
-function VIS2({ vis, setVis }) {
+// ── Vision 2 — Core values ───────────────────────────────────────────────────
+  function VIS_VALUES({ vis, setVis, profile }) {
+  const values = (vis.items || []).filter(i => i.kind === "value");
+  const setValue = (id, text) => setVis({ items:(vis.items || []).map(i => i.id===id ? { ...i, text } : i) });
+  const add = () => setVis({ items:[...(vis.items || []), { id:"value-"+Date.now(), kind:"value", sourceLabel:"Added here", text:"", tests:{}, verdict:"untested" }] });
+  const seed = () => setVis({ items:[...(vis.items || []), ...(profile.values && !values.length ? [{ id:"profile-value-"+Date.now(), kind:"value", sourceLabel:"Farm Profile", text:profile.values, tests:{}, verdict:"untested" }] : [])], valuesSeeded:true });
+  return <div>
+    <Head eyebrow="Strategic vision · Stage 3" title="Core values" sub="Identify the principles that should guide choices when the easiest or most profitable option is not automatically the right one." />
+    <div style={cardStyle({ borderTop:`4px solid ${T.blue}` })}>
+      <div style={cardLblStyle()}>Why this matters</div>
+      <p style={{ fontSize:14, color:T.fgM, lineHeight:1.65, margin:0 }}>Core values turn a farm&apos;s identity into a decision filter. They help the household decide what work to accept, how to treat land and people, and what trade-offs are worth making. A value becomes useful when it can change a decision — not when it is only a good-sounding word.</p>
+    </div>
+    {!values.length && profile.values && !vis.valuesSeeded && <div style={cardStyle()}><div style={cardLblStyle()}>Bring forward what you already wrote</div><p style={{ fontSize:13, color:T.fgM }}>Your Farm Profile already has a values statement. Start there, then make it more specific if needed.</p><button onClick={seed} style={btnStyle("primary")}>Bring in core values →</button></div>}
+    <div style={cardStyle()}><div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12 }}><div style={cardLblStyle({ marginBottom:0 })}>Your core values</div><button onClick={add} style={{ ...btnStyle("outline"), fontSize:12, padding:"6px 13px" }}>+ Add one</button></div>{values.length ? values.map(v=><div key={v.id} style={{ marginBottom:12 }}><textarea style={inputStyle({ minHeight:64, fontSize:14 })} value={v.text} onChange={e=>setValue(v.id,e.target.value)} placeholder="Name the principle and what it means in practice" /></div>) : <div style={{ color:T.fgS, fontSize:13 }}>Add the principles you want this operation to be known for.</div>}</div>
+  </div>;
+  }
+
+// ── Vision 3 — Test it ───────────────────────────────────────────────────────
+  function VIS2({ vis, setVis }) {
   const items = (vis.items||[]).filter(i => i.text && i.text.trim());
   const setTest = (id, tid, val) => setVis({ items: (vis.items||[]).map(i => i.id===id ? { ...i, tests:{ ...(i.tests||{}), [tid]:val } } : i) });
   const s = visStats(vis);
 
-  if (!items.length) return <div><Head eyebrow="Strategic vision · Stage 2" title="Test it" sub="" /><Flag type="warn">Nothing to test yet. Go back a stage and bring in what you have written.</Flag></div>;
+  if (!items.length) return <div><Head eyebrow="Strategic vision · Stage 3" title="Test it" sub="" /><Flag type="warn">Nothing to test yet. Go back a stage and bring in what you have written.</Flag></div>;
 
   return (
     <div>
-      <Head eyebrow="Strategic vision · Stage 2" title="Test it" sub="Most operations answer the competitive advantage question with hard work and quality. Neither one is an advantage. These questions find out which of your claims actually are." />
+      <Head eyebrow="Strategic vision · Stage 3" title="Test it" sub="Most operations answer the competitive advantage question with hard work and quality. Neither one is an advantage. These questions find out which of your claims actually are." />
       <Flag type="info">Expect several of these to get demoted. That is the module working. An honest short list is worth more than a long one nobody believes.</Flag>
 
       {items.map(it => {
@@ -5511,7 +5531,7 @@ function VIS3({ vis, setVis }) {
   const answered = values.filter(v => ((v.tests||{}).cost||"").trim().length > 10).length;
   return (
     <div>
-      <Head eyebrow="Strategic vision · Stage 3" title="What it has cost you" sub="A value that has never cost anything is not governing behaviour, it is decoration. This is the question most operators have a real answer to and have never been asked." />
+      <Head eyebrow="Strategic vision · Stage 4" title="What it has cost you" sub="A value that has never cost anything is not governing behaviour, it is decoration. This is the question most operators have a real answer to and have never been asked." />
       {values.length === 0 ? (
         <Flag type="warn">No core values recorded yet. Go back to stage 1 and mark at least one claim as a core value.</Flag>
       ) : (
@@ -5546,7 +5566,7 @@ function VIS4({ vis, setVis }) {
 
   return (
     <div>
-      <Head eyebrow="Strategic vision · Stage 4" title="Turn it into rules" sub="This is where a personal vision becomes an organizational one. A value cannot be followed by an employee. A rule can, and more importantly a rule can be cited back at you." />
+      <Head eyebrow="Strategic vision · Stage 5" title="Turn it into rules" sub="This is where a personal vision becomes an organizational one. A value cannot be followed by an employee. A rule can, and more importantly a rule can be cited back at you." />
       <div style={cardStyle({ borderTop:`4px solid ${T.blue}` })}>
         <div style={cardLblStyle()}>What the conversion looks like</div>
         {[["We value stewardship","We do not rent ground we cannot farm to our own standard, even when the rent is good"],
@@ -5611,7 +5631,7 @@ function VIS5({ vis, setVis, goLegacy }) {
   const canState = VIS_HOLDERS.filter(p => h[p.id] === 3);
   return (
     <div>
-      <Head eyebrow="Strategic vision · Stage 5" title="Who holds this" sub="A vision one person holds is a preference. A vision the organization holds is a constraint. The difference is whether anyone else could state it, and whether they could use it to stop something." />
+      <Head eyebrow="Strategic vision · Stage 6" title="Who holds this" sub="A vision one person holds is a preference. A vision the organization holds is a constraint. The difference is whether anyone else could state it, and whether they could use it to stop something." />
       <div style={cardStyle()}>
         <div style={cardLblStyle()}>Where each person actually stands</div>
         {VIS_HOLDERS.map(p => (
@@ -5666,7 +5686,7 @@ function VIS6({ vis, setVis }) {
   const unbound = rules.filter(r => r.statement && (r.binds||[]).length === 0);
   return (
     <div>
-      <Head eyebrow="Strategic vision · Stage 6" title="Where it binds" sub="A vision that does not show up where decisions get made is wall decoration. Mark which decisions each rule actually governs." />
+      <Head eyebrow="Strategic vision · Stage 7" title="Where it binds" sub="A vision that does not show up where decisions get made is wall decoration. Mark which decisions each rule actually governs." />
       {rules.length === 0 ? (
         <Flag type="warn">No rules yet. Go back to stage 4 and write at least one.</Flag>
       ) : (
@@ -5734,7 +5754,7 @@ function VIS7({ vis, setVis, profile }) {
 
   return (
     <div>
-      <Head eyebrow="Strategic vision · Stage 7" title="The statement" sub="Assembled from your own words rather than rewritten. A farm team can tell instantly when a document was not written by the person who runs the place." />
+      <Head eyebrow="Strategic vision · Stage 8" title="The statement" sub="Assembled from your own words rather than rewritten. A farm team can tell instantly when a document was not written by the person who runs the place." />
 
       {!vis.assembled && (
         <div style={cardStyle({ borderTop:`4px solid ${T.moss}` })}>
@@ -6437,8 +6457,9 @@ else if (isRD) { if (rd.stage<rdTotal) goRD(rd.stage+1); else goLegacy(1); }
     : legRole === "compare" ? <LegCompare leg={leg} setLegData={setLegData} setSucc={setSucc} />
     : LEG_BODY[stage-1];
   const VIS_BODY = [
-    <VIS1 vis={vis} setVis={setVis} profile={profile} goProfile={()=>setModule("profile")} />,
-    <VIS2 vis={vis} setVis={setVis} />, <VIS3 vis={vis} setVis={setVis} />,
+  <VIS1 vis={vis} setVis={setVis} profile={profile} goProfile={()=>setModule("profile")} />,
+  <VIS_VALUES vis={vis} setVis={setVis} profile={profile} />,
+  <VIS2 vis={vis} setVis={setVis} />, <VIS3 vis={vis} setVis={setVis} />,
     <VIS4 vis={vis} setVis={setVis} />, <VIS5 vis={vis} setVis={setVis} goLegacy={()=>{ setModule("legacy"); setLeg(s=>({...s, role:"compare"})); }} />,
     <VIS6 vis={vis} setVis={setVis} />, <VIS7 vis={vis} setVis={setVis} profile={profile} />,
     <VIS8 vis={vis} profile={profile} />,
