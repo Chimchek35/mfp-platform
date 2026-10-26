@@ -1,6 +1,7 @@
 import { useState, useMemo, useRef, useEffect } from "react";
 import { loadSavedWork, syncSavedWork } from "./backend.js";
 import EagleEye from "./EagleEye.jsx";
+import FarmKnowledgeSearch from "./FarmKnowledgeSearch.jsx";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // FONTS  (system stack, matching the MFP action plan design language)
@@ -1705,7 +1706,7 @@ function RiskPlanRevenueOps({ risk, setRisk }) {
   const removeContact = (i) => setPlan({ contacts: contacts.filter((_,idx)=>idx!==i) });
   return (
     <div>
-      <Head eyebrow="Farm Risk · Plan Builder · Stage 1" title="Revenue operations & key contacts" sub="Document each primary revenue operation and the assets, suppliers, employees, and customers it depends on — then record backup contacts for your key suppliers, vendors, and customers." />
+      <Head eyebrow="Farm Risk �� Plan Builder · Stage 1" title="Revenue operations & key contacts" sub="Document each primary revenue operation and the assets, suppliers, employees, and customers it depends on — then record backup contacts for your key suppliers, vendors, and customers." />
       <div style={cardStyle()}>
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:14 }}>
           <div style={cardLblStyle({ marginBottom:0 })}>Primary revenue operations</div>
@@ -2479,7 +2480,7 @@ function RD1({ rd, setRData, fa }) {
 const INCOME_BENCHMARK = [
   { label:"Residence farm", sub:"Small; operator's main job is off-farm", farm:"5–10%", wages:"55–65%", nonfarm:"10–15%", transfers:"15–25%", tiers:["< $500K"] },
   { label:"Intermediate farm", sub:"Small; farming is the primary occupation", farm:"15–25%", wages:"45–55%", nonfarm:"10–15%", transfers:"15–20%", tiers:["< $500K","$500K – $2M"] },
-  { label:"Commercial family farm", sub:"≥ $350K gross cash income", farm:"55–70%", wages:"15–25%", nonfarm:"5–10%", transfers:"10–15%", tiers:["$500K – $2M","$2M – $5M"] },
+  { label:"Commercial family farm", sub:"≥ $350K gross cash income", farm:"55–70%", wages:"15–25%", nonfarm:"5–10%", transfers:"10–15%", tiers:["$500K – $2M","$2M ��� $5M"] },
   { label:"Large-scale family farm", sub:"≥ $1M gross cash income", farm:"70–85%", wages:"5–15%", nonfarm:"5–10%", transfers:"5–10%", tiers:["$2M – $5M","$5M+"] },
 ];
 function PeerIncomeBenchmark({ revTier }) {
@@ -6548,7 +6549,7 @@ else if (isRD) { if (rd.stage<rdTotal) goRD(rd.stage+1); else goLegacy(1); }
             onClear={resetAll} />
         </div>
         <div style={{ display:"flex", alignItems:"center", gap:16, flexShrink:0 }}>
-          <span style={{ fontSize:11, color:T.fgS, maxWidth:190, textAlign:"right", lineHeight:1.4 }}>Your farm profile carries across all modules</span>
+          <span style={{ fontSize:11, color:T.fgS, maxWidth:190, textAlign:"right", lineHeight:1.4 }}>Saved locally on this browser · your farm profile carries across all modules</span>
           <div style={{ width:38, height:38, borderRadius:"50%", background:T.blue, color:"#fff", display:"flex", alignItems:"center", justifyContent:"center", fontWeight:700, fontSize:15 }}>RM</div>
         </div>
       </header>
@@ -6562,8 +6563,12 @@ else if (isRD) { if (rd.stage<rdTotal) goRD(rd.stage+1); else goLegacy(1); }
                 <div style={{ fontWeight:700, fontSize:11, letterSpacing:"0.16em", textTransform:"uppercase", color:T.green, display:"flex", alignItems:"center", gap:7, marginBottom:4 }}>Farm Profile</div>
                 <div style={{ fontSize:12, color:"rgba(255,255,255,0.55)" }}>360° farm business view</div>
               </div>
-              <div style={{ height:1, background:"rgba(255,255,255,0.09)", margin:"0 0 8px" }} />
-              <div style={{ padding:"10px 16px", fontSize:12.5, color:T.fgM, lineHeight:1.6 }}>Fill this in once — Financial Analysis and Revenue Diversification each pull matching fields from here instead of asking twice.</div>
+  <div style={{ height:1, background:"rgba(255,255,255,0.09)", margin:"0 0 8px" }} />
+  <div style={{ padding:"10px 12px 12px" }}>
+    <div style={{ color:"rgba(255,255,255,0.72)", fontSize:10, fontWeight:700, letterSpacing:"0.12em", textTransform:"uppercase", marginBottom:7 }}>Ask your farm record</div>
+    <FarmKnowledgeSearch state={{ profile, vision:vis, fa, rd, legacy:leg, risk }} onNavigate={(nextModule) => setModule(nextModule)} />
+  </div>
+  <div style={{ padding:"10px 16px", fontSize:12.5, color:T.fgM, lineHeight:1.6 }}>Fill this in once — Financial Analysis and Revenue Diversification each pull matching fields from here instead of asking twice.</div>
               <div style={{ padding:"14px 16px 0" }}>
   <button type="button" onClick={() => window.dispatchEvent(new Event("mfp:open-profile-import"))} style={{ width:"100%", boxSizing:"border-box", ...btnStyle("outline"), borderColor:"rgba(255,255,255,0.35)", color:"#fff", background:"rgba(255,255,255,0.08)", fontSize:12, padding:"9px 10px", display:"block", textAlign:"center" }}>
   Import MFP profile JSON
@@ -6597,6 +6602,10 @@ else if (isRD) { if (rd.stage<rdTotal) goRD(rd.stage+1); else goLegacy(1); }
   <div style={{ fontSize:12, color:T.fgM }}>{isVis?`${visTotal}-stage planning`:isFA?"4-stage diagnostic":isLeg?`${legTotal}-stage transition plan`:isRD?"9-stage planning":"12-stage risk review"}</div>
           </div>
           <div style={{ height:1, background:"rgba(255,255,255,0.09)", margin:"0 0 8px" }} />
+          <div style={{ padding:"10px 12px 12px" }}>
+            <div style={{ color:"rgba(255,255,255,0.72)", fontSize:10, fontWeight:700, letterSpacing:"0.12em", textTransform:"uppercase", marginBottom:7 }}>Ask your farm record</div>
+            <FarmKnowledgeSearch state={{ profile, vision:vis, fa, rd, legacy:leg, risk }} onNavigate={(nextModule) => setModule(nextModule)} />
+          </div>
           <nav style={{ flex:1 }}>
             {stageDefs.map(s => {
               const active = s.n===stage, done = s.n<stage;
