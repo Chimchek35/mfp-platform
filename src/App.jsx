@@ -3711,16 +3711,19 @@ function FarmProfilePage({ profile, setProfile, fa, rd, goFA, goRD, goRisk, goLe
 // nothing here scores the family, and the tool is willing to say "not yet".
 
 const LEG_STAGES = [
-  { n:1,  label:"Where you are today" },
-  { n:2,  label:"The three transfers" },
-  { n:3,  label:"The next chapter" },
-  { n:4,  label:"Two households" },
-  { n:5,  label:"Successor readiness" },
-  { n:6,  label:"Who knows what" },
-  { n:7,  label:"Fair is not equal" },
-  { n:8,  label:"Triggers & contingencies" },
-  { n:9,  label:"Rented ground & relationships" },
-  { n:10, label:"Where this leaves you" },
+  { n:1,  label:"The people" },
+  { n:2,  label:"The successor question" },
+  { n:3,  label:"What exists on paper" },
+  { n:4,  label:"The three transfers" },
+  { n:5,  label:"The next chapter" },
+  { n:6,  label:"Two households" },
+  { n:7,  label:"Successor readiness" },
+  { n:8,  label:"Who knows what" },
+  { n:9,  label:"Fair is not equal" },
+  { n:10, label:"Triggers & contingencies" },
+  { n:11, label:"Rented ground & relationships" },
+  { n:12, label:"Parcels and land valuation" },
+  { n:13, label:"Where this leaves you" },
 ];
 
 const TRANSFERS = [
@@ -4138,8 +4141,32 @@ const SUCC_STAGES = [
   { n:6, label:"What you need to commit" },
 ];
 
-// ── Stage 1 — Where you are today ────────────────────────────────────────────
+// ── Stage 1 — The people ───────────────────────────────────────────────────────
 function LEG1({ leg, setLegData }) {
+  const d = leg.data || {};
+  const v = (k) => d[k] || "";
+  const set = (k) => (e) => setLegData({ [k]: e.target.value });
+  return <div><Head eyebrow="Legacy · Stage 1" title="The people" sub="Start with the people who make the operation work today and the family members whose interests may shape what comes next." /><div style={cardStyle()}><div style={cardLblStyle()}>The people</div>{legRow("Who is involved in the operation today, and what does each person do?", <textarea style={inputStyle({ minHeight:100 })} value={v("people")} onChange={set("people")} placeholder="Names, roles, rough ages. Include anyone whose absence would be felt." />)}{legRow("Who is off the farm but still part of the family picture?", <textarea style={inputStyle({ minHeight:80 })} value={v("offFarmPeople")} onChange={set("offFarmPeople")} placeholder="Off-farm children, siblings with an interest in the ground, anyone with an expectation." />, "These are the people most often left out and the most common source of trouble later.")}</div></div>;
+}
+
+// ── Stage 2 — The successor question ─────────────────────────────────────────
+function LEG2({ leg, setLegData }) {
+  const d = leg.data || {};
+  const v = (k) => d[k] || "";
+  const set = (k) => (e) => setLegData({ [k]: e.target.value });
+  return <div><Head eyebrow="Legacy · Stage 2" title="The successor question" sub="There may be a clear successor, several possibilities, or no successor at all. Naming the reality is the useful first step." /><div style={cardStyle()}><div style={cardLblStyle()}>The successor question</div>{legRow("Is there an identified successor?", <select style={inputStyle()} value={v("successorStatus")} onChange={set("successorStatus")}><option value="">Select</option><option value="working">Yes, and they are already working in the business</option><option value="identified">Yes, identified but not yet involved day to day</option><option value="maybe">Maybe, more than one candidate or nobody has said it out loud</option><option value="none">No, there is no successor</option></select>)}{d.successorStatus === "none" && <><Flag type="info">No successor is a legitimate path, not a failure. It deserves the same rigour as a family transition.</Flag>{legRow("Which direction makes most sense to explore?", <select style={inputStyle()} value={v("noSuccessorPath")} onChange={set("noSuccessorPath")}><option value="">Select</option><option value="sale">Orderly sale of the operation</option><option value="lease">Lease the ground to a neighbouring operation</option><option value="employee">Transition to a non-family employee</option><option value="winddown">Planned wind-down over a set number of years</option><option value="unsure">Genuinely unsure, that is the question</option></select>)}</>}{d.successorStatus === "maybe" && <Flag type="warn">More than one candidate, or nobody having said it out loud, is a common starting point. Naming it is the work of the next few stages.</Flag>}</div></div>;
+}
+
+// ── Stage 3 — What exists on paper ───────────────────────────────────────────
+function LEG3({ leg, setLegData }) {
+  const d = leg.data || {};
+  const v = (k) => d[k] || "";
+  const set = (k) => (e) => setLegData({ [k]: e.target.value });
+  return <div><Head eyebrow="Legacy · Stage 3" title="What exists on paper" sub="A quick inventory of what is written down shows whether the next conversation starts with documents, assumptions, or a blank page." /><div style={cardStyle()}><div style={cardLblStyle()}>What exists on paper</div>{legRow("What is in writing today?", <textarea style={inputStyle({ minHeight:100 })} value={v("inWriting")} onChange={set("inWriting")} placeholder="Wills, trusts, operating agreements, buy-sell, leases, anything. If the answer is nothing, that is a common and useful answer." />)}{legRow("If you had to hand the whole thing over Monday morning, what would break first?", <textarea style={inputStyle({ minHeight:100 })} value={v("breakFirst")} onChange={set("breakFirst")} placeholder="Name the first decision, relationship, or process that would be exposed." />, "This question usually locates the real gap faster than anything else in the module.")}</div></div>;
+}
+
+// ── Legacy compatibility: the original combined page is retained below for saved records. ──
+function LEG1_COMBINED({ leg, setLegData }) {
   const d = leg.data || {};
   const v = (k) => d[k] || "";
   const set = (k) => (e) => setLegData({ [k]: e.target.value });
@@ -4195,7 +4222,7 @@ function LEG1({ leg, setLegData }) {
 }
 
 // ── Stage 2 — The three transfers ───────────────────────────────────────────�����
-function LEG2({ leg, setLegData }) {
+function LEG4({ leg, setLegData }) {
   const d = leg.data || {};
   const t = d.transfers || {};
   const setT = (tid, hid, val) => setLegData({ transfers:{ ...t, [tid]:{ ...(t[tid]||{}), [hid]:val } } });
@@ -4262,13 +4289,13 @@ function LEG2({ leg, setLegData }) {
 }
 
 // ── Stage 3 — The next chapter ──────���─────���──────────────────────────────────
-function LEG3({ leg, setLegData }) {
+function LEG5({ leg, setLegData }) {
   const d = leg.data || {};
   const v = (k) => d[k] || "";
   const set = (k) => (e) => setLegData({ [k]: e.target.value });
   return (
     <div>
-      <Head eyebrow="Legacy · Stage 3" title="The next chapter" sub="Asked before anything financial, because this is where most plans actually stall. For many operators the farm is not what they do, it is who they are, and transition can read as erasure." />
+      <Head eyebrow="Legacy · Stage 5" title="The next chapter" sub="Asked before anything financial, because this is where most plans actually stall. For many operators the farm is not what they do, it is who they are, and transition can read as erasure." />
       <div style={cardStyle()}>
         <div style={cardLblStyle()}>For the senior generation</div>
         {legRow("What does your week look like in the first year after transition?",
@@ -4299,7 +4326,7 @@ function LEG3({ leg, setLegData }) {
 }
 
 // ── Stage 4 — Two households ─────────────────────────────────────────────────
-function LEG4({ leg, setLegData, fa }) {
+function LEG6({ leg, setLegData, fa }) {
   const d = leg.data || {};
   const v = (k) => d[k] || "";
   const set = (k) => (e) => setLegData({ [k]: e.target.value });
@@ -4368,7 +4395,7 @@ function LEG4({ leg, setLegData, fa }) {
 }
 
 // ── Stage 5 — Successor readiness ────────────────────────────────────────────
-function LEG5({ leg, setLegData }) {
+function LEG7({ leg, setLegData }) {
   const d = leg.data || {};
   const ex = d.exposure || {};
   const toggle = (id) => setLegData({ exposure:{ ...ex, [id]: !ex[id] } });
@@ -4418,7 +4445,7 @@ function LEG5({ leg, setLegData }) {
 }
 
 // ── Stage 6 — Who knows what ─────────────────────────────────────────────────
-function LEG6({ leg, setLegData }) {
+function LEG8({ leg, setLegData }) {
   const d = leg.data || {};
   const k = d.knows || {};
   const setK = (id, val) => setLegData({ knows:{ ...k, [id]: val } });
@@ -4489,7 +4516,7 @@ function LEG6({ leg, setLegData }) {
 }
 
 // ── Stage 7 — Fair is not equal ───────────────────────────────────────────��──
-function LEG7({ leg, setLegData }) {
+function LEG9({ leg, setLegData }) {
   const d = leg.data || {};
   const chosen = d.fairApproaches || {};
   const toggle = (id) => setLegData({ fairApproaches:{ ...chosen, [id]: !chosen[id] } });
@@ -4533,7 +4560,7 @@ function LEG7({ leg, setLegData }) {
 }
 
 // ── Stage 8 — Triggers & contingencies ───────────────────────────────────────
-function LEG8({ leg, setLegData }) {
+function LEG10({ leg, setLegData }) {
   const d = leg.data || {};
   const c = d.contingency || {};
   const set = (id) => (e) => setLegData({ contingency:{ ...c, [id]: e.target.value } });
@@ -4563,7 +4590,7 @@ function LEG8({ leg, setLegData }) {
 }
 
 // ── Stage 9 — Rented ground & relationships ──────────────────────────────────
-function LEG9({ leg, setLegData }) {
+function LEG11({ leg, setLegData }) {
   const d = leg.data || {};
   const ll = d.landlords || [];
   const setLL = (i, field, val) => { const next = ll.map((x,k)=>k===i?{...x,[field]:val}:x); setLegData({ landlords:next }); };
@@ -4638,8 +4665,8 @@ function LEG9({ leg, setLegData }) {
 }
 
 
-// ── Stage 11 — Parcels and land valuation ────────────────────────────────────
-function LEG11({ leg, setLegData, profile }) {
+// ── Stage 12 — Parcels and land valuation ────────────────────────────────────
+function LEG12({ leg, setLegData, profile }) {
   const d = leg.data || {};
   const parcels = d.parcels || [];
   const tierKey = legacyTier(leg);
@@ -5158,8 +5185,8 @@ function LegCompare({ leg, setLegData, setSucc }) {
   );
 }
 
-// ── Stage 10 — Where this leaves you ─────────────────────────────────────────
-function LEG10({ leg, profile }) {
+// ── Stage 13 — Where this leaves you ─────────────────────────────────────────
+function LEG13({ leg, profile }) {
   const d = leg.data || {};
   const tierKey = legacyTier(leg);
   const tier = READINESS_TIERS[tierKey];
@@ -5736,7 +5763,7 @@ function VIS6({ vis, setVis }) {
   );
 }
 
-// ── Vision 7 — The statement ──────────────────────────────────────��──────────
+// ── Vision 7 — The statement ───────────────────────────���──────────��──────────
 function VIS7({ vis, setVis, profile }) {
   const s = visStats(vis);
   const pub = vis.published || {};
@@ -6455,11 +6482,13 @@ else if (isRD) { if (rd.stage<rdTotal) goRD(rd.stage+1); else goLegacy(1); }
   const riskConvoActive = isRisk && riskConvo;
   const legCompareActive = isLeg && legRole === "compare";
   const LEG_BODY = [
-    <LEG1 leg={leg} setLegData={setLegData} />, <LEG2 leg={leg} setLegData={setLegData} />,
-    <LEG3 leg={leg} setLegData={setLegData} />, <LEG4 leg={leg} setLegData={setLegData} fa={fa} />,
-    <LEG5 leg={leg} setLegData={setLegData} />, <LEG6 leg={leg} setLegData={setLegData} />,
-    <LEG7 leg={leg} setLegData={setLegData} />, <LEG8 leg={leg} setLegData={setLegData} />,
-    <LEG9 leg={leg} setLegData={setLegData} />, <LEG10 leg={leg} profile={profile} />,
+  <LEG1 leg={leg} setLegData={setLegData} />, <LEG2 leg={leg} setLegData={setLegData} />,
+  <LEG3 leg={leg} setLegData={setLegData} />, <LEG4 leg={leg} setLegData={setLegData} />,
+  <LEG5 leg={leg} setLegData={setLegData} />, <LEG6 leg={leg} setLegData={setLegData} fa={fa} />,
+  <LEG7 leg={leg} setLegData={setLegData} />, <LEG8 leg={leg} setLegData={setLegData} />,
+  <LEG9 leg={leg} setLegData={setLegData} />, <LEG10 leg={leg} setLegData={setLegData} />,
+  <LEG11 leg={leg} setLegData={setLegData} />, <LEG12 leg={leg} setLegData={setLegData} profile={profile} />,
+  <LEG13 leg={leg} profile={profile} />,
   ];
   const SUCC_BODY = [
     <SUCC1 leg={leg} setSucc={setSucc} />, <SUCC2 leg={leg} setSucc={setSucc} />,
