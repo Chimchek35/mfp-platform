@@ -5374,26 +5374,6 @@ function StrategicAdvisor({ profile, vis, setVis }) {
     : "Let’s shape a direction that is both meaningful and workable. What do you most want this farm to make possible over the next five to ten years?" }]);
   const [draft, setDraft] = useState("");
   const [busy, setBusy] = useState(false);
-  const [voiceEnabled, setVoiceEnabled] = useState(false);
-  const [speakingIndex, setSpeakingIndex] = useState(null);
-  const speak = (text, index) => {
-    if (!("speechSynthesis" in window)) return;
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.rate = 0.96;
-    utterance.pitch = 1;
-    utterance.onstart = () => setSpeakingIndex(index);
-    utterance.onend = () => setSpeakingIndex(null);
-    utterance.onerror = () => setSpeakingIndex(null);
-    window.speechSynthesis.speak(utterance);
-  };
-  useEffect(() => () => window.speechSynthesis?.cancel(), []);
-  useEffect(() => {
-    if (voiceEnabled && messages.length) {
-      const latest = messages[messages.length - 1];
-      if (latest.role === "assistant") speak(latest.content, messages.length - 1);
-    }
-  }, [messages, voiceEnabled]);
   const send = async (event) => {
     event.preventDefault();
     const content = draft.trim();
@@ -5411,8 +5391,8 @@ function StrategicAdvisor({ profile, vis, setVis }) {
     } finally { setBusy(false); }
   };
   return <div style={{ background: "#f8fbfd", border: `1px solid ${T.border}`, borderRadius: 12, padding: 20 }}>
-    <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "baseline", marginBottom: 14 }}><div><div style={{ color: T.blue, fontSize: 11, fontWeight: 800, letterSpacing: ".12em", textTransform: "uppercase" }}>Strategic Vision Advisor</div><h2 style={{ marginTop: 5 }}>Think it through with an advisor</h2></div><div style={{ display: "flex", alignItems: "center", gap: 10 }}><button type="button" onClick={() => { const next = !voiceEnabled; setVoiceEnabled(next); if (next && messages[0]) speak(messages[messages.length - 1].content, messages.length - 1); else window.speechSynthesis?.cancel(); }} aria-pressed={voiceEnabled} style={{ ...btnStyle(voiceEnabled ? "primary" : "outline"), fontSize: 12, padding: "6px 10px" }}>{voiceEnabled ? "Voice on" : "Talk to me"}</button><span style={{ color: T.fgS, fontSize: 12 }}>One question at a time</span></div></div>
-    <div aria-live="polite" style={{ display: "grid", gap: 10, maxHeight: 390, overflowY: "auto", padding: "4px 2px 12px" }}>{messages.map((message, index) => <div key={`${message.role}-${index}`} style={{ maxWidth: "88%", justifySelf: message.role === "user" ? "end" : "start", background: message.role === "user" ? T.navy : "#fff", color: message.role === "user" ? "#fff" : T.fg, border: message.role === "user" ? "none" : `1px solid ${T.border}`, borderRadius: 10, padding: "11px 13px", lineHeight: 1.55 }}><div>{message.content}</div>{message.role === "assistant" && <button type="button" onClick={() => speak(message.content, index)} aria-label={`Read advisor message ${index + 1} aloud`} style={{ ...btnStyle("ghost"), fontSize: 11, padding: "4px 0", marginTop: 6 }}>{speakingIndex === index ? "Stop speaking" : "Listen"}</button>}</div>)}{busy && <div style={{ color: T.fgS, fontSize: 13 }}>Your advisor is thinking…</div>}</div>
+    <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "baseline", marginBottom: 14 }}><div><div style={{ color: T.blue, fontSize: 11, fontWeight: 800, letterSpacing: ".12em", textTransform: "uppercase" }}>Strategic Vision Advisor</div><h2 style={{ marginTop: 5 }}>Think it through with an advisor</h2></div><span style={{ color: T.fgS, fontSize: 12 }}>One question at a time</span></div>
+    <div aria-live="polite" style={{ display: "grid", gap: 10, maxHeight: 390, overflowY: "auto", padding: "4px 2px 12px" }}>{messages.map((message, index) => <div key={`${message.role}-${index}`} style={{ maxWidth: "88%", justifySelf: message.role === "user" ? "end" : "start", background: message.role === "user" ? T.navy : "#fff", color: message.role === "user" ? "#fff" : T.fg, border: message.role === "user" ? "none" : `1px solid ${T.border}`, borderRadius: 10, padding: "11px 13px", lineHeight: 1.55 }}>{message.content}</div>)}{busy && <div style={{ color: T.fgS, fontSize: 13 }}>Your advisor is thinking…</div>}</div>
     <form onSubmit={send} style={{ display: "flex", gap: 10, alignItems: "flex-end", marginTop: 8 }}><textarea value={draft} onChange={(event) => setDraft(event.target.value)} placeholder="Share what you are considering…" rows={3} aria-label="Message your strategic vision advisor" style={{ flex: 1, resize: "vertical", border: `1px solid ${T.border}`, borderRadius: 8, padding: 12, background: "#fff" }} /><button type="submit" disabled={busy || !draft.trim()} style={{ ...btnStyle("primary"), opacity: busy || !draft.trim() ? .55 : 1 }}>Send</button></form>
   </div>;
 }
