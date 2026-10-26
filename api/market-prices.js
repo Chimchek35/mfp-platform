@@ -27,14 +27,22 @@ function firstValue(rows, commodity) {
 
 async function getReport(reportPattern) {
   const response = await fetch(`${AMS_BASE}/reports`, { headers: authHeaders() });
-  if (!response.ok) throw new Error(`AMS report catalog returned ${response.status}`);
+  if (!response.ok) {
+    const error = new Error(`AMS report catalog returned ${response.status}`);
+    error.status = response.status;
+    throw error;
+  }
   const catalog = await response.json();
   const reports = catalog.results || catalog || [];
   const match = reports.find((report) => reportPattern.test(`${report.report_title || ""} ${report.reportName || ""} ${report.slug_name || ""}`));
   if (!match) throw new Error(`No AMS report matched ${reportPattern}`);
   const id = match.slug_id || match.report_id || match.reportId || match.slug;
   const detail = await fetch(`${AMS_BASE}/reports/${encodeURIComponent(id)}/Detail?lastReports=1`, { headers: authHeaders() });
-  if (!detail.ok) throw new Error(`AMS report returned ${detail.status}`);
+  if (!detail.ok) {
+    const error = new Error(`AMS report returned ${detail.status}`);
+    error.status = detail.status;
+    throw error;
+  }
   const data = await detail.json();
   return data.results || data.data || data || [];
 }
@@ -47,6 +55,10 @@ export default async function handler(req, res) {
       const rows = await getReport(feed.report);
       return { commodity: feed.commodity, value: firstValue(rows, feed.commodity) || "No current quote", unit: "USDA AMS", asOf: new Date().toLocaleDateString("en-US") };
     }));
+    const authFailure = results.find((result) => result.status === "rejected" && result.reason?.status === 401);
+    if (authFailure) {
+      return res.status(401).json({ status: "authentication_error", prices: [], message: "USDA AMS rejected the configured API key." });
+    }
     const prices = results.map((result, index) => result.status === "fulfilled"
       ? result.value
       : { commodity: feeds[index].commodity, value: "No current quote", unit: "USDA AMS", asOf: "Report unavailable" });
