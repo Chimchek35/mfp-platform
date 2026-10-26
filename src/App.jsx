@@ -649,7 +649,7 @@ function DocumentScanUpload({ fa, setFA }) {
             {uploadSlot("beginBS","Balance sheet — Jan 1","PDF or photo, optional")}
             {uploadSlot("endBS","Balance sheet — Dec 31","PDF or photo, optional")}
           </div>
-          <button onClick={runMockScan} disabled={!canScan||scanning} style={{ ...btnStyle("primary"), opacity:(!canScan||scanning)?0.5:1, pointerEvents:(!canScan||scanning)?"none":"auto" }}>{scanning?"Scanning…":"Scan documents →"}</button>
+          <button onClick={runMockScan} disabled={!canScan||scanning} style={{ ...btnStyle("primary"), opacity:(!canScan||scanning)?0.5:1, pointerEvents:(!canScan||scanning)?"none":"auto" }}>{scanning?"Scanning����":"Scan documents →"}</button>
         </>
       ) : (
         <>
@@ -1706,7 +1706,7 @@ function RiskPlanRevenueOps({ risk, setRisk }) {
   const removeContact = (i) => setPlan({ contacts: contacts.filter((_,idx)=>idx!==i) });
   return (
     <div>
-      <Head eyebrow="Farm Risk �� Plan Builder · Stage 1" title="Revenue operations & key contacts" sub="Document each primary revenue operation and the assets, suppliers, employees, and customers it depends on — then record backup contacts for your key suppliers, vendors, and customers." />
+      <Head eyebrow="Farm Risk ������ Plan Builder · Stage 1" title="Revenue operations & key contacts" sub="Document each primary revenue operation and the assets, suppliers, employees, and customers it depends on — then record backup contacts for your key suppliers, vendors, and customers." />
       <div style={cardStyle()}>
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:14 }}>
           <div style={cardLblStyle({ marginBottom:0 })}>Primary revenue operations</div>
@@ -2480,7 +2480,7 @@ function RD1({ rd, setRData, fa }) {
 const INCOME_BENCHMARK = [
   { label:"Residence farm", sub:"Small; operator's main job is off-farm", farm:"5–10%", wages:"55–65%", nonfarm:"10–15%", transfers:"15–25%", tiers:["< $500K"] },
   { label:"Intermediate farm", sub:"Small; farming is the primary occupation", farm:"15–25%", wages:"45–55%", nonfarm:"10–15%", transfers:"15–20%", tiers:["< $500K","$500K – $2M"] },
-  { label:"Commercial family farm", sub:"≥ $350K gross cash income", farm:"55–70%", wages:"15–25%", nonfarm:"5–10%", transfers:"10–15%", tiers:["$500K – $2M","$2M ��� $5M"] },
+  { label:"Commercial family farm", sub:"≥ $350K gross cash income", farm:"55–70%", wages:"15–25%", nonfarm:"5–10%", transfers:"10–15%", tiers:["$500K ��� $2M","$2M ��� $5M"] },
   { label:"Large-scale family farm", sub:"≥ $1M gross cash income", farm:"70–85%", wages:"5–15%", nonfarm:"5–10%", transfers:"5–10%", tiers:["$2M – $5M","$5M+"] },
 ];
 function PeerIncomeBenchmark({ revTier }) {
@@ -2537,11 +2537,17 @@ function RD2({ rd, setRData }) {
           ))}
         </div>
       ))}
+      <div style={cardStyle({ borderTop:`4px solid ${T.moss}` })}>
+        <div style={cardLblStyle()}>Income and opportunity lens</div>
+        <p style={{ fontSize:13, color:T.fgM, lineHeight:1.55, marginTop:0 }}>Diversification is not limited to a new farm enterprise. Off-farm wages, a spouse&apos;s income, a part-time job, buying an existing ag-adjacent business, or collaborating with another farm can all improve the household&apos;s revenue mix.</p>
+        {legRow("What off-farm income or work is already part of the household picture, or could realistically be added?", <textarea style={inputStyle({ minHeight:62 })} value={g.offFarmIncome||""} onChange={e=>set("offFarmIncome",e.target.value)} placeholder="W-2 income, spouse income, consulting, part-time work, or none." />)}
+        {legRow("Which possibility is worth exploring first?", <select style={inputStyle()} value={g.opportunityMode||""} onChange={e=>set("opportunityMode",e.target.value)}><option value="">Select</option><option value="farm">A new on-farm enterprise</option><option value="offFarm">Off-farm income or service work</option><option value="collaboration">A partnership or collaboration with another farm</option><option value="acquisition">Acquire an existing ag-adjacent business</option><option value="unsure">I need to widen the opportunity set first</option></select>)}
+      </div>
     </div>
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// ──────────────���──────────────────────────────────────────────────────────────
 // RD STAGE 3 — Human capital, assets & financial capital
 // ─────────────────────────────────────────────────────────────────────────────
 function RD3({ rd, setRData }) {
@@ -2581,6 +2587,12 @@ function RD3({ rd, setRData }) {
           </div>
         );
       })}
+      <div style={cardStyle({ borderTop:`4px solid ${T.blue}` })}>
+        <div style={cardLblStyle()}>The right hands on the right work</div>
+        <p style={{ fontSize:13, color:T.fgM, lineHeight:1.55, marginTop:0 }}>Farmers in the workshop emphasized that human capital is often the most leverageable asset. A new venture needs the right skills, motivation, personality, and decision style — not simply more labor.</p>
+        {legRow("What strengths, experience, and competencies could this household leverage?", <textarea style={inputStyle({ minHeight:62 })} value={rd.data.humanStrengths||""} onChange={e=>setRData(s=>({ ...s, humanStrengths:e.target.value }))} placeholder="Record keeping, livestock, sales, mechanics, relationships, teaching, technology, etc." />)}
+        {legRow("Who is best suited to lead the work, and what personality or working style matters?", <textarea style={inputStyle({ minHeight:62 })} value={rd.data.humanFit||""} onChange={e=>setRData(s=>({ ...s, humanFit:e.target.value }))} placeholder="Who likes uncertainty, selling, managing people, or building something new?" />)}
+      </div>
       {allWeak && touched && <Flag type="danger">All three levers score below 34% — only zero-capital, passive paths are appropriate until at least one lever is strengthened.</Flag>}
       {!allWeak && touched && (
         <div style={cardStyle({ borderTop:`4px solid ${T.green}` })}>
@@ -2716,6 +2728,13 @@ function RD5({ rd, setRData }) {
     <div>
       <Head eyebrow="Revenue Diversification · Stage 5" title="Barrier & compliance review" sub="Known barriers and regulatory considerations for each selected path. Check each one to confirm you've reviewed it before proceeding." />
       {selected.length===0 && <Flag type="warn">No opportunities selected. Go back to Stage 4.</Flag>}
+      <div style={cardStyle({ borderTop:`4px solid ${T.tan}` })}>
+        <div style={cardLblStyle()}>Workshop questions to carry into every opportunity</div>
+        <p style={{ fontSize:13, color:T.fgM, lineHeight:1.55, marginTop:0 }}>Use these prompts before treating a market idea as a strategy: separate a short-lived fad from a durable future, identify the legal and regulatory expertise you need, find an objective sounding board, and define how you would exit if the work no longer fits.</p>
+        {legRow("What would make this opportunity durable rather than a fad, and what is the short-term test?", <textarea style={inputStyle({ minHeight:58 })} value={d.fadFuture||""} onChange={e=>setRData(s=>({ ...s, fadFuture:e.target.value }))} placeholder="Name the long-term customer, capability, or asset this test would build." />)}
+        {legRow("Who will provide objective feedback and rural/ag-law guidance?", <textarea style={inputStyle({ minHeight:58 })} value={d.soundingBoard||""} onChange={e=>setRData(s=>({ ...s, soundingBoard:e.target.value }))} placeholder="A peer group, partner, attorney, accountant, extension advisor, or lender." />)}
+        {legRow("What is the exit path if the opportunity does not work?", <textarea style={inputStyle({ minHeight:58 })} value={d.exitPlan||""} onChange={e=>setRData(s=>({ ...s, exitPlan:e.target.value }))} placeholder="Time limit, resale value, lease end, buyer, or stop-loss decision." />)}
+      </div>
       {maxReg>=3 && (
         <div style={cardStyle({ borderTop:`4px solid ${T.amber}` })}>
           <div style={cardLblStyle()}><Apex color={T.amber} />Regulatory & compliance review — before you commit capital</div>
@@ -3981,7 +4000,7 @@ const valueParcel = (p) => {
 };
 
 
-// ═════════════════════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════��══════════════
 // BLIND COMPARE — the same questions, answered independently
 // ��════��═══════════════════════════════════════════════════════════════════════
 // One array drives both sides and the comparison, so the two generations are
@@ -4175,7 +4194,7 @@ function LEG1({ leg, setLegData }) {
   );
 }
 
-// ── Stage 2 — The three transfers ────────────────────────────────────────────
+// ── Stage 2 — The three transfers ───────────────────────────────────────────����
 function LEG2({ leg, setLegData }) {
   const d = leg.data || {};
   const t = d.transfers || {};
@@ -5258,14 +5277,16 @@ function LEG10({ leg, profile }) {
 // than the owner cannot invoke it to stop something, it is not institutional yet.
 
 const VIS_STAGES = [
-  { n:1, label:"What you have already said" },
-  { n:2, label:"Test it" },
-  { n:3, label:"What it has cost you" },
-  { n:4, label:"Turn it into rules" },
-  { n:5, label:"Who holds this" },
-  { n:6, label:"Where it binds" },
-  { n:7, label:"The statement" },
-  { n:8, label:"The document" },
+  { n:1, label:"Competitive advantage" },
+  { n:2, label:"Test competitive advantage" },
+  { n:3, label:"Core values" },
+  { n:4, label:"Test core values" },
+  { n:5, label:"What it has cost you" },
+  { n:6, label:"Turn it into rules" },
+  { n:7, label:"Who holds this" },
+  { n:8, label:"Where it binds" },
+  { n:9, label:"The statement" },
+  { n:10, label:"The document" },
 ];
 
 // The four tests. Most answers fail at least one, which is the point of running them.
@@ -5360,17 +5381,23 @@ const visStats = (vis) => {
 
 // ── Vision 1 — What you have already said ────────────────────────────────�������───
 function VIS1({ vis, setVis, profile, goProfile }) {
-  const items = vis.items || [];
+  const items = (vis.items || []).filter(i => i.kind === "advantage");
+  const carouselRef = useRef(null);
+  const [activeAdvantage, setActiveAdvantage] = useState(0);
   const seeded = !!vis.seeded;
-  const seed = () => setVis({ items: visSeedItems(profile), seeded:true });
-  const setItem = (id, patch) => setVis({ items: items.map(i => i.id===id ? {...i,...patch} : i) });
-  const add = () => setVis({ items:[...items, { id:"custom-"+Date.now(), kind:"advantage", sourceLabel:"Added here", text:"", tests:{}, verdict:"untested" }], seeded:true });
+  const seed = () => setVis({ items: visSeedItems(profile).filter(i => i.kind === "advantage"), seeded:true });
+  const setItem = (id, patch) => setVis({ items: (vis.items || []).map(i => i.id===id ? {...i,...patch} : i) });
+  const add = () => setVis({ items:[...(vis.items || []), { id:"custom-"+Date.now(), kind:"advantage", sourceLabel:"Added here", text:"", tests:{}, verdict:"untested" }], seeded:true });
   const remove = (id) => setVis({ items: items.filter(i => i.id!==id) });
   const hasProfile = ["advantage","values","nearTerm","longTerm"].some(f => (profile||{})[f] && String(profile[f]).trim());
 
   return (
     <div>
-      <Head eyebrow="Strategic vision · Stage 1" title="What you have already said" sub="You have written some of this down before. Nothing here asks you to start over. This pulls it forward so the rest of the module can make it harder." />
+      <Head eyebrow="Strategic vision · Stage 1" title="Competitive advantage" sub="Start with the reason customers, employees, landlords, or partners choose this operation over another." />
+      <div style={cardStyle({ borderTop:`4px solid ${T.moss}` })}>
+        <div style={cardLblStyle()}>Why this matters</div>
+        <p style={{ fontSize:14, color:T.fgM, lineHeight:1.65, margin:0 }}>A competitive advantage is more than working hard or producing quality. It is a capability, relationship, reputation, location, or way of operating that creates value and is difficult for another farm to copy. Naming it clearly helps you protect it, invest in it, and make better decisions about where the business is headed.</p>
+      </div>
       {!hasProfile && (
         <Flag type="warn">Your Farm Profile does not have competitive advantage, core values, or objectives filled in yet. You can add items here directly, but filling the profile first gives this module something to work with.
           {goProfile && <div style={{ marginTop:9 }}><button onClick={goProfile} style={{ ...btnStyle("outline"), fontSize:12, padding:"6px 13px" }}>Open Farm Profile</button></div>}
@@ -5389,22 +5416,26 @@ function VIS1({ vis, setVis, profile, goProfile }) {
             <div style={cardLblStyle({ marginBottom:0 })}>{items.length} claims to work with</div>
             <button onClick={add} style={{ ...btnStyle("outline"), fontSize:12, padding:"6px 13px" }}>+ Add one</button>
           </div>
-          <div style={{ fontSize:12.5, color:T.fgM, marginBottom:14, lineHeight:1.55 }}>Edit anything that came across wrong, split anything that is really two claims, and delete anything you no longer stand behind. What is missing matters as much as what is here.</div>
-          {items.map(it => (
-            <div key={it.id} style={{ border:`1px solid ${T.border}`, borderRadius:8, padding:"12px 14px", marginBottom:10 }}>
-              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", gap:10, marginBottom:8, flexWrap:"wrap" }}>
-                <select style={{ ...inputStyle(), width:"auto", fontSize:12, padding:"4px 9px" }} value={it.kind} onChange={e=>setItem(it.id,{kind:e.target.value})}>
-                  <option value="advantage">Competitive advantage</option>
-                  <option value="value">Core value</option>
-                  <option value="goal">Objective</option>
-                </select>
-                <span style={{ fontSize:11, color:T.fgS }}>from {it.sourceLabel}</span>
+          <div style={{ fontSize:12.5, color:T.fgM, marginBottom:14, lineHeight:1.55 }}>Swipe horizontally through the claims pulled from your Farm Profile. Edit anything that came across wrong, split anything that is really two claims, and remove anything you no longer stand behind.</div>
+          <div ref={carouselRef} onScroll={(event) => { const track = event.currentTarget; const cardWidth = track.clientWidth + 12; setActiveAdvantage(Math.min(items.length - 1, Math.max(0, Math.round(track.scrollLeft / cardWidth)))); }} style={{ display:"flex", gap:12, overflowX:"auto", overscrollBehaviorX:"contain", scrollSnapType:"x mandatory", padding:"2px 2px 12px", margin:"0 -2px", WebkitOverflowScrolling:"touch" }}>
+            {items.map((it, index) => (
+              <div key={it.id} style={{ flex:"0 0 100%", scrollSnapAlign:"start", border:`1px solid ${T.border}`, borderTop:`4px solid ${T.moss}`, borderRadius:10, padding:"14px 15px", background:T.bg, display:"flex", flexDirection:"column", minHeight:190 }}>
+                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", gap:10, marginBottom:12 }}>
+                  <span style={{ fontSize:10.5, fontWeight:700, letterSpacing:"0.1em", textTransform:"uppercase", color:T.moss }}>Advantage {index + 1}</span>
+                  <span style={{ fontSize:10.5, color:T.fgS }}>from {it.sourceLabel}</span>
+                </div>
+                <LegacyVoiceField><textarea style={inputStyle({ minHeight:82, fontSize:14, flex:1 })} value={it.text} onChange={e=>setItem(it.id,{text:e.target.value})} placeholder="State it as plainly as you can" /></LegacyVoiceField>
+                <button onClick={()=>remove(it.id)} style={{ ...btnStyle("ghost"), alignSelf:"flex-start", marginTop:9, fontSize:11.5 }}>Remove</button>
               </div>
-              <textarea style={inputStyle({ minHeight:52, fontSize:14 })} value={it.text} onChange={e=>setItem(it.id,{text:e.target.value})} placeholder="State it as plainly as you can" />
-              <button onClick={()=>remove(it.id)} style={{ ...btnStyle("ghost"), marginTop:7, fontSize:11.5 }}>Remove</button>
-            </div>
-          ))}
-        </div>
+            ))}
+  </div>
+  {items.length > 1 && <>
+    <div style={{ display:"flex", justifyContent:"center", alignItems:"center", gap:7, marginTop:4 }} aria-label={`${items.length} advantages available to swipe through`}>
+      {items.map((it, index) => <button key={`dot-${it.id}`} type="button" aria-label={`Show advantage ${index + 1}`} onClick={() => { const track = carouselRef.current; if (track) track.scrollTo({ left:index * (track.clientWidth + 12), behavior:"smooth" }); setActiveAdvantage(index); }} style={{ width:6, height:6, minWidth:6, maxWidth:6, minHeight:6, maxHeight:6, aspectRatio:"1 / 1", padding:0, margin:0, border:0, borderRadius:"50%", background:index === activeAdvantage ? T.moss : "#c7d0d8", opacity:index === activeAdvantage ? 1 : 0.85, display:"block", lineHeight:0, flex:"0 0 6px", alignSelf:"center", appearance:"none", cursor:"pointer" }} />)}
+    </div>
+    <div style={{ textAlign:"center", fontSize:11.5, color:T.fgS, marginTop:6 }}>Swipe right to see the next advantage. The dark dot marks the card you are viewing.</div>
+  </>}
+  </div>
       )}
       {items.length > 0 && (
         <div style={cardStyle()}>
@@ -5417,17 +5448,38 @@ function VIS1({ vis, setVis, profile, goProfile }) {
   );
 }
 
-// ── Vision 2 — Test it ───────────────────────────────────────────────────────
-function VIS2({ vis, setVis }) {
-  const items = (vis.items||[]).filter(i => i.text && i.text.trim());
+// ── Vision 2 — Core values ───────────────────────────────────────────────────
+  function VIS_VALUES({ vis, setVis, profile }) {
+  const values = (vis.items || []).filter(i => i.kind === "value");
+  const setValue = (id, text) => setVis({ items:(vis.items || []).map(i => i.id===id ? { ...i, text } : i) });
+  const add = () => setVis({ items:[...(vis.items || []), { id:"value-"+Date.now(), kind:"value", sourceLabel:"Added here", text:"", tests:{}, verdict:"untested" }] });
+  const seed = () => setVis({ items:[...(vis.items || []), ...(profile.values && !values.length ? [{ id:"profile-value-"+Date.now(), kind:"value", sourceLabel:"Farm Profile", text:profile.values, tests:{}, verdict:"untested" }] : [])], valuesSeeded:true });
+  return <div>
+    <Head eyebrow="Strategic vision · Stage 2" title="Core values" sub="Identify the principles that should guide choices when the easiest or most profitable option is not automatically the right one." />
+    <div style={cardStyle({ borderTop:`4px solid ${T.blue}` })}>
+      <div style={cardLblStyle()}>Why this matters</div>
+      <p style={{ fontSize:14, color:T.fgM, lineHeight:1.65, margin:0 }}>Core values turn a farm&apos;s identity into a decision filter. They help the household decide what work to accept, how to treat land and people, and what trade-offs are worth making. A value becomes useful when it can change a decision — not when it is only a good-sounding word.</p>
+    </div>
+    {!values.length && profile.values && !vis.valuesSeeded && <div style={cardStyle()}><div style={cardLblStyle()}>Bring forward what you already wrote</div><p style={{ fontSize:13, color:T.fgM }}>Your Farm Profile already has a values statement. Start there, then make it more specific if needed.</p><button onClick={seed} style={btnStyle("primary")}>Bring in core values →</button></div>}
+    <div style={cardStyle()}><div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12 }}><div style={cardLblStyle({ marginBottom:0 })}>Your core values</div><button onClick={add} style={{ ...btnStyle("outline"), fontSize:12, padding:"6px 13px" }}>+ Add one</button></div>{values.length ? values.map(v=><div key={v.id} style={{ marginBottom:12 }}><LegacyVoiceField><textarea style={inputStyle({ minHeight:64, fontSize:14 })} value={v.text} onChange={e=>setValue(v.id,e.target.value)} placeholder="Name the principle and what it means in practice" /></LegacyVoiceField></div>) : <div style={{ color:T.fgS, fontSize:13 }}>Add the principles you want this operation to be known for.</div>}</div>
+  </div>;
+  }
+
+// ── Vision 3 — Test it ───────────────────────────────────────────────────────
+  function VIS2({ vis, setVis, kind="advantage" }) {
+  const isValuesTest = kind === "value";
+  const items = (vis.items||[]).filter(i => i.kind === kind && i.text && i.text.trim());
   const setTest = (id, tid, val) => setVis({ items: (vis.items||[]).map(i => i.id===id ? { ...i, tests:{ ...(i.tests||{}), [tid]:val } } : i) });
   const s = visStats(vis);
 
-  if (!items.length) return <div><Head eyebrow="Strategic vision · Stage 2" title="Test it" sub="" /><Flag type="warn">Nothing to test yet. Go back a stage and bring in what you have written.</Flag></div>;
-
+  const title = isValuesTest ? "Test core values" : "Test competitive advantage";
+  const eyebrow = isValuesTest ? "Strategic vision · Stage 4" : "Strategic vision · Stage 2";
+  const sub = isValuesTest ? "A value is useful when it changes a real decision. Test whether each principle is specific, observable, and strong enough to guide the operation." : "Most operations answer the competitive advantage question with hard work and quality. Neither one is an advantage. These questions find out which of your claims actually are.";
+  if (!items.length) return <div><Head eyebrow={eyebrow} title={title} sub="" /><Flag type="warn">Nothing to test yet. Go back a stage and bring in what you have written.</Flag></div>;
+  
   return (
-    <div>
-      <Head eyebrow="Strategic vision · Stage 2" title="Test it" sub="Most operations answer the competitive advantage question with hard work and quality. Neither one is an advantage. These questions find out which of your claims actually are." />
+  <div>
+  <Head eyebrow={eyebrow} title={title} sub={sub} />
       <Flag type="info">Expect several of these to get demoted. That is the module working. An honest short list is worth more than a long one nobody believes.</Flag>
 
       {items.map(it => {
@@ -5492,7 +5544,7 @@ function VIS3({ vis, setVis }) {
   const answered = values.filter(v => ((v.tests||{}).cost||"").trim().length > 10).length;
   return (
     <div>
-      <Head eyebrow="Strategic vision · Stage 3" title="What it has cost you" sub="A value that has never cost anything is not governing behaviour, it is decoration. This is the question most operators have a real answer to and have never been asked." />
+      <Head eyebrow="Strategic vision · Stage 5" title="What it has cost you" sub="A value that has never cost anything is not governing behaviour, it is decoration. This is the question most operators have a real answer to and have never been asked." />
       {values.length === 0 ? (
         <Flag type="warn">No core values recorded yet. Go back to stage 1 and mark at least one claim as a core value.</Flag>
       ) : (
@@ -5502,7 +5554,7 @@ function VIS3({ vis, setVis }) {
             <div key={v.id} style={cardStyle()}>
               <div style={{ fontSize:15.5, fontWeight:600, color:T.navy, marginBottom:4, lineHeight:1.45 }}>{v.text}</div>
               <div style={{ fontSize:13, color:T.fgM, marginBottom:11 }}>What has this cost you, or what have you turned down because of it?</div>
-              <textarea style={inputStyle({ minHeight:64 })} value={(v.tests||{}).cost||""} onChange={e=>setTest(v.id, e.target.value)} placeholder="A contract you did not take. A tenant you did not renew. A price you did not chase." />
+              <LegacyVoiceField><textarea style={inputStyle({ minHeight:64 })} value={(v.tests||{}).cost||""} onChange={e=>setTest(v.id, e.target.value)} placeholder="A contract you did not take. A tenant you did not renew. A price you did not chase." /></LegacyVoiceField>
             </div>
           ))}
           {answered > 0 && answered < values.length && (
@@ -5527,7 +5579,7 @@ function VIS4({ vis, setVis }) {
 
   return (
     <div>
-      <Head eyebrow="Strategic vision · Stage 4" title="Turn it into rules" sub="This is where a personal vision becomes an organizational one. A value cannot be followed by an employee. A rule can, and more importantly a rule can be cited back at you." />
+      <Head eyebrow="Strategic vision · Stage 6" title="Turn it into rules" sub="This is where a personal vision becomes an organizational one. A value cannot be followed by an employee. A rule can, and more importantly a rule can be cited back at you." />
       <div style={cardStyle({ borderTop:`4px solid ${T.blue}` })}>
         <div style={cardLblStyle()}>What the conversion looks like</div>
         {[["We value stewardship","We do not rent ground we cannot farm to our own standard, even when the rent is good"],
@@ -5583,7 +5635,7 @@ function VIS4({ vis, setVis }) {
   );
 }
 
-// ── Vision 5 — Who holds this ─────────────────────��──────────────────────────
+// ── Vision 5 — Who holds this ────────���────────────��──────────────────────────
 function VIS5({ vis, setVis, goLegacy }) {
   const h = vis.holders || {};
   const setH = (id,val) => setVis({ holders:{ ...h, [id]:val } });
@@ -5592,7 +5644,7 @@ function VIS5({ vis, setVis, goLegacy }) {
   const canState = VIS_HOLDERS.filter(p => h[p.id] === 3);
   return (
     <div>
-      <Head eyebrow="Strategic vision · Stage 5" title="Who holds this" sub="A vision one person holds is a preference. A vision the organization holds is a constraint. The difference is whether anyone else could state it, and whether they could use it to stop something." />
+      <Head eyebrow="Strategic vision · Stage 7" title="Who holds this" sub="A vision one person holds is a preference. A vision the organization holds is a constraint. The difference is whether anyone else could state it, and whether they could use it to stop something." />
       <div style={cardStyle()}>
         <div style={cardLblStyle()}>Where each person actually stands</div>
         {VIS_HOLDERS.map(p => (
@@ -5647,7 +5699,7 @@ function VIS6({ vis, setVis }) {
   const unbound = rules.filter(r => r.statement && (r.binds||[]).length === 0);
   return (
     <div>
-      <Head eyebrow="Strategic vision · Stage 6" title="Where it binds" sub="A vision that does not show up where decisions get made is wall decoration. Mark which decisions each rule actually governs." />
+      <Head eyebrow="Strategic vision · Stage 8" title="Where it binds" sub="A vision that does not show up where decisions get made is wall decoration. Mark which decisions each rule actually governs." />
       {rules.length === 0 ? (
         <Flag type="warn">No rules yet. Go back to stage 4 and write at least one.</Flag>
       ) : (
@@ -5684,7 +5736,7 @@ function VIS6({ vis, setVis }) {
   );
 }
 
-// ── Vision 7 — The statement ─────────────────────────────────────────────────
+// ── Vision 7 — The statement ──────────────────────────────────────��──────────
 function VIS7({ vis, setVis, profile }) {
   const s = visStats(vis);
   const pub = vis.published || {};
@@ -5715,7 +5767,7 @@ function VIS7({ vis, setVis, profile }) {
 
   return (
     <div>
-      <Head eyebrow="Strategic vision · Stage 7" title="The statement" sub="Assembled from your own words rather than rewritten. A farm team can tell instantly when a document was not written by the person who runs the place." />
+      <Head eyebrow="Strategic vision · Stage 9" title="The statement" sub="Assembled from your own words rather than rewritten. A farm team can tell instantly when a document was not written by the person who runs the place." />
 
       {!vis.assembled && (
         <div style={cardStyle({ borderTop:`4px solid ${T.moss}` })}>
@@ -5939,7 +5991,7 @@ function VIS8({ vis, profile }) {
 
 // ═════════════════════════════════════════════════════════════════════════════
 // LOCAL PERSISTENCE — the farm record stays on the farmer's own machine
-// ═════════════════════════���═══════════════════════════════════════════════════
+// ═════════════════════════�����═══════════════════════════════════════════════════
 // Everything a farmer enters saves to their browser automatically and reloads
 // next time. Nothing is transmitted. For this data in particular — succession
 // tensions, sweat equity figures, who the operator thinks is not ready — that is
@@ -6205,7 +6257,7 @@ function DataControls({ state, savedAt, storageOk, onImport, onImportProfile, on
   );
 }
 
-// ═════════════════════════════════════════════════════════════════════════════
+// ═══════════════════��═════════════════════════════════════════════════════════
 // ROOT APP
 // ═════════════════════════════════════════════════════════════════════════════
 // Generic farm SWOT, pre-populated so the quadrants open with a real starting point
@@ -6418,9 +6470,11 @@ else if (isRD) { if (rd.stage<rdTotal) goRD(rd.stage+1); else goLegacy(1); }
     : legRole === "compare" ? <LegCompare leg={leg} setLegData={setLegData} setSucc={setSucc} />
     : LEG_BODY[stage-1];
   const VIS_BODY = [
-    <VIS1 vis={vis} setVis={setVis} profile={profile} goProfile={()=>setModule("profile")} />,
-    <VIS2 vis={vis} setVis={setVis} />, <VIS3 vis={vis} setVis={setVis} />,
-    <VIS4 vis={vis} setVis={setVis} />, <VIS5 vis={vis} setVis={setVis} goLegacy={()=>{ setModule("legacy"); setLeg(s=>({...s, role:"compare"})); }} />,
+  <VIS1 vis={vis} setVis={setVis} profile={profile} goProfile={()=>setModule("profile")} />,
+  <VIS2 vis={vis} setVis={setVis} kind="advantage" />,
+  <VIS_VALUES vis={vis} setVis={setVis} profile={profile} />,
+  <VIS2 vis={vis} setVis={setVis} kind="value" />,
+  <VIS3 vis={vis} setVis={setVis} />, <VIS4 vis={vis} setVis={setVis} />, <VIS5 vis={vis} setVis={setVis} goLegacy={()=>{ setModule("legacy"); setLeg(s=>({...s, role:"compare"})); }} />,
     <VIS6 vis={vis} setVis={setVis} />, <VIS7 vis={vis} setVis={setVis} profile={profile} />,
     <VIS8 vis={vis} profile={profile} />,
   ];
