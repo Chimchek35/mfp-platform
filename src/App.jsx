@@ -5359,7 +5359,19 @@ const visStats = (vis) => {
 
 // ── Vision 1 — What you have already said ────────────────────────────────�������───
 function StrategicAdvisor({ profile, vis, setVis }) {
-  const [messages, setMessages] = useState([{ role: "assistant", content: "Let’s shape a direction that is both meaningful and workable. What do you most want this farm to make possible over the next five to ten years?" }]);
+  const profileContext = [
+    profile?.location && `Location: ${profile.location}`,
+    profile?.size && `Scale: ${profile.size}`,
+    profile?.productionMix && `Production mix: ${profile.productionMix}`,
+    profile?.ventures && `Current ventures: ${profile.ventures}`,
+    profile?.nearTerm && `Near-term objective: ${profile.nearTerm}`,
+    profile?.longTerm && `Long-term objective: ${profile.longTerm}`,
+    profile?.advantage && `Strength: ${profile.advantage}`,
+    profile?.values && `Values: ${profile.values}`,
+  ].filter(Boolean).join(" · ");
+  const [messages, setMessages] = useState(() => [{ role: "assistant", content: profileContext
+    ? `I’ve reviewed your farm profile: ${profileContext}. I’ll use that as our starting point rather than make you repeat it. We’ll clarify the direction, test it against constraints, and turn it into a practical plan. Looking at your stated objectives, what is the single outcome that matters most to protect or achieve first?`
+    : "Let’s shape a direction that is both meaningful and workable. What do you most want this farm to make possible over the next five to ten years?" }]);
   const [draft, setDraft] = useState("");
   const [busy, setBusy] = useState(false);
   const send = async (event) => {
