@@ -11,8 +11,8 @@ import FarmKnowledgeSearch from "./FarmKnowledgeSearch.jsx";
 const FontStyles = () => (
   <style>{`
     *{box-sizing:border-box;}
-  .mfp-root{font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;color:#17233d;font-size:16px;line-height:1.65;-webkit-font-smoothing:antialiased;}
-  .mfp-root h1,.mfp-root h2,.mfp-root h3,.mfp-root h4{margin:0;font-family:"Arial Narrow",Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-weight:700;line-height:1.18;letter-spacing:-.015em;}
+  .mfp-root{font-family:"Geist",system-ui,sans-serif;color:#17233d;font-size:16px;line-height:1.65;-webkit-font-smoothing:antialiased;}
+  .mfp-root h1,.mfp-root h2,.mfp-root h3,.mfp-root h4{margin:0;font-family:"Geist",system-ui,sans-serif;font-weight:700;line-height:1.18;letter-spacing:-.015em;}
     .mfp-root h1{font-size:clamp(24px,2.2vw,30px);}
     .mfp-root h2{font-size:clamp(20px,1.8vw,25px);}
     .mfp-root h3{font-size:18px;}
@@ -649,7 +649,7 @@ function DocumentScanUpload({ fa, setFA }) {
             {uploadSlot("beginBS","Balance sheet — Jan 1","PDF or photo, optional")}
             {uploadSlot("endBS","Balance sheet — Dec 31","PDF or photo, optional")}
           </div>
-          <button onClick={runMockScan} disabled={!canScan||scanning} style={{ ...btnStyle("primary"), opacity:(!canScan||scanning)?0.5:1, pointerEvents:(!canScan||scanning)?"none":"auto" }}>{scanning?"Scanning����":"Scan documents →"}</button>
+          <button onClick={runMockScan} disabled={!canScan||scanning} style={{ ...btnStyle("primary"), opacity:(!canScan||scanning)?0.5:1, pointerEvents:(!canScan||scanning)?"none":"auto" }}>{scanning?"Scanning�����":"Scan documents →"}</button>
         </>
       ) : (
         <>
@@ -4194,7 +4194,7 @@ function LEG1({ leg, setLegData }) {
   );
 }
 
-// ── Stage 2 — The three transfers ───────────────────────────────────────────����
+// ── Stage 2 — The three transfers ───────────────────────────────────────────�����
 function LEG2({ leg, setLegData }) {
   const d = leg.data || {};
   const t = d.transfers || {};
@@ -6521,7 +6521,7 @@ else if (isRD) { if (rd.stage<rdTotal) goRD(rd.stage+1); else goLegacy(1); }
         <div style={{ display:"flex", alignItems:"center", gap:8 }}>
           <div style={{ width:30, height:30, borderRadius:"50% 50% 45% 45%", background:"linear-gradient(150deg,#0c4477,#1ca8c9)", display:"grid", placeItems:"center", color:"#fff", fontWeight:800, fontSize:13, letterSpacing:"-.08em" }}>MFP</div>
           <div style={{ display:"flex", flexDirection:"column", lineHeight:1.05 }}>
-            <span style={{ fontFamily:"Arial Narrow, sans-serif", fontWeight:800, fontSize:16, color:T.navy, letterSpacing:".01em", whiteSpace:"nowrap" }}>MAXIMUM FARM POTENTIAL</span>
+            <span style={{ fontFamily:"Geist, system-ui, sans-serif", fontWeight:800, fontSize:16, color:T.navy, letterSpacing:".01em", whiteSpace:"nowrap" }}>MAXIMUM FARM POTENTIAL</span>
             <span style={{ fontSize:9, color:T.blue, letterSpacing:".18em", fontWeight:700 }}>POWERED BY IDEALYST INNOVATION</span>
           </div>
         </div>
