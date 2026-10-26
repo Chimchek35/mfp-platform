@@ -57,13 +57,14 @@ export default async function handler(req, res) {
     }));
     const authFailure = results.find((result) => result.status === "rejected" && result.reason?.status === 401);
     if (authFailure) {
-      return res.status(401).json({ status: "authentication_error", prices: [], message: "USDA AMS rejected the configured API key." });
+      console.error("[v0] USDA AMS rejected USDA_AMS_API_KEY");
+      return res.status(401).json({ status: "authentication_error", prices: [], message: "USDA AMS rejected the configured API key. Generate a MARS API key at marsapi.ams.usda.gov and update USDA_AMS_API_KEY." });
     }
     const prices = results.map((result, index) => result.status === "fulfilled"
       ? result.value
-      : { commodity: feeds[index].commodity, value: "No current quote", unit: "USDA AMS", asOf: "Report unavailable" });
+      : { commodity: feeds[index].commodity, value: "Report unavailable", unit: "USDA AMS", asOf: "Unable to verify" });
     const liveCount = results.filter((result) => result.status === "fulfilled").length;
-    return res.status(200).json({ status: liveCount ? "live" : "unavailable", prices });
+    return res.status(200).json({ status: liveCount ? "live" : "unavailable", prices, message: liveCount ? undefined : "USDA AMS returned no usable commodity reports." });
   } catch (error) {
     console.error("[v0] USDA AMS price feed error:", error.message);
     const authError = error.message.includes("401");
