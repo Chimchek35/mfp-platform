@@ -649,7 +649,7 @@ function DocumentScanUpload({ fa, setFA }) {
             {uploadSlot("beginBS","Balance sheet — Jan 1","PDF or photo, optional")}
             {uploadSlot("endBS","Balance sheet — Dec 31","PDF or photo, optional")}
           </div>
-          <button onClick={runMockScan} disabled={!canScan||scanning} style={{ ...btnStyle("primary"), opacity:(!canScan||scanning)?0.5:1, pointerEvents:(!canScan||scanning)?"none":"auto" }}>{scanning?"Scanning���":"Scan documents →"}</button>
+          <button onClick={runMockScan} disabled={!canScan||scanning} style={{ ...btnStyle("primary"), opacity:(!canScan||scanning)?0.5:1, pointerEvents:(!canScan||scanning)?"none":"auto" }}>{scanning?"Scanning����":"Scan documents →"}</button>
         </>
       ) : (
         <>
@@ -5430,7 +5430,7 @@ function VIS1({ vis, setVis, profile, goProfile }) {
   </div>
   {items.length > 1 && <>
     <div style={{ display:"flex", justifyContent:"center", alignItems:"center", gap:7, marginTop:4 }} aria-label={`${items.length} advantages available to swipe through`}>
-      {items.map((it, index) => <button key={`dot-${it.id}`} type="button" aria-label={`Show advantage ${index + 1}`} onClick={() => { const track = carouselRef.current; if (track) track.scrollTo({ left:index * (track.clientWidth + 12), behavior:"smooth" }); setActiveAdvantage(index); }} style={{ width:6, height:6, minWidth:6, maxWidth:6, padding:0, margin:0, border:0, borderRadius:"50%", background:index === activeAdvantage ? T.moss : "#c7d0d8", opacity:index === activeAdvantage ? 1 : 0.85, display:"block", flex:"0 0 6px", appearance:"none", cursor:"pointer" }} />)}
+      {items.map((it, index) => <button key={`dot-${it.id}`} type="button" aria-label={`Show advantage ${index + 1}`} onClick={() => { const track = carouselRef.current; if (track) track.scrollTo({ left:index * (track.clientWidth + 12), behavior:"smooth" }); setActiveAdvantage(index); }} style={{ width:6, height:6, minWidth:6, maxWidth:6, minHeight:6, maxHeight:6, aspectRatio:"1 / 1", padding:0, margin:0, border:0, borderRadius:"50%", background:index === activeAdvantage ? T.moss : "#c7d0d8", opacity:index === activeAdvantage ? 1 : 0.85, display:"block", lineHeight:0, flex:"0 0 6px", alignSelf:"center", appearance:"none", cursor:"pointer" }} />)}
     </div>
     <div style={{ textAlign:"center", fontSize:11.5, color:T.fgS, marginTop:6 }}>Swipe right to see the next advantage. The dark dot marks the card you are viewing.</div>
   </>}
