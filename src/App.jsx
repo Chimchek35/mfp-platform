@@ -1706,7 +1706,7 @@ function RiskPlanRevenueOps({ risk, setRisk }) {
   const removeContact = (i) => setPlan({ contacts: contacts.filter((_,idx)=>idx!==i) });
   return (
     <div>
-      <Head eyebrow="Farm Risk �� Plan Builder · Stage 1" title="Revenue operations & key contacts" sub="Document each primary revenue operation and the assets, suppliers, employees, and customers it depends on — then record backup contacts for your key suppliers, vendors, and customers." />
+      <Head eyebrow="Farm Risk ���� Plan Builder · Stage 1" title="Revenue operations & key contacts" sub="Document each primary revenue operation and the assets, suppliers, employees, and customers it depends on — then record backup contacts for your key suppliers, vendors, and customers." />
       <div style={cardStyle()}>
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:14 }}>
           <div style={cardLblStyle({ marginBottom:0 })}>Primary revenue operations</div>
@@ -2537,6 +2537,12 @@ function RD2({ rd, setRData }) {
           ))}
         </div>
       ))}
+      <div style={cardStyle({ borderTop:`4px solid ${T.moss}` })}>
+        <div style={cardLblStyle()}>Income and opportunity lens</div>
+        <p style={{ fontSize:13, color:T.fgM, lineHeight:1.55, marginTop:0 }}>Diversification is not limited to a new farm enterprise. Off-farm wages, a spouse&apos;s income, a part-time job, buying an existing ag-adjacent business, or collaborating with another farm can all improve the household&apos;s revenue mix.</p>
+        {legRow("What off-farm income or work is already part of the household picture, or could realistically be added?", <textarea style={inputStyle({ minHeight:62 })} value={g.offFarmIncome||""} onChange={e=>set("offFarmIncome",e.target.value)} placeholder="W-2 income, spouse income, consulting, part-time work, or none." />)}
+        {legRow("Which possibility is worth exploring first?", <select style={inputStyle()} value={g.opportunityMode||""} onChange={e=>set("opportunityMode",e.target.value)}><option value="">Select</option><option value="farm">A new on-farm enterprise</option><option value="offFarm">Off-farm income or service work</option><option value="collaboration">A partnership or collaboration with another farm</option><option value="acquisition">Acquire an existing ag-adjacent business</option><option value="unsure">I need to widen the opportunity set first</option></select>)}
+      </div>
     </div>
   );
 }
@@ -2581,6 +2587,12 @@ function RD3({ rd, setRData }) {
           </div>
         );
       })}
+      <div style={cardStyle({ borderTop:`4px solid ${T.blue}` })}>
+        <div style={cardLblStyle()}>The right hands on the right work</div>
+        <p style={{ fontSize:13, color:T.fgM, lineHeight:1.55, marginTop:0 }}>Farmers in the workshop emphasized that human capital is often the most leverageable asset. A new venture needs the right skills, motivation, personality, and decision style — not simply more labor.</p>
+        {legRow("What strengths, experience, and competencies could this household leverage?", <textarea style={inputStyle({ minHeight:62 })} value={rd.data.humanStrengths||""} onChange={e=>setRData(s=>({ ...s, humanStrengths:e.target.value }))} placeholder="Record keeping, livestock, sales, mechanics, relationships, teaching, technology, etc." />)}
+        {legRow("Who is best suited to lead the work, and what personality or working style matters?", <textarea style={inputStyle({ minHeight:62 })} value={rd.data.humanFit||""} onChange={e=>setRData(s=>({ ...s, humanFit:e.target.value }))} placeholder="Who likes uncertainty, selling, managing people, or building something new?" />)}
+      </div>
       {allWeak && touched && <Flag type="danger">All three levers score below 34% — only zero-capital, passive paths are appropriate until at least one lever is strengthened.</Flag>}
       {!allWeak && touched && (
         <div style={cardStyle({ borderTop:`4px solid ${T.green}` })}>
@@ -2716,6 +2728,13 @@ function RD5({ rd, setRData }) {
     <div>
       <Head eyebrow="Revenue Diversification · Stage 5" title="Barrier & compliance review" sub="Known barriers and regulatory considerations for each selected path. Check each one to confirm you've reviewed it before proceeding." />
       {selected.length===0 && <Flag type="warn">No opportunities selected. Go back to Stage 4.</Flag>}
+      <div style={cardStyle({ borderTop:`4px solid ${T.tan}` })}>
+        <div style={cardLblStyle()}>Workshop questions to carry into every opportunity</div>
+        <p style={{ fontSize:13, color:T.fgM, lineHeight:1.55, marginTop:0 }}>Use these prompts before treating a market idea as a strategy: separate a short-lived fad from a durable future, identify the legal and regulatory expertise you need, find an objective sounding board, and define how you would exit if the work no longer fits.</p>
+        {legRow("What would make this opportunity durable rather than a fad, and what is the short-term test?", <textarea style={inputStyle({ minHeight:58 })} value={d.fadFuture||""} onChange={e=>setRData(s=>({ ...s, fadFuture:e.target.value }))} placeholder="Name the long-term customer, capability, or asset this test would build." />)}
+        {legRow("Who will provide objective feedback and rural/ag-law guidance?", <textarea style={inputStyle({ minHeight:58 })} value={d.soundingBoard||""} onChange={e=>setRData(s=>({ ...s, soundingBoard:e.target.value }))} placeholder="A peer group, partner, attorney, accountant, extension advisor, or lender." />)}
+        {legRow("What is the exit path if the opportunity does not work?", <textarea style={inputStyle({ minHeight:58 })} value={d.exitPlan||""} onChange={e=>setRData(s=>({ ...s, exitPlan:e.target.value }))} placeholder="Time limit, resale value, lease end, buyer, or stop-loss decision." />)}
+      </div>
       {maxReg>=3 && (
         <div style={cardStyle({ borderTop:`4px solid ${T.amber}` })}>
           <div style={cardLblStyle()}><Apex color={T.amber} />Regulatory & compliance review — before you commit capital</div>
@@ -3981,7 +4000,7 @@ const valueParcel = (p) => {
 };
 
 
-// ═════════════════════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════��══════════════
 // BLIND COMPARE — the same questions, answered independently
 // ��════��═══════════════════════════════════════════════════════════════════════
 // One array drives both sides and the comparison, so the two generations are
