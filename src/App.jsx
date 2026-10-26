@@ -4194,7 +4194,7 @@ function LEG1({ leg, setLegData }) {
   );
 }
 
-// ── Stage 2 — The three transfers ────────────────────────────────────────────
+// ── Stage 2 — The three transfers ───────────────────────────────────────────��
 function LEG2({ leg, setLegData }) {
   const d = leg.data || {};
   const t = d.transfers || {};
@@ -5278,14 +5278,15 @@ function LEG10({ leg, profile }) {
 
 const VIS_STAGES = [
   { n:1, label:"Competitive advantage" },
-  { n:2, label:"Core values" },
-  { n:3, label:"Test it" },
-  { n:4, label:"What it has cost you" },
-  { n:5, label:"Turn it into rules" },
-  { n:6, label:"Who holds this" },
-  { n:7, label:"Where it binds" },
-  { n:8, label:"The statement" },
-  { n:9, label:"The document" },
+  { n:2, label:"Test competitive advantage" },
+  { n:3, label:"Core values" },
+  { n:4, label:"Test core values" },
+  { n:5, label:"What it has cost you" },
+  { n:6, label:"Turn it into rules" },
+  { n:7, label:"Who holds this" },
+  { n:8, label:"Where it binds" },
+  { n:9, label:"The statement" },
+  { n:10, label:"The document" },
 ];
 
 // The four tests. Most answers fail at least one, which is the point of running them.
@@ -5465,16 +5466,20 @@ function VIS1({ vis, setVis, profile, goProfile }) {
   }
 
 // ── Vision 3 — Test it ───────────────────────────────────────────────────────
-  function VIS2({ vis, setVis }) {
-  const items = (vis.items||[]).filter(i => i.text && i.text.trim());
+  function VIS2({ vis, setVis, kind="advantage" }) {
+  const isValuesTest = kind === "value";
+  const items = (vis.items||[]).filter(i => i.kind === kind && i.text && i.text.trim());
   const setTest = (id, tid, val) => setVis({ items: (vis.items||[]).map(i => i.id===id ? { ...i, tests:{ ...(i.tests||{}), [tid]:val } } : i) });
   const s = visStats(vis);
 
-  if (!items.length) return <div><Head eyebrow="Strategic vision · Stage 3" title="Test it" sub="" /><Flag type="warn">Nothing to test yet. Go back a stage and bring in what you have written.</Flag></div>;
-
+  const title = isValuesTest ? "Test core values" : "Test competitive advantage";
+  const eyebrow = isValuesTest ? "Strategic vision · Stage 4" : "Strategic vision · Stage 2";
+  const sub = isValuesTest ? "A value is useful when it changes a real decision. Test whether each principle is specific, observable, and strong enough to guide the operation." : "Most operations answer the competitive advantage question with hard work and quality. Neither one is an advantage. These questions find out which of your claims actually are.";
+  if (!items.length) return <div><Head eyebrow={eyebrow} title={title} sub="" /><Flag type="warn">Nothing to test yet. Go back a stage and bring in what you have written.</Flag></div>;
+  
   return (
-    <div>
-      <Head eyebrow="Strategic vision · Stage 3" title="Test it" sub="Most operations answer the competitive advantage question with hard work and quality. Neither one is an advantage. These questions find out which of your claims actually are." />
+  <div>
+  <Head eyebrow={eyebrow} title={title} sub={sub} />
       <Flag type="info">Expect several of these to get demoted. That is the module working. An honest short list is worth more than a long one nobody believes.</Flag>
 
       {items.map(it => {
@@ -5539,7 +5544,7 @@ function VIS3({ vis, setVis }) {
   const answered = values.filter(v => ((v.tests||{}).cost||"").trim().length > 10).length;
   return (
     <div>
-      <Head eyebrow="Strategic vision · Stage 4" title="What it has cost you" sub="A value that has never cost anything is not governing behaviour, it is decoration. This is the question most operators have a real answer to and have never been asked." />
+      <Head eyebrow="Strategic vision · Stage 5" title="What it has cost you" sub="A value that has never cost anything is not governing behaviour, it is decoration. This is the question most operators have a real answer to and have never been asked." />
       {values.length === 0 ? (
         <Flag type="warn">No core values recorded yet. Go back to stage 1 and mark at least one claim as a core value.</Flag>
       ) : (
@@ -5574,7 +5579,7 @@ function VIS4({ vis, setVis }) {
 
   return (
     <div>
-      <Head eyebrow="Strategic vision · Stage 5" title="Turn it into rules" sub="This is where a personal vision becomes an organizational one. A value cannot be followed by an employee. A rule can, and more importantly a rule can be cited back at you." />
+      <Head eyebrow="Strategic vision · Stage 6" title="Turn it into rules" sub="This is where a personal vision becomes an organizational one. A value cannot be followed by an employee. A rule can, and more importantly a rule can be cited back at you." />
       <div style={cardStyle({ borderTop:`4px solid ${T.blue}` })}>
         <div style={cardLblStyle()}>What the conversion looks like</div>
         {[["We value stewardship","We do not rent ground we cannot farm to our own standard, even when the rent is good"],
@@ -5639,7 +5644,7 @@ function VIS5({ vis, setVis, goLegacy }) {
   const canState = VIS_HOLDERS.filter(p => h[p.id] === 3);
   return (
     <div>
-      <Head eyebrow="Strategic vision · Stage 6" title="Who holds this" sub="A vision one person holds is a preference. A vision the organization holds is a constraint. The difference is whether anyone else could state it, and whether they could use it to stop something." />
+      <Head eyebrow="Strategic vision · Stage 7" title="Who holds this" sub="A vision one person holds is a preference. A vision the organization holds is a constraint. The difference is whether anyone else could state it, and whether they could use it to stop something." />
       <div style={cardStyle()}>
         <div style={cardLblStyle()}>Where each person actually stands</div>
         {VIS_HOLDERS.map(p => (
@@ -5694,7 +5699,7 @@ function VIS6({ vis, setVis }) {
   const unbound = rules.filter(r => r.statement && (r.binds||[]).length === 0);
   return (
     <div>
-      <Head eyebrow="Strategic vision · Stage 7" title="Where it binds" sub="A vision that does not show up where decisions get made is wall decoration. Mark which decisions each rule actually governs." />
+      <Head eyebrow="Strategic vision · Stage 8" title="Where it binds" sub="A vision that does not show up where decisions get made is wall decoration. Mark which decisions each rule actually governs." />
       {rules.length === 0 ? (
         <Flag type="warn">No rules yet. Go back to stage 4 and write at least one.</Flag>
       ) : (
@@ -5762,7 +5767,7 @@ function VIS7({ vis, setVis, profile }) {
 
   return (
     <div>
-      <Head eyebrow="Strategic vision · Stage 8" title="The statement" sub="Assembled from your own words rather than rewritten. A farm team can tell instantly when a document was not written by the person who runs the place." />
+      <Head eyebrow="Strategic vision · Stage 9" title="The statement" sub="Assembled from your own words rather than rewritten. A farm team can tell instantly when a document was not written by the person who runs the place." />
 
       {!vis.assembled && (
         <div style={cardStyle({ borderTop:`4px solid ${T.moss}` })}>
@@ -6466,9 +6471,10 @@ else if (isRD) { if (rd.stage<rdTotal) goRD(rd.stage+1); else goLegacy(1); }
     : LEG_BODY[stage-1];
   const VIS_BODY = [
   <VIS1 vis={vis} setVis={setVis} profile={profile} goProfile={()=>setModule("profile")} />,
+  <VIS2 vis={vis} setVis={setVis} kind="advantage" />,
   <VIS_VALUES vis={vis} setVis={setVis} profile={profile} />,
-  <VIS2 vis={vis} setVis={setVis} />, <VIS3 vis={vis} setVis={setVis} />,
-    <VIS4 vis={vis} setVis={setVis} />, <VIS5 vis={vis} setVis={setVis} goLegacy={()=>{ setModule("legacy"); setLeg(s=>({...s, role:"compare"})); }} />,
+  <VIS2 vis={vis} setVis={setVis} kind="value" />,
+  <VIS3 vis={vis} setVis={setVis} />, <VIS4 vis={vis} setVis={setVis} />, <VIS5 vis={vis} setVis={setVis} goLegacy={()=>{ setModule("legacy"); setLeg(s=>({...s, role:"compare"})); }} />,
     <VIS6 vis={vis} setVis={setVis} />, <VIS7 vis={vis} setVis={setVis} profile={profile} />,
     <VIS8 vis={vis} profile={profile} />,
   ];
