@@ -6360,27 +6360,27 @@ export default function App() {
     : [{ label:`${riskAnsweredTotal}/32 answered` }];
 
   let backLabel = "← Back"; let backDisabled = (isRisk && risk.stage===1) || (isLeg && leg.stage===1) || (isVis && vis.stage===1);
-  const onBack = () => { if (isVis) { if (vis.stage>1) goVision(vis.stage-1); else setModule("profile"); } else if (isFA) { if (fa.stage>1) goFA(fa.stage-1); else goVision(visTotal); } else if (isLeg) { if (leg.stage>1) goLegacy(leg.stage-1); else goFA(FA_STAGES.length); } else if (isRD) { if (rd.stage>1) goRD(rd.stage-1); else goLegacy(legTotal); } else if (isRisk) { if (risk.stage>1) goRisk(risk.stage-1); else goRD(rdTotal); } };
+  const onBack = () => { if (isVis) { if (vis.stage>1) goVision(vis.stage-1); else setModule("profile"); } else if (isFA) { if (fa.stage>1) goFA(fa.stage-1); else goVision(visTotal); } else if (isRD) { if (rd.stage>1) goRD(rd.stage-1); else goFA(FA_STAGES.length); } else if (isRisk) { if (risk.stage>1) goRisk(risk.stage-1); else goRD(rdTotal); } else if (isLeg) { if (leg.stage>1) goLegacy(leg.stage-1); else goRisk(riskTotal); } };
   if (isVis && vis.stage===1) backLabel = "← Farm Profile";
   if (isFA && fa.stage===1) backLabel = "← Strategic Vision";
-  if (isLeg && leg.stage===1) backLabel = "← Financial Analysis";
-  if (isRD && rd.stage===1) backLabel = "← Legacy";
+  if (isRD && rd.stage===1) backLabel = "← Financial Analysis";
   if (isRisk && risk.stage===1) backLabel = "← Revenue Diversification";
+  if (isLeg && leg.stage===1) backLabel = "← Farm Risk";
 
   let nextLabel = "Continue →";
   const onNext = () => {
     if (!canAdvance) return;
     if (isVis) { if (vis.stage<visTotal) goVision(vis.stage+1); else goFA(1); }
-    else if (isFA) { if (fa.stage<faTotal) goFA(fa.stage+1); else goLegacy(1); }
-    else if (isLeg) { if (leg.stage<legTotal) goLegacy(leg.stage+1); else goRD(1); }
+    else if (isFA) { if (fa.stage<faTotal) goFA(fa.stage+1); else goRD(1); }
     else if (isRD) { if (rd.stage<rdTotal) goRD(rd.stage+1); else goRisk(1); }
-    else { if (risk.stage<riskTotal) goRisk(risk.stage+1); else setRisk(s=>({...s,stage:1})); }
+    else if (isRisk) { if (risk.stage<riskTotal) goRisk(risk.stage+1); else goLegacy(1); }
+    else if (isLeg) { if (leg.stage<legTotal) goLegacy(leg.stage+1); else setLeg(s=>({...s,stage:1})); }
   };
   if (isVis && vis.stage===visTotal) nextLabel = "Financial Analysis →";
-  if (isFA && fa.stage===faTotal) nextLabel = "Legacy →";
-  if (isLeg && leg.stage===legTotal) nextLabel = "Revenue Diversification →";
+  if (isFA && fa.stage===faTotal) nextLabel = "Revenue Diversification →";
   if (isRD && rd.stage===rdTotal) nextLabel = "Farm Risk →";
-  if (isRisk && risk.stage===riskTotal) nextLabel = "Start over ↺";
+  if (isRisk && risk.stage===riskTotal) nextLabel = "Legacy →";
+  if (isLeg && leg.stage===legTotal) nextLabel = "Start over ↺";
 
   const FA_BODY = [
     <FA1 fa={fa} setFA={setFA} />, <FA2 fa={fa} setFA={setFA} />, <FA3 fa={fa} setFA={setFA} />,
@@ -6437,12 +6437,12 @@ export default function App() {
   );
 
   const tabBase = { display:"flex", alignItems:"center", gap:11, padding:"8px 14px", borderRadius:8, cursor:"pointer", transition:"all .15s", border:"1.5px solid transparent" };
-  const faTabStyle = isFA ? { ...tabBase, background:T.blueL, border:`1.5px solid ${T.blue}` } : { ...tabBase, background:"transparent" };
-  const rdTabStyle = isRD ? { ...tabBase, background:T.blueL, border:`1.5px solid ${T.blue}` } : { ...tabBase, background:"transparent" };
-  const riskTabStyle = isRisk ? { ...tabBase, background:T.blueL, border:`1.5px solid ${T.blue}` } : { ...tabBase, background:"transparent" };
-  const profileTabStyle = isProfile ? { ...tabBase, background:T.blueL, border:`1.5px solid ${T.blue}` } : { ...tabBase, background:"transparent" };
-  const visTabStyle = isVis ? { ...tabBase, background:T.blueL, border:`1.5px solid ${T.blue}` } : { ...tabBase, background:"transparent" };
-  const legTabStyle = isLeg ? { ...tabBase, background:T.blueL, border:`1.5px solid ${T.blue}` } : { ...tabBase, background:"transparent" };
+  const faTabStyle = isFA ? { ...tabBase, order:2, background:T.blueL, border:`1.5px solid ${T.blue}` } : { ...tabBase, order:2, background:"transparent" };
+  const rdTabStyle = isRD ? { ...tabBase, order:3, background:T.blueL, border:`1.5px solid ${T.blue}` } : { ...tabBase, order:3, background:"transparent" };
+  const riskTabStyle = isRisk ? { ...tabBase, order:4, background:T.blueL, border:`1.5px solid ${T.blue}` } : { ...tabBase, order:4, background:"transparent" };
+  const profileTabStyle = isProfile ? { ...tabBase, order:0, background:T.blueL, border:`1.5px solid ${T.blue}` } : { ...tabBase, order:0, background:"transparent" };
+  const visTabStyle = isVis ? { ...tabBase, order:1, background:T.blueL, border:`1.5px solid ${T.blue}` } : { ...tabBase, order:1, background:"transparent" };
+  const legTabStyle = isLeg ? { ...tabBase, order:5, background:T.blueL, border:`1.5px solid ${T.blue}` } : { ...tabBase, order:5, background:"transparent" };
   const lblOn = { fontSize:14.5, fontWeight:700, color:T.navy, letterSpacing:"0.01em" };
   const lblOff = { ...lblOn, fontWeight:600, color:T.fgS };
 
