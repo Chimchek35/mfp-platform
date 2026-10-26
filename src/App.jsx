@@ -4194,7 +4194,7 @@ function LEG1({ leg, setLegData }) {
   );
 }
 
-// ── Stage 2 — The three transfers ───────────────────────────────────────────��
+// ── Stage 2 — The three transfers ───────────────────────────────────────────���
 function LEG2({ leg, setLegData }) {
   const d = leg.data || {};
   const t = d.transfers || {};
@@ -5424,7 +5424,7 @@ function VIS1({ vis, setVis, profile, goProfile }) {
                   <span style={{ fontSize:10.5, fontWeight:700, letterSpacing:"0.1em", textTransform:"uppercase", color:T.moss }}>Advantage {index + 1}</span>
                   <span style={{ fontSize:10.5, color:T.fgS }}>from {it.sourceLabel}</span>
                 </div>
-                <textarea style={inputStyle({ minHeight:82, fontSize:14, flex:1 })} value={it.text} onChange={e=>setItem(it.id,{text:e.target.value})} placeholder="State it as plainly as you can" />
+                <LegacyVoiceField><textarea style={inputStyle({ minHeight:82, fontSize:14, flex:1 })} value={it.text} onChange={e=>setItem(it.id,{text:e.target.value})} placeholder="State it as plainly as you can" /></LegacyVoiceField>
                 <button onClick={()=>remove(it.id)} style={{ ...btnStyle("ghost"), alignSelf:"flex-start", marginTop:9, fontSize:11.5 }}>Remove</button>
               </div>
             ))}
@@ -5461,7 +5461,7 @@ function VIS1({ vis, setVis, profile, goProfile }) {
       <p style={{ fontSize:14, color:T.fgM, lineHeight:1.65, margin:0 }}>Core values turn a farm&apos;s identity into a decision filter. They help the household decide what work to accept, how to treat land and people, and what trade-offs are worth making. A value becomes useful when it can change a decision — not when it is only a good-sounding word.</p>
     </div>
     {!values.length && profile.values && !vis.valuesSeeded && <div style={cardStyle()}><div style={cardLblStyle()}>Bring forward what you already wrote</div><p style={{ fontSize:13, color:T.fgM }}>Your Farm Profile already has a values statement. Start there, then make it more specific if needed.</p><button onClick={seed} style={btnStyle("primary")}>Bring in core values →</button></div>}
-    <div style={cardStyle()}><div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12 }}><div style={cardLblStyle({ marginBottom:0 })}>Your core values</div><button onClick={add} style={{ ...btnStyle("outline"), fontSize:12, padding:"6px 13px" }}>+ Add one</button></div>{values.length ? values.map(v=><div key={v.id} style={{ marginBottom:12 }}><textarea style={inputStyle({ minHeight:64, fontSize:14 })} value={v.text} onChange={e=>setValue(v.id,e.target.value)} placeholder="Name the principle and what it means in practice" /></div>) : <div style={{ color:T.fgS, fontSize:13 }}>Add the principles you want this operation to be known for.</div>}</div>
+    <div style={cardStyle()}><div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12 }}><div style={cardLblStyle({ marginBottom:0 })}>Your core values</div><button onClick={add} style={{ ...btnStyle("outline"), fontSize:12, padding:"6px 13px" }}>+ Add one</button></div>{values.length ? values.map(v=><div key={v.id} style={{ marginBottom:12 }}><LegacyVoiceField><textarea style={inputStyle({ minHeight:64, fontSize:14 })} value={v.text} onChange={e=>setValue(v.id,e.target.value)} placeholder="Name the principle and what it means in practice" /></LegacyVoiceField></div>) : <div style={{ color:T.fgS, fontSize:13 }}>Add the principles you want this operation to be known for.</div>}</div>
   </div>;
   }
 
@@ -5635,7 +5635,7 @@ function VIS4({ vis, setVis }) {
   );
 }
 
-// ── Vision 5 — Who holds this ─────────────────────��──────────────────────────
+// ── Vision 5 — Who holds this ────────���────────────��──────────────────────────
 function VIS5({ vis, setVis, goLegacy }) {
   const h = vis.holders || {};
   const setH = (id,val) => setVis({ holders:{ ...h, [id]:val } });
@@ -5736,7 +5736,7 @@ function VIS6({ vis, setVis }) {
   );
 }
 
-// ── Vision 7 — The statement ─────────────────────────────────────────────────
+// ── Vision 7 — The statement ──────────────────────────────────────��──────────
 function VIS7({ vis, setVis, profile }) {
   const s = visStats(vis);
   const pub = vis.published || {};
