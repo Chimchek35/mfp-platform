@@ -3347,7 +3347,7 @@ const FinancialHealthStrip = ({ fa }) => {
 function FarmProfilePage({ profile, setProfile, fa, rd, goFA, goRD, goRisk, goLegacy }) {
   const set = (field) => (e) => setProfile(s => ({ ...s, [field]: e.target.value }));
   const [pri, setPri] = useState(0);
-  const [view, setView] = useState("actions");
+  const [view, setView] = useState("glance");
   const { hasData: faHasData, categories: faCategories } = computeFARatios(fa.s3vals);
   const lenderOpps = lenderOpportunities(fa);
 
@@ -3386,7 +3386,7 @@ function FarmProfilePage({ profile, setProfile, fa, rd, goFA, goRD, goRisk, goLe
 
       {/* view tabs */}
       <div style={{ display:"flex", gap:8, borderBottom:`1px solid ${T.border}`, marginBottom:20 }}>
-        {[["actions","Priority actions"],["glance","Business at a glance"]].map(([k,lab]) => {
+        {[["glance","Business at a glance"],["actions","Priority actions"]].map(([k,lab]) => {
           const on = view===k;
           return (
             <button key={k} onClick={()=>setView(k)} style={{ background:"none", border:"none", borderBottom:`2px solid ${on?T.navy:"transparent"}`, padding:"9px 4px", marginBottom:-1, cursor:"pointer", font:"inherit", fontSize:14, fontWeight:on?600:500, color:on?T.navy:T.fgS, marginRight:14 }}>{lab}</button>
