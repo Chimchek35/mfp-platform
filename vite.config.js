@@ -1,6 +1,11 @@
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
 import marketPrices from './api/market-prices.js'
+
+const env = loadEnv('development', process.cwd(), '')
+if (!process.env.USDA_AMS_API_KEY && env.USDA_AMS_API_KEY) {
+  process.env.USDA_AMS_API_KEY = env.USDA_AMS_API_KEY
+}
 
 function marketPricesMiddleware() {
   return {
