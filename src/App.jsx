@@ -5358,33 +5358,6 @@ const visStats = (vis) => {
 
 
 // ── Vision 1 — What you have already said ────────────────────────────────�������───
-function StrategicAdvisor({ profile, vis, setVis }) {
-  const [messages, setMessages] = useState([{ role: "assistant", content: "Let’s shape a direction that is both meaningful and workable. What do you most want this farm to make possible over the next five to ten years?" }]);
-  const [draft, setDraft] = useState("");
-  const [busy, setBusy] = useState(false);
-  const send = async (event) => {
-    event.preventDefault();
-    const content = draft.trim();
-    if (!content || busy) return;
-    const next = [...messages, { role: "user", content }];
-    setMessages(next); setDraft(""); setBusy(true);
-    try {
-      const response = await fetch("/api/strategic-advisor", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ messages: next, profile, vision: vis }) });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Advisor unavailable");
-      setMessages([...next, { role: "assistant", content: data.reply }]);
-      setVis({ advisorConversation: [...next, { role: "assistant", content: data.reply }] });
-    } catch (error) {
-      setMessages([...next, { role: "assistant", content: error.message }]);
-    } finally { setBusy(false); }
-  };
-  return <div style={{ background: "#f8fbfd", border: `1px solid ${T.border}`, borderRadius: 12, padding: 20 }}>
-    <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "baseline", marginBottom: 14 }}><div><div style={{ color: T.blue, fontSize: 11, fontWeight: 800, letterSpacing: ".12em", textTransform: "uppercase" }}>Strategic Vision Advisor</div><h2 style={{ marginTop: 5 }}>Think it through with an advisor</h2></div><span style={{ color: T.fgS, fontSize: 12 }}>One question at a time</span></div>
-    <div aria-live="polite" style={{ display: "grid", gap: 10, maxHeight: 390, overflowY: "auto", padding: "4px 2px 12px" }}>{messages.map((message, index) => <div key={`${message.role}-${index}`} style={{ maxWidth: "88%", justifySelf: message.role === "user" ? "end" : "start", background: message.role === "user" ? T.navy : "#fff", color: message.role === "user" ? "#fff" : T.fg, border: message.role === "user" ? "none" : `1px solid ${T.border}`, borderRadius: 10, padding: "11px 13px", lineHeight: 1.55 }}>{message.content}</div>)}{busy && <div style={{ color: T.fgS, fontSize: 13 }}>Your advisor is thinking…</div>}</div>
-    <form onSubmit={send} style={{ display: "flex", gap: 10, alignItems: "flex-end", marginTop: 8 }}><textarea value={draft} onChange={(event) => setDraft(event.target.value)} placeholder="Share what you are considering…" rows={3} aria-label="Message your strategic vision advisor" style={{ flex: 1, resize: "vertical", border: `1px solid ${T.border}`, borderRadius: 8, padding: 12, background: "#fff" }} /><button type="submit" disabled={busy || !draft.trim()} style={{ ...btnStyle("primary"), opacity: busy || !draft.trim() ? .55 : 1 }}>Send</button></form>
-  </div>;
-}
-
 function VIS1({ vis, setVis, profile, goProfile }) {
   const items = vis.items || [];
   const seeded = !!vis.seeded;
@@ -6452,7 +6425,7 @@ export default function App() {
   ];
   const body = riskConvoActive
     ? <ConversationalRisk risk={risk} setRisk={setRisk} profile={profile} onExit={(stage)=>{ setRiskConvo(false); setRisk(s=>({ ...s, stage: stage || 5 })); }} />
-    : isFA ? FA_BODY[stage-1] : isRD ? RD_BODY[stage-1] : isLeg ? <div>{legBodyForRole}</div> : isVis ? <StrategicAdvisor profile={profile} vis={vis} setVis={setVis} /> : RISK_BODY[stage-1];
+    : isFA ? FA_BODY[stage-1] : isRD ? RD_BODY[stage-1] : isLeg ? <div>{legBodyForRole}</div> : isVis ? VIS_BODY[stage-1] : RISK_BODY[stage-1];
   const stageCard = (
     <section className="mfp-stage-card" aria-label={`${isVis ? "Strategic Vision" : isFA ? "Financial Analysis" : isLeg ? "Legacy" : isRD ? "Revenue Diversification" : "Farm Risk"} question ${stage} of ${total}`}>
       <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:12, marginBottom:18, color:T.fgS, fontSize:13, fontWeight:650 }}>
