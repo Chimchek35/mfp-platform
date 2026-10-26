@@ -1,4 +1,6 @@
 
+import { useEffect, useState } from "react";
+
 const updates = [
   { impact: "HIGH", type: "POLICY", title: "Next year's biofuel blending volumes are under review", happened: "Federal officials are reviewing how much biofuel must be blended into the fuel supply next year. The sources we follow do not agree on where it lands, so we show the range rather than pick one.", meaning: "The ethanol plant near you is one of your clearest advantages, and it is also a market for your corn. Higher volumes would strengthen demand at that plant and the value of your access to it. A cut would add pressure to a row-crop market your SWOT already shows softening.", direction: "Threat and opportunity", confidence: "Medium on direction, low on timing", horizon: "3 to 6 months", connected: "Strength s2: Ethanol-plant access | Opportunity o3: Regional supply chains | Threat t1: Row-crop softening", sources: "Agency notice A2 · Trade association outlook B3 · Private analyst note C3" },
   { impact: "MODERATE", type: "REGULATORY", title: "A proposed rule would change how diesel emissions systems can be repaired", happened: "The agency proposed changes to how certain diesel emissions systems may be repaired and serviced. A comment period is open, and the final rule may look different from the proposal.", meaning: "Your diesel repair business is the direct link. Depending on the final wording, the rule could add equipment or certification costs for your shop, or bring in more work from neighbors whose machines need servicing.", direction: "Threat and opportunity", confidence: "Medium", horizon: "6 to 12 months", connected: "Business: Diesel repair | Strength s1: Diversified revenue | Weakness w2: Enterprise-level financial visibility", sources: "Agency notice A2 · Trade association outlook B3" },
@@ -25,6 +27,26 @@ const driverBriefs = [
 ];
 
 const impactColor = { HIGH: "#b42318", MODERATE: "#a15c00", LOW: "#47705d" };
+
+function LiveCommodityPrices() {
+  const [prices, setPrices] = useState([]);
+  const [status, setStatus] = useState("loading");
+
+  useEffect(() => {
+    let active = true;
+    fetch("/api/market-prices")
+      .then((response) => response.ok ? response.json() : Promise.reject(new Error("Market feed unavailable")))
+      .then((data) => { if (active) { setPrices(data.prices || []); setStatus(data.status || "live"); } })
+      .catch(() => { if (active) setStatus("unavailable"); });
+    return () => { active = false; };
+  }, []);
+
+  return <section style={{ marginTop: 24, background: "#fff", border: "1px solid #d5e0ea", borderRadius: 12, padding: 22 }}>
+    <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "baseline", flexWrap: "wrap" }}><div style={{ color: "#0c4477", fontSize: 12, fontWeight: 800, letterSpacing: ".1em" }}>CURRENT COMMODITY PRICES</div><span style={{ color: status === "live" ? "#47705d" : "#a15c00", fontSize: 12, fontWeight: 800 }}>{status === "live" ? "LIVE USDA AMS FEED" : "FEED UPDATING"}</span></div>
+    <p style={{ color: "#53657a", lineHeight: 1.6, margin: "7px 0 16px" }}>The latest verified market values Eagle Eye uses when deciding whether to update your farmer impact.</p>
+    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(190px,1fr))", gap: 12 }}>{(prices.length ? prices : [{ commodity: "Corn", value: "Updating…", unit: "USDA AMS" }, { commodity: "Soybeans", value: "Updating…", unit: "USDA AMS" }, { commodity: "Cattle", value: "Updating…", unit: "USDA AMS" }]).map((price) => <article key={price.commodity} style={{ background: "#f9fbfd", border: "1px solid #dfe8f0", borderRadius: 10, padding: 15 }}><div style={{ color: "#53657a", fontSize: 13, fontWeight: 700 }}>{price.commodity}</div><div style={{ color: "#17233d", fontSize: 24, fontWeight: 800, marginTop: 5 }}>{price.value}</div><div style={{ color: "#718096", fontSize: 12, marginTop: 4 }}>{price.unit} · {price.asOf || "Latest report"}</div></article>)}</div>
+  </section>;
+}
 
 function BriefCard({ update }) {
   const color = impactColor[update.impact];
@@ -64,6 +86,7 @@ export default function EagleEye({ profile = {}, onBack }) {
           <div style={{ display: "grid", gap: 12, marginTop: 16 }}>{commodityTriggers.map((trigger) => <article key={trigger.commodity} style={{ background: "#fff", border: "1px solid #d5e0ea", borderRadius: 10, padding: 16 }}><div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap", alignItems: "baseline" }}><h3 style={{ margin: 0, fontSize: 17, color: "#17233d" }}>{trigger.commodity}</h3><span style={{ fontSize: 12, fontWeight: 800, color: "#0c7390", textTransform: "uppercase", letterSpacing: ".06em" }}>Trigger enabled</span></div><p style={{ margin: "9px 0", color: "#17233d", lineHeight: 1.55 }}><strong>Signal:</strong> {trigger.signal}</p><div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(210px,1fr))", gap: 12, color: "#53657a", fontSize: 13, lineHeight: 1.55 }}><div><strong>Near term</strong><br />{trigger.nearTerm}</div><div><strong>Longer term</strong><br />{trigger.longerTerm}</div><div><strong>Farmer impact</strong><br />{trigger.farmerImpact}</div></div><p style={{ margin: "11px 0 0", color: "#0c4477", fontSize: 13, lineHeight: 1.5 }}><strong>Verification rule:</strong> {trigger.threshold}. <strong>Confidence:</strong> {trigger.confidence}.</p></article>)}</div>
         </div>
       </section>
+      <LiveCommodityPrices />
       <section style={{ order: 7, background: "#fff", border: "1px solid #d5e0ea", borderRadius: 12, padding: 24, marginTop: 28 }}><div style={{ color: "#0c4477", fontSize: 12, fontWeight: 800, letterSpacing: ".1em" }}>THIS WILL NOT IMPACT YOU, AND HERE'S WHY</div><p style={{ color: "#53657a", lineHeight: 1.65 }}>We watched the whole field this week, not just your corner. These are headlines you can set aside because they do not touch your farm profile: dairy pricing reform, cotton and rice program changes, and new tariffs on U.S. pork.</p></section>
       <section style={{ order: 8, background: "#fff", border: "1px solid #d5e0ea", borderRadius: 12, padding: 24, marginTop: 16 }}><div style={{ color: "#0c4477", fontSize: 12, fontWeight: 800, letterSpacing: ".1em" }}>THE LONGER VIEW</div><h2 style={{ margin: "7px 0 10px", fontSize: 23 }}>This week's deep dive · MFP dimension: Succession planning</h2><p style={{ color: "#53657a", lineHeight: 1.7, margin: 0 }}>Succession is your top goal, and it is also the widest gap in your assessment. Other operations learned that formal planning and simply setting aside time to talk about the transition can both move the work forward.</p></section>
       <footer style={{ color: "#718096", fontSize: 12, lineHeight: 1.6, marginTop: 24, paddingBottom: 24 }}>My EagleEye weekly brief, prepared for your farm. EagleEye is powered by Idealyst Innovation. This is general information, not legal, financial, or commodity-trading advice.</footer>
