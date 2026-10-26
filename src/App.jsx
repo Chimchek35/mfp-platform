@@ -6426,12 +6426,23 @@ export default function App() {
   const body = riskConvoActive
     ? <ConversationalRisk risk={risk} setRisk={setRisk} profile={profile} onExit={(stage)=>{ setRiskConvo(false); setRisk(s=>({ ...s, stage: stage || 5 })); }} />
     : isFA ? FA_BODY[stage-1] : isRD ? RD_BODY[stage-1] : isLeg ? <div>{legBodyForRole}</div> : isVis ? VIS_BODY[stage-1] : RISK_BODY[stage-1];
+  const moduleName = isVis ? "Strategic Vision" : isFA ? "Financial Analysis" : isLeg ? "Legacy" : isRD ? "Revenue Diversification" : "Farm Risk";
+  const moduleSupport = isVis
+    ? "Start with what you want this farm to make possible. We will work from your reality, not a textbook answer."
+    : isFA
+      ? "The numbers are here to support your judgment—not to grade you. We will focus on what the numbers mean for cash, time, and choices."
+      : isRD
+        ? "New income only helps if it fits your people, equipment, market, and appetite for more complexity. We will test the fit before chasing an idea."
+        : isRisk
+          ? "Risk is not a failure to eliminate. It is the weather, markets, health, people, and surprises you plan around so one hard season does not decide everything."
+          : "Legacy is about people and a workable handoff, not just assets. We will make room for difficult conversations and practical next steps.";
   const stageCard = (
-    <section className="mfp-stage-card" aria-label={`${isVis ? "Strategic Vision" : isFA ? "Financial Analysis" : isLeg ? "Legacy" : isRD ? "Revenue Diversification" : "Farm Risk"} question ${stage} of ${total}`}>
+    <section className="mfp-stage-card" aria-label={`${moduleName} question ${stage} of ${total}`}>
       <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:12, marginBottom:18, color:T.fgS, fontSize:13, fontWeight:650 }}>
-        <span>{isVis ? "Strategic Vision" : isFA ? "Financial Analysis" : isLeg ? "Legacy" : isRD ? "Revenue Diversification" : "Farm Risk"}</span>
+        <span>{moduleName}</span>
         <span>Question {stage} of {total}</span>
       </div>
+      <div style={{ background:"#f7fafc", borderLeft:`3px solid ${T.blue}`, borderRadius:"0 8px 8px 0", padding:"10px 13px", marginBottom:20, color:T.fgS, fontSize:14, lineHeight:1.55 }}>{moduleSupport}</div>
       {body}
     </section>
   );
