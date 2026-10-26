@@ -5381,6 +5381,8 @@ const visStats = (vis) => {
 // ── Vision 1 — What you have already said ────────────────────────────────�������───
 function VIS1({ vis, setVis, profile, goProfile }) {
   const items = (vis.items || []).filter(i => i.kind === "advantage");
+  const carouselRef = useRef(null);
+  const [activeAdvantage, setActiveAdvantage] = useState(0);
   const seeded = !!vis.seeded;
   const seed = () => setVis({ items: visSeedItems(profile).filter(i => i.kind === "advantage"), seeded:true });
   const setItem = (id, patch) => setVis({ items: (vis.items || []).map(i => i.id===id ? {...i,...patch} : i) });
@@ -5414,9 +5416,9 @@ function VIS1({ vis, setVis, profile, goProfile }) {
             <button onClick={add} style={{ ...btnStyle("outline"), fontSize:12, padding:"6px 13px" }}>+ Add one</button>
           </div>
           <div style={{ fontSize:12.5, color:T.fgM, marginBottom:14, lineHeight:1.55 }}>Swipe horizontally through the claims pulled from your Farm Profile. Edit anything that came across wrong, split anything that is really two claims, and remove anything you no longer stand behind.</div>
-          <div style={{ display:"flex", gap:12, overflowX:"auto", overscrollBehaviorX:"contain", scrollSnapType:"x mandatory", padding:"2px 2px 12px", margin:"0 -2px", WebkitOverflowScrolling:"touch" }}>
+          <div ref={carouselRef} onScroll={(event) => { const track = event.currentTarget; const cardWidth = track.clientWidth + 12; setActiveAdvantage(Math.min(items.length - 1, Math.max(0, Math.round(track.scrollLeft / cardWidth)))); }} style={{ display:"flex", gap:12, overflowX:"auto", overscrollBehaviorX:"contain", scrollSnapType:"x mandatory", padding:"2px 2px 12px", margin:"0 -2px", WebkitOverflowScrolling:"touch" }}>
             {items.map((it, index) => (
-              <div key={it.id} style={{ flex:"0 0 min(82%, 360px)", scrollSnapAlign:"start", border:`1px solid ${T.border}`, borderTop:`4px solid ${T.moss}`, borderRadius:10, padding:"14px 15px", background:T.bg, display:"flex", flexDirection:"column", minHeight:190 }}>
+              <div key={it.id} style={{ flex:"0 0 100%", scrollSnapAlign:"start", border:`1px solid ${T.border}`, borderTop:`4px solid ${T.moss}`, borderRadius:10, padding:"14px 15px", background:T.bg, display:"flex", flexDirection:"column", minHeight:190 }}>
                 <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", gap:10, marginBottom:12 }}>
                   <span style={{ fontSize:10.5, fontWeight:700, letterSpacing:"0.1em", textTransform:"uppercase", color:T.moss }}>Advantage {index + 1}</span>
                   <span style={{ fontSize:10.5, color:T.fgS }}>from {it.sourceLabel}</span>
@@ -5428,9 +5430,9 @@ function VIS1({ vis, setVis, profile, goProfile }) {
   </div>
   {items.length > 1 && <>
     <div style={{ display:"flex", justifyContent:"center", alignItems:"center", gap:7, marginTop:4 }} aria-label={`${items.length} advantages available to swipe through`}>
-      {items.map((it, index) => <span key={`dot-${it.id}`} aria-label={`Advantage ${index + 1}`} style={{ width:7, height:7, borderRadius:"50%", background:T.moss, opacity:0.72, display:"block" }} />)}
+      {items.map((it, index) => <button key={`dot-${it.id}`} type="button" aria-label={`Show advantage ${index + 1}`} onClick={() => { const track = carouselRef.current; if (track) track.scrollTo({ left:index * (track.clientWidth + 12), behavior:"smooth" }); setActiveAdvantage(index); }} style={{ width:8, height:8, padding:0, border:0, borderRadius:"50%", background:index === activeAdvantage ? T.moss : T.border, opacity:index === activeAdvantage ? 1 : 0.9, display:"block", cursor:"pointer" }} />)}
     </div>
-    <div style={{ textAlign:"center", fontSize:11.5, color:T.fgS, marginTop:6 }}>Swipe right to see the next advantage</div>
+    <div style={{ textAlign:"center", fontSize:11.5, color:T.fgS, marginTop:6 }}>Swipe right to see the next advantage. The dark dot marks the card you are viewing.</div>
   </>}
   </div>
       )}
