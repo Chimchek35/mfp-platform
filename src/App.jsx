@@ -4149,7 +4149,7 @@ function LEG1({ leg, setLegData }) {
   return <div><Head eyebrow="Legacy · Stage 1" title="The people" sub="Start with the people who make the operation work today and the family members whose interests may shape what comes next." /><div style={cardStyle()}><div style={cardLblStyle()}>The people</div>{legRow("Who is involved in the operation today, and what does each person do?", <textarea style={inputStyle({ minHeight:100 })} value={v("people")} onChange={set("people")} placeholder="Names, roles, rough ages. Include anyone whose absence would be felt." />)}{legRow("Who is off the farm but still part of the family picture?", <textarea style={inputStyle({ minHeight:80 })} value={v("offFarmPeople")} onChange={set("offFarmPeople")} placeholder="Off-farm children, siblings with an interest in the ground, anyone with an expectation." />, "These are the people most often left out and the most common source of trouble later.")}</div></div>;
 }
 
-// ── Stage 2 — The successor question ─────────────────────────────────────────
+// ── Stage 2 — The successor question ────────────────────────────────��────────
 function LEG2({ leg, setLegData }) {
   const d = leg.data || {};
   const v = (k) => d[k] || "";
@@ -6639,7 +6639,7 @@ else if (isRD) { if (rd.stage<rdTotal) goRD(rd.stage+1); else goLegacy(1); }
 
       <div style={{ display:"flex", flex:1, overflow:"hidden" }}>
 
-        {isEagleEye ? <EagleEye profile={profile} onBack={() => setModule("profile")} /> : isProfile ? (
+        {isEagleEye ? <EagleEye profile={profile} vision={vis} onBack={() => setModule("profile")} /> : isProfile ? (
           <>
             <aside className="mfp-flow-rail" style={{ width:240, background:"#0b5577", borderRight:`1px solid #062f4b`, display:"flex", flexDirection:"column", flexShrink:0, overflowY:"auto" }}>
               <div style={{ padding:"22px 18px 14px" }}>
