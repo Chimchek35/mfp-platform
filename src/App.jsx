@@ -649,7 +649,7 @@ function DocumentScanUpload({ fa, setFA }) {
             {uploadSlot("beginBS","Balance sheet — Jan 1","PDF or photo, optional")}
             {uploadSlot("endBS","Balance sheet — Dec 31","PDF or photo, optional")}
           </div>
-          <button onClick={runMockScan} disabled={!canScan||scanning} style={{ ...btnStyle("primary"), opacity:(!canScan||scanning)?0.5:1, pointerEvents:(!canScan||scanning)?"none":"auto" }}>{scanning?"Scanning��":"Scan documents →"}</button>
+          <button onClick={runMockScan} disabled={!canScan||scanning} style={{ ...btnStyle("primary"), opacity:(!canScan||scanning)?0.5:1, pointerEvents:(!canScan||scanning)?"none":"auto" }}>{scanning?"Scanning���":"Scan documents →"}</button>
         </>
       ) : (
         <>
@@ -2547,7 +2547,7 @@ function RD2({ rd, setRData }) {
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// ──────────────���──────────────────────────────────────────────────────────────
 // RD STAGE 3 — Human capital, assets & financial capital
 // ─────────────────────────────────────────────────────────────────────────────
 function RD3({ rd, setRData }) {
@@ -5425,9 +5425,14 @@ function VIS1({ vis, setVis, profile, goProfile }) {
                 <button onClick={()=>remove(it.id)} style={{ ...btnStyle("ghost"), alignSelf:"flex-start", marginTop:9, fontSize:11.5 }}>Remove</button>
               </div>
             ))}
-          </div>
-          {items.length > 1 && <div style={{ fontSize:11.5, color:T.fgS, marginTop:2 }}>Swipe to see the next advantage →</div>}
-        </div>
+  </div>
+  {items.length > 1 && <>
+    <div style={{ display:"flex", justifyContent:"center", alignItems:"center", gap:7, marginTop:4 }} aria-label={`${items.length} advantages available to swipe through`}>
+      {items.map((it, index) => <span key={`dot-${it.id}`} aria-label={`Advantage ${index + 1}`} style={{ width:7, height:7, borderRadius:"50%", background:T.moss, opacity:0.72, display:"block" }} />)}
+    </div>
+    <div style={{ textAlign:"center", fontSize:11.5, color:T.fgS, marginTop:6 }}>Swipe right to see the next advantage</div>
+  </>}
+  </div>
       )}
       {items.length > 0 && (
         <div style={cardStyle()}>
@@ -6245,7 +6250,7 @@ function DataControls({ state, savedAt, storageOk, onImport, onImportProfile, on
   );
 }
 
-// ═════════════════════════════════════════════════════════════════════════════
+// ═══════════════════��═════════════════════════════════════════════════════════
 // ROOT APP
 // ═════════════════════════════════════════════════════════════════════════════
 // Generic farm SWOT, pre-populated so the quadrants open with a real starting point
