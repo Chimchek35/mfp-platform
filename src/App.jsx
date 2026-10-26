@@ -1,5 +1,6 @@
 import { useState, useMemo, useRef, useEffect } from "react";
 import { loadSavedWork, syncSavedWork } from "./backend.js";
+import EagleEye from "./EagleEye.jsx";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // FONTS  (system stack, matching the MFP action plan design language)
@@ -3981,7 +3982,7 @@ const valueParcel = (p) => {
 
 // ═════════════════════════════════════════════════════════════════════════════
 // BLIND COMPARE — the same questions, answered independently
-// ═════��═══════════════════════════════════════════════════════════════════════
+// ��════��═══════════════════════════════════════════════════════════════════════
 // One array drives both sides and the comparison, so the two generations are
 // provably answering the same question rather than two similar ones.
 //
@@ -4240,7 +4241,7 @@ function LEG2({ leg, setLegData }) {
   );
 }
 
-// ── Stage 3 — The next chapter ────────────���──────────────────────────────────
+// ── Stage 3 — The next chapter ──────���─────���──────────────────────────────────
 function LEG3({ leg, setLegData }) {
   const d = leg.data || {};
   const v = (k) => d[k] || "";
@@ -6318,7 +6319,7 @@ export default function App() {
   const goVision = (n) => { setModule("vision"); setVisState(s => ({ ...s, stage:n })); };
   const setLegData = (patch) => setLeg(s => ({ ...s, data:{ ...(s.data||{}), ...patch } }));
 
-  const isFA = module === "fa", isRD = module === "rd", isRisk = module === "risk", isProfile = module === "profile", isLeg = module === "legacy", isVis = module === "vision";
+  const isFA = module === "fa", isRD = module === "rd", isRisk = module === "risk", isProfile = module === "profile", isLeg = module === "legacy", isVis = module === "vision", isEagleEye = module === "eagle-eye";
   const faTotal = FA_STAGES.length, rdTotal = RD_STAGES.length, riskTotal = RISK_STAGES.length;
   const visTotal = VIS_STAGES.length;
   const legRole = leg.role || "senior";
@@ -6459,7 +6460,12 @@ export default function App() {
           </div>
         </div>
         <div style={{ width:1, height:30, background:T.border }} />
-        <div style={{ display:"flex", gap:8, alignItems:"center" }}>
+          <div style={{ display:"flex", gap:8, alignItems:"center" }}>
+            <div onClick={()=>setModule("eagle-eye")} style={{ padding:"8px 12px", borderRadius:8, cursor:"pointer", background:isEagleEye?T.blueL:"transparent", color:isEagleEye?T.blue:T.fgM, fontWeight:700, fontSize:12 }}>Eagle Eye</div>
+          <div onClick={()=>setModule("eagle-eye")} style={{ ...profileTabStyle, background:isEagleEye?T.blueL:"transparent" }}>
+            <IconShield />
+            <div><div style={{ ...lblOff, color:isEagleEye?T.blue:T.fgM, fontWeight:isEagleEye?700:600 }}>Eagle Eye Intelligence</div><div style={{ fontSize:10.5, color:T.fgS, marginTop:2 }}>Farm signals & source watch</div></div>
+          </div>
           <div onClick={()=>setModule("profile")} style={profileTabStyle}>
             <IconProfile />
             <div>
@@ -6538,7 +6544,7 @@ export default function App() {
 
       <div style={{ display:"flex", flex:1, overflow:"hidden" }}>
 
-        {isProfile ? (
+        {isEagleEye ? <EagleEye profile={profile} onBack={() => setModule("profile")} /> : isProfile ? (
           <>
             <aside className="mfp-flow-rail" style={{ width:240, background:"#0b5577", borderRight:`1px solid #062f4b`, display:"flex", flexDirection:"column", flexShrink:0, overflowY:"auto" }}>
               <div style={{ padding:"22px 18px 14px" }}>
