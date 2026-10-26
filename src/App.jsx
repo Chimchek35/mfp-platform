@@ -4194,7 +4194,7 @@ function LEG1({ leg, setLegData }) {
   );
 }
 
-// ── Stage 2 — The three transfers ───────────────────────────────────────────���
+// ── Stage 2 — The three transfers ───────────────────────────────────────────����
 function LEG2({ leg, setLegData }) {
   const d = leg.data || {};
   const t = d.transfers || {};
@@ -5554,7 +5554,7 @@ function VIS3({ vis, setVis }) {
             <div key={v.id} style={cardStyle()}>
               <div style={{ fontSize:15.5, fontWeight:600, color:T.navy, marginBottom:4, lineHeight:1.45 }}>{v.text}</div>
               <div style={{ fontSize:13, color:T.fgM, marginBottom:11 }}>What has this cost you, or what have you turned down because of it?</div>
-              <textarea style={inputStyle({ minHeight:64 })} value={(v.tests||{}).cost||""} onChange={e=>setTest(v.id, e.target.value)} placeholder="A contract you did not take. A tenant you did not renew. A price you did not chase." />
+              <LegacyVoiceField><textarea style={inputStyle({ minHeight:64 })} value={(v.tests||{}).cost||""} onChange={e=>setTest(v.id, e.target.value)} placeholder="A contract you did not take. A tenant you did not renew. A price you did not chase." /></LegacyVoiceField>
             </div>
           ))}
           {answered > 0 && answered < values.length && (
