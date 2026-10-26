@@ -1,4 +1,13 @@
-const AMS_BASE = "https://mpr.datamart.ams.usda.gov/services/v1.1";
+const AMS_BASE = "https://marsapi.ams.usda.gov/services/v1.1";
+
+function authHeaders() {
+  const apiKey = process.env.USDA_AMS_API_KEY;
+  return {
+    // USDA AMS authenticates the API key as the Basic Auth username with a blank password.
+    Authorization: `Basic ${Buffer.from(`${apiKey}:`).toString("base64")}`,
+    Accept: "application/json",
+  };
+}
 
 const feeds = [
   { commodity: "Corn", report: /corn|grain/i },
@@ -17,14 +26,14 @@ function firstValue(rows, commodity) {
 }
 
 async function getReport(reportPattern) {
-  const response = await fetch(`${AMS_BASE}/reports`, { headers: { "x-api-key": process.env.USDA_AMS_API_KEY } });
+  const response = await fetch(`${AMS_BASE}/reports`, { headers: authHeaders() });
   if (!response.ok) throw new Error(`AMS report catalog returned ${response.status}`);
   const catalog = await response.json();
   const reports = catalog.results || catalog || [];
   const match = reports.find((report) => reportPattern.test(`${report.report_title || ""} ${report.reportName || ""} ${report.slug_name || ""}`));
   if (!match) throw new Error(`No AMS report matched ${reportPattern}`);
   const id = match.slug_id || match.report_id || match.reportId || match.slug;
-  const detail = await fetch(`${AMS_BASE}/reports/${encodeURIComponent(id)}/Detail?lastReports=1`, { headers: { "x-api-key": process.env.USDA_AMS_API_KEY } });
+  const detail = await fetch(`${AMS_BASE}/reports/${encodeURIComponent(id)}/Detail?lastReports=1`, { headers: authHeaders() });
   if (!detail.ok) throw new Error(`AMS report returned ${detail.status}`);
   const data = await detail.json();
   return data.results || data.data || data || [];
@@ -45,6 +54,11 @@ export default async function handler(req, res) {
     return res.status(200).json({ status: liveCount ? "live" : "unavailable", prices });
   } catch (error) {
     console.error("[v0] USDA AMS price feed error:", error.message);
-    return res.status(502).json({ status: "unavailable", prices: [] });
+    const authError = error.message.includes("401");
+    return res.status(authError ? 401 : 502).json({
+      status: authError ? "authentication_error" : "unavailable",
+      prices: [],
+      message: authError ? "USDA AMS rejected the configured API key." : "USDA AMS could not be reached.",
+    });
   }
 }

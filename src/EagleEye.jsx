@@ -35,14 +35,18 @@ function LiveCommodityPrices() {
   useEffect(() => {
     let active = true;
     fetch("/api/market-prices")
-      .then((response) => response.ok ? response.json() : Promise.reject(new Error("Market feed unavailable")))
+      .then(async (response) => {
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.message || "Market feed unavailable");
+        return data;
+      })
       .then((data) => { if (active) { setPrices(data.prices || []); setStatus(data.status || "live"); } })
-      .catch(() => { if (active) setStatus("unavailable"); });
+      .catch((error) => { if (active) { setPrices([]); setStatus(error.message.includes("API key") ? "authentication_error" : "unavailable"); } });
     return () => { active = false; };
   }, []);
 
   return <section style={{ marginTop: 24, background: "#fff", border: "1px solid #d5e0ea", borderRadius: 12, padding: 22 }}>
-    <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "baseline", flexWrap: "wrap" }}><div style={{ color: "#0c4477", fontSize: 12, fontWeight: 800, letterSpacing: ".1em" }}>CURRENT COMMODITY PRICES</div><span style={{ color: status === "live" ? "#47705d" : "#a15c00", fontSize: 12, fontWeight: 800 }}>{status === "live" ? "LIVE USDA AMS FEED" : status === "loading" ? "CONNECTING TO USDA AMS" : "FEED UNAVAILABLE"}</span></div>
+    <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "baseline", flexWrap: "wrap" }}><div style={{ color: "#0c4477", fontSize: 12, fontWeight: 800, letterSpacing: ".1em" }}>CURRENT COMMODITY PRICES</div><span style={{ color: status === "live" ? "#47705d" : "#a15c00", fontSize: 12, fontWeight: 800 }}>{status === "live" ? "LIVE USDA AMS FEED" : status === "loading" ? "CONNECTING TO USDA AMS" : status === "authentication_error" ? "USDA KEY REJECTED" : "FEED UNAVAILABLE"}</span></div>
     <p style={{ color: "#53657a", lineHeight: 1.6, margin: "7px 0 16px" }}>The latest verified market values Eagle Eye uses when deciding whether to update your farmer impact.</p>
     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(190px,1fr))", gap: 12 }}>{(prices.length ? prices : [{ commodity: "Corn", value: status === "loading" ? "Connecting…" : "Unavailable", unit: "USDA AMS" }, { commodity: "Soybeans", value: status === "loading" ? "Connecting…" : "Unavailable", unit: "USDA AMS" }, { commodity: "Cattle", value: status === "loading" ? "Connecting…" : "Unavailable", unit: "USDA AMS" }]).map((price) => <article key={price.commodity} style={{ background: "#f9fbfd", border: "1px solid #dfe8f0", borderRadius: 10, padding: 15 }}><div style={{ color: "#53657a", fontSize: 13, fontWeight: 700 }}>{price.commodity}</div><div style={{ color: "#17233d", fontSize: 24, fontWeight: 800, marginTop: 5 }}>{price.value}</div><div style={{ color: "#718096", fontSize: 12, marginTop: 4 }}>{price.unit} · {price.asOf || "Latest report"}</div></article>)}</div>
   </section>;
