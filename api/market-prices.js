@@ -24,7 +24,7 @@ async function getReport(reportName) {
   const match = reports.find((report) => new RegExp(reportName, "i").test(`${report.report_title || ""} ${report.reportName || ""} ${report.slug || ""}`));
   if (!match) throw new Error(`No AMS report matched ${reportName}`);
   const id = match.report_id || match.reportId || match.slug;
-  const detail = await fetch(`${AMS_BASE}/reports/${encodeURIComponent(id)}`, { headers: { "x-api-key": process.env.USDA_AMS_API_KEY } });
+  const detail = await fetch(`${AMS_BASE}/reports/${encodeURIComponent(id)}/Detail?lastReports=1`, { headers: { "x-api-key": process.env.USDA_AMS_API_KEY } });
   if (!detail.ok) throw new Error(`AMS report returned ${detail.status}`);
   const data = await detail.json();
   return data.results || data.data || data || [];
