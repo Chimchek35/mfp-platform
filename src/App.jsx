@@ -1,6 +1,7 @@
 import { useState, useMemo, useRef, useEffect } from "react";
 import { loadSavedWork, syncSavedWork } from "./backend.js";
 import EagleEye from "./EagleEye.jsx";
+import FarmKnowledgeSearch from "./FarmKnowledgeSearch.jsx";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // FONTS  (system stack, matching the MFP action plan design language)
@@ -6547,8 +6548,9 @@ else if (isRD) { if (rd.stage<rdTotal) goRD(rd.stage+1); else goLegacy(1); }
             onImportProfile={(importedProfile) => setProfile(current => ({ ...current, ...importedProfile }))}
             onClear={resetAll} />
         </div>
+        <FarmKnowledgeSearch state={{ profile, vis, fa, rd, leg, risk }} onNavigate={(nextModule) => setModule(nextModule)} />
         <div style={{ display:"flex", alignItems:"center", gap:16, flexShrink:0 }}>
-          <span style={{ fontSize:11, color:T.fgS, maxWidth:190, textAlign:"right", lineHeight:1.4 }}>Your farm profile carries across all modules</span>
+          <span style={{ fontSize:11, color:T.fgS, maxWidth:190, textAlign:"right", lineHeight:1.4 }}>Saved locally on this browser · your farm profile carries across all modules</span>
           <div style={{ width:38, height:38, borderRadius:"50%", background:T.blue, color:"#fff", display:"flex", alignItems:"center", justifyContent:"center", fontWeight:700, fontSize:15 }}>RM</div>
         </div>
       </header>
