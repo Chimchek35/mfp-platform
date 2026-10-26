@@ -649,7 +649,7 @@ function DocumentScanUpload({ fa, setFA }) {
             {uploadSlot("beginBS","Balance sheet — Jan 1","PDF or photo, optional")}
             {uploadSlot("endBS","Balance sheet — Dec 31","PDF or photo, optional")}
           </div>
-          <button onClick={runMockScan} disabled={!canScan||scanning} style={{ ...btnStyle("primary"), opacity:(!canScan||scanning)?0.5:1, pointerEvents:(!canScan||scanning)?"none":"auto" }}>{scanning?"Scanning…":"Scan documents →"}</button>
+          <button onClick={runMockScan} disabled={!canScan||scanning} style={{ ...btnStyle("primary"), opacity:(!canScan||scanning)?0.5:1, pointerEvents:(!canScan||scanning)?"none":"auto" }}>{scanning?"Scanning��":"Scan documents →"}</button>
         </>
       ) : (
         <>
@@ -2480,7 +2480,7 @@ function RD1({ rd, setRData, fa }) {
 const INCOME_BENCHMARK = [
   { label:"Residence farm", sub:"Small; operator's main job is off-farm", farm:"5–10%", wages:"55–65%", nonfarm:"10–15%", transfers:"15–25%", tiers:["< $500K"] },
   { label:"Intermediate farm", sub:"Small; farming is the primary occupation", farm:"15–25%", wages:"45–55%", nonfarm:"10–15%", transfers:"15–20%", tiers:["< $500K","$500K – $2M"] },
-  { label:"Commercial family farm", sub:"≥ $350K gross cash income", farm:"55–70%", wages:"15–25%", nonfarm:"5–10%", transfers:"10–15%", tiers:["$500K – $2M","$2M ��� $5M"] },
+  { label:"Commercial family farm", sub:"≥ $350K gross cash income", farm:"55–70%", wages:"15–25%", nonfarm:"5–10%", transfers:"10–15%", tiers:["$500K ��� $2M","$2M ��� $5M"] },
   { label:"Large-scale family farm", sub:"≥ $1M gross cash income", farm:"70–85%", wages:"5–15%", nonfarm:"5–10%", transfers:"5–10%", tiers:["$2M – $5M","$5M+"] },
 ];
 function PeerIncomeBenchmark({ revTier }) {
@@ -5413,19 +5413,20 @@ function VIS1({ vis, setVis, profile, goProfile }) {
             <div style={cardLblStyle({ marginBottom:0 })}>{items.length} claims to work with</div>
             <button onClick={add} style={{ ...btnStyle("outline"), fontSize:12, padding:"6px 13px" }}>+ Add one</button>
           </div>
-          <div style={{ fontSize:12.5, color:T.fgM, marginBottom:14, lineHeight:1.55 }}>Edit anything that came across wrong, split anything that is really two claims, and delete anything you no longer stand behind. What is missing matters as much as what is here.</div>
-          {items.map(it => (
-            <div key={it.id} style={{ border:`1px solid ${T.border}`, borderRadius:8, padding:"12px 14px", marginBottom:10 }}>
-              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", gap:10, marginBottom:8, flexWrap:"wrap" }}>
-                <select style={{ ...inputStyle(), width:"auto", fontSize:12, padding:"4px 9px" }} value={it.kind} onChange={e=>setItem(it.id,{kind:e.target.value})}>
-                  <option value="advantage">Competitive advantage</option>
-                </select>
-                <span style={{ fontSize:11, color:T.fgS }}>from {it.sourceLabel}</span>
+          <div style={{ fontSize:12.5, color:T.fgM, marginBottom:14, lineHeight:1.55 }}>Swipe horizontally through the claims pulled from your Farm Profile. Edit anything that came across wrong, split anything that is really two claims, and remove anything you no longer stand behind.</div>
+          <div style={{ display:"flex", gap:12, overflowX:"auto", overscrollBehaviorX:"contain", scrollSnapType:"x mandatory", padding:"2px 2px 12px", margin:"0 -2px", WebkitOverflowScrolling:"touch" }}>
+            {items.map((it, index) => (
+              <div key={it.id} style={{ flex:"0 0 min(82%, 360px)", scrollSnapAlign:"start", border:`1px solid ${T.border}`, borderTop:`4px solid ${T.moss}`, borderRadius:10, padding:"14px 15px", background:T.bg, display:"flex", flexDirection:"column", minHeight:190 }}>
+                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", gap:10, marginBottom:12 }}>
+                  <span style={{ fontSize:10.5, fontWeight:700, letterSpacing:"0.1em", textTransform:"uppercase", color:T.moss }}>Advantage {index + 1}</span>
+                  <span style={{ fontSize:10.5, color:T.fgS }}>from {it.sourceLabel}</span>
+                </div>
+                <textarea style={inputStyle({ minHeight:82, fontSize:14, flex:1 })} value={it.text} onChange={e=>setItem(it.id,{text:e.target.value})} placeholder="State it as plainly as you can" />
+                <button onClick={()=>remove(it.id)} style={{ ...btnStyle("ghost"), alignSelf:"flex-start", marginTop:9, fontSize:11.5 }}>Remove</button>
               </div>
-              <textarea style={inputStyle({ minHeight:52, fontSize:14 })} value={it.text} onChange={e=>setItem(it.id,{text:e.target.value})} placeholder="State it as plainly as you can" />
-              <button onClick={()=>remove(it.id)} style={{ ...btnStyle("ghost"), marginTop:7, fontSize:11.5 }}>Remove</button>
-            </div>
-          ))}
+            ))}
+          </div>
+          {items.length > 1 && <div style={{ fontSize:11.5, color:T.fgS, marginTop:2 }}>Swipe to see the next advantage →</div>}
         </div>
       )}
       {items.length > 0 && (
@@ -5446,7 +5447,7 @@ function VIS1({ vis, setVis, profile, goProfile }) {
   const add = () => setVis({ items:[...(vis.items || []), { id:"value-"+Date.now(), kind:"value", sourceLabel:"Added here", text:"", tests:{}, verdict:"untested" }] });
   const seed = () => setVis({ items:[...(vis.items || []), ...(profile.values && !values.length ? [{ id:"profile-value-"+Date.now(), kind:"value", sourceLabel:"Farm Profile", text:profile.values, tests:{}, verdict:"untested" }] : [])], valuesSeeded:true });
   return <div>
-    <Head eyebrow="Strategic vision · Stage 3" title="Core values" sub="Identify the principles that should guide choices when the easiest or most profitable option is not automatically the right one." />
+    <Head eyebrow="Strategic vision · Stage 2" title="Core values" sub="Identify the principles that should guide choices when the easiest or most profitable option is not automatically the right one." />
     <div style={cardStyle({ borderTop:`4px solid ${T.blue}` })}>
       <div style={cardLblStyle()}>Why this matters</div>
       <p style={{ fontSize:14, color:T.fgM, lineHeight:1.65, margin:0 }}>Core values turn a farm&apos;s identity into a decision filter. They help the household decide what work to accept, how to treat land and people, and what trade-offs are worth making. A value becomes useful when it can change a decision — not when it is only a good-sounding word.</p>
