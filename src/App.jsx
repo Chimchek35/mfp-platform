@@ -2637,7 +2637,7 @@ function RD3({ rd, setRData }) {
 
 // ───────────────────────────────────���─────���───���────���──────────────────────────
 // RD STAGE 4 — Opportunity mapping
-// ─────────────────────────────────────────────────────────────────────────────
+// ────��────────────────────────────────────────────────────────────────────────
 const GROWTH_TIER_LABEL = { 1:"Tier 1 · Fastest structural growth", 2:"Tier 2 · Strong growth", 3:"Tier 3 · Steady & selective" };
 const GROWTH_TIER_COLOR = { 1:T.dgreen, 2:T.blue, 3:T.tan };
 
@@ -3730,20 +3730,29 @@ function FarmProfilePage({ profile, setProfile, fa, rd, goFA, goRD, goRisk, goLe
 // Three rules this module holds to: the three transfers stay separated everywhere,
 // nothing here scores the family, and the tool is willing to say "not yet".
 
+const LEG_NORMALIZE = [
+  { tag:"THE TIMING", head:"Almost nobody starts this early", body:"Most families begin when something forces it. A health scare, a bad year, a conversation that went badly, or a neighbour's transfer that fell apart. Arriving late is the normal way to arrive." },
+  { tag:"THE SILENCE", head:"The conversation has probably been avoided for years", body:"Both generations are usually waiting for the other to raise it. The senior generation does not want to look like they are leaving. The successor does not want to look like they are asking." },
+  { tag:"THE IDENTITY", head:"Stepping back can feel like being erased", body:"For many operators the farm is not what they do, it is who they are. That is why plans stall on something that looks financial and is not." },
+  { tag:"THE RESENTMENT", head:"There is often something nobody has said", body:"Years of below-market wages, a promise heard differently, or a sibling who left and still expects a share can sit underneath the financial questions." },
+  { tag:"THE MONEY", head:"The operation often cannot support two households", body:"This is common and it is not a verdict on the farm. It is a number the plan has to solve rather than a reason to stop." },
+];
+
 const LEG_STAGES = [
-  { n:1,  label:"The people" },
-  { n:2,  label:"The successor question" },
-  { n:3,  label:"What exists on paper" },
-  { n:4,  label:"The three transfers" },
-  { n:5,  label:"The next chapter" },
-  { n:6,  label:"Two households" },
-  { n:7,  label:"Successor readiness" },
-  { n:8,  label:"Who knows what" },
-  { n:9,  label:"Fair is not equal" },
-  { n:10, label:"Triggers & contingencies" },
-  { n:11, label:"Rented ground & relationships" },
-  { n:12, label:"Parcels and land valuation" },
-  { n:13, label:"Where this leaves you" },
+  { n:1,  label:"Before you start" },
+  { n:2,  label:"The people" },
+  { n:3,  label:"The successor question" },
+  { n:4,  label:"What exists on paper" },
+  { n:5,  label:"The three transfers" },
+  { n:6,  label:"The next chapter" },
+  { n:7,  label:"Two households" },
+  { n:8,  label:"Successor readiness" },
+  { n:9,  label:"Who knows what" },
+  { n:10, label:"Fair is not equal" },
+  { n:11, label:"Triggers & contingencies" },
+  { n:12, label:"Rented ground & relationships" },
+  { n:13, label:"Parcels and land valuation" },
+  { n:14, label:"Where this leaves you" },
 ];
 
 const TRANSFERS = [
@@ -4161,12 +4170,19 @@ const SUCC_STAGES = [
   { n:6, label:"What you need to commit" },
 ];
 
-// ── Stage 1 — The people ───────────────────────────────────────────────────────
+// ── Stage 1 — Before you start ────────────────────────────────────────────────
+function LEG0({ leg, setLegData }) {
+  const d = leg.data || {};
+  const set = (key) => (event) => setLegData({ [key]: event.target.value });
+  return <div><Head eyebrow="Legacy · Stage 1" title="Before you start" sub="If this feels late, awkward, or harder than it should, that is normal. Most families arrive here because something made the conversation impossible to keep avoiding." /><div style={cardStyle()}><div style={cardLblStyle()}>What families recognise themselves in</div>{LEG_NORMALIZE.map((item) => <div key={item.tag} style={{ borderTop:`1px solid ${T.div}`, padding:"14px 0" }}><div style={{ color:T.fgS, fontSize:10.5, fontWeight:700, letterSpacing:".12em" }}>{item.tag}</div><h3 style={{ color:T.navy, fontSize:17, margin:"5px 0 4px" }}>{item.head}</h3><p style={{ color:T.fgM, fontSize:13.5, lineHeight:1.6, margin:0 }}>{item.body}</p></div>)}</div><div style={cardStyle()}><div style={cardLblStyle()}>Optional, private starting point</div>{legRow("What made you open this today?", <textarea style={inputStyle({ minHeight:70 })} value={d.startedWhy || ""} onChange={set("startedWhy")} placeholder="A change, a worry, a conversation, or simply that it is time." />)}{legRow("What would make this feel useful rather than intrusive?", <textarea style={inputStyle({ minHeight:70 })} value={d.usefulNotIntrusive || ""} onChange={set("usefulNotIntrusive")} placeholder="Optional. This stays private and is not included in any output." />)}</div></div>;
+}
+
+// ── Stage 2 — The people ───────────────────────────────────────────────────────
 function LEG1({ leg, setLegData }) {
   const d = leg.data || {};
   const v = (k) => d[k] || "";
   const set = (k) => (e) => setLegData({ [k]: e.target.value });
-  return <div><Head eyebrow="Legacy · Stage 1" title="The people" sub="Start with the people who make the operation work today and the family members whose interests may shape what comes next." /><div style={cardStyle()}><div style={cardLblStyle()}>The people</div>{legRow("Who is involved in the operation today, and what does each person do?", <textarea style={inputStyle({ minHeight:100 })} value={v("people")} onChange={set("people")} placeholder="Names, roles, rough ages. Include anyone whose absence would be felt." />)}{legRow("Who is off the farm but still part of the family picture?", <textarea style={inputStyle({ minHeight:80 })} value={v("offFarmPeople")} onChange={set("offFarmPeople")} placeholder="Off-farm children, siblings with an interest in the ground, anyone with an expectation." />, "These are the people most often left out and the most common source of trouble later.")}</div></div>;
+  return <div><Head eyebrow="Legacy · Stage 2" title="The people" sub="Start with the people who make the operation work today and the family members whose interests may shape what comes next." /><div style={cardStyle()}><div style={cardLblStyle()}>The people</div>{legRow("Who is involved in the operation today, and what does each person do?", <textarea style={inputStyle({ minHeight:100 })} value={v("people")} onChange={set("people")} placeholder="Names, roles, rough ages. Include anyone whose absence would be felt." />)}{legRow("Who is off the farm but still part of the family picture?", <textarea style={inputStyle({ minHeight:80 })} value={v("offFarmPeople")} onChange={set("offFarmPeople")} placeholder="Off-farm children, siblings with an interest in the ground, anyone with an expectation." />, "These are the people most often left out and the most common source of trouble later.")}</div></div>;
 }
 
 // ── Stage 2 — The successor question ────────────────────────────────���────────
@@ -4174,7 +4190,7 @@ function LEG2({ leg, setLegData }) {
   const d = leg.data || {};
   const v = (k) => d[k] || "";
   const set = (k) => (e) => setLegData({ [k]: e.target.value });
-  return <div><Head eyebrow="Legacy · Stage 2" title="The successor question" sub="There may be a clear successor, several possibilities, or no successor at all. Naming the reality is the useful first step." /><div style={cardStyle()}><div style={cardLblStyle()}>The successor question</div>{legRow("Is there an identified successor?", <select style={inputStyle()} value={v("successorStatus")} onChange={set("successorStatus")}><option value="">Select</option><option value="working">Yes, and they are already working in the business</option><option value="identified">Yes, identified but not yet involved day to day</option><option value="maybe">Maybe, more than one candidate or nobody has said it out loud</option><option value="none">No, there is no successor</option></select>)}{d.successorStatus === "none" && <><Flag type="info">No successor is a legitimate path, not a failure. It deserves the same rigour as a family transition.</Flag>{legRow("Which direction makes most sense to explore?", <select style={inputStyle()} value={v("noSuccessorPath")} onChange={set("noSuccessorPath")}><option value="">Select</option><option value="sale">Orderly sale of the operation</option><option value="lease">Lease the ground to a neighbouring operation</option><option value="employee">Transition to a non-family employee</option><option value="winddown">Planned wind-down over a set number of years</option><option value="unsure">Genuinely unsure, that is the question</option></select>)}</>}{d.successorStatus === "maybe" && <Flag type="warn">More than one candidate, or nobody having said it out loud, is a common starting point. Naming it is the work of the next few stages.</Flag>}</div></div>;
+  return <div><Head eyebrow="Legacy · Stage 3" title="The successor question" sub="There may be a clear successor, several possibilities, or no successor at all. Naming the reality is the useful first step." /><div style={cardStyle()}><div style={cardLblStyle()}>The successor question</div>{legRow("Is there an identified successor?", <select style={inputStyle()} value={v("successorStatus")} onChange={set("successorStatus")}><option value="">Select</option><option value="working">Yes, and they are already working in the business</option><option value="identified">Yes, identified but not yet involved day to day</option><option value="maybe">Maybe, more than one candidate or nobody has said it out loud</option><option value="none">No, there is no successor</option></select>)}{d.successorStatus === "none" && <><Flag type="info">No successor is a legitimate path, not a failure. It deserves the same rigour as a family transition.</Flag>{legRow("Which direction makes most sense to explore?", <select style={inputStyle()} value={v("noSuccessorPath")} onChange={set("noSuccessorPath")}><option value="">Select</option><option value="sale">Orderly sale of the operation</option><option value="lease">Lease the ground to a neighbouring operation</option><option value="employee">Transition to a non-family employee</option><option value="winddown">Planned wind-down over a set number of years</option><option value="unsure">Genuinely unsure, that is the question</option></select>)}</>}{d.successorStatus === "maybe" && <Flag type="warn">More than one candidate, or nobody having said it out loud, is a common starting point. Naming it is the work of the next few stages.</Flag>}</div></div>;
 }
 
 // ── Stage 3 — What exists on paper ───────────────────────────────────────────
@@ -4182,7 +4198,7 @@ function LEG3({ leg, setLegData }) {
   const d = leg.data || {};
   const v = (k) => d[k] || "";
   const set = (k) => (e) => setLegData({ [k]: e.target.value });
-  return <div><Head eyebrow="Legacy · Stage 3" title="What exists on paper" sub="A quick inventory of what is written down shows whether the next conversation starts with documents, assumptions, or a blank page." /><div style={cardStyle()}><div style={cardLblStyle()}>What exists on paper</div>{legRow("What is in writing today?", <textarea style={inputStyle({ minHeight:100 })} value={v("inWriting")} onChange={set("inWriting")} placeholder="Wills, trusts, operating agreements, buy-sell, leases, anything. If the answer is nothing, that is a common and useful answer." />)}{legRow("If you had to hand the whole thing over Monday morning, what would break first?", <textarea style={inputStyle({ minHeight:100 })} value={v("breakFirst")} onChange={set("breakFirst")} placeholder="Name the first decision, relationship, or process that would be exposed." />, "This question usually locates the real gap faster than anything else in the module.")}</div></div>;
+  return <div><Head eyebrow="Legacy · Stage 4" title="What exists on paper" sub="A quick inventory of what is written down shows whether the next conversation starts with documents, assumptions, or a blank page." /><div style={cardStyle()}><div style={cardLblStyle()}>What exists on paper</div>{legRow("What is in writing today?", <textarea style={inputStyle({ minHeight:100 })} value={v("inWriting")} onChange={set("inWriting")} placeholder="Wills, trusts, operating agreements, buy-sell, leases, anything. If the answer is nothing, that is a common and useful answer." />)}{legRow("If you had to hand the whole thing over Monday morning, what would break first?", <textarea style={inputStyle({ minHeight:100 })} value={v("breakFirst")} onChange={set("breakFirst")} placeholder="Name the first decision, relationship, or process that would be exposed." />, "This question usually locates the real gap faster than anything else in the module.")}</div></div>;
 }
 
 // ── Legacy compatibility: the original combined page is retained below for saved records. ──
@@ -4252,7 +4268,7 @@ function LEG4({ leg, setLegData }) {
   };
   return (
     <div>
-      <Head eyebrow="Legacy · Stage 2" title="The three transfers" sub="Labor, management, and ownership move independently. Farmers experience transition as one event, which is what creates the standoff. Separating them is most of the work." />
+      <Head eyebrow="Legacy · Stage 5" title="The three transfers" sub="Labor, management, and ownership move independently. Farmers experience transition as one event, which is what creates the standoff. Separating them is most of the work." />
       <Flag type="info">Zero means entirely senior generation. One hundred means entirely successor. Set where each one sits today, then where it should sit at each horizon.</Flag>
       {TRANSFERS.map(tr => (
         <div key={tr.id} style={cardStyle()}>
@@ -4315,7 +4331,7 @@ function LEG5({ leg, setLegData }) {
   const set = (k) => (e) => setLegData({ [k]: e.target.value });
   return (
     <div>
-      <Head eyebrow="Legacy · Stage 5" title="The next chapter" sub="Asked before anything financial, because this is where most plans actually stall. For many operators the farm is not what they do, it is who they are, and transition can read as erasure." />
+      <Head eyebrow="Legacy · Stage 6" title="The next chapter" sub="Asked before anything financial, because this is where most plans actually stall. For many operators the farm is not what they do, it is who they are, and transition can read as erasure." />
       <div style={cardStyle()}>
         <div style={cardLblStyle()}>For the senior generation</div>
         {legRow("What does your week look like in the first year after transition?",
@@ -4357,7 +4373,7 @@ function LEG6({ leg, setLegData, fa }) {
   const independent = n("seniorNonFarmIncome");
   return (
     <div>
-      <Head eyebrow="Legacy · Stage 4" title="Can the operation support two households?" sub="The financial question that governs everything else, and the honest answer is often no. Better to know that now than to discover it after the paperwork is signed." />
+      <Head eyebrow="Legacy · Stage 7" title="Can the operation support two households?" sub="The financial question that governs everything else, and the honest answer is often no. Better to know that now than to discover it after the paperwork is signed." />
       <FinancialHealthStrip fa={fa} />
       <div style={cardStyle()}>
         <div style={cardLblStyle()}>What each household needs</div>
@@ -4384,6 +4400,14 @@ function LEG6({ leg, setLegData, fa }) {
             : <Flag type="ok">On these numbers the operation covers both households with {fmt$(covered)} left over. Worth stress-testing against a bad year before treating it as settled.</Flag>}
         </div>
       )}
+      <div style={cardStyle({ borderTop:`4px solid ${T.amber}` })}>
+        <div style={cardLblStyle()}>Who has actually seen this</div>
+        <p style={{ fontSize:14.5, color:T.fgM, marginTop:0, lineHeight:1.65 }}>Knowing the number is half of it. The other half is whether the people affected by it can see how the business cash flows and pays its bills.</p>
+        {legRow("Who has seen the actual cash flow of this operation?", <select style={inputStyle()} value={d.cashflowSeen||""} onChange={e=>setLegData({ cashflowSeen:e.target.value })}><option value="">Select</option><option value="meOnly">Only me</option><option value="meSpouse">Me and my spouse</option><option value="successor">The successor has seen it</option><option value="all">Everyone with a stake has seen it</option></select>)}
+        {(d.cashflowSeen === "meOnly" || d.cashflowSeen === "meSpouse") && <Flag type="warn">The successor has not seen how the business actually cash flows. Asking someone to commit their working life to an operation whose finances they have never been shown is a common reason a successor quietly disengages.</Flag>}
+        {legRow("Could the successor explain how this business pays its bills?", <select style={inputStyle()} value={d.cashflowUnderstood||""} onChange={e=>setLegData({ cashflowUnderstood:e.target.value })}><option value="">Select</option><option value="no">No</option><option value="roughly">Roughly</option><option value="yes">Yes, in detail</option></select>, "Seeing the numbers and understanding them are different things.")}
+        {legRow("What is not transparent today that should be?", <textarea style={inputStyle({ minHeight:64 })} value={d.notTransparent||""} onChange={e=>setLegData({ notTransparent:e.target.value })} placeholder="Debt, draws, land payments, what the operation actually clears." />)}
+      </div>
       <div style={cardStyle()}>
         <div style={cardLblStyle()}>The two failure modes, named</div>
         <FindingBlock kind="t" tag="FAILURE MODE ONE" heading="The senior generation has no income independent of the operation" source={independent > 0 ? `You have recorded ${fmt$(independent)} of non-farm income` : "You have not recorded any non-farm income"}>
@@ -4423,7 +4447,7 @@ function LEG7({ leg, setLegData }) {
   const done = SUCCESSOR_EXPOSURE.length - gaps.length;
   return (
     <div>
-      <Head eyebrow="Legacy · Stage 5" title="Successor readiness" sub="An exposure checklist, not a competence judgement. The question is only whether they have done a thing yet, and every unchecked box is a specific decision to hand over this year." />
+      <Head eyebrow="Legacy · Stage 8" title="Successor readiness" sub="An exposure checklist, not a competence judgement. The question is only whether they have done a thing yet, and every unchecked box is a specific decision to hand over this year." />
       <Flag type="info">This is a curriculum, not a report card. The senior generation is being asked to hand over specific decisions, which is a much easier ask than handing over "management".</Flag>
       <div style={cardStyle()}>
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12, gap:12, flexWrap:"wrap" }}>
@@ -4460,6 +4484,12 @@ function LEG7({ leg, setLegData }) {
         {legRow("Which decision would you find hardest to hand over?",
           <textarea style={inputStyle({ minHeight:64 })} value={d.hardestToHand || ""} onChange={e=>setLegData({ hardestToHand:e.target.value })} placeholder="" />)}
       </div>
+      <div style={cardStyle({ borderTop:`4px solid ${T.red}` })}>
+        <div style={cardLblStyle()}>A private resentment check</div>
+        <p style={{ fontSize:13.5, color:T.fgM, lineHeight:1.6, marginTop:0 }}>Sometimes the readiness problem is not readiness. It is an old grievance, an unkept promise, or a feeling that the transfer is unfair. This answer is private and excluded from every output.</p>
+        {legRow("Is there something unresolved that could hold up a transfer even if the successor were ready?", <textarea style={inputStyle({ minHeight:90 })} value={d.privateResentment || ""} onChange={e=>setLegData({ privateResentment:e.target.value })} placeholder="Optional. Name it plainly, or skip it." />)}
+        {!!d.privateResentment?.trim() && <Flag type="warn">No amount of successor-readiness work will move a transfer that is actually held up by this. Keep it private, and bring it to the right conversation when you are ready.</Flag>}
+      </div>
     </div>
   );
 }
@@ -4472,7 +4502,7 @@ function LEG8({ leg, setLegData }) {
   const unvoiced = KNOWS_WHAT.filter(p => (k[p.id] === 0 || k[p.id] === 1));
   return (
     <div>
-      <Head eyebrow="Legacy · Stage 6" title="Who actually knows what" sub="The most common regret in farm succession is an assumption nobody voiced. One person assumed they would inherit the home place, the other assumed it would be bought, and neither asked for twenty years." />
+      <Head eyebrow="Legacy · Stage 9" title="Who actually knows what" sub="The most common regret in farm succession is an assumption nobody voiced. One person assumed they would inherit the home place, the other assumed it would be bought, and neither asked for twenty years." />
       <div style={cardStyle()}>
         <div style={cardLblStyle()}>Where each person actually stands</div>
         {KNOWS_WHAT.map(p => (
@@ -4543,7 +4573,7 @@ function LEG9({ leg, setLegData }) {
   const para = d.fairParagraph || "";
   return (
     <div>
-      <Head eyebrow="Legacy · Stage 7" title="Fair is not equal" sub="One heir farms and three do not. Land is both the family's wealth and the business's means of production, so dividing it equally destroys the thing everyone says they want to preserve." />
+      <Head eyebrow="Legacy · Stage 10" title="Fair is not equal" sub="One heir farms and three do not. Land is both the family's wealth and the business's means of production, so dividing it equally destroys the thing everyone says they want to preserve." />
       <div style={cardStyle()}>
         <div style={cardLblStyle()}>Approaches families use</div>
         <div style={{ fontSize:12.5, color:T.fgM, marginBottom:14 }}>Presented, not recommended. Mark any worth exploring. Which one fits is a question for your attorney and accountant.</div>
@@ -4586,7 +4616,7 @@ function LEG10({ leg, setLegData }) {
   const set = (id) => (e) => setLegData({ contingency:{ ...c, [id]: e.target.value } });
   return (
     <div>
-      <Head eyebrow="Legacy · Stage 8" title="Triggers and contingencies" sub="Plans without dates do not happen, and plans that only work if everyone stays healthy until seventy-five are not plans." />
+      <Head eyebrow="Legacy · Stage 11" title="Triggers and contingencies" sub="Plans without dates do not happen, and plans that only work if everyone stays healthy until seventy-five are not plans." />
       <div style={cardStyle()}>
         <div style={cardLblStyle()}>Target dates</div>
         <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16 }}>
@@ -4619,7 +4649,7 @@ function LEG11({ leg, setLegData }) {
   const notMet = ll.filter(x => x.name && x.met === "no");
   return (
     <div>
-      <Head eyebrow="Legacy · Stage 9" title="Rented ground and relationships" sub="If a meaningful share of the operation is rented, its viability rests on leases and relationships that do not transfer automatically. They are personal, often built over decades, and a successor who has never met the landlords can lose the acres." />
+      <Head eyebrow="Legacy · Stage 12" title="Rented ground and relationships" sub="If a meaningful share of the operation is rented, its viability rests on leases and relationships that do not transfer automatically. They are personal, often built over decades, and a successor who has never met the landlords can lose the acres." />
       <div style={cardStyle()}>
         {legRow("Roughly what share of the operation is rented ground?",
           <select style={inputStyle()} value={d.rentedShare||""} onChange={e=>setLegData({ rentedShare:e.target.value })}>
@@ -4706,7 +4736,7 @@ function LEG12({ leg, setLegData, profile }) {
 
   return (
     <div>
-      <Head eyebrow="Legacy · Stage 11" title="Parcels and land valuation" sub="A value for every parcel the family owns. That number flows into estate size, buy-sell funding, insurance sizing, and the equalisation maths between heirs, so if it is wrong everything downstream is wrong." />
+      <Head eyebrow="Legacy · Stage 13" title="Parcels and land valuation" sub="A value for every parcel the family owns. That number flows into estate size, buy-sell funding, insurance sizing, and the equalisation maths between heirs, so if it is wrong everything downstream is wrong." />
 
       {!ready && (
         <Flag type="warn">The readiness stages put this family at {READINESS_TIERS[tierKey].label.toLowerCase()}. You can value parcels here, but the numbers will sit in front of decisions that have not been made yet. {READINESS_TIERS[tierKey].rec}</Flag>
@@ -5220,7 +5250,7 @@ function LEG13({ leg, profile }) {
 
   return (
     <div>
-      <Head eyebrow="Legacy · Stage 10" title="Where this leaves you" sub="Not a plan. A readiness profile, and a sequenced list of what to actually do next." />
+      <Head eyebrow="Legacy · Stage 14" title="Where this leaves you" sub="Not a plan. A readiness profile, and a sequenced list of what to actually do next." />
 
       <div style={cardStyle({ borderTop:`4px solid ${tierKey==="execution"?T.moss:tierKey==="conversation"?T.red:T.amber}` })}>
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", gap:12, flexWrap:"wrap", marginBottom:10 }}>
@@ -5282,6 +5312,13 @@ function LEG13({ leg, profile }) {
             {notMet.map((x,i) => <li key={i}>{x.name}{x.acres?` · ${x.acres} acres`:""}</li>)}
           </ul>
         </>)}
+      </div>
+
+      <div style={cardStyle({ borderTop:`4px solid ${T.blue}` })}>
+        <div style={cardLblStyle()}>People and business: where plans stall</div>
+        <p style={{ fontSize:14, color:T.fgM, lineHeight:1.6, marginTop:0 }}>In a typical transition conversation, most of the work is about people. The business side is largely arithmetic; the people side is where plans stall.</p>
+        <div style={{ display:"flex", height:18, borderRadius:5, overflow:"hidden", margin:"14px 0 7px" }}><div style={{ width:"80%", background:T.blue }} /><div style={{ width:"20%", background:T.moss }} /></div>
+        <div style={{ display:"flex", justifyContent:"space-between", color:T.fgS, fontSize:11.5 }}><span>8 of 10 questions: people</span><span>2 of 10: business</span></div>
       </div>
 
       <div style={cardStyle({ borderTop:`4px solid ${ready?T.moss:T.silver}` })}>
@@ -6502,6 +6539,7 @@ else if (isRD) { if (rd.stage<rdTotal) goRD(rd.stage+1); else goLegacy(1); }
   const riskConvoActive = isRisk && riskConvo;
   const legCompareActive = isLeg && legRole === "compare";
   const LEG_BODY = [
+  <LEG0 leg={leg} setLegData={setLegData} />,
   <LEG1 leg={leg} setLegData={setLegData} />, <LEG2 leg={leg} setLegData={setLegData} />,
   <LEG3 leg={leg} setLegData={setLegData} />, <LEG4 leg={leg} setLegData={setLegData} />,
   <LEG5 leg={leg} setLegData={setLegData} />, <LEG6 leg={leg} setLegData={setLegData} fa={fa} />,
