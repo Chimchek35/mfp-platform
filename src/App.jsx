@@ -211,6 +211,26 @@ const ENT = {
     { key:"tc", label:"Total cost per cow", unit:"$/cow", strong:"< $600", watch:"$600–1,046", vuln:"> $1,046", sv:600, vv:1046, lb:true },
     { key:"dscr", label:"Debt service coverage", unit:"x", strong:"> 1.25x", watch:"1.0–1.25x", vuln:"< 1.0x", sv:1.25, vv:1.0, lb:false },
   ]},
+  hogs: { label:"Hogs", sub:"Swine production", ratios:[
+    { key:"nrph", label:"Net return per hog", unit:"$/hog", strong:"> $25", watch:"$10–25", vuln:"< $10", sv:25, vv:10, lb:false },
+    { key:"tcph", label:"Total cost per hog", unit:"$/hog", strong:"< $150", watch:"$150–175", vuln:"> $175", sv:150, vv:175, lb:true },
+    { key:"dscr", label:"Debt service coverage", unit:"x", strong:"> 1.25x", watch:"1.0–1.25x", vuln:"< 1.0x", sv:1.25, vv:1.0, lb:false },
+  ]},
+  perennials: { label:"Perennials", sub:"Orchard · vineyard · agroforestry", ratios:[
+    { key:"nrpa", label:"Net return per acre", unit:"$/ac", strong:"> $500", watch:"$200–500", vuln:"< $200", sv:500, vv:200, lb:false },
+    { key:"establishment", label:"Establishment cost per acre", unit:"$/ac", strong:"< $5,000", watch:"$5,000–10,000", vuln:"> $10,000", sv:5000, vv:10000, lb:true },
+    { key:"dscr", label:"Debt service coverage", unit:"x", strong:"> 1.25x", watch:"1.0–1.25x", vuln:"< 1.0x", sv:1.25, vv:1.0, lb:false },
+  ]},
+  produce: { label:"Produce", sub:"Vegetables · specialty crops", ratios:[
+    { key:"nrpa", label:"Net return per acre", unit:"$/ac", strong:"> $2,000", watch:"$750–2,000", vuln:"< $750", sv:2000, vv:750, lb:false },
+    { key:"laborpa", label:"Labor cost per acre", unit:"$/ac", strong:"< $2,500", watch:"$2,500–4,000", vuln:"> $4,000", sv:2500, vv:4000, lb:true },
+    { key:"dscr", label:"Debt service coverage", unit:"x", strong:"> 1.25x", watch:"1.0–1.25x", vuln:"< 1.0x", sv:1.25, vv:1.0, lb:false },
+  ]},
+  other: { label:"Other", sub:"Custom or mixed enterprise", ratios:[
+    { key:"oer", label:"Operating expense ratio", unit:"%", strong:"< 70%", watch:"70–80%", vuln:"> 80%", sv:70, vv:80, lb:true },
+    { key:"nrpa", label:"Net return per acre", unit:"$/ac", strong:"> $150", watch:"$50–150", vuln:"< $50", sv:150, vv:50, lb:false },
+    { key:"dscr", label:"Debt service coverage", unit:"x", strong:"> 1.25x", watch:"1.0–1.25x", vuln:"< 1.0x", sv:1.25, vv:1.0, lb:false },
+  ]},
 };
 
 // Each opportunity now carries: cluster (5-cluster taxonomy), growthTier (1=fastest
@@ -3186,7 +3206,7 @@ function EfficiencyValueImpact({ sel, lev }) {
 // onboarding and assessments, and feeds relevant fields back into FA, RD, and Risk
 // so nothing has to be entered twice.
 // ═════════════════════════════════════════════════════════════════════════════
-const ENT_KEYWORDS = { grain:["corn","soy","soybean","wheat","grain","oats"], dairy:["dairy","milk"], beef:["cattle","beef","cow-calf","cow calf"] };
+const ENT_KEYWORDS = { grain:["corn","soy","soybean","wheat","grain","oats"], dairy:["dairy","milk"], beef:["cattle","beef","cow-calf","cow calf"], hogs:["hog","hogs","swine","pork"], perennials:["perennial","orchard","vineyard","agroforestry"], produce:["produce","vegetable","vegetables","market garden"], other:["other","mixed enterprise"] };
 const matchEnterprisesFromText = (text) => {
   const t = (text||"").toLowerCase();
   return Object.entries(ENT_KEYWORDS).filter(([,kws]) => kws.some(k=>t.includes(k))).map(([id])=>id);
@@ -4149,7 +4169,7 @@ function LEG1({ leg, setLegData }) {
   return <div><Head eyebrow="Legacy · Stage 1" title="The people" sub="Start with the people who make the operation work today and the family members whose interests may shape what comes next." /><div style={cardStyle()}><div style={cardLblStyle()}>The people</div>{legRow("Who is involved in the operation today, and what does each person do?", <textarea style={inputStyle({ minHeight:100 })} value={v("people")} onChange={set("people")} placeholder="Names, roles, rough ages. Include anyone whose absence would be felt." />)}{legRow("Who is off the farm but still part of the family picture?", <textarea style={inputStyle({ minHeight:80 })} value={v("offFarmPeople")} onChange={set("offFarmPeople")} placeholder="Off-farm children, siblings with an interest in the ground, anyone with an expectation." />, "These are the people most often left out and the most common source of trouble later.")}</div></div>;
 }
 
-// ── Stage 2 — The successor question ────────────────────────────────��────────
+// ── Stage 2 — The successor question ────────────────────────────────���────────
 function LEG2({ leg, setLegData }) {
   const d = leg.data || {};
   const v = (k) => d[k] || "";
