@@ -32,22 +32,23 @@ function LiveCommodityPrices() {
   const [prices, setPrices] = useState([]);
   const [status, setStatus] = useState("loading");
   const [message, setMessage] = useState("");
-
-  useEffect(() => {
-    let active = true;
-    fetch("/api/market-prices")
+  const [refreshing, setRefreshing] = useState(false);
+  const loadPrices = () => {
+    setRefreshing(true);
+    return fetch("/api/market-prices")
       .then(async (response) => {
         const data = await response.json().catch(() => ({}));
         if (!response.ok) throw new Error(data.message || "Market feed unavailable");
         return data;
       })
-      .then((data) => { if (active) { setPrices(data.prices || []); setStatus(data.status || "live"); setMessage(data.message || ""); } })
-      .catch((error) => { if (active) { setPrices([]); setStatus(error.message.includes("API key") ? "authentication_error" : "unavailable"); setMessage(error.message); } });
-    return () => { active = false; };
-  }, []);
+      .then((data) => { setPrices(data.prices || []); setStatus(data.status || "live"); setMessage(data.message || ""); })
+      .catch((error) => { setStatus(error.message.includes("API key") ? "authentication_error" : "unavailable"); setMessage(error.message); })
+      .finally(() => setRefreshing(false));
+  };
+  useEffect(() => { loadPrices(); }, []);
 
   return <section style={{ marginTop: 24, background: "#fff", border: "1px solid #d5e0ea", borderRadius: 12, padding: 22 }}>
-    <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "baseline", flexWrap: "wrap" }}><div style={{ color: "#0c4477", fontSize: 12, fontWeight: 800, letterSpacing: ".1em" }}>CURRENT COMMODITY PRICES</div><span style={{ color: status === "live" ? "#47705d" : "#a15c00", fontSize: 12, fontWeight: 800 }}>{status === "live" ? "LIVE USDA AMS FEED" : status === "loading" ? "CONNECTING TO USDA AMS" : status === "authentication_error" ? "USDA KEY REJECTED" : "FEED UNAVAILABLE"}</span></div>
+    <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center", flexWrap: "wrap" }}><div style={{ color: "#0c4477", fontSize: 12, fontWeight: 800, letterSpacing: ".1em" }}>CURRENT COMMODITY PRICES</div><div style={{ display: "flex", alignItems: "center", gap: 12 }}><span style={{ color: status === "live" ? "#47705d" : status === "stale" ? "#a15c00" : "#a15c00", fontSize: 12, fontWeight: 800 }}>{status === "live" ? "LIVE USDA AMS FEED" : status === "stale" ? "STALE · LAST VERIFIED VALUES" : status === "loading" ? "CONNECTING TO USDA AMS" : status === "authentication_error" ? "USDA KEY REJECTED" : "FEED UNAVAILABLE"}</span><button type="button" onClick={loadPrices} disabled={refreshing} style={{ border: "1px solid #c7d0d8", borderRadius: 7, background: "#fff", color: "#0c4477", padding: "6px 10px", fontSize: 12, fontWeight: 700, cursor: refreshing ? "wait" : "pointer" }}>{refreshing ? "Refreshing…" : "Refresh"}</button></div></div>
     <p style={{ color: "#53657a", lineHeight: 1.6, margin: "7px 0 16px" }}>The latest verified market values Eagle Eye uses when deciding whether to update your farmer impact.</p>
     {message && <p role="status" style={{ color: status === "authentication_error" ? "#b42318" : "#a15c00", background: "#fff8ed", border: "1px solid #f0d5a8", borderRadius: 8, padding: "10px 12px", margin: "0 0 16px", fontSize: 13, lineHeight: 1.5 }}>{message}</p>}
     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(190px,1fr))", gap: 12 }}>{(prices.length ? prices : [{ commodity: "Corn", value: status === "loading" ? "Connecting…" : status === "authentication_error" ? "USDA key rejected" : "Unavailable", unit: "USDA AMS" }, { commodity: "Soybeans", value: status === "loading" ? "Connecting…" : status === "authentication_error" ? "USDA key rejected" : "Unavailable", unit: "USDA AMS" }, { commodity: "Cattle", value: status === "loading" ? "Connecting…" : status === "authentication_error" ? "USDA key rejected" : "Unavailable", unit: "USDA AMS" }]).map((price) => <article key={price.commodity} style={{ background: "#f9fbfd", border: "1px solid #dfe8f0", borderRadius: 10, padding: 15 }}><div style={{ color: "#53657a", fontSize: 13, fontWeight: 700 }}>{price.commodity}</div><div style={{ color: "#17233d", fontSize: 24, fontWeight: 800, marginTop: 5 }}>{price.value}</div><div style={{ color: "#718096", fontSize: 12, marginTop: 4 }}>{price.unit} · {price.asOf || "Latest report"}</div></article>)}</div>
