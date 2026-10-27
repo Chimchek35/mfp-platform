@@ -2547,7 +2547,7 @@ function RD2({ rd, setRData }) {
   );
 }
 
-// ──────────────���──────────────────────────���───────────────────────────────────
+// ──────────────���──────────────────────────────────────────────────────────────
 // RD STAGE 3 — Human capital, assets & financial capital
 // ─────────────────────────────────────────────────────────────────────────────
 function RD3({ rd, setRData }) {
@@ -3212,23 +3212,6 @@ const FIND_COLOR = {
   neutral:{ b:T.silver, bg:"#eceef2", c:T.fgS },
 };
 
-const FarmProfileCarousel = ({ profile, set }) => {
-  const [active, setActive] = useState(0);
-  const cards = [
-    { title:"SWOT analysis", accent:T.blue, body:"Strengths and weaknesses are internal. Opportunities and threats are external. Capture the farm’s own read before making a plan.", fields:["swotStrengths","swotWeaknesses","swotOpportunities","swotThreats"] },
-    { title:"Strategy & values", accent:T.moss, body:"What the operation is trying to become, and what it will not trade away to get there. These answers set the filter for diversification and risk decisions.", fields:["nearTerm","longTerm","advantage","values"] },
-    { title:"Whole-farm financial health", accent:T.green, body:"A whole-farm view connects liquidity, solvency, growth, and efficiency so one strong number cannot hide a weak one.", fields:[] },
-  ];
-  useEffect(() => { const timer = window.setInterval(() => setActive((current) => (current + 1) % cards.length), 5000); return () => window.clearInterval(timer); }, []);
-  const card = cards[active];
-  const labels = { swotStrengths:"Strengths", swotWeaknesses:"Weaknesses", swotOpportunities:"Opportunities", swotThreats:"Threats", nearTerm:"Near-term objectives", longTerm:"Long-term direction", advantage:"Competitive advantage", values:"Core values" };
-  return <div style={cardStyle({ borderTop:`4px solid ${card.accent}` })}>
-    <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", gap:12, marginBottom:10 }}><div style={cardLblStyle({ marginBottom:0 })}>Farm profile lens</div><span style={{ fontSize:11.5, color:T.fgS }}>{active + 1} of 3</span></div>
-    <div style={{ overflow:"hidden" }}><div key={card.title} style={{ animation:"eagleEyeSlideIn .35s ease-out" }}><h3 style={{ color:T.navy, fontSize:22, margin:"0 0 6px" }}>{card.title}</h3><p style={{ color:T.fgM, fontSize:13, lineHeight:1.55, margin:"0 0 15px" }}>{card.body}</p>{active < 2 ? <div style={{ display:"grid", gridTemplateColumns:"repeat(2, minmax(0,1fr))", gap:10 }}>{card.fields.map((field) => <div key={field} style={{ background:T.bgAlt, borderRadius:8, padding:"10px 12px" }}><div style={{ color:T.fgS, fontSize:10.5, fontWeight:700, textTransform:"uppercase", letterSpacing:".05em", marginBottom:5 }}>{labels[field]}</div><textarea style={inputStyle({ minHeight:54, border:"none", background:"transparent", padding:0, fontSize:13, color:T.fgM, resize:"vertical", lineHeight:1.5 })} value={profile[field] || ""} onChange={set(field)} placeholder="Add what is true for this operation" /></div>)}</div> : <div style={{ background:T.bgAlt, borderRadius:8, padding:"14px 16px", color:T.fgM, fontSize:13, lineHeight:1.6 }}>Financial health is pulled live from Financial Analysis below. Complete the financial data there to see liquidity, solvency, sustainable growth, and efficiency.</div>}</div></div>
-    <div role="tablist" aria-label="Farm profile sections" style={{ display:"flex", justifyContent:"center", gap:7, marginTop:18 }}>{cards.map((item,index)=><button key={item.title} type="button" role="tab" aria-selected={active===index} aria-label={`Show ${item.title}`} onClick={()=>setActive(index)} style={{ width:7, height:7, minWidth:7, minHeight:7, maxWidth:7, maxHeight:7, padding:0, border:0, borderRadius:"50%", background:active===index?T.navy:"#c7d0d8", cursor:"pointer" }} />)}</div>
-  </div>;
-};
-
 const FindingBlock = ({ kind, tag, heading, source, children }) => {
   const fc = FIND_COLOR[kind] || FIND_COLOR.none;
   return (
@@ -3571,9 +3554,6 @@ function FarmProfilePage({ profile, setProfile, fa, rd, goFA, goRD, goRisk, goLe
         </div>
       </div>
 
-      <FarmProfileCarousel profile={profile} set={set} />
-
-      {false && <>
       <div style={cardStyle()}>
         <div style={cardLblStyle()}>SWOT analysis</div>
         <div style={{ fontSize:12.5, color:T.fgM, marginBottom:16, lineHeight:1.55 }}>Strengths and weaknesses are internal, what is already true about the operation. Opportunities and threats are external, what is happening around it. Every line below is editable and meant to be replaced with this operation's own read.</div>
@@ -3634,8 +3614,6 @@ function FarmProfilePage({ profile, setProfile, fa, rd, goFA, goRD, goRisk, goLe
           <div style={{ fontSize:13.5, fontStyle:"italic", color:T.fgS }}>Not scored yet. Complete the financial data in Financial Analysis to see liquidity, solvency, sustainable growth and efficiency here.</div>
         )}
       </div>
-
-      </>}
 
       <div style={cardStyle({ borderTop:`4px solid ${T.blue}` })}>
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12, gap:12, flexWrap:"wrap" }}>
@@ -4171,7 +4149,7 @@ function LEG1({ leg, setLegData }) {
   return <div><Head eyebrow="Legacy · Stage 1" title="The people" sub="Start with the people who make the operation work today and the family members whose interests may shape what comes next." /><div style={cardStyle()}><div style={cardLblStyle()}>The people</div>{legRow("Who is involved in the operation today, and what does each person do?", <textarea style={inputStyle({ minHeight:100 })} value={v("people")} onChange={set("people")} placeholder="Names, roles, rough ages. Include anyone whose absence would be felt." />)}{legRow("Who is off the farm but still part of the family picture?", <textarea style={inputStyle({ minHeight:80 })} value={v("offFarmPeople")} onChange={set("offFarmPeople")} placeholder="Off-farm children, siblings with an interest in the ground, anyone with an expectation." />, "These are the people most often left out and the most common source of trouble later.")}</div></div>;
 }
 
-// ── Stage 2 — The successor question ────────────────────────────────���────────
+// ── Stage 2 — The successor question ────────────────────────────────��────────
 function LEG2({ leg, setLegData }) {
   const d = leg.data || {};
   const v = (k) => d[k] || "";
@@ -5586,7 +5564,7 @@ function VIS1({ vis, setVis, profile, goProfile }) {
   );
 }
 
-// ── Vision 3 — What it has cost you ───────────────���──────────────────────────
+// ── Vision 3 — What it has cost you ──────────────────────────────────────────
 function VIS3({ vis, setVis }) {
   const values = (vis.items||[]).filter(i => i.kind === "value" && i.text);
   const setTest = (id, val) => setVis({ items: (vis.items||[]).map(i => i.id===id ? { ...i, tests:{ ...(i.tests||{}), cost:val } } : i) });
