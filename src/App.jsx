@@ -164,9 +164,36 @@ const Head = ({ eyebrow, title, sub }) => (
 // DATA
 // ─────────────────────────────────────────────────────────────────────────────
 const FA_STAGES = [
-  { n:1, label:"Enterprise dashboard" }, { n:2, label:"Goal alignment" }, { n:3, label:"Ratio deep dive" },
-  { n:4, label:"Peer benchmarking" },
+  { n:1, label:"Your accounting profile" }, { n:2, label:"Enterprise dashboard" }, { n:3, label:"Goal alignment" }, { n:4, label:"Ratio deep dive" },
+  { n:5, label:"Peer benchmarking" },
 ];
+
+const BOOK_PREPARER = [
+  ["self", "I do it myself"], ["family", "My spouse or a family member"], ["bookkeeper", "A bookkeeper we employ"],
+  ["accountant", "Our accountant does the whole thing"], ["service", "A farm business management service"],
+];
+const BOOK_SYSTEM = [
+  ["paper", "Paper, a shoebox, or the checkbook register"], ["sheet", "A spreadsheet I maintain"],
+  ["generic", "QuickBooks, Quicken, or similar"], ["farm", "Farm-specific software"], ["service", "Handled entirely by an outside service"],
+];
+
+function FA0({ fa, setFA }) {
+  const p = fa.accounting || {};
+  const set = (key, value) => setFA(s => ({ ...s, accounting:{ ...(s.accounting||{}), [key]:value } }));
+  const Option = ({ group, value, children }) => <button type="button" onClick={() => set(group, value)} style={{ display:"block", width:"100%", padding:"13px 15px", marginBottom:8, textAlign:"left", borderRadius:8, border:p[group]===value?`2px solid ${T.blue}`:`1px solid ${T.border}`, background:p[group]===value?T.blueL:"#fff", color:p[group]===value?T.blue:T.navy, cursor:"pointer", fontSize:14, fontWeight:600 }}>{children}</button>;
+  return <div>
+    <Head eyebrow="Financial Analysis · Stage 1" title="Start with how you keep the books" sub="Every farm tracks costs differently. We will first establish what your numbers mean, so the analysis does not compare apples to oranges or mistake tax timing for business performance." />
+    <div style={cardStyle()}><div style={cardLblStyle()}>What accounting basis do you use?</div>
+      <Option group="basis" value="cash">Cash basis — I mostly track money when it moves</Option>
+      <Option group="basis" value="accrual">Accrual basis — revenue and expenses are matched to the year earned</Option>
+      <Option group="basis" value="mixed">A mixture — some parts are accrual, others are cash</Option>
+      <div style={{ marginTop:12, color:T.fgS, fontSize:12.5, lineHeight:1.5 }}>Not sure? Choose cash basis. The next stages will show which adjustments matter and let you use estimates.</div>
+    </div>
+    <div style={cardStyle()}><div style={cardLblStyle()}>Who prepares your financial records?</div>{BOOK_PREPARER.map(([id,label])=><Option key={id} group="preparer" value={id}>{label}</Option>)}</div>
+    <div style={cardStyle()}><div style={cardLblStyle()}>Where do you keep the records?</div>{BOOK_SYSTEM.map(([id,label])=><Option key={id} group="system" value={id}>{label}</Option>)}</div>
+    <div style={cardStyle({ background:T.blueL, borderColor:"#c8d9e8" })}><div style={{ display:"flex", gap:10, alignItems:"flex-start" }}><IconChart color={T.blue} size={20} /><div><div style={{ fontWeight:700, color:T.navy }}>Why this comes first</div><div style={{ color:T.fgM, fontSize:13, lineHeight:1.5, marginTop:3 }}>Tax records can be perfectly correct and still be the wrong starting point for enterprise profitability. Your answers determine which ratios can be compared confidently and where we should ask for a balance-sheet adjustment.</div></div></div></div>
+  </div>;
+}
 const RD_STAGES = [
   { n:1, label:"Baseline & readiness" }, { n:2, label:"Goal alignment" }, { n:3, label:"Human capital, assets & financial capital" },
   { n:4, label:"Opportunity mapping" }, { n:5, label:"Barrier identification" }, { n:6, label:"Policy & grant enablers" },
@@ -371,7 +398,7 @@ function FA1({ fa, setFA }) {
   const toggle = (k) => setFA(s => ({ ...s, enterprises: s.enterprises.includes(k) ? s.enterprises.filter(x=>x!==k) : [...s.enterprises, k] }));
   return (
     <div>
-      <Head eyebrow="Financial Analysis · Stage 1" title="Enterprise dashboard" sub="Select the enterprises you operate. Each one gets its own ratio scorecard, and this profile flows into the Revenue Diversification module." />
+      <Head eyebrow="Financial Analysis · Stage 2" title="Enterprise dashboard" sub="Select the enterprises you operate. Each one gets its own ratio scorecard, and this profile flows into the Revenue Diversification module." />
       <div style={cardStyle()}>
         <div style={cardLblStyle()}>Select your enterprises</div>
         <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:12 }}>
@@ -443,7 +470,7 @@ function FA2({ fa, setFA }) {
   const optSty = (on) => ({ padding:"13px 15px", borderRadius:8, border:on?`2px solid ${T.blue}`:`1px solid ${T.border}`, cursor:"pointer", background:on?T.blueL:"#fff", marginBottom:8, transition:"all .12s" });
   return (
     <div>
-      <Head eyebrow="Financial Analysis · Stage 2" title="Goal alignment" sub="These answers shape your ratio deep dive, action plan, and what carries into the Revenue Diversification module." />
+      <Head eyebrow="Financial Analysis · Stage 3" title="Goal alignment" sub="These answers shape your ratio deep dive, action plan, and what carries into the Revenue Diversification module." />
       {Qs.map(q => (
         <div key={q.key} style={cardStyle()}>
           <div style={cardLblStyle()}>{q.title}</div>
@@ -720,7 +747,7 @@ function FA3({ fa, setFA }) {
   ];
   return (
     <div>
-      <Head eyebrow="Financial Analysis · Stage 3" title="Ratio deep dive" sub="Enter your financial data — from your MFP Financial Data Worksheet, your own records, or your best estimate. Ratios calculate automatically as you type." />
+      <Head eyebrow="Financial Analysis · Stage 4" title="Ratio deep dive" sub="Enter your financial data — from your MFP Financial Data Worksheet, your own records, or your best estimate. Ratios calculate automatically as you type." />
       <DocumentScanUpload fa={fa} setFA={setFA} />
       <div style={cardStyle()}>
         <div style={cardLblStyle()}>Financial data</div>
@@ -825,7 +852,7 @@ function FA4({ fa, setFA }) {
   const unitSuf = bb => bb.unit==="%"?"%":bb.unit==="x"?"x":"";
   return (
     <div>
-      <Head eyebrow="Financial Analysis · Stage 4" title="Peer benchmarking" sub="Compeer Financial and IFBA 2023–24 data. Mid-size row crop, $500K–$5M revenue, Midwest region." />
+      <Head eyebrow="Financial Analysis · Stage 5" title="Peer benchmarking" sub="Compeer Financial and IFBA 2023–24 data. Mid-size row crop, $500K–$5M revenue, Midwest region." />
       <div style={cardStyle()}>
         <div style={cardLblStyle()}>Enter your values</div>
         <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:14 }}>
@@ -2637,7 +2664,7 @@ function RD3({ rd, setRData }) {
 
 // ───────────────────────────────────���─────���───���────���──────────────────────────
 // RD STAGE 4 — Opportunity mapping
-// ────��────────────────────────────────────────────────────────────────────────
+// ────���────────────────────────────────────────────────────────────────────────
 const GROWTH_TIER_LABEL = { 1:"Tier 1 · Fastest structural growth", 2:"Tier 2 · Strong growth", 3:"Tier 3 · Steady & selective" };
 const GROWTH_TIER_COLOR = { 1:T.dgreen, 2:T.blue, 3:T.tan };
 
@@ -6388,7 +6415,7 @@ export default function App() {
   const [savedAt, setSavedAt] = useState(null);
   const [storageOk] = useState(() => storageAvailable());
   const [schemaWarn, setSchemaWarn] = useState(false);
-  const [fa, setFA] = useState({ stage:1, enterprises:[], goals:{}, wholeFarm:{}, ratioVals:{}, s3vals:{ ...GENERIC_FARM_FINANCIALS }, s4bench:{}, s5:{}, actionChecked:{} });
+  const [fa, setFA] = useState({ stage:1, accounting:{}, enterprises:[], goals:{}, wholeFarm:{}, ratioVals:{}, s3vals:{ ...GENERIC_FARM_FINANCIALS }, s4bench:{}, s5:{}, actionChecked:{} });
   const [rd, setRD] = useState({ stage:1, data:{} });
   const [risk, setRisk] = useState({ stage:1, answers:{} });
   const [leg, setLeg] = useState({ stage:1, data:{}, succ:{}, role:"senior" });
@@ -6430,7 +6457,7 @@ export default function App() {
 
   const applyRecord = (rec) => {
     setProfile(rec.profile || {});
-    setFA(rec.fa || { stage:1, enterprises:[], goals:{}, wholeFarm:{}, ratioVals:{}, s3vals:{}, s4bench:{}, s5:{}, actionChecked:{} });
+    setFA(rec.fa || { stage:1, accounting:{}, enterprises:[], goals:{}, wholeFarm:{}, ratioVals:{}, s3vals:{}, s4bench:{}, s5:{}, actionChecked:{} });
     setRD(rec.rd || { stage:1, data:{} });
     setRisk(rec.risk || { stage:1, answers:{} });
     setLeg(rec.leg || { stage:1, data:{}, succ:{}, role:"senior" });
@@ -6475,7 +6502,7 @@ export default function App() {
   const pct = isFA ? faPct : isRD ? rdPct : isLeg ? legPct : isVis ? visPct : riskPct;
 
   const canAdvance = useMemo(() => {
-    if (isFA) { if (fa.stage===1) return fa.enterprises.length>0; if (fa.stage===2) { const g=fa.goals; return !!(g.trigger&&g.concern&&g.outcome); } return true; }
+    if (isFA) { if (fa.stage===1) { const a=fa.accounting||{}; return !!(a.basis&&a.preparer&&a.system); } if (fa.stage===2) return fa.enterprises.length>0; if (fa.stage===3) { const g=fa.goals; return !!(g.trigger&&g.concern&&g.outcome); } return true; }
     if (isRD) { const d = rd.data, g = d.goals2||{}, leverItems = d.leverItems||{}, b = d.baseline||{}, sel = d.selectedOpps||[];
       if (rd.stage===1) return !!(b.farmType&&b.revTier); if (rd.stage===2) return !!(g.trigger&&g.horizon&&g.capitalAppetite&&g.timeAppetite); if (rd.stage===3) return Object.keys(leverItems).length>0; if (rd.stage===4) return sel.length>0; return true; }
     return true;
@@ -6519,8 +6546,8 @@ else if (isRD) { if (rd.stage<rdTotal) goRD(rd.stage+1); else goLegacy(1); }
   if (isLeg && leg.stage===legTotal) nextLabel = "Farm Risk →";
   if (isRisk && risk.stage===riskTotal) nextLabel = "Start over ↺";
 
-  const FA_BODY = [
-    <FA1 fa={fa} setFA={setFA} />, <FA2 fa={fa} setFA={setFA} />, <FA3 fa={fa} setFA={setFA} />,
+const FA_BODY = [
+  <FA0 fa={fa} setFA={setFA} />, <FA1 fa={fa} setFA={setFA} />, <FA2 fa={fa} setFA={setFA} />, <FA3 fa={fa} setFA={setFA} />,
     <FA4 fa={fa} setFA={setFA} />,
   ];
   const RD_BODY = [
