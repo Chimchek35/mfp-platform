@@ -484,6 +484,28 @@ function FA1({ fa, setFA }) {
   );
 }
 
+const FINANCIAL_ENT_KINDS = [
+  ["grain", "Crop / grain", "acres"], ["forage", "Hay / forage", "acres"], ["specialty", "Vegetable / specialty", "acres"], ["perennial", "Orchard / vineyard / berries", "acres"],
+  ["beef", "Beef cattle", "head"], ["dairy", "Dairy", "head"], ["swine", "Swine", "head"], ["poultry", "Poultry", "birds"],
+  ["service", "Custom work / service", "hours"], ["storage", "Storage / facility", "units"], ["land", "Land lease out", "acres"], ["other", "Something else", "units"],
+];
+const FINANCIAL_TRACKING = [["none","Not separated at all"],["revOnly","Revenue only"],["partial","Revenue and direct costs"],["full","Full profit and loss"]];
+const FINANCIAL_ALLOCATIONS = [["acres","Per acre"],["hours","Machine hours"],["labor","Labor hours"],["head","Per head or unit"],["revenue","Share of revenue"],["custom","A split I set myself"],["none","Leave unallocated"]];
+function FA1Registry({ fa, setFA }) {
+  const ent = fa.ent || { list:[], allocations:{} };
+  const list = ent.list || [];
+  const update = (patch) => setFA(s => ({ ...s, ent:{ ...(s.ent||{}), ...patch } }));
+  const add = (kind="other") => { const [,label,unit]=FINANCIAL_ENT_KINDS.find(x=>x[0]===kind)||FINANCIAL_ENT_KINDS[FINANCIAL_ENT_KINDS.length-1]; update({ list:[...list,{ id:`ent-${Date.now()}`, name:label, kind, unit, tracking:"none" }] }); };
+  const setRow = (id, patch) => update({ list:list.map(e=>e.id===id?{...e,...patch}:e) });
+  return <div>
+    <Head eyebrow="Financial Analysis · Stage 2" title="Define the enterprises and shared costs" sub="Your operation does not have to fit a fixed list. Name each enterprise you want to understand, say how well you track it today, then choose how shared expenses should be allocated." />
+    <div style={cardStyle()}><div style={cardLblStyle()}>Add your enterprises</div><div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>{FINANCIAL_ENT_KINDS.map(([id,label])=><button key={id} type="button" onClick={()=>add(id)} style={btnStyle("outline")}>+ {label}</button>)}</div>{!list.length&&<Flag type="info">Start with the enterprises that have their own revenue stream or use meaningful amounts of shared equipment, labor, land, or overhead.</Flag>}</div>
+    {list.map((e,i)=><div key={e.id} style={cardStyle()}><div style={{ display:"flex", justifyContent:"space-between", gap:12, alignItems:"center", marginBottom:12 }}><input aria-label="Enterprise name" value={e.name} onChange={ev=>setRow(e.id,{name:ev.target.value})} style={inputStyle({ fontSize:17, fontWeight:700, maxWidth:420 })} /><button type="button" onClick={()=>update({list:list.filter(x=>x.id!==e.id)})} style={btnStyle("ghost")}>Remove</button></div><div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))", gap:14 }}><label style={labelStyle}>What kind of enterprise?<select value={e.kind} onChange={ev=>{const k=FINANCIAL_ENT_KINDS.find(x=>x[0]===ev.target.value);setRow(e.id,{kind:k[0],unit:k[2]})}} style={inputStyle()}>{FINANCIAL_ENT_KINDS.map(([id,label])=><option key={id} value={id}>{label}</option>)}</select></label><label style={labelStyle}>How well are costs tracked?<select value={e.tracking||"none"} onChange={ev=>setRow(e.id,{tracking:ev.target.value})} style={inputStyle()}>{FINANCIAL_TRACKING.map(([id,label])=><option key={id} value={id}>{label}</option>)}</select></label></div></div>)}
+    <div style={cardStyle()}><div style={cardLblStyle()}>Shared expense allocation policy</div><p style={{ margin:"0 0 14px", color:T.fgM, fontSize:13 }}>When an expense belongs to more than one enterprise, use the driver that best reflects what caused the cost. Revenue share is available, but is usually the weakest explanation for equipment and labor costs.</p>{FINANCIAL_ALLOCATIONS.map(([id,label])=><label key={id} style={{ display:"flex", alignItems:"center", gap:10, padding:"9px 0", borderBottom:`1px solid ${T.div}`, fontSize:13 }}><input type="radio" name="defaultAllocation" checked={(ent.defaultAllocation||"none")===id} onChange={()=>update({defaultAllocation:id})} /> <span style={{ fontWeight:600 }}>{label}</span><span style={{ color:T.fgS, fontSize:12 }}>{id==="hours"?"Best for equipment, fuel, and repairs":id==="labor"?"Best for wages and benefits":id==="revenue"?"Use only for general overhead":""}</span></label>)}</div>
+    {list.length>0&&<div style={cardStyle({ background:T.blueL, borderColor:"#c8d9e8" })}><strong>{list.length} enterprise{list.length===1?"":"s"} defined.</strong><div style={{ color:T.fgM, fontSize:13, marginTop:4 }}>The next stages will keep direct costs separate, make shared allocations visible, and show confidence levels when an enterprise does not have enough tracking detail.</div></div>}
+  </div>;
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // FA STAGE 2 — Goal alignment
 // ─────────────────────────────────────────────────────────────────────────────
@@ -2597,7 +2619,7 @@ function RD2({ rd, setRData }) {
   const Qs = [
     { key:"trigger", title:"What is prompting you to think about diversification?", opts:[["income","Add a new income stream","Grow total revenue beyond the primary commodity"],["risk","Reduce commodity price dependence","One bad year in grain or milk prices is too much exposure"],["assets","Put underutilized assets to work","Land, equipment or facilities that could generate more"],["succession","Build something to pass on","Diversification as part of a legacy and transition plan"],["curiosity","Understand my options first","No specific trigger — want to see what's possible"]] },
     { key:"horizon", title:"What time horizon are you planning for?", opts:[["1yr","First revenue within 12 months","Need results quickly"],["3yr","Building toward a 3-year plan","Willing to invest in groundwork now"],["5yr","Long-term structural change","A fundamental shift in how the farm generates income"]] },
-    { key:"capitalAppetite", title:"How much capital are you willing to invest?", opts:[["zero","$0 — no-capital paths only","Revenue from existing assets only"],["low","Under $10K","Small pilot investment"],["medium","$10K–$50K","Moderate investment if the return case is clear"],["high","$50K+","Meaningful investment for the right opportunity"]] },
+    { key:"capitalAppetite", title:"How much capital are you willing to invest?", opts:[["zero","$0 �� no-capital paths only","Revenue from existing assets only"],["low","Under $10K","Small pilot investment"],["medium","$10K–$50K","Moderate investment if the return case is clear"],["high","$50K+","Meaningful investment for the right opportunity"]] },
     { key:"timeAppetite", title:"How much personal time can you commit?", opts:[["minimal","Less than 5 hours/week","Largely passive or handled by existing labor"],["moderate","5–15 hours/week","Can add a side activity without sacrificing core operations"],["significant","15+ hours/week","Willing to restructure around a new primary activity"]] },
   ];
   const Radio = ({ on }) => <div style={{ width:18, height:18, borderRadius:"50%", border:`2px solid ${on?T.blue:T.border}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>{on && <div style={{ width:8, height:8, borderRadius:"50%", background:T.blue }} />}</div>;
@@ -2855,7 +2877,7 @@ function RD5({ rd, setRData }) {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // RD STAGE 6 — Policy & grant enablers
-// ─────────────────────────────────────────────────────────────────────────────
+// ────────────────────────────────────────────────────────────────────────��────
 // Deliberately mirrors Barrier Identification's structure — same per-opportunity card
 // layout, same checkbox-to-acknowledge pattern — but framed as tailwinds rather than
 // obstacles: policy and grant programs that could actively support a selected path,
@@ -6533,7 +6555,7 @@ export default function App() {
   const pct = isFA ? faPct : isRD ? rdPct : isLeg ? legPct : isVis ? visPct : riskPct;
 
   const canAdvance = useMemo(() => {
-    if (isFA) { if (fa.stage===1) { const a=fa.accounting||{}; return !!(a.basis&&a.preparer&&a.system); } if (fa.stage===2) return fa.enterprises.length>0; if (fa.stage===3) { const g=fa.goals; return !!(g.trigger&&g.concern&&g.outcome); } return true; }
+    if (isFA) { if (fa.stage===1) { const a=fa.accounting||{}; return !!(a.basis&&a.preparer&&a.system); } if (fa.stage===2) return (fa.ent?.list||[]).length>0; if (fa.stage===3) { const g=fa.goals; return !!(g.trigger&&g.concern&&g.outcome); } return true; }
     if (isRD) { const d = rd.data, g = d.goals2||{}, leverItems = d.leverItems||{}, b = d.baseline||{}, sel = d.selectedOpps||[];
       if (rd.stage===1) return !!(b.farmType&&b.revTier); if (rd.stage===2) return !!(g.trigger&&g.horizon&&g.capitalAppetite&&g.timeAppetite); if (rd.stage===3) return Object.keys(leverItems).length>0; if (rd.stage===4) return sel.length>0; return true; }
     return true;
@@ -6578,7 +6600,7 @@ else if (isRD) { if (rd.stage<rdTotal) goRD(rd.stage+1); else goLegacy(1); }
   if (isRisk && risk.stage===riskTotal) nextLabel = "Start over ↺";
 
 const FA_BODY = [
-  <FA0 fa={fa} setFA={setFA} />, <FA1 fa={fa} setFA={setFA} />, <FA2 fa={fa} setFA={setFA} />, <FA3 fa={fa} setFA={setFA} />,
+  <FA0 fa={fa} setFA={setFA} />, <FA1Registry fa={fa} setFA={setFA} />, <FA2 fa={fa} setFA={setFA} />, <FA3 fa={fa} setFA={setFA} />,
     <FA4 fa={fa} setFA={setFA} />,
   ];
   const RD_BODY = [
