@@ -164,7 +164,7 @@ const Head = ({ eyebrow, title, sub }) => (
 // DATA
 // ─────────────────────────────────────────────────────────────────────────────
 const FA_STAGES = [
-  { n:1, label:"Your accounting profile" }, { n:2, label:"Enterprise dashboard" }, { n:3, label:"Goal alignment" }, { n:4, label:"Ratio deep dive" },
+  { n:1, label:"Your accounting profile" }, { n:2, label:"Enterprise registry & shared costs" }, { n:3, label:"Goal alignment" }, { n:4, label:"Ratio deep dive" },
   { n:5, label:"Peer benchmarking" },
 ];
 
@@ -176,6 +176,13 @@ const BOOK_SYSTEM = [
   ["paper", "Paper, a shoebox, or the checkbook register"], ["sheet", "A spreadsheet I maintain"],
   ["generic", "QuickBooks, Quicken, or similar"], ["farm", "Farm-specific software"], ["service", "Handled entirely by an outside service"],
 ];
+const TAX_DISTORTIONS = [
+  ["prepaid", "Prepaid inputs at year end", "Inputs bought early can pull next season's costs into this year."],
+  ["deferred", "Deferred sales", "Holding product past year end can move revenue into the next year."],
+  ["sec179", "Section 179 or bonus depreciation", "Tax depreciation can make a profitable year look like a loss."],
+  ["inventory", "Significant inventory change", "Cash records miss the value of product still on hand."],
+];
+const CONVERSION_CHECKS = ["Balance sheet at the start of the year", "Balance sheet at the end of the year", "Both statements match your fiscal year", "Detail for receivables, payables, inventory, and prepaid inputs"];
 
 const FINANCIAL_CATEGORIES = ["Seed & crop inputs", "Feed & livestock inputs", "Fertilizer & chemicals", "Fuel & repairs", "Labor & payroll", "Equipment & machinery", "Land & rent", "Insurance & taxes", "Utilities & communications", "Interest & financing", "Professional services", "Owner draw / personal", "Shared / allocate", "Uncategorized"];
 const CATEGORY_RULES = [
@@ -217,6 +224,8 @@ function FA0({ fa, setFA }) {
       <Option group="basis" value="mixed">A mixture — some parts are accrual, others are cash</Option>
       <div style={{ marginTop:12, color:T.fgS, fontSize:12.5, lineHeight:1.5 }}>Not sure? Choose cash basis. The next stages will show which adjustments matter and let you use estimates.</div>
     </div>
+    {p.basis && p.basis !== "accrual" && <div style={cardStyle()}><div style={cardLblStyle()}>What may distort the tax picture?</div><p style={{ margin:"0 0 12px", color:T.fgM, fontSize:13, lineHeight:1.5 }}>These are common tax-management decisions—not mistakes. We ask because tax records and business performance answer different questions.</p>{TAX_DISTORTIONS.map(([id,label,note])=><label key={id} style={{ display:"flex", gap:10, alignItems:"flex-start", padding:"10px 0", borderBottom:`1px solid ${T.div}`, cursor:"pointer" }}><input type="checkbox" checked={p.distortions?.[id] === "yes"} onChange={e=>set("distortions",{ ...(p.distortions||{}), [id]:e.target.checked?"yes":"no" })} style={{ marginTop:3 }} /><span><strong style={{ display:"block", color:T.navy, fontSize:13 }}>{label}</strong><span style={{ color:T.fgS, fontSize:12 }}>{note}</span></span></label>)}</div>}
+    {p.basis && p.basis !== "accrual" && <div style={cardStyle()}><div style={cardLblStyle()}>Can we convert cash results when needed?</div><p style={{ margin:"0 0 12px", color:T.fgM, fontSize:13, lineHeight:1.5 }}>A balance-sheet conversion improves comparability. Only confirm what you can actually provide.</p>{CONVERSION_CHECKS.map((label,i)=><label key={label} style={{ display:"flex", gap:10, alignItems:"center", padding:"9px 0", fontSize:13 }}><input type="checkbox" checked={p.conv?.[i] === "yes"} onChange={e=>set("conv",{ ...(p.conv||{}), [i]:e.target.checked?"yes":"no" })} /><span>{label}</span></label>)}</div>}
     <div style={cardStyle()}><div style={cardLblStyle()}>Who prepares your financial records?</div>{BOOK_PREPARER.map(([id,label])=><Option key={id} group="preparer" value={id}>{label}</Option>)}</div>
     <div style={cardStyle()}><div style={cardLblStyle()}>Where do you keep the records?</div>{BOOK_SYSTEM.map(([id,label])=><Option key={id} group="system" value={id}>{label}</Option>)}</div>
     <div style={cardStyle()}><div style={cardLblStyle()}>Import transactions for a first-pass categorization</div><div style={{ color:T.fgM, fontSize:13, lineHeight:1.5, marginBottom:12 }}>Upload a CSV exported from your bank, bookkeeping system, or spreadsheet. We suggest categories from the description and flag shared expenses for your review. Your file stays in this working session.</div><input type="file" accept=".csv,text/csv" onChange={e=>{ const file=e.target.files?.[0]; if(!file) return; const reader=new FileReader(); reader.onload=ev=>setFA(s=>({ ...s, csvTransactions:parseFinancialCsv(String(ev.target.result||"")) })); reader.readAsText(file); }} style={{ width:"100%", padding:"10px", border:`1px dashed ${T.blue}`, borderRadius:8, background:T.blueL }} />
@@ -498,7 +507,7 @@ function FA1Registry({ fa, setFA }) {
   const add = (kind="other") => { const [,label,unit]=FINANCIAL_ENT_KINDS.find(x=>x[0]===kind)||FINANCIAL_ENT_KINDS[FINANCIAL_ENT_KINDS.length-1]; update({ list:[...list,{ id:`ent-${Date.now()}`, name:label, kind, unit, tracking:"none" }] }); };
   const setRow = (id, patch) => update({ list:list.map(e=>e.id===id?{...e,...patch}:e) });
   return <div>
-    <Head eyebrow="Financial Analysis · Stage 2" title="Define the enterprises and shared costs" sub="Your operation does not have to fit a fixed list. Name each enterprise you want to understand, say how well you track it today, then choose how shared expenses should be allocated." />
+    <Head eyebrow="Financial Analysis · Stage 2" title="Build your enterprise registry" sub="Your operation does not have to fit a fixed list. Name each enterprise, describe how well it is tracked, and choose an allocation basis that reflects what actually causes shared costs." />
     <div style={cardStyle()}><div style={cardLblStyle()}>Add your enterprises</div><div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>{FINANCIAL_ENT_KINDS.map(([id,label])=><button key={id} type="button" onClick={()=>add(id)} style={btnStyle("outline")}>+ {label}</button>)}</div>{!list.length&&<Flag type="info">Start with the enterprises that have their own revenue stream or use meaningful amounts of shared equipment, labor, land, or overhead.</Flag>}</div>
     {list.map((e,i)=><div key={e.id} style={cardStyle()}><div style={{ display:"flex", justifyContent:"space-between", gap:12, alignItems:"center", marginBottom:12 }}><input aria-label="Enterprise name" value={e.name} onChange={ev=>setRow(e.id,{name:ev.target.value})} style={inputStyle({ fontSize:17, fontWeight:700, maxWidth:420 })} /><button type="button" onClick={()=>update({list:list.filter(x=>x.id!==e.id)})} style={btnStyle("ghost")}>Remove</button></div><div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))", gap:14 }}><label style={labelStyle}>What kind of enterprise?<select value={e.kind} onChange={ev=>{const k=FINANCIAL_ENT_KINDS.find(x=>x[0]===ev.target.value);setRow(e.id,{kind:k[0],unit:k[2]})}} style={inputStyle()}>{FINANCIAL_ENT_KINDS.map(([id,label])=><option key={id} value={id}>{label}</option>)}</select></label><label style={labelStyle}>How well are costs tracked?<select value={e.tracking||"none"} onChange={ev=>setRow(e.id,{tracking:ev.target.value})} style={inputStyle()}>{FINANCIAL_TRACKING.map(([id,label])=><option key={id} value={id}>{label}</option>)}</select></label></div></div>)}
     <div style={cardStyle()}><div style={cardLblStyle()}>Shared expense allocation policy</div><p style={{ margin:"0 0 14px", color:T.fgM, fontSize:13 }}>When an expense belongs to more than one enterprise, use the driver that best reflects what caused the cost. Revenue share is available, but is usually the weakest explanation for equipment and labor costs.</p>{FINANCIAL_ALLOCATIONS.map(([id,label])=><label key={id} style={{ display:"flex", alignItems:"center", gap:10, padding:"9px 0", borderBottom:`1px solid ${T.div}`, fontSize:13 }}><input type="radio" name="defaultAllocation" checked={(ent.defaultAllocation||"none")===id} onChange={()=>update({defaultAllocation:id})} /> <span style={{ fontWeight:600 }}>{label}</span><span style={{ color:T.fgS, fontSize:12 }}>{id==="hours"?"Best for equipment, fuel, and repairs":id==="labor"?"Best for wages and benefits":id==="revenue"?"Use only for general overhead":""}</span></label>)}</div>
@@ -3799,7 +3808,7 @@ function FarmProfilePage({ profile, setProfile, fa, rd, goFA, goRD, goRisk, goLe
 }
 
 
-// ═════════════════════════════════════════════════════════════════════════════
+// ══════════════════════���══════════════════════════════════════════════════════
 // LEGACY — Transition readiness
 // ═════════════════════════════════════════════════════════════════════════════
 // Deliberately does NOT open with assets. Operational transition is about who runs
@@ -5852,7 +5861,7 @@ function VIS5({ vis, setVis, goLegacy }) {
   );
 }
 
-// ── Vision 6 — Where it binds ───────────────────────────────��────────────────
+// ── Vision 6 — Where it binds ───────────────────────────────��────���───────────
 function VIS6({ vis, setVis }) {
   const rules = vis.rules || [];
   const toggle = (i, bindId) => {
@@ -5985,7 +5994,7 @@ function VIS7({ vis, setVis, profile }) {
 }
 
 
-// ── Vision 8 — The document ──────────────────────────────────────────────────
+// ── Vision 8 — The document ────────────────────���─────────────────────────────
 // Renders ONLY approved sections. Everything diagnostic stays in the working
 // record: demoted claims, person-dependent advantages, cost-test answers and the
 // who-holds-this ratings never appear here. Publishing a document that names a
@@ -6421,7 +6430,7 @@ function DataControls({ state, savedAt, storageOk, onImport, onImportProfile, on
   );
 }
 
-// ═══════════════════��═════════════════════════════════════════════════════════
+// ═══════════════════��════════════════════════════════════════════════════════��
 // ROOT APP
 // ═════════════════════════════════════════════════════════════════════════════
 // Generic farm SWOT, pre-populated so the quadrants open with a real starting point
