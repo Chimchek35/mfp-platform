@@ -164,9 +164,76 @@ const Head = ({ eyebrow, title, sub }) => (
 // DATA
 // ─────────────────────────────────────────────────────────────────────────────
 const FA_STAGES = [
-  { n:1, label:"Enterprise dashboard" }, { n:2, label:"Goal alignment" }, { n:3, label:"Ratio deep dive" },
-  { n:4, label:"Peer benchmarking" },
+  { n:1, label:"Your accounting profile" }, { n:2, label:"Enterprise registry & shared costs" }, { n:3, label:"Goal alignment" }, { n:4, label:"Ratio deep dive" },
+  { n:5, label:"Peer benchmarking" },
 ];
+
+const BOOK_PREPARER = [
+  ["self", "I do it myself"], ["family", "My spouse or a family member"], ["bookkeeper", "A bookkeeper we employ"],
+  ["accountant", "Our accountant does the whole thing"], ["service", "A farm business management service"],
+];
+const BOOK_SYSTEM = [
+  ["paper", "Paper, a shoebox, or the checkbook register"], ["sheet", "A spreadsheet I maintain"],
+  ["generic", "QuickBooks, Quicken, or similar"], ["farm", "Farm-specific software"], ["service", "Handled entirely by an outside service"],
+];
+const TAX_DISTORTIONS = [
+  ["prepaid", "Prepaid inputs at year end", "Inputs bought early can pull next season's costs into this year."],
+  ["deferred", "Deferred sales", "Holding product past year end can move revenue into the next year."],
+  ["sec179", "Section 179 or bonus depreciation", "Tax depreciation can make a profitable year look like a loss."],
+  ["inventory", "Significant inventory change", "Cash records miss the value of product still on hand."],
+];
+const CONVERSION_CHECKS = ["Balance sheet at the start of the year", "Balance sheet at the end of the year", "Both statements match your fiscal year", "Detail for receivables, payables, inventory, and prepaid inputs"];
+
+const FINANCIAL_CATEGORIES = ["Seed & crop inputs", "Feed & livestock inputs", "Fertilizer & chemicals", "Fuel & repairs", "Labor & payroll", "Equipment & machinery", "Land & rent", "Insurance & taxes", "Utilities & communications", "Interest & financing", "Professional services", "Owner draw / personal", "Shared / allocate", "Uncategorized"];
+const CATEGORY_RULES = [
+  [/seed|fert|chemical|herbicide|pesticide|spray|crop input/i, "Seed & crop inputs"],
+  [/feed|hay|vet|livestock|animal|cattle|hog|dairy/i, "Feed & livestock inputs"],
+  [/fuel|diesel|gas|repair|maintenance|parts|tire/i, "Fuel & repairs"],
+  [/wage|payroll|labor|employee|hired/i, "Labor & payroll"],
+  [/tractor|equipment|machinery|implement|combine|depreciation/i, "Equipment & machinery"],
+  [/rent|lease|land|mortgage/i, "Land & rent"],
+  [/insurance|tax|property tax/i, "Insurance & taxes"],
+  [/electric|utility|phone|internet|water/i, "Utilities & communications"],
+  [/interest|bank|loan|credit/i, "Interest & financing"],
+  [/account|legal|attorney|consult|professional/i, "Professional services"],
+  [/owner|personal|draw/i, "Owner draw / personal"],
+];
+const categorizeFinancialRow = (row) => {
+  const text = Object.values(row).join(" ");
+  const match = CATEGORY_RULES.find(([pattern]) => pattern.test(text));
+  const shared = /shared|general|home|farm & home|multiple|overhead/i.test(text);
+  return { ...row, category: shared ? "Shared / allocate" : (match?.[1] || "Uncategorized"), allocation: shared ? 50 : 100, confidence: shared ? "Review" : (match ? "Suggested" : "Needs review") };
+};
+const parseFinancialCsv = (text) => {
+  const lines = text.split(/\\r?\\n/).filter(Boolean);
+  if (!lines.length) return [];
+  const split = line => line.match(/(?:[^,\\"]|\\"[^\\"]*\\")+/g)?.map(v => v.trim().replace(/^\\"|\\"$/g, "")) || [];
+  const headers = split(lines[0]).map((h,i) => h || `Column ${i+1}`);
+  return lines.slice(1).map((line, i) => { const vals=split(line); const row={}; headers.forEach((h,j)=>row[h]=vals[j]||""); return { id:`csv-${Date.now()}-${i}`, ...categorizeFinancialRow(row) }; }).filter(row => Object.values(row).some(v => v));
+};
+
+function FA0({ fa, setFA }) {
+  const p = fa.accounting || {};
+  const set = (key, value) => setFA(s => ({ ...s, accounting:{ ...(s.accounting||{}), [key]:value } }));
+  const Option = ({ group, value, children }) => <button type="button" onClick={() => set(group, value)} style={{ display:"block", width:"100%", padding:"13px 15px", marginBottom:8, textAlign:"left", borderRadius:8, border:p[group]===value?`2px solid ${T.blue}`:`1px solid ${T.border}`, background:p[group]===value?T.blueL:"#fff", color:p[group]===value?T.blue:T.navy, cursor:"pointer", fontSize:14, fontWeight:600 }}>{children}</button>;
+  return <div>
+    <Head eyebrow="Financial Analysis · Stage 1" title="Start with how you keep the books" sub="Every farm tracks costs differently. We will first establish what your numbers mean, so the analysis does not compare apples to oranges or mistake tax timing for business performance." />
+    <div style={cardStyle()}><div style={cardLblStyle()}>What accounting basis do you use?</div>
+      <Option group="basis" value="cash">Cash basis — I mostly track money when it moves</Option>
+      <Option group="basis" value="accrual">Accrual basis — revenue and expenses are matched to the year earned</Option>
+      <Option group="basis" value="mixed">A mixture — some parts are accrual, others are cash</Option>
+      <div style={{ marginTop:12, color:T.fgS, fontSize:12.5, lineHeight:1.5 }}>Not sure? Choose cash basis. The next stages will show which adjustments matter and let you use estimates.</div>
+    </div>
+    {p.basis && p.basis !== "accrual" && <div style={cardStyle()}><div style={cardLblStyle()}>What may distort the tax picture?</div><p style={{ margin:"0 0 12px", color:T.fgM, fontSize:13, lineHeight:1.5 }}>These are common tax-management decisions—not mistakes. We ask because tax records and business performance answer different questions.</p>{TAX_DISTORTIONS.map(([id,label,note])=><label key={id} style={{ display:"flex", gap:10, alignItems:"flex-start", padding:"10px 0", borderBottom:`1px solid ${T.div}`, cursor:"pointer" }}><input type="checkbox" checked={p.distortions?.[id] === "yes"} onChange={e=>set("distortions",{ ...(p.distortions||{}), [id]:e.target.checked?"yes":"no" })} style={{ marginTop:3 }} /><span><strong style={{ display:"block", color:T.navy, fontSize:13 }}>{label}</strong><span style={{ color:T.fgS, fontSize:12 }}>{note}</span></span></label>)}</div>}
+    {p.basis && p.basis !== "accrual" && <div style={cardStyle()}><div style={cardLblStyle()}>Can we convert cash results when needed?</div><p style={{ margin:"0 0 12px", color:T.fgM, fontSize:13, lineHeight:1.5 }}>A balance-sheet conversion improves comparability. Only confirm what you can actually provide.</p>{CONVERSION_CHECKS.map((label,i)=><label key={label} style={{ display:"flex", gap:10, alignItems:"center", padding:"9px 0", fontSize:13 }}><input type="checkbox" checked={p.conv?.[i] === "yes"} onChange={e=>set("conv",{ ...(p.conv||{}), [i]:e.target.checked?"yes":"no" })} /><span>{label}</span></label>)}</div>}
+    <div style={cardStyle()}><div style={cardLblStyle()}>Who prepares your financial records?</div>{BOOK_PREPARER.map(([id,label])=><Option key={id} group="preparer" value={id}>{label}</Option>)}</div>
+    <div style={cardStyle()}><div style={cardLblStyle()}>Where do you keep the records?</div>{BOOK_SYSTEM.map(([id,label])=><Option key={id} group="system" value={id}>{label}</Option>)}</div>
+    <div style={cardStyle()}><div style={cardLblStyle()}>Import transactions for a first-pass categorization</div><div style={{ color:T.fgM, fontSize:13, lineHeight:1.5, marginBottom:12 }}>Upload a CSV exported from your bank, bookkeeping system, or spreadsheet. We suggest categories from the description and flag shared expenses for your review. Your file stays in this working session.</div><input type="file" accept=".csv,text/csv" onChange={e=>{ const file=e.target.files?.[0]; if(!file) return; const reader=new FileReader(); reader.onload=ev=>setFA(s=>({ ...s, csvTransactions:parseFinancialCsv(String(ev.target.result||"")) })); reader.readAsText(file); }} style={{ width:"100%", padding:"10px", border:`1px dashed ${T.blue}`, borderRadius:8, background:T.blueL }} />
+      {(fa.csvTransactions||[]).length>0 && <div style={{ marginTop:16 }}><div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:8 }}><strong>{fa.csvTransactions.length} transactions ready for review</strong><span style={{ fontSize:12, color:T.fgS }}>Suggestions are not final</span></div><div style={{ overflowX:"auto", border:`1px solid ${T.border}`, borderRadius:8 }}><table style={{ width:"100%", borderCollapse:"collapse", fontSize:12 }}><thead><tr>{["Description","Amount","Suggested category","Allocation","Why / action"].map(h=><th key={h} style={{ textAlign:"left", padding:"9px 10px", background:T.bgAlt, color:T.fgM, whiteSpace:"nowrap" }}>{h}</th>)}</tr></thead><tbody>{fa.csvTransactions.slice(0,50).map((row,i)=>{ const desc=row.Description||row.description||row.Memo||row.memo||Object.values(row)[0]||"Transaction"; const amount=row.Amount||row.amount||row.Debit||row.debit||"—"; return <tr key={row.id||i}><td style={{ padding:"8px 10px", borderTop:`1px solid ${T.div}` }}>{desc}</td><td style={{ padding:"8px 10px", borderTop:`1px solid ${T.div}`, whiteSpace:"nowrap" }}>{amount}</td><td style={{ padding:"8px 10px", borderTop:`1px solid ${T.div}` }}><select value={row.category} onChange={e=>setFA(s=>({...s,csvTransactions:s.csvTransactions.map((r,j)=>j===i?{...r,category:e.target.value,confidence:"Reviewed"}:r)}))} style={{ ...inputStyle(), minHeight:34, padding:"4px 8px", fontSize:12 }}>{FINANCIAL_CATEGORIES.map(c=><option key={c}>{c}</option>)}</select></td><td style={{ padding:"8px 10px", borderTop:`1px solid ${T.div}`, minWidth:130 }}><input type="range" min="0" max="100" step="25" value={row.allocation??100} onChange={e=>setFA(s=>({...s,csvTransactions:s.csvTransactions.map((r,j)=>j===i?{...r,allocation:Number(e.target.value),category:Number(e.target.value)<100?"Shared / allocate":r.category,confidence:"Reviewed"}:r)}))} /><div style={{ fontSize:11, color:T.fgM }}>{row.allocation??100}% to selected enterprise</div></td><td style={{ padding:"8px 10px", borderTop:`1px solid ${T.div}`, color:row.confidence==="Needs review"||row.confidence==="Review"?T.amberT:T.dgreen }}>{row.confidence==="Review"?"Shared expense — allocate across enterprises":row.confidence}</td></tr>})}</tbody></table></div>{fa.csvTransactions.length>50&&<div style={{ fontSize:12, color:T.fgS, marginTop:6 }}>Showing the first 50 rows. All imported rows remain available for the analysis.</div>}</div>}
+    </div>
+    <div style={cardStyle({ background:T.blueL, borderColor:"#c8d9e8" })}><div style={{ display:"flex", gap:10, alignItems:"flex-start" }}><IconChart color={T.blue} size={20} /><div><div style={{ fontWeight:700, color:T.navy }}>Why this comes first</div><div style={{ color:T.fgM, fontSize:13, lineHeight:1.5, marginTop:3 }}>Tax records can be perfectly correct and still be the wrong starting point for enterprise profitability. Your answers determine which ratios can be compared confidently and where we should ask for a balance-sheet adjustment.</div></div></div></div>
+  </div>;
+}
 const RD_STAGES = [
   { n:1, label:"Baseline & readiness" }, { n:2, label:"Goal alignment" }, { n:3, label:"Human capital, assets & financial capital" },
   { n:4, label:"Opportunity mapping" }, { n:5, label:"Barrier identification" }, { n:6, label:"Policy & grant enablers" },
@@ -371,7 +438,7 @@ function FA1({ fa, setFA }) {
   const toggle = (k) => setFA(s => ({ ...s, enterprises: s.enterprises.includes(k) ? s.enterprises.filter(x=>x!==k) : [...s.enterprises, k] }));
   return (
     <div>
-      <Head eyebrow="Financial Analysis · Stage 1" title="Enterprise dashboard" sub="Select the enterprises you operate. Each one gets its own ratio scorecard, and this profile flows into the Revenue Diversification module." />
+      <Head eyebrow="Financial Analysis · Stage 2" title="Enterprise dashboard" sub="Select the enterprises you operate. Each one gets its own ratio scorecard, and this profile flows into the Revenue Diversification module." />
       <div style={cardStyle()}>
         <div style={cardLblStyle()}>Select your enterprises</div>
         <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:12 }}>
@@ -426,6 +493,28 @@ function FA1({ fa, setFA }) {
   );
 }
 
+const FINANCIAL_ENT_KINDS = [
+  ["grain", "Crop / grain", "acres"], ["forage", "Hay / forage", "acres"], ["specialty", "Vegetable / specialty", "acres"], ["perennial", "Orchard / vineyard / berries", "acres"],
+  ["beef", "Beef cattle", "head"], ["dairy", "Dairy", "head"], ["swine", "Swine", "head"], ["poultry", "Poultry", "birds"],
+  ["service", "Custom work / service", "hours"], ["storage", "Storage / facility", "units"], ["land", "Land lease out", "acres"], ["other", "Something else", "units"],
+];
+const FINANCIAL_TRACKING = [["none","Not separated at all"],["revOnly","Revenue only"],["partial","Revenue and direct costs"],["full","Full profit and loss"]];
+const FINANCIAL_ALLOCATIONS = [["acres","Per acre"],["hours","Machine hours"],["labor","Labor hours"],["head","Per head or unit"],["revenue","Share of revenue"],["custom","A split I set myself"],["none","Leave unallocated"]];
+function FA1Registry({ fa, setFA }) {
+  const ent = fa.ent || { list:[], allocations:{} };
+  const list = ent.list || [];
+  const update = (patch) => setFA(s => ({ ...s, ent:{ ...(s.ent||{}), ...patch } }));
+  const add = (kind="other") => { const [,label,unit]=FINANCIAL_ENT_KINDS.find(x=>x[0]===kind)||FINANCIAL_ENT_KINDS[FINANCIAL_ENT_KINDS.length-1]; update({ list:[...list,{ id:`ent-${Date.now()}`, name:label, kind, unit, tracking:"none" }] }); };
+  const setRow = (id, patch) => update({ list:list.map(e=>e.id===id?{...e,...patch}:e) });
+  return <div>
+    <Head eyebrow="Financial Analysis · Stage 2" title="Build your enterprise registry" sub="Your operation does not have to fit a fixed list. Name each enterprise, describe how well it is tracked, and choose an allocation basis that reflects what actually causes shared costs." />
+    <div style={cardStyle()}><div style={cardLblStyle()}>Add your enterprises</div><div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>{FINANCIAL_ENT_KINDS.map(([id,label])=><button key={id} type="button" onClick={()=>add(id)} style={btnStyle("outline")}>+ {label}</button>)}</div>{!list.length&&<Flag type="info">Start with the enterprises that have their own revenue stream or use meaningful amounts of shared equipment, labor, land, or overhead.</Flag>}</div>
+    {list.map((e,i)=><div key={e.id} style={cardStyle()}><div style={{ display:"flex", justifyContent:"space-between", gap:12, alignItems:"center", marginBottom:12 }}><input aria-label="Enterprise name" value={e.name} onChange={ev=>setRow(e.id,{name:ev.target.value})} style={inputStyle({ fontSize:17, fontWeight:700, maxWidth:420 })} /><button type="button" onClick={()=>update({list:list.filter(x=>x.id!==e.id)})} style={btnStyle("ghost")}>Remove</button></div><div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))", gap:14 }}><label style={labelStyle}>What kind of enterprise?<select value={e.kind} onChange={ev=>{const k=FINANCIAL_ENT_KINDS.find(x=>x[0]===ev.target.value);setRow(e.id,{kind:k[0],unit:k[2]})}} style={inputStyle()}>{FINANCIAL_ENT_KINDS.map(([id,label])=><option key={id} value={id}>{label}</option>)}</select></label><label style={labelStyle}>How well are costs tracked?<select value={e.tracking||"none"} onChange={ev=>setRow(e.id,{tracking:ev.target.value})} style={inputStyle()}>{FINANCIAL_TRACKING.map(([id,label])=><option key={id} value={id}>{label}</option>)}</select></label></div></div>)}
+    <div style={cardStyle()}><div style={cardLblStyle()}>Shared expense allocation policy</div><p style={{ margin:"0 0 14px", color:T.fgM, fontSize:13 }}>When an expense belongs to more than one enterprise, use the driver that best reflects what caused the cost. Revenue share is available, but is usually the weakest explanation for equipment and labor costs.</p>{FINANCIAL_ALLOCATIONS.map(([id,label])=><label key={id} style={{ display:"flex", alignItems:"center", gap:10, padding:"9px 0", borderBottom:`1px solid ${T.div}`, fontSize:13 }}><input type="radio" name="defaultAllocation" checked={(ent.defaultAllocation||"none")===id} onChange={()=>update({defaultAllocation:id})} /> <span style={{ fontWeight:600 }}>{label}</span><span style={{ color:T.fgS, fontSize:12 }}>{id==="hours"?"Best for equipment, fuel, and repairs":id==="labor"?"Best for wages and benefits":id==="revenue"?"Use only for general overhead":""}</span></label>)}</div>
+    {list.length>0&&<div style={cardStyle({ background:T.blueL, borderColor:"#c8d9e8" })}><strong>{list.length} enterprise{list.length===1?"":"s"} defined.</strong><div style={{ color:T.fgM, fontSize:13, marginTop:4 }}>The next stages will keep direct costs separate, make shared allocations visible, and show confidence levels when an enterprise does not have enough tracking detail.</div></div>}
+  </div>;
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // FA STAGE 2 — Goal alignment
 // ─────────────────────────────────────────────────────────────────────────────
@@ -443,7 +532,7 @@ function FA2({ fa, setFA }) {
   const optSty = (on) => ({ padding:"13px 15px", borderRadius:8, border:on?`2px solid ${T.blue}`:`1px solid ${T.border}`, cursor:"pointer", background:on?T.blueL:"#fff", marginBottom:8, transition:"all .12s" });
   return (
     <div>
-      <Head eyebrow="Financial Analysis · Stage 2" title="Goal alignment" sub="These answers shape your ratio deep dive, action plan, and what carries into the Revenue Diversification module." />
+      <Head eyebrow="Financial Analysis · Stage 3" title="Goal alignment" sub="These answers shape your ratio deep dive, action plan, and what carries into the Revenue Diversification module." />
       {Qs.map(q => (
         <div key={q.key} style={cardStyle()}>
           <div style={cardLblStyle()}>{q.title}</div>
@@ -587,7 +676,7 @@ const computeFARatios = (s3) => {
            accrualGross, accrualOpex, ratios, categories };
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
+// ───────────────────────────────────────────────────────────────��─────────────
 // FA STAGE 3 — Document upload & AI-assisted extraction (placeholder / demo)
 // ──────────────────────────────────��──────────────────────────────────────────
 // This UI is fully built and clickable end-to-end, but the actual scan step below
@@ -720,7 +809,7 @@ function FA3({ fa, setFA }) {
   ];
   return (
     <div>
-      <Head eyebrow="Financial Analysis · Stage 3" title="Ratio deep dive" sub="Enter your financial data — from your MFP Financial Data Worksheet, your own records, or your best estimate. Ratios calculate automatically as you type." />
+      <Head eyebrow="Financial Analysis · Stage 4" title="Ratio deep dive" sub="Enter your financial data — from your MFP Financial Data Worksheet, your own records, or your best estimate. Ratios calculate automatically as you type." />
       <DocumentScanUpload fa={fa} setFA={setFA} />
       <div style={cardStyle()}>
         <div style={cardLblStyle()}>Financial data</div>
@@ -825,7 +914,7 @@ function FA4({ fa, setFA }) {
   const unitSuf = bb => bb.unit==="%"?"%":bb.unit==="x"?"x":"";
   return (
     <div>
-      <Head eyebrow="Financial Analysis · Stage 4" title="Peer benchmarking" sub="Compeer Financial and IFBA 2023–24 data. Mid-size row crop, $500K–$5M revenue, Midwest region." />
+      <Head eyebrow="Financial Analysis · Stage 5" title="Peer benchmarking" sub="Compeer Financial and IFBA 2023–24 data. Mid-size row crop, $500K–$5M revenue, Midwest region." />
       <div style={cardStyle()}>
         <div style={cardLblStyle()}>Enter your values</div>
         <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:14 }}>
@@ -2265,7 +2354,7 @@ function LivestockInsuranceCalculator({ risk, setRisk }) {
   );
 }
 
-// ───��������─�����───────────────────────────────────────────────────────────────────────
+// ───��������─�����──────────���────────────────────────────────────────────────────────────
 // RD helpers
 // ─────────────────────────────────────────────────────────────────────────────
 // Each lever category is now built from specific, measurable items rather than one
@@ -2530,7 +2619,7 @@ function PeerIncomeBenchmark({ revTier }) {
   );
 }
 
-// ─────────��──�����───��─��───��───��─��───────────────────────────────────���───────────
+// ─────────��──�����───��─��───��───��─��──��────────────────────────────────���───────────
 // RD STAGE 2 — Goal alignment
 // ───────────────────────────��────────────────────────────────────────��────��───
 function RD2({ rd, setRData }) {
@@ -2539,7 +2628,7 @@ function RD2({ rd, setRData }) {
   const Qs = [
     { key:"trigger", title:"What is prompting you to think about diversification?", opts:[["income","Add a new income stream","Grow total revenue beyond the primary commodity"],["risk","Reduce commodity price dependence","One bad year in grain or milk prices is too much exposure"],["assets","Put underutilized assets to work","Land, equipment or facilities that could generate more"],["succession","Build something to pass on","Diversification as part of a legacy and transition plan"],["curiosity","Understand my options first","No specific trigger — want to see what's possible"]] },
     { key:"horizon", title:"What time horizon are you planning for?", opts:[["1yr","First revenue within 12 months","Need results quickly"],["3yr","Building toward a 3-year plan","Willing to invest in groundwork now"],["5yr","Long-term structural change","A fundamental shift in how the farm generates income"]] },
-    { key:"capitalAppetite", title:"How much capital are you willing to invest?", opts:[["zero","$0 — no-capital paths only","Revenue from existing assets only"],["low","Under $10K","Small pilot investment"],["medium","$10K–$50K","Moderate investment if the return case is clear"],["high","$50K+","Meaningful investment for the right opportunity"]] },
+    { key:"capitalAppetite", title:"How much capital are you willing to invest?", opts:[["zero","$0 �� no-capital paths only","Revenue from existing assets only"],["low","Under $10K","Small pilot investment"],["medium","$10K–$50K","Moderate investment if the return case is clear"],["high","$50K+","Meaningful investment for the right opportunity"]] },
     { key:"timeAppetite", title:"How much personal time can you commit?", opts:[["minimal","Less than 5 hours/week","Largely passive or handled by existing labor"],["moderate","5–15 hours/week","Can add a side activity without sacrificing core operations"],["significant","15+ hours/week","Willing to restructure around a new primary activity"]] },
   ];
   const Radio = ({ on }) => <div style={{ width:18, height:18, borderRadius:"50%", border:`2px solid ${on?T.blue:T.border}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>{on && <div style={{ width:8, height:8, borderRadius:"50%", background:T.blue }} />}</div>;
@@ -2637,7 +2726,7 @@ function RD3({ rd, setRData }) {
 
 // ───────────────────────────────────���─────���───���────���──────────────────────────
 // RD STAGE 4 — Opportunity mapping
-// ────��────────────────────────────────────────────────────────────────────────
+// ────���────────────────────────────────────────────────────────────────────────
 const GROWTH_TIER_LABEL = { 1:"Tier 1 · Fastest structural growth", 2:"Tier 2 · Strong growth", 3:"Tier 3 · Steady & selective" };
 const GROWTH_TIER_COLOR = { 1:T.dgreen, 2:T.blue, 3:T.tan };
 
@@ -2797,7 +2886,7 @@ function RD5({ rd, setRData }) {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // RD STAGE 6 — Policy & grant enablers
-// ─────────────────────────────────────────────────────────────────────────────
+// ────────────────────────────────────────────────────────────────────────��────
 // Deliberately mirrors Barrier Identification's structure — same per-opportunity card
 // layout, same checkbox-to-acknowledge pattern — but framed as tailwinds rather than
 // obstacles: policy and grant programs that could actively support a selected path,
@@ -3719,7 +3808,7 @@ function FarmProfilePage({ profile, setProfile, fa, rd, goFA, goRD, goRisk, goLe
 }
 
 
-// ═════════════════════════════════════════════════════════════════════════════
+// ══════════════════════���══════════════════════════════════════════════════════
 // LEGACY — Transition readiness
 // ═════════════════════════════════════════════════════════════════════════════
 // Deliberately does NOT open with assets. Operational transition is about who runs
@@ -5772,7 +5861,7 @@ function VIS5({ vis, setVis, goLegacy }) {
   );
 }
 
-// ── Vision 6 — Where it binds ───────────────────────────────��────────────────
+// ── Vision 6 — Where it binds ───────────────────────────────��────���───────────
 function VIS6({ vis, setVis }) {
   const rules = vis.rules || [];
   const toggle = (i, bindId) => {
@@ -5905,7 +5994,7 @@ function VIS7({ vis, setVis, profile }) {
 }
 
 
-// ── Vision 8 — The document ──────────────────────────────────────────────────
+// ── Vision 8 — The document ────────────────────���─────────────────────────────
 // Renders ONLY approved sections. Everything diagnostic stays in the working
 // record: demoted claims, person-dependent advantages, cost-test answers and the
 // who-holds-this ratings never appear here. Publishing a document that names a
@@ -6073,7 +6162,7 @@ function VIS8({ vis, profile }) {
 }
 
 
-// ═════════════════════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════���══════════════════════════════
 // LOCAL PERSISTENCE — the farm record stays on the farmer's own machine
 // ═════════════════════════�����═══════════════════════════════════════════════════
 // Everything a farmer enters saves to their browser automatically and reloads
@@ -6341,7 +6430,7 @@ function DataControls({ state, savedAt, storageOk, onImport, onImportProfile, on
   );
 }
 
-// ═══════════════════��═════════════════════════════════════════════════════════
+// ═══════════════════��════════════════════════════════════════════════════════��
 // ROOT APP
 // ═════════════════════════════════════════════════════════════════════════════
 // Generic farm SWOT, pre-populated so the quadrants open with a real starting point
@@ -6388,7 +6477,7 @@ export default function App() {
   const [savedAt, setSavedAt] = useState(null);
   const [storageOk] = useState(() => storageAvailable());
   const [schemaWarn, setSchemaWarn] = useState(false);
-  const [fa, setFA] = useState({ stage:1, enterprises:[], goals:{}, wholeFarm:{}, ratioVals:{}, s3vals:{ ...GENERIC_FARM_FINANCIALS }, s4bench:{}, s5:{}, actionChecked:{} });
+  const [fa, setFA] = useState({ stage:1, accounting:{}, enterprises:[], goals:{}, wholeFarm:{}, ratioVals:{}, s3vals:{ ...GENERIC_FARM_FINANCIALS }, s4bench:{}, s5:{}, actionChecked:{} });
   const [rd, setRD] = useState({ stage:1, data:{} });
   const [risk, setRisk] = useState({ stage:1, answers:{} });
   const [leg, setLeg] = useState({ stage:1, data:{}, succ:{}, role:"senior" });
@@ -6430,7 +6519,7 @@ export default function App() {
 
   const applyRecord = (rec) => {
     setProfile(rec.profile || {});
-    setFA(rec.fa || { stage:1, enterprises:[], goals:{}, wholeFarm:{}, ratioVals:{}, s3vals:{}, s4bench:{}, s5:{}, actionChecked:{} });
+    setFA(rec.fa || { stage:1, accounting:{}, enterprises:[], goals:{}, wholeFarm:{}, ratioVals:{}, s3vals:{}, s4bench:{}, s5:{}, actionChecked:{} });
     setRD(rec.rd || { stage:1, data:{} });
     setRisk(rec.risk || { stage:1, answers:{} });
     setLeg(rec.leg || { stage:1, data:{}, succ:{}, role:"senior" });
@@ -6475,7 +6564,7 @@ export default function App() {
   const pct = isFA ? faPct : isRD ? rdPct : isLeg ? legPct : isVis ? visPct : riskPct;
 
   const canAdvance = useMemo(() => {
-    if (isFA) { if (fa.stage===1) return fa.enterprises.length>0; if (fa.stage===2) { const g=fa.goals; return !!(g.trigger&&g.concern&&g.outcome); } return true; }
+    if (isFA) { if (fa.stage===1) { const a=fa.accounting||{}; return !!(a.basis&&a.preparer&&a.system); } if (fa.stage===2) return (fa.ent?.list||[]).length>0; if (fa.stage===3) { const g=fa.goals; return !!(g.trigger&&g.concern&&g.outcome); } return true; }
     if (isRD) { const d = rd.data, g = d.goals2||{}, leverItems = d.leverItems||{}, b = d.baseline||{}, sel = d.selectedOpps||[];
       if (rd.stage===1) return !!(b.farmType&&b.revTier); if (rd.stage===2) return !!(g.trigger&&g.horizon&&g.capitalAppetite&&g.timeAppetite); if (rd.stage===3) return Object.keys(leverItems).length>0; if (rd.stage===4) return sel.length>0; return true; }
     return true;
@@ -6519,8 +6608,8 @@ else if (isRD) { if (rd.stage<rdTotal) goRD(rd.stage+1); else goLegacy(1); }
   if (isLeg && leg.stage===legTotal) nextLabel = "Farm Risk →";
   if (isRisk && risk.stage===riskTotal) nextLabel = "Start over ↺";
 
-  const FA_BODY = [
-    <FA1 fa={fa} setFA={setFA} />, <FA2 fa={fa} setFA={setFA} />, <FA3 fa={fa} setFA={setFA} />,
+const FA_BODY = [
+  <FA0 fa={fa} setFA={setFA} />, <FA1Registry fa={fa} setFA={setFA} />, <FA2 fa={fa} setFA={setFA} />, <FA3 fa={fa} setFA={setFA} />,
     <FA4 fa={fa} setFA={setFA} />,
   ];
   const RD_BODY = [
