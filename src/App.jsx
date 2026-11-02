@@ -164,7 +164,7 @@ const Head = ({ eyebrow, title, sub }) => (
   </div>
 );
 
-// ─────────────────────────────────────────────────────�������──�����────────────────────
+// ─────────────────────────────────────────────────────���������──�����────────────────────
 // DATA
 // ─────────────────────────────────────────────────────────────────────────────
 const FA_STAGES = [
@@ -238,7 +238,7 @@ function FA0({ fa, setFA }) {
       {(fa.csvTransactions||[]).length>0 && <div style={{ marginTop:16 }}><div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:8 }}><strong>{fa.csvTransactions.length} transactions ready for review</strong><span style={{ fontSize:12, color:T.fgS }}>Suggestions are not final</span></div><div style={{ overflowX:"auto", border:`1px solid ${T.border}`, borderRadius:8 }}><table style={{ width:"100%", borderCollapse:"collapse", fontSize:12 }}><thead><tr>{["Description","Amount","Suggested category","Allocation","Why / action"].map(h=><th key={h} style={{ textAlign:"left", padding:"9px 10px", background:T.bgAlt, color:T.fgM, whiteSpace:"nowrap" }}>{h}</th>)}</tr></thead><tbody>{fa.csvTransactions.slice(0,50).map((row,i)=>{ const desc=row.Description||row.description||row.Memo||row.memo||Object.values(row)[0]||"Transaction"; const amount=row.Amount||row.amount||row.Debit||row.debit||"—"; return <tr key={row.id||i}><td style={{ padding:"8px 10px", borderTop:`1px solid ${T.div}` }}>{desc}</td><td style={{ padding:"8px 10px", borderTop:`1px solid ${T.div}`, whiteSpace:"nowrap" }}>{amount}</td><td style={{ padding:"8px 10px", borderTop:`1px solid ${T.div}` }}><select value={row.category} onChange={e=>setFA(s=>({...s,csvTransactions:s.csvTransactions.map((r,j)=>j===i?{...r,category:e.target.value,confidence:"Reviewed"}:r)}))} style={{ ...inputStyle(), minHeight:34, padding:"4px 8px", fontSize:12 }}>{FINANCIAL_CATEGORIES.map(c=><option key={c}>{c}</option>)}</select></td><td style={{ padding:"8px 10px", borderTop:`1px solid ${T.div}`, minWidth:130 }}><input type="range" min="0" max="100" step="25" value={row.allocation??100} onChange={e=>setFA(s=>({...s,csvTransactions:s.csvTransactions.map((r,j)=>j===i?{...r,allocation:Number(e.target.value),category:Number(e.target.value)<100?"Shared / allocate":r.category,confidence:"Reviewed"}:r)}))} /><div style={{ fontSize:11, color:T.fgM }}>{row.allocation??100}% to selected enterprise</div></td><td style={{ padding:"8px 10px", borderTop:`1px solid ${T.div}`, color:row.confidence==="Needs review"||row.confidence==="Review"?T.amberT:T.dgreen }}>{row.confidence==="Review"?"Shared expense — allocate across enterprises":row.confidence}</td></tr>})}</tbody></table></div>{fa.csvTransactions.length>50&&<div style={{ fontSize:12, color:T.fgS, marginTop:6 }}>Showing the first 50 rows. All imported rows remain available for the analysis.</div>}</div>}
     </div>
     <div style={{ ...cardStyle({ background:T.blueL, borderColor:"#c8d9e8" }), display:q>=3?"block":"none" }}><div style={{ display:"flex", gap:10, alignItems:"flex-start" }}><IconChart color={T.blue} size={20} /><div><div style={{ fontWeight:700, color:T.navy }}>Why this comes first</div><div style={{ color:T.fgM, fontSize:13, lineHeight:1.5, marginTop:3 }}>Tax records can be perfectly correct and still be the wrong starting point for enterprise profitability. Your answers determine which ratios can be compared confidently and where we should ask for a balance-sheet adjustment.</div></div></div></div>
-    <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:16, margin:"24px 0 18px", paddingTop:18, borderTop:`1px solid ${T.div}` }}><button type="button" onClick={()=>setQ(q-1)} disabled={q===0} style={{ ...btnStyle("ghost"), opacity:q===0?0.45:1 }}>← Previous</button><div style={{ display:"flex", alignItems:"center", gap:7 }}>{["Accounting basis","Preparer","Records","Transactions","Tax timing","Conversion"].map((label,i)=><button key={label} type="button" aria-label={label} onClick={()=>setQ(i)} style={{ width:7, height:7, minWidth:7, border:0, borderRadius:"50%", padding:0, background:i===q?T.blue:T.border, cursor:"pointer" }} />)}</div><button type="button" onClick={()=>setQ(q+1)} disabled={q===5} style={{ ...btnStyle("primary"), opacity:q===5?0.55:1 }}>{q>=3?"Continue to enterprise profile →":"Next question →"}</button></div>
+    <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:16, margin:"24px 0 18px", paddingTop:18, borderTop:`1px solid ${T.div}` }}><button type="button" onClick={()=>setQ(q-1)} disabled={q===0} style={{ ...btnStyle("ghost"), opacity:q===0?0.45:1 }}>← Previous</button><div style={{ display:"flex", alignItems:"center", gap:7 }}>{["Accounting basis","Preparer","Records","Transactions","Tax timing","Conversion"].map((label,i)=><button key={label} type="button" aria-label={label} onClick={()=>setQ(i)} style={{ width:7, height:7, minWidth:7, maxWidth:7, minHeight:7, maxHeight:7, flex:"0 0 7px", display:"block", lineHeight:0, border:0, borderRadius:"50%", padding:0, background:i===q?T.blue:T.border, cursor:"pointer" }} />)}</div><button type="button" onClick={()=>setQ(q+1)} disabled={q===5} style={{ ...btnStyle("primary"), opacity:q===5?0.55:1 }}>{q>=3?"Continue to enterprise profile →":"Next question →"}</button></div>
   </div>;
 }
 const RD_STAGES = [
@@ -571,7 +571,7 @@ function FA2({ fa, setFA }) {
   );
 }
 
-// ────────��─��─��───────────────────────────────────────���──���─���─────��─────────────
+// ──────��─��─��─��───────────────────────────────────────���──���─���─────��─────────────
 // FA STAGE 3 — Ratio deep dive
 // ─────────────────────────────────────────────────────────────────────────────
 // Shared ratio engine for Financial Analysis Stage 3. Extracted to a single function so
@@ -920,7 +920,7 @@ function FA4({ fa, setFA }) {
   const unitSuf = bb => bb.unit==="%"?"%":bb.unit==="x"?"x":"";
   return (
     <div>
-      <Head eyebrow="Financial Analysis · Stage 7" title="Peer benchmarking" sub="Compeer Financial and IFBA 2023–24 data. Mid-size row crop, $500K–$5M revenue, Midwest region." />
+      <Head eyebrow="Financial Analysis · Stage 7" title="Peer benchmarking" sub="Compeer Financial and IFBA 2023–24 data. Mid-size row crop, $500K��$5M revenue, Midwest region." />
       <div style={cardStyle()}>
         <div style={cardLblStyle()}>Enter your values</div>
         <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:14 }}>
@@ -4419,7 +4419,7 @@ function LEG4({ leg, setLegData }) {
   );
 }
 
-// ── Stage 3 — The next chapter ──────���─────���─���──���──���──────��───────────────────
+// ── Stage 3 — The next chapter ──────���─────���─���──���──�����──────��───────────────────
 function LEG5({ leg, setLegData }) {
   const d = leg.data || {};
   const v = (k) => d[k] || "";
@@ -5646,7 +5646,7 @@ function VIS1({ vis, setVis, profile, goProfile }) {
   </div>;
   }
 
-// ── Vision 3 — Test it ────────────��──────────────────────────────���───────────
+// ── Vision 3 — Test it ────────────��───────��──────────────────────���───────────
   function VIS2({ vis, setVis, kind="advantage" }) {
   const isValuesTest = kind === "value";
   const items = (vis.items||[]).filter(i => i.kind === kind && i.text && i.text.trim());
