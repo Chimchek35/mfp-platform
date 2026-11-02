@@ -164,9 +164,9 @@ const Head = ({ eyebrow, title, sub }) => (
   </div>
 );
 
-// ────────────────�����────────────────────────────────────�������������������������──�����────────────────────
+// ─���──────────────�����────────────────────────────────────�������������������������──�����────────────────────
 // DATA
-// ────────────────────────────��─��──────────────────────────────────────��─��─��─��─
+// ───────────��────────────────��─��──────────────────────────────────────��─��─��─��─
 const FA_STAGES = [
   { n:1, label:"Your accounting profile" }, { n:2, label:"Enterprise registry & shared costs" }, { n:3, label:"Goal alignment" },
   { n:4, label:"Upload your documents" }, { n:5, label:"Budgeting & working capital" }, { n:6, label:"Ratio deep dive" }, { n:7, label:"Peer benchmarking" },
@@ -524,7 +524,7 @@ function FA1Registry({ fa, setFA }) {
 
 // ─────────────────────────�����──────��───────────────────────────────────────────
 // FA STAGE 2 — Goal alignment
-// ─────────────────────────────────────────────────────────────────────────────
+// ──────────────────────────���──────────────────────────────────────────────────
 function FA2({ fa, setFA }) {
   const g = fa.goals;
   const set = (f,v) => setFA(s => ({ ...s, goals:{ ...s.goals, [f]:v } }));
@@ -2361,9 +2361,22 @@ function LivestockInsuranceCalculator({ risk, setRisk }) {
   );
 }
 
-// ───��������─�����──────────���──────────���──���───────────────────────────────────────���──────
+// ───��������─�����─────���────���──────────���──���───────────────────────────────────────���──────
 // RD helpers
 // ─────────────────────────────────────────────────────────────────────────────
+const entKind = (kind) => ({ grain:{ rdKind:"grain" }, forage:{ rdKind:"grain" }, specialty:{ rdKind:"produce" }, perennial:{ rdKind:"perennials" }, beef:{ rdKind:"beef" }, dairy:{ rdKind:"dairy" }, swine:{ rdKind:"hogs" }, poultry:{ rdKind:"poultry" }, other:{ rdKind:"other" } }[kind] || { rdKind:kind });
+const faEnterpriseKinds = (fa) => { const list = ((fa||{}).ent||{}).list || []; const derived = list.map(e => entKind(e.kind).rdKind).filter(Boolean); return derived.length ? [...new Set(derived)] : ((fa||{}).enterprises || []); };
+const HC_MOVES = [
+  { id:"heir", label:"Bring an heir or family member in properly", raises:{ management:20, succession:35, laborCap:10 }, cost:"Below-market wages for a period, and real decision authority handed over.", unlocks:"Lifts management capacity durably.", needs:"Someone willing, and a senior generation willing to hand over actual decisions.", link:"legacy" },
+  { id:"counterseason", label:"Add a counter-seasonal venture so roles become year-round", raises:{ laborCap:30, expertise:10 }, cost:"The new venture has to be real work in the off months.", unlocks:"Creates a stronger recruiting proposition.", needs:"An enterprise whose peak sits opposite your current one." },
+  { id:"trade", label:"Trade labour and equipment with a neighbouring operation", raises:{ laborCap:20, network:15 }, cost:"The cost is reciprocity, and the risk is conflicting peaks.", unlocks:"Adds peak capacity without payroll.", needs:"A neighbour whose peak does not coincide with yours." },
+  { id:"outsource", label:"Outsource field or custom work", raises:{ laborCap:25 }, cost:"Converts a fixed cost to a variable one at a higher per-unit rate.", unlocks:"Frees owner and crew time.", needs:"A reliable custom operator." },
+  { id:"automate", label:"Automate the back office", raises:{ management:15, laborCap:10 }, cost:"Low; time cards, payroll, bookkeeping and scheduling are usual candidates.", unlocks:"Frees the operator specifically.", needs:"Willingness to change a routine." },
+  { id:"slack", label:"Overhire and build slack", raises:{ laborCap:25 }, cost:"You are paying for capacity you will not use every day.", unlocks:"Adds resilience when people do not show up.", needs:"Margin to absorb it and a pool to draw from." },
+  { id:"specialize", label:"Hire for a skill you do not have", raises:{ expertise:30, management:10 }, cost:"The most expensive move on this list.", unlocks:"Opens opportunities gated on expertise.", needs:"Enough scale to keep that person busy." },
+];
+const applyHCMoves = (levers, selected) => { const out={...(levers?.trust||{})}; (selected||[]).forEach(id => { const mv=HC_MOVES.find(m=>m.id===id); if (!mv) return; Object.entries(mv.raises).forEach(([k,v]) => { out[k]=Math.min(100,(parseFloat(out[k])||HUMAN_ITEMS.find(h=>h.id===k)?.default||0)+v); }); }); return out; };
+const operatorIsSPOF = (levers) => { const t=levers?.trust||{}; return (parseFloat(t.laborCap)||0)<=30 && (parseFloat(t.succession)||0)<=30; };
 // Each lever category is now built from specific, measurable items rather than one
 // blanket rating. Every item is framed so a HIGHER value (0–100) always means MORE
 // opportunity — i.e. "idle capacity" or "strength," not raw utilization — so scoring
@@ -2551,7 +2564,7 @@ const scoredOpps = (rd, faEnterprises, faS3vals) => { const d=rd.data||{}; const
 
 // ─────────────────────────────────────────────────────────────────────────────
 // RD STAGE 1 — Baseline & readiness
-// ─────────────────────────────────────────────────────────────────────────────
+// ───────────��─────────────────────────────────────────────────────────────────
 function RD1({ rd, setRData, fa }) {
   const d = rd.data; const b = d.baseline || {};
   const set = (f,v) => setRData(s => ({ ...s, baseline:{ ...(s.baseline||{}), [f]:v } }));
@@ -2628,7 +2641,7 @@ function PeerIncomeBenchmark({ revTier }) {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // RD STAGE 2 — Goal alignment
-// ─────────────────────────────────────────────────────────────────────────────
+// ────────────────────────────────────���────────────────────────────────────────
 function RD2({ rd, setRData }) {
   const g = rd.data.goals2 || {};
   const set = (f,v) => setRData(s => ({ ...s, goals2:{ ...(s.goals2||{}), [f]:v } }));
@@ -3462,7 +3475,7 @@ const FindingBlock = ({ kind, tag, heading, source, children }) => {
 
 // ═════════════════════════════════════════════════════════════════════════════
 // ACTION PLAN — twelve business areas, ranked into three priorities
-// ═════════════════════════════════════════════════════════════════════════════
+// ════════════════════════════════════════��════════════════════════════════════
 // Areas map to one of the four MFP categories, and some map to a guided module.
 // Ranking is weight-aware: a constraint area gates everything downstream, a value
 // area produces the largest near-term lift, so neither is ranked on raw score alone.
