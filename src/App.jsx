@@ -165,8 +165,8 @@ const Head = ({ eyebrow, title, sub }) => (
 // ─────────────────────────────────────────────────────────────────────────────
 const FA_STAGES = [
   { n:1, label:"Your accounting profile" }, { n:2, label:"Enterprise registry & shared costs" }, { n:3, label:"Goal alignment" }, { n:4, label:"Ratio deep dive" },
-  { n:5, label:"Peer benchmarking" },
-];
+  { n:5, label:"Peer benchmarking" }, { n:6, label:"Upload your documents" }, { n:7, label:"Budgeting & working capital" },
+  ];
 
 const BOOK_PREPARER = [
   ["self", "I do it myself"], ["family", "My spouse or a family member"], ["bookkeeper", "A bookkeeper we employ"],
@@ -900,7 +900,7 @@ function FA3({ fa, setFA }) {
   );
 }
 
-// ───────────────────────────────────────────��─────────────────────────────────
+// ───────────────────────────────────────────���─────────────────────────────────
 // FA STAGE 4 — Peer benchmarking
 // ─────────────────────────────────────────────────────────────────────────────
 function FA4({ fa, setFA }) {
@@ -2817,7 +2817,7 @@ function RD4({ rd, setRData, fa }) {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // RD STAGE 5 — Barrier identification
-// ─────────��───────────────────────────────────────────────────────────────────
+// ────────����───────────────────────────────────────────────────────────────────
 // Cross-cutting regulatory & compliance checklist — surfaces for any selected path with
 // meaningful regulatory load (reg >= 3), independent of that path's specific barrier list.
 const COMPLIANCE_ITEMS = {
@@ -3335,7 +3335,7 @@ const FindingBlock = ({ kind, tag, heading, source, children }) => {
 
 // ═══════════════════��══��════════���═════════════════════════════════════════════
 // ACTION PLAN — twelve business areas, ranked into three priorities
-// ════════════════════════════════���═════════════════════════════════════���══════
+// ═════════════════════════════���══���═════════════════════════════════════���══════
 // Areas map to one of the four MFP categories, and some map to a guided module.
 // Ranking is weight-aware: a constraint area gates everything downstream, a value
 // area produces the largest near-term lift, so neither is ranked on raw score alone.
@@ -3624,7 +3624,7 @@ function FarmProfilePage({ profile, setProfile, fa, rd, goFA, goRD, goRisk, goLe
                     <p style={{ fontSize:11, color:T.fgS, margin:0, whiteSpace:"nowrap" }}>{t[1]}</p>
                   </div>
                   <p style={{ fontSize:12.5, color:T.fgM, margin:"4px 0 8px" }}>{t[2]}</p>
-                  <p style={{ fontSize:12, color:T.green, margin:0 }}>▸ {t[3]}</p>
+                  <p style={{ fontSize:12, color:T.green, margin:0 }}>��� {t[3]}</p>
                 </div>
               ))}
             </div>
@@ -6623,9 +6623,19 @@ else if (isRD) { if (rd.stage<rdTotal) goRD(rd.stage+1); else goLegacy(1); }
   if (isLeg && leg.stage===legTotal) nextLabel = "Farm Risk →";
   if (isRisk && risk.stage===riskTotal) nextLabel = "Start over ↺";
 
-const FA_BODY = [
+  function FADocuments({ fa, setFA }) {
+    const docs = fa.documents || [];
+    const addDocs = (files) => setFA(s => ({ ...s, documents:[...(s.documents||[]), ...Array.from(files).map(file => ({ id:`doc-${Date.now()}-${file.name}`, name:file.name, size:file.size, type:file.type || "Document", status:"Ready for review" }))] }));
+    const remove = id => setFA(s => ({ ...s, documents:(s.documents||[]).filter(doc=>doc.id!==id) }));
+    return <div><Head eyebrow="Financial Analysis · Stage 6" title="Upload your documents" sub="Bring the records you already have. We will use them to reduce re-entry, identify missing periods, and make the analysis easier to explain—not silently decide what a number means." /><div style={cardStyle({ borderTop:`4px solid ${T.blue}` })}><div style={cardLblStyle()}>Choose files to review</div><p style={{ color:T.fgM, fontSize:13.5, lineHeight:1.6, marginTop:0 }}>Upload statements, enterprise reports, tax summaries, budgets, or CSV exports. PDF, CSV, XLS, XLSX, and common image files are supported.</p><input type="file" multiple accept=".pdf,.csv,.xls,.xlsx,.png,.jpg,.jpeg" onChange={e=>addDocs(e.target.files)} style={{ width:"100%", padding:16, border:`1px dashed ${T.blue}`, borderRadius:8, background:T.blueL }} /><div style={{ marginTop:10, color:T.fgS, fontSize:12 }}>Documents remain associated with this analysis session until you confirm what should be used.</div></div>{docs.length===0?<div style={cardStyle({ background:T.bgAlt })}><div style={{ color:T.fgM, fontSize:13.5 }}>No documents uploaded yet. You can continue with estimates, or add the records you trust most.</div></div>:<div style={cardStyle()}><div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}><div style={cardLblStyle()}>Documents in this analysis</div><span style={{ fontSize:12, color:T.fgS }}>{docs.length} file{docs.length===1?"":"s"}</span></div>{docs.map(doc=><div key={doc.id} style={{ display:"flex", justifyContent:"space-between", gap:12, alignItems:"center", padding:"11px 0", borderBottom:`1px solid ${T.div}` }}><div><strong style={{ color:T.navy, fontSize:13 }}>{doc.name}</strong><div style={{ color:T.fgS, fontSize:12, marginTop:3 }}>{doc.type} · {Math.max(1,Math.round(doc.size/1024))} KB · {doc.status}</div></div><button type="button" onClick={()=>remove(doc.id)} style={btnStyle("ghost")}>Remove</button></div>)}</div>}<div style={cardStyle({ background:T.blueL, borderColor:"#c8d9e8" })}><strong>Review before using</strong><p style={{ margin:"5px 0 0", color:T.fgM, fontSize:13, lineHeight:1.5 }}>A document can be accurate and still use a different period, allocation method, or accounting basis. The next steps keep source and assumption visible.</p></div></div>;
+  }
+  function FABudget({ fa, setFA }) {
+    const b=fa.budget||{}; const set=(key,value)=>setFA(s=>({...s,budget:{...(s.budget||{}),[key]:value}})); const n=k=>Number(b[k])||0; const available=n("cash")+n("line")-n("committed")-n("debt"); const gap=Math.max(0,-available); const fields=[["cash","Cash available today","0"],["line","Available operating line","0"],["committed","Committed bills and inputs","0"],["debt","Debt service due before next receipts","0"],["receipts","Expected receipts before next major payment","0"]];
+    return <div><Head eyebrow="Financial Analysis · Stage 7" title="Budgeting and working capital" sub="A profitable year can still create a cash squeeze. This view separates what the business earns from when cash arrives and when obligations come due." /><div style={cardStyle()}><div style={cardLblStyle()}>Near-term cash position</div><div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(190px,1fr))", gap:12 }}>{fields.map(([key,label,placeholder])=><label key={key} style={labelStyle}>{label}<input type="number" min="0" step="100" placeholder={placeholder} value={b[key]||""} onChange={e=>set(key,e.target.value)} style={inputStyle()} /></label>)}</div></div><div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))", gap:14 }}><div style={cardStyle({ borderTop:`4px solid ${available>=0?T.green:T.red}`, marginBottom:0 })}><div style={cardLblStyle()}>Working capital before receipts</div><div style={{ fontSize:30, fontWeight:800, color:available>=0?T.green:T.red }}>{available<0?"-":""}${Math.abs(available).toLocaleString()}</div><div style={{ color:T.fgM, fontSize:13, marginTop:5 }}>{available>=0?"Positive room after committed obligations.":`Potential shortfall of $${gap.toLocaleString()} before the next receipts.`}</div></div><div style={cardStyle({ borderTop:`4px solid ${T.blue}`, marginBottom:0 })}><div style={cardLblStyle()}>Receipts to plan against</div><div style={{ fontSize:30, fontWeight:800, color:T.blue }}>${n("receipts").toLocaleString()}</div><div style={{ color:T.fgM, fontSize:13, marginTop:5 }}>Use confirmed timing where possible; estimates should be labeled.</div></div></div><div style={cardStyle({ background:T.blueL, borderColor:"#c8d9e8" })}><strong>What this is for</strong><p style={{ margin:"5px 0 0", color:T.fgM, fontSize:13, lineHeight:1.5 }}>This is a planning screen, not a borrowing recommendation. It highlights when to ask your accountant, lender, or advisor to review timing, terms, and contingency options.</p></div></div>;
+  }
+  const FA_BODY = [
   <FA0 fa={fa} setFA={setFA} />, <FA1Registry fa={fa} setFA={setFA} />, <FA2 fa={fa} setFA={setFA} />, <FA3 fa={fa} setFA={setFA} />,
-    <FA4 fa={fa} setFA={setFA} />,
+  <FA4 fa={fa} setFA={setFA} />, <FADocuments fa={fa} setFA={setFA} />, <FABudget fa={fa} setFA={setFA} />,
   ];
   const RD_BODY = [
     <RD1 rd={rd} setRData={setRData} fa={fa} />, <RD2 rd={rd} setRData={setRData} />, <RD3 rd={rd} setRData={setRData} />,
