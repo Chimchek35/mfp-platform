@@ -900,7 +900,7 @@ function FA3({ fa, setFA }) {
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// ───────────────────────────────────────────��─────────────────────────────────
 // FA STAGE 4 — Peer benchmarking
 // ─────────────────────────────────────────────────────────────────────────────
 function FA4({ fa, setFA }) {
@@ -2817,7 +2817,7 @@ function RD4({ rd, setRData, fa }) {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // RD STAGE 5 — Barrier identification
-// ─────────────────────────────────────────────────────────────────────────────
+// ─────────��───────────────────────────────────────────────────────────────────
 // Cross-cutting regulatory & compliance checklist — surfaces for any selected path with
 // meaningful regulatory load (reg >= 3), independent of that path's specific barrier list.
 const COMPLIANCE_ITEMS = {
@@ -3068,7 +3068,7 @@ function OpportunityCostLens({ financialSel, physicalSel, setRData }) {
 
 // ───────────────────────────────────────────────────────────────────���─────────
 // RD STAGE 7 — Financial reserves & sequencing
-// ─────────────────────────────────────────────────────────────────────────────
+// ────────��────────────────────────────────────────────────────────────────────
 // Distinct from Stage 4 (which opportunity to pursue): this stage is about capital
 // placement and timing — where reserve money sits, and in what order to fund the
 // equipment reserve, diversify income, and layer in longer-horizon investments.
@@ -3335,7 +3335,7 @@ const FindingBlock = ({ kind, tag, heading, source, children }) => {
 
 // ═══════════════════��══��════════���═════════════════════════════════════════════
 // ACTION PLAN — twelve business areas, ranked into three priorities
-// ══════════════════════════════════════════════════════════════════════���══════
+// ════════════════════════════════���═════════════════════════════════════���══════
 // Areas map to one of the four MFP categories, and some map to a guided module.
 // Ranking is weight-aware: a constraint area gates everything downstream, a value
 // area produces the largest near-term lift, so neither is ranked on raw score alone.
@@ -5459,7 +5459,8 @@ const VIS_STAGES = [
   { n:7, label:"Who holds this" },
   { n:8, label:"Where it binds" },
   { n:9, label:"The statement" },
-  { n:10, label:"The document" },
+  { n:10, label:"Farm profile & SWOT" },
+  { n:11, label:"The document" },
 ];
 
 // The four tests. Most answers fail at least one, which is the point of running them.
@@ -5994,7 +5995,21 @@ function VIS7({ vis, setVis, profile }) {
 }
 
 
-// ── Vision 8 — The document ────────────────────���─────────────────────────────
+// ── Vision 8 — Farm profile and SWOT ─────────────────────────────────────
+function VIS_PROFILE({ vis, profile, setProfile, goFA }) {
+  const advantages = (vis.items||[]).filter(i=>i.kind==="advantage" && i.text?.trim()).map(i=>i.text.trim());
+  const values = (vis.items||[]).filter(i=>i.kind==="value" && i.text?.trim()).map(i=>i.text.trim());
+  const strengths = advantages.length ? advantages : [profile.advantage || "Your farm's distinctive strengths will appear here after you test the vision."];
+  const weaknesses = values.length ? values.map(v=>`Capacity or trade-off: ${v}`) : ["Name the constraint that could make the vision hard to deliver."];
+  const opportunities = [profile.nearTerm, profile.longTerm].filter(Boolean);
+  const threats = [profile.productionMix, profile.ventures].filter(Boolean);
+  const swot = { strengths, weaknesses, opportunities:opportunities.length?opportunities:["Add a near-term opportunity in your vision."], threats:threats.length?threats:["Add an external condition that could change the plan."] };
+  const save = () => setProfile(p=>({ ...p, swotStrengths:swot.strengths.join("; "), swotWeaknesses:swot.weaknesses.join("; "), swotOpportunities:swot.opportunities.join("; "), swotThreats:swot.threats.join("; "), advantage:swot.strengths.join("; "), values:values.join("; ") }));
+  const box = (title, items, color) => <div style={cardStyle({ marginBottom:0, borderTop:`4px solid ${color}` })}><div style={cardLblStyle()}>{title}</div>{items.map((item,i)=><div key={i} style={{ padding:"9px 0", borderBottom:i<items.length-1?`1px solid ${T.div}`:"none", color:T.fgM, fontSize:13.5, lineHeight:1.5 }}>{item}</div>)}</div>;
+  return <div><Head eyebrow="Strategic Vision · Farm profile" title="Your farm profile and SWOT" sub="This is the working profile generated from what you said—not a generic score. Confirm it, then Eagle Eye can use it to filter signals and explain what matters to your farm." /><div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(260px,1fr))", gap:14 }}>{box("Strengths",swot.strengths,T.green)}{box("Weaknesses / trade-offs",swot.weaknesses,T.amber)}{box("Opportunities",swot.opportunities,T.blue)}{box("Threats / conditions",swot.threats,T.red)}</div><div style={cardStyle({ background:T.blueL, borderColor:"#c8d9e8", marginTop:16 })}><strong>Use this profile across MFP</strong><p style={{ margin:"5px 0 13px", color:T.fgM, fontSize:13, lineHeight:1.5 }}>Saving this profile makes it available to Eagle Eye Intelligence, Financial Analysis, Revenue Diversification, and Farm Risk. You can revise it later as your priorities change.</p><button type="button" onClick={() => { save(); goFA(1); }} style={btnStyle("primary")}>Save profile and continue to Financial Analysis →</button></div></div>;
+}
+
+// ── Vision 9 — The document ────────────────────���─────────────────────────────
 // Renders ONLY approved sections. Everything diagnostic stays in the working
 // record: demoted claims, person-dependent advantages, cost-test answers and the
 // who-holds-this ratings never appear here. Publishing a document that names a
@@ -6469,7 +6484,7 @@ const GENERIC_FARM_FINANCIALS = {
 };
 
 export default function App() {
-  const [module, setModule] = useState("profile");
+  const [module, setModule] = useState("vision");
   const [profile, setProfile] = useState({ ...GENERIC_FARM_SWOT, ...GENERIC_FARM_STRATEGY });
   // Persistence. `restored` gates the autosave so the initial empty state can
   // never overwrite a saved record before the load has finished.
@@ -6530,7 +6545,7 @@ export default function App() {
   const resetAll = () => {
     clearRecord();
     applyRecord({});
-    setModule("profile");
+    setModule("vision");
     setSavedAt(null);
   };
   const setSucc = (patch) => setLeg(s => ({ ...s, succ:{ ...(s.succ||{}), ...patch } }));
@@ -6587,7 +6602,7 @@ export default function App() {
 
   let backLabel = "← Back"; let backDisabled = (isRisk && risk.stage===1) || (isLeg && leg.stage===1) || (isVis && vis.stage===1);
   const onBack = () => { if (isVis) { if (vis.stage>1) goVision(vis.stage-1); else setModule("profile"); } else if (isFA) { if (fa.stage>1) goFA(fa.stage-1); else goVision(visTotal); } else if (isRD) { if (rd.stage>1) goRD(rd.stage-1); else goFA(FA_STAGES.length); } else if (isLeg) { if (leg.stage>1) goLegacy(leg.stage-1); else goRD(rdTotal); } else if (isRisk) { if (risk.stage>1) goRisk(risk.stage-1); else goLegacy(legTotal); } };
-  if (isVis && vis.stage===1) backLabel = "← Farm Profile";
+  if (isVis && vis.stage===1) backLabel = "← Start";
   if (isFA && fa.stage===1) backLabel = "← Strategic Vision";
   if (isRD && rd.stage===1) backLabel = "← Financial Analysis";
   if (isRisk && risk.stage===1) backLabel = "← Revenue Diversification";
@@ -6652,6 +6667,7 @@ const FA_BODY = [
   <VIS2 vis={vis} setVis={setVis} kind="value" />,
   <VIS3 vis={vis} setVis={setVis} />, <VIS4 vis={vis} setVis={setVis} />, <VIS5 vis={vis} setVis={setVis} goLegacy={()=>{ setModule("legacy"); setLeg(s=>({...s, role:"compare"})); }} />,
     <VIS6 vis={vis} setVis={setVis} />, <VIS7 vis={vis} setVis={setVis} profile={profile} />,
+    <VIS_PROFILE vis={vis} profile={profile} setProfile={setProfile} goFA={goFA} />,
     <VIS8 vis={vis} profile={profile} />,
   ];
   const body = riskConvoActive
@@ -6682,8 +6698,8 @@ const FA_BODY = [
   const faTabStyle = isFA ? { ...tabBase, order:2, background:T.blueL, border:`1.5px solid ${T.blue}` } : { ...tabBase, order:2, background:"transparent" };
   const rdTabStyle = isRD ? { ...tabBase, order:3, background:T.blueL, border:`1.5px solid ${T.blue}` } : { ...tabBase, order:3, background:"transparent" };
   const riskTabStyle = isRisk ? { ...tabBase, order:5, background:T.blueL, border:`1.5px solid ${T.blue}` } : { ...tabBase, order:5, background:"transparent" };
-  const profileTabStyle = isProfile ? { ...tabBase, order:0, background:T.blueL, border:`1.5px solid ${T.blue}` } : { ...tabBase, order:0, background:"transparent" };
-  const visTabStyle = isVis ? { ...tabBase, order:1, background:T.blueL, border:`1.5px solid ${T.blue}` } : { ...tabBase, order:1, background:"transparent" };
+  const profileTabStyle = isProfile ? { ...tabBase, order:1, background:T.blueL, border:`1.5px solid ${T.blue}` } : { ...tabBase, order:1, background:"transparent" };
+  const visTabStyle = isVis ? { ...tabBase, order:0, background:T.blueL, border:`1.5px solid ${T.blue}` } : { ...tabBase, order:0, background:"transparent" };
   const legTabStyle = isLeg ? { ...tabBase, order:4, background:T.blueL, border:`1.5px solid ${T.blue}` } : { ...tabBase, order:4, background:"transparent" };
   const lblOn = { fontSize:14.5, fontWeight:700, color:T.navy, letterSpacing:"0.01em" };
   const lblOff = { ...lblOn, fontWeight:600, color:T.fgS };
