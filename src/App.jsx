@@ -129,7 +129,7 @@ const IconCheckSm = ({ color = "#fff", size = 11 }) => (
 // ─────────────────────────────────────────────────�������───────────────────────────
 // STYLE HELPERS
 // ─────────────────────────────────────────────────────────────────────────────
-const cardStyle = (extra={}) => ({ background:"#fff", border:`1px solid ${T.border}`, borderRadius:10, padding:"24px 28px", marginBottom:14, ...extra });
+const cardStyle = (extra={}) => ({ background:"#fff", border:`1px solid ${T.border}`, borderRadius:16, padding:"24px 28px", marginBottom:20, boxShadow:"0 8px 24px rgba(14,28,57,.06)", ...extra });
 const h1Style = { fontSize:26, fontWeight:650, color:T.navy, margin:"0 0 6px", letterSpacing:"-0.01em", lineHeight:1.28 };
 const eyebrowStyle = { fontSize:12, fontWeight:650, letterSpacing:"0.12em", textTransform:"uppercase", color:T.fgS, marginBottom:8 };
 const subStyle = { fontSize:16, color:T.fgM, margin:"8px 0 24px", maxWidth:700, lineHeight:1.65 };
@@ -164,9 +164,9 @@ const Head = ({ eyebrow, title, sub }) => (
   </div>
 );
 
-// ────────────────���────────────────────────────────────�������������������������──�����────────────────────
+// ────────────────�����────────────────────────────────────�������������������������──�����────────────────────
 // DATA
-// ──────────────────────────────��──────────────────────────────────────��─��─��─��─
+// ────────────────────────────��─��──────────────────────────────────────��─��─��─��─
 const FA_STAGES = [
   { n:1, label:"Your accounting profile" }, { n:2, label:"Enterprise registry & shared costs" }, { n:3, label:"Goal alignment" },
   { n:4, label:"Upload your documents" }, { n:5, label:"Budgeting & working capital" }, { n:6, label:"Ratio deep dive" }, { n:7, label:"Peer benchmarking" },
@@ -2361,7 +2361,7 @@ function LivestockInsuranceCalculator({ risk, setRisk }) {
   );
 }
 
-// ───��������─�����──────────���─────────────���───────────────────────────────────────���──────
+// ───��������─�����──────────���──────────���──���───────────────────────────────────────���──────
 // RD helpers
 // ─────────────────────────────────────────────────────────────────────────────
 // Each lever category is now built from specific, measurable items rather than one
@@ -3207,7 +3207,7 @@ function RD7({ rd, setRData, fa }) {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // RD STAGE 8 — Action plan
-// ──────────────────────────────────────────────────────────────────��──────────
+// ───────────────────────────────────────────────────────────���──────��──────────
 function RD8({ rd, fa }) {
   const d = rd.data; const selected = d.selectedOpps || []; const ranked = d.rankedOpps || []; const lev = d.leverItems || {}; const b = d.baseline || {};
   const sel = selected.map(id => OPPS.find(o=>o.id===id)).filter(Boolean).sort((a,c) => { const ra=(ranked.find(r=>r.id===a.id)||{}).rank||99, rb=(ranked.find(r=>r.id===c.id)||{}).rank||99; return ra-rb; });
@@ -6449,7 +6449,7 @@ function DataControls({ state, savedAt, storageOk, onImport, onImportProfile, on
   );
 }
 
-// ═══════════════════��════════════════════════════════════════════════════════��
+// ═══════════════════��═══════���════════════════════════════════════════════════��
 // ROOT APP
 // ═════════════════════════════════════════════���═══════════════════════════════
 // Generic farm SWOT, pre-populated so the quadrants open with a real starting point
