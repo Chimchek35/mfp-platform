@@ -37,10 +37,10 @@ const FontStyles = () => (
   .mfp-root.mfp-turbotax-flow .mfp-flow-header>div:nth-child(3){gap:8px!important;flex:1;justify-content:center;}
   .mfp-root.mfp-turbotax-flow .mfp-flow-header>div:nth-child(3)>div{padding:10px 16px!important;border-radius:999px!important;}
   .mfp-root.mfp-turbotax-flow .mfp-flow-header>div:nth-child(3)>div:not([style*="rgb"]){background:transparent!important;}
-  .mfp-root.mfp-turbotax-flow .mfp-flow-rail{width:248px!important;background:linear-gradient(180deg,#0E1C39 0%,#0C4477 58%,#0E1C39 100%)!important;border-right:0;color:#fff!important;}
+  .mfp-root.mfp-turbotax-flow .mfp-flow-rail{width:248px!important;background:linear-gradient(180deg,#083d62 0%,#0b5577 48%,#083d62 100%)!important;border-right:1px solid #062f4b;color:#fff!important;}
   .mfp-root.mfp-turbotax-flow .mfp-flow-rail div,.mfp-root.mfp-turbotax-flow .mfp-flow-rail span{color:#fff!important;}
   .mfp-root.mfp-turbotax-flow .mfp-flow-rail nav>div[style*="background: transparent"]{color:#d9edf4!important;}
-  .mfp-root.mfp-turbotax-flow .mfp-flow-rail>div:first-child{padding:34px 24px 22px!important;background:linear-gradient(145deg,#0E1C39 0%,#0C4477 64%,#358733 150%)!important;color:#fff;}
+  .mfp-root.mfp-turbotax-flow .mfp-flow-rail>div:first-child{padding:34px 24px 22px!important;background:linear-gradient(145deg,#083d62 0%,#0c7390 62%,#20afd2 100%)!important;color:#fff;}
   .mfp-root.mfp-turbotax-flow .mfp-flow-rail nav{padding:14px 12px;}
   .mfp-root.mfp-turbotax-flow .mfp-flow-rail nav>div{border-left:0!important;border-radius:12px;padding:13px 14px!important;margin:4px 0;}
   .mfp-root.mfp-turbotax-flow .mfp-flow-main{background:#fff;}
@@ -522,7 +522,7 @@ function FA1Registry({ fa, setFA }) {
   </div>;
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────��───────────────────────────────────────────
 // FA STAGE 2 — Goal alignment
 // ─────────────────────────────────────────────────────────────────────────────
 function FA2({ fa, setFA }) {
@@ -571,7 +571,7 @@ function FA2({ fa, setFA }) {
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// ───────────────────────────────────────────────────────────────��─────────────
 // FA STAGE 3 — Ratio deep dive
 // ─────────────────────────────────────────────────────────────────────────────
 // Shared ratio engine for Financial Analysis Stage 3. Extracted to a single function so
@@ -3297,7 +3297,7 @@ function EfficiencyValueImpact({ sel, lev }) {
   );
 }
 
-// ══════���═════════════════════════════════════════════��═══════��═════��══════��═══
+// ══════���═════════════════════════════════════════════��═══════����═════��══════��═══
 // FARM PROFILE — a single 360° farm view that fills in as the farmer completes
 // onboarding and assessments, and feeds relevant fields back into FA, RD, and Risk
 // so nothing has to be entered twice.
@@ -4705,7 +4705,7 @@ function LEG9({ leg, setLegData }) {
   );
 }
 
-// ── Stage 8 — Triggers & contingencies ───────────────────────────────────────
+// ── Stage 8 — Triggers & contingencies ──────────────────────────────��────────
 function LEG10({ leg, setLegData }) {
   const d = leg.data || {};
   const c = d.contingency || {};
@@ -5015,7 +5015,7 @@ function LEG12({ leg, setLegData, profile }) {
 }
 
 
-// ════════════════════════════════════════════════════════════════════���════════
+// ══════���═════════════════════════════════════════════════════════════���════════
 // SUCCESSOR TRACK
 // ═════════════════════════════════════════════════════════════════════════════
 // Written to the successor, not about them. Their entry point is not "help plan a
@@ -5820,7 +5820,7 @@ function VIS4({ vis, setVis }) {
   );
 }
 
-// ── Vision 5 — Who holds this ────────���────────────��──────────────────────────
+// ── Vision 5 — Who holds this ────────���────────────��────────────���─────────────
 function VIS5({ vis, setVis, goLegacy }) {
   const h = vis.holders || {};
   const setH = (id,val) => setVis({ holders:{ ...h, [id]:val } });
@@ -5921,7 +5921,7 @@ function VIS6({ vis, setVis }) {
   );
 }
 
-// ── Vision 7 — The statement ───────────────────────────���──────────��──────────
+// ── Vision 7 — The statement ───────────────────────────���───────���──��──────────
 function VIS7({ vis, setVis, profile }) {
   const s = visStats(vis);
   const pub = vis.published || {};
