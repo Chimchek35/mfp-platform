@@ -48,7 +48,7 @@ const FontStyles = () => (
   .mfp-root.mfp-turbotax-flow .mfp-flow-main>div:nth-child(2){height:6px!important;background:#eef0f4!important;}
   .mfp-root.mfp-turbotax-flow .mfp-flow-main>div:nth-child(2)>div{background:linear-gradient(90deg,#0C4477,#358733)!important;}
   .mfp-root.mfp-turbotax-flow .mfp-stage-card{background:transparent;border:0;border-radius:0;padding:0;box-shadow:none;}
-  .mfp-root.mfp-turbotax-flow .mfp-stage-card h1{font-size:clamp(34px,4vw,54px)!important;line-height:1.08!important;letter-spacing:-.04em!important;color:#0E1C39;max-width:860px;}
+  .mfp-root.mfp-turbotax-flow .mfp-stage-card h1{font-size:clamp(30px,3.2vw,44px)!important;line-height:1.05!important;letter-spacing:-.04em!important;color:#0E1C39;max-width:860px;margin-bottom:8px!important;}.mfp-root.mfp-turbotax-flow .mfp-stage-card h1 + p{margin-bottom:12px!important;}
   .mfp-root.mfp-turbotax-flow .mfp-stage-card h2{font-size:clamp(22px,2.5vw,32px)!important;}
   .mfp-root.mfp-turbotax-flow .mfp-stage-card button{border-radius:999px;}
   .mfp-root.mfp-turbotax-flow .mfp-stage-card button[style*="background"]{box-shadow:0 4px 12px rgba(12,68,119,.14);}
@@ -164,9 +164,9 @@ const Head = ({ eyebrow, title, sub }) => (
   </div>
 );
 
-// ─────────────────────────────────────────────────────�����������������������──�����────────────────────
+// ─────────────────────────────────────────────────────�������������������������──�����────────────────────
 // DATA
-// ───────────────────────────────────────────────────────────────────────��─��─��─
+// ─────────────────────────────────────────────────────────────────────��─��─��─��─
 const FA_STAGES = [
   { n:1, label:"Your accounting profile" }, { n:2, label:"Enterprise registry & shared costs" }, { n:3, label:"Goal alignment" },
   { n:4, label:"Upload your documents" }, { n:5, label:"Budgeting & working capital" }, { n:6, label:"Ratio deep dive" }, { n:7, label:"Peer benchmarking" },
@@ -2361,7 +2361,7 @@ function LivestockInsuranceCalculator({ risk, setRisk }) {
   );
 }
 
-// ───��������─�����──────────���────────────────────────────────────────────────────────────
+// ───��������─�����──────────���─────────────────────────────────────────────────────���──────
 // RD helpers
 // ─────────────────────────────────────────────────────────────────────────────
 // Each lever category is now built from specific, measurable items rather than one
@@ -2551,7 +2551,7 @@ const scoredOpps = (rd, faEnterprises, faS3vals) => { const d=rd.data||{}; const
 
 // ��������──��������───────────────────────────────────────────────────────────────────
 // RD STAGE 1 — Baseline & readiness
-// ────────────────────────�����──���─���─���───���─���────────────────────────������──���������──���────
+// ────────────────────────�����──���─���─���───���─���────────────────���───────������──���������──���────
 function RD1({ rd, setRData, fa }) {
   const d = rd.data; const b = d.baseline || {};
   const set = (f,v) => setRData(s => ({ ...s, baseline:{ ...(s.baseline||{}), [f]:v } }));
@@ -5577,7 +5577,7 @@ function VIS1({ vis, setVis, profile, goProfile }) {
   return (
     <div>
       <Head eyebrow="Strategic vision · Stage 1" title="Core Competencies and Competitive Advantage" sub="Start with the reason customers, employees, landlords, or partners choose this operation over another." /><VisionInlineVisual stageLabel="Core capability → defensible advantage" />
-      <div style={{ display:"grid", gridTemplateColumns:"minmax(0,1fr) minmax(280px,420px)", gap:24, alignItems:"center", marginBottom:24, padding:"22px 0", borderBottom:`1px solid ${T.div}` }}><div><div style={cardLblStyle()}>The capability behind the farm</div><p style={{ fontSize:15, color:T.fgM, lineHeight:1.55, margin:0, maxWidth:560 }}>What can this operation do exceptionally well—and what would be difficult for another farm to copy?</p></div><img src="/vision-competitive-advantage.png" alt="Infographic connecting farm enterprises, family ownership, cash flow, customers, and long-term growth" style={{ width:"100%", height:180, objectFit:"cover", borderRadius:16 }} /></div>
+      <div style={{ display:"grid", gridTemplateColumns:"minmax(0,1fr) minmax(280px,420px)", gap:16, alignItems:"center", marginBottom:14, padding:"10px 0", borderBottom:`1px solid ${T.div}` }}><div><div style={cardLblStyle()}>The capability behind the farm</div><p style={{ fontSize:15, color:T.fgM, lineHeight:1.55, margin:0, maxWidth:560 }}>What can this operation do exceptionally well—and what would be difficult for another farm to copy?</p></div><img src="/vision-competitive-advantage.png" alt="Infographic connecting farm enterprises, family ownership, cash flow, customers, and long-term growth" style={{ width:"100%", height:100, objectFit:"cover", borderRadius:16 }} /></div>
       {!hasProfile && (<>
         <Flag type="warn">Your Farm Profile does not have competitive advantage, core values, or objectives filled in yet. You can add items here directly, or fill the profile first.
           {goProfile && <div style={{ marginTop:9 }}><button onClick={goProfile} style={{ ...btnStyle("outline"), fontSize:12, padding:"6px 13px" }}>Open Farm Profile</button></div>}
@@ -5637,7 +5637,7 @@ function VIS1({ vis, setVis, profile, goProfile }) {
   const add = () => setVis({ items:[...(vis.items || []), { id:"value-"+Date.now(), kind:"value", sourceLabel:"Added here", text:"", tests:{}, verdict:"untested" }] });
   const seed = () => setVis({ items:[...(vis.items || []), ...(profile.values && !values.length ? [{ id:"profile-value-"+Date.now(), kind:"value", sourceLabel:"Farm Profile", text:profile.values, tests:{}, verdict:"untested" }] : [])], valuesSeeded:true });
   return <div>
-    <Head eyebrow="Strategic vision · Stage 2" title="Core values" sub="Identify the principles that should guide choices when the easiest or most profitable option is not automatically the right one." />
+    <Head eyebrow="Strategic vision · Stage 2" title="Core values" sub="Identify the principles that should guide choices when the easiest or most profitable option is not automatically the right one." /><VisionInlineVisual stageLabel="Core values → consistent decisions" />
     <div style={cardStyle({ borderTop:`4px solid ${T.blue}` })}>
       <div style={cardLblStyle()}>Why this matters</div>
       <p style={{ fontSize:14, color:T.fgM, lineHeight:1.65, margin:0 }}>Core values turn a farm&apos;s identity into a decision filter. They help the household decide what work to accept, how to treat land and people, and what trade-offs are worth making. A value becomes useful when it can change a decision — not when it is only a good-sounding word.</p>
@@ -5726,7 +5726,7 @@ function VIS3({ vis, setVis }) {
   const answered = values.filter(v => ((v.tests||{}).cost||"").trim().length > 10).length;
   return (
     <div>
-      <Head eyebrow="Strategic vision · Stage 5" title="What it has cost you" sub="A value becomes real when it changes a decision." />
+      <Head eyebrow="Strategic vision · Stage 5" title="What it has cost you" sub="A value becomes real when it changes a decision." /><VisionInlineVisual stageLabel="Trade-offs → tested principles" />
       {values.length === 0 ? (
         <Flag type="warn">No core values recorded yet. Go back to stage 1 and mark at least one claim as a core value.</Flag>
       ) : (
@@ -5761,7 +5761,7 @@ function VIS4({ vis, setVis }) {
 
   return (
     <div>
-      <Head eyebrow="Strategic vision · Stage 6" title="Turn it into rules" sub="This is where a personal vision becomes an organizational one. A value cannot be followed by an employee. A rule can, and more importantly a rule can be cited back at you." />
+      <Head eyebrow="Strategic vision · Stage 6" title="Turn it into rules" sub="This is where a personal vision becomes an organizational one. A value cannot be followed by an employee. A rule can, and more importantly a rule can be cited back at you." /><VisionInlineVisual stageLabel="Values → operating rules" />
       <div style={cardStyle({ borderTop:`4px solid ${T.blue}` })}>
         <div style={cardLblStyle()}>What the conversion looks like</div>
         {[["We value stewardship","We do not rent ground we cannot farm to our own standard, even when the rent is good"],
@@ -5826,7 +5826,7 @@ function VIS5({ vis, setVis, goLegacy }) {
   const canState = VIS_HOLDERS.filter(p => h[p.id] === 3);
   return (
     <div>
-      <Head eyebrow="Strategic vision · Stage 7" title="Who holds this" sub="A vision one person holds is a preference. A vision the organization holds is a constraint. The difference is whether anyone else could state it, and whether they could use it to stop something." />
+      <Head eyebrow="Strategic vision · Stage 7" title="Who holds this" sub="A vision one person holds is a preference. A vision the organization holds is a constraint. The difference is whether anyone else could state it, and whether they could use it to stop something." /><VisionInlineVisual stageLabel="Shared ownership → organizational constraint" />
       <div style={cardStyle()}>
         <div style={cardLblStyle()}>Where each person actually stands</div>
         {VIS_HOLDERS.map(p => (
@@ -5881,7 +5881,7 @@ function VIS6({ vis, setVis }) {
   const unbound = rules.filter(r => r.statement && (r.binds||[]).length === 0);
   return (
     <div>
-      <Head eyebrow="Strategic vision · Stage 8" title="Where it binds" sub="A vision that does not show up where decisions get made is wall decoration. Mark which decisions each rule actually governs." />
+      <Head eyebrow="Strategic vision · Stage 8" title="Where it binds" sub="A vision that does not show up where decisions get made is wall decoration. Mark which decisions each rule actually governs." /><VisionInlineVisual stageLabel="Rules → decisions and actions" />
       {rules.length === 0 ? (
         <Flag type="warn">No rules yet. Go back to stage 4 and write at least one.</Flag>
       ) : (
@@ -6457,7 +6457,7 @@ function DataControls({ state, savedAt, storageOk, onImport, onImportProfile, on
 
 // ═══════════════════��════════════════════════════════════════════════════════��
 // ROOT APP
-// ═════════════════════════════════════════════════════════════════════════════
+// ═════════════════════════════════════════════���═══════════════════════════════
 // Generic farm SWOT, pre-populated so the quadrants open with a real starting point
 // rather than four empty boxes. Every line is editable and meant to be replaced with
 // the operation's own read once the conversation gets specific.
@@ -6493,7 +6493,7 @@ const GENERIC_FARM_FINANCIALS = {
   livingWithdrawals:"68000", incomeTaxes:"34000",
 };
 
-const VisionInlineVisual = ({ stageLabel }) => <div style={{ margin:"4px 0 26px", borderRadius:16, overflow:"hidden", border:`1px solid ${T.div}`, background:T.bgAlt }}><img src="/strategic-vision-roadmap.png" alt="Strategic vision roadmap toward a decision-ready farm document" style={{ display:"block", width:"100%", height:150, objectFit:"cover" }} /><div style={{ display:"flex", justifyContent:"space-between", gap:10, padding:"10px 14px", color:T.fgS, fontSize:11.5 }}><span>{stageLabel}</span><span style={{ color:T.green, fontWeight:700 }}>Vision in progress</span></div></div>;
+const VisionInlineVisual = ({ stageLabel }) => <div style={{ margin:"2px 0 14px", borderRadius:14, overflow:"hidden", border:`1px solid ${T.div}`, background:T.bgAlt }}><img src="/strategic-vision-roadmap.png" alt="Strategic vision roadmap toward a decision-ready farm document" style={{ display:"block", width:"100%", height:44, objectFit:"cover" }} /><div style={{ display:"flex", justifyContent:"space-between", gap:10, padding:"4px 10px", color:T.fgS, fontSize:10.5 }}><span>{stageLabel}</span><span style={{ color:T.green, fontWeight:700 }}>Vision in progress</span></div></div>;
 
 export default function App() {
   const [module, setModule] = useState("vision");
