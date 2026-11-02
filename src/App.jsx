@@ -164,9 +164,9 @@ const Head = ({ eyebrow, title, sub }) => (
   </div>
 );
 
-// ─���──────────────�����────────────────────────────────────�������������������������──�����────────────────────
+// ────────────────�����────────────────────────────────────�������������������������──�����────────────────────
 // DATA
-// ───────────��────────────────��─��──────────────────────────────────────��─��─��─��─
+// ────────────────────────────��─��──────────────────────────────────────��─��─��─��─
 const FA_STAGES = [
   { n:1, label:"Your accounting profile" }, { n:2, label:"Enterprise registry & shared costs" }, { n:3, label:"Goal alignment" },
   { n:4, label:"Upload your documents" }, { n:5, label:"Budgeting & working capital" }, { n:6, label:"Ratio deep dive" }, { n:7, label:"Peer benchmarking" },
@@ -524,7 +524,7 @@ function FA1Registry({ fa, setFA }) {
 
 // ─────────────────────────�����──────��───────────────────────────────────────────
 // FA STAGE 2 — Goal alignment
-// ──────────────────────────���──────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
 function FA2({ fa, setFA }) {
   const g = fa.goals;
   const set = (f,v) => setFA(s => ({ ...s, goals:{ ...s.goals, [f]:v } }));
@@ -2361,22 +2361,9 @@ function LivestockInsuranceCalculator({ risk, setRisk }) {
   );
 }
 
-// ───��������─�����─────���────���──────────���──���───────────────────────────────────────���──────
+// ───��������─�����──────────���──────────���──���───────────────────────────────────────���──────
 // RD helpers
 // ─────────────────────────────────────────────────────────────────────────────
-const entKind = (kind) => ({ grain:{ rdKind:"grain" }, forage:{ rdKind:"grain" }, specialty:{ rdKind:"produce" }, perennial:{ rdKind:"perennials" }, beef:{ rdKind:"beef" }, dairy:{ rdKind:"dairy" }, swine:{ rdKind:"hogs" }, poultry:{ rdKind:"poultry" }, other:{ rdKind:"other" } }[kind] || { rdKind:kind });
-const faEnterpriseKinds = (fa) => { const list = ((fa||{}).ent||{}).list || []; const derived = list.map(e => entKind(e.kind).rdKind).filter(Boolean); return derived.length ? [...new Set(derived)] : ((fa||{}).enterprises || []); };
-const HC_MOVES = [
-  { id:"heir", label:"Bring an heir or family member in properly", raises:{ management:20, succession:35, laborCap:10 }, cost:"Below-market wages for a period, and real decision authority handed over.", unlocks:"Lifts management capacity durably.", needs:"Someone willing, and a senior generation willing to hand over actual decisions.", link:"legacy" },
-  { id:"counterseason", label:"Add a counter-seasonal venture so roles become year-round", raises:{ laborCap:30, expertise:10 }, cost:"The new venture has to be real work in the off months.", unlocks:"Creates a stronger recruiting proposition.", needs:"An enterprise whose peak sits opposite your current one." },
-  { id:"trade", label:"Trade labour and equipment with a neighbouring operation", raises:{ laborCap:20, network:15 }, cost:"The cost is reciprocity, and the risk is conflicting peaks.", unlocks:"Adds peak capacity without payroll.", needs:"A neighbour whose peak does not coincide with yours." },
-  { id:"outsource", label:"Outsource field or custom work", raises:{ laborCap:25 }, cost:"Converts a fixed cost to a variable one at a higher per-unit rate.", unlocks:"Frees owner and crew time.", needs:"A reliable custom operator." },
-  { id:"automate", label:"Automate the back office", raises:{ management:15, laborCap:10 }, cost:"Low; time cards, payroll, bookkeeping and scheduling are usual candidates.", unlocks:"Frees the operator specifically.", needs:"Willingness to change a routine." },
-  { id:"slack", label:"Overhire and build slack", raises:{ laborCap:25 }, cost:"You are paying for capacity you will not use every day.", unlocks:"Adds resilience when people do not show up.", needs:"Margin to absorb it and a pool to draw from." },
-  { id:"specialize", label:"Hire for a skill you do not have", raises:{ expertise:30, management:10 }, cost:"The most expensive move on this list.", unlocks:"Opens opportunities gated on expertise.", needs:"Enough scale to keep that person busy." },
-];
-const applyHCMoves = (levers, selected) => { const out={...(levers?.trust||{})}; (selected||[]).forEach(id => { const mv=HC_MOVES.find(m=>m.id===id); if (!mv) return; Object.entries(mv.raises).forEach(([k,v]) => { out[k]=Math.min(100,(parseFloat(out[k])||HUMAN_ITEMS.find(h=>h.id===k)?.default||0)+v); }); }); return out; };
-const operatorIsSPOF = (levers) => { const t=levers?.trust||{}; return (parseFloat(t.laborCap)||0)<=30 && (parseFloat(t.succession)||0)<=30; };
 // Each lever category is now built from specific, measurable items rather than one
 // blanket rating. Every item is framed so a HIGHER value (0–100) always means MORE
 // opportunity — i.e. "idle capacity" or "strength," not raw utilization — so scoring
@@ -2552,7 +2539,7 @@ const scoredOpps = (rd, faEnterprises, faS3vals) => { const d=rd.data||{}; const
     if (sizeMatch) leverMatch = leverMatch * 1.15; // modest boost for farms this opportunity typically suits
     if (o.entSpecific && !entMatch) leverMatch = leverMatch * 0.15; // heavily suppress enterprise-specific paths that don't apply
     if (isRelevant) leverMatch = leverMatch * 1.2; // boost — this complements an enterprise the farm already runs
-    if (isExcluded) leverMatch = leverMatch * 0.2; // heavily suppress — this isn't diversification if you already run it
+    if (isExcluded) leverMatch = leverMatch * 0.2; // heavily suppress ��� this isn't diversification if you already run it
 
     // Financial-health adjustment, embedded directly from FA Stage 3's ratios
     let faAdj = 1;
@@ -2562,13 +2549,13 @@ const scoredOpps = (rd, faEnterprises, faS3vals) => { const d=rd.data||{}; const
 
     return { ...o, leverMatch:Math.round(Math.min(100,leverMatch)), capOk, timeOk, sizeMatch, entMatch, isRelevant, isExcluded, faAdj, score:leverMatch*(capOk?1:0.3)*(timeOk?1:0.7)*(entMatch?1:0.1)*faAdj }; }).sort((a,b)=>b.score-a.score); };
 
-// ─────────────────────────────────────────────────────────────────────────────
+// ��������──��������───────────────────────────────────────────────────────────────────
 // RD STAGE 1 — Baseline & readiness
-// ───────────��─────────────────────────────────────────────────────────────────
+// ────────────────────────�������──���─���─���───���─���────────────────���───────������──���������──���────
 function RD1({ rd, setRData, fa }) {
   const d = rd.data; const b = d.baseline || {};
   const set = (f,v) => setRData(s => ({ ...s, baseline:{ ...(s.baseline||{}), [f]:v } }));
-  const faEnt = faEnterpriseKinds(fa)[0] || ""; const faEnt2 = { grain:"Row crop (grain)", dairy:"Dairy", beef:"Beef cattle" }[faEnt] || "";
+  const faEnt = (fa.enterprises||[])[0] || ""; const faEnt2 = { grain:"Row crop (grain)", dairy:"Dairy", beef:"Beef cattle" }[faEnt] || "";
   const sc = faScoreOf(fa); const mfp = parseFloat(b.mfpScore) || sc; const rf = mfp>=3.5?"ready":mfp>=2.5?"caution":"foundation"; const rl = { ready:"Ready to diversify", caution:"Diversify with caution", foundation:"Foundation first" }[rf];
   const FARM=["Row crop (grain)","Dairy","Beef cattle","Hogs","Broilers","Layers","Mixed"], TIERS=["< $500K","$500K – $2M","$2M – $5M","$5M+"], STAGES=["Establishment (0–3 yrs)","Growth (3–7 yrs)","Consolidation (7–15 yrs)","Transition (15+ yrs / succession)"];
   const SelField = ({ label, k, opts, val }) => (<div><label style={labelStyle}>{label}</label><select style={inputStyle()} value={val} onChange={e=>set(k,e.target.value)}><option value="">Select</option>{opts.map(t=><option key={t} value={t}>{t}</option>)}</select></div>);
@@ -2609,7 +2596,7 @@ function RD1({ rd, setRData, fa }) {
 const INCOME_BENCHMARK = [
   { label:"Residence farm", sub:"Small; operator's main job is off-farm", farm:"5–10%", wages:"55–65%", nonfarm:"10–15%", transfers:"15–25%", tiers:["< $500K"] },
   { label:"Intermediate farm", sub:"Small; farming is the primary occupation", farm:"15–25%", wages:"45–55%", nonfarm:"10–15%", transfers:"15–20%", tiers:["< $500K","$500K – $2M"] },
-  { label:"Commercial family farm", sub:"≥ $350K gross cash income", farm:"55–70%", wages:"15–25%", nonfarm:"5–10%", transfers:"10–15%", tiers:["$500K – $2M","$2M – $5M"] },
+  { label:"Commercial family farm", sub:"≥ $350K gross cash income", farm:"55–70%", wages:"15–25%", nonfarm:"5–10%", transfers:"10–15%", tiers:["$500K ��� $2M","$2M ��� $5M"] },
   { label:"Large-scale family farm", sub:"≥ $1M gross cash income", farm:"70–85%", wages:"5–15%", nonfarm:"5–10%", transfers:"5–10%", tiers:["$2M – $5M","$5M+"] },
 ];
 function PeerIncomeBenchmark({ revTier }) {
@@ -2639,16 +2626,16 @@ function PeerIncomeBenchmark({ revTier }) {
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// ─────────��──�����───��─��───��───��─��──��────────────────────────────────���───────────
 // RD STAGE 2 — Goal alignment
-// ────────────────────────────────────���────────────────────────────────────────
+// ───────────────────────────��────────────────────────────────────────��────��───
 function RD2({ rd, setRData }) {
   const g = rd.data.goals2 || {};
   const set = (f,v) => setRData(s => ({ ...s, goals2:{ ...(s.goals2||{}), [f]:v } }));
   const Qs = [
     { key:"trigger", title:"What is prompting you to think about diversification?", opts:[["income","Add a new income stream","Grow total revenue beyond the primary commodity"],["risk","Reduce commodity price dependence","One bad year in grain or milk prices is too much exposure"],["assets","Put underutilized assets to work","Land, equipment or facilities that could generate more"],["succession","Build something to pass on","Diversification as part of a legacy and transition plan"],["curiosity","Understand my options first","No specific trigger — want to see what's possible"]] },
     { key:"horizon", title:"What time horizon are you planning for?", opts:[["1yr","First revenue within 12 months","Need results quickly"],["3yr","Building toward a 3-year plan","Willing to invest in groundwork now"],["5yr","Long-term structural change","A fundamental shift in how the farm generates income"]] },
-    { key:"capitalAppetite", title:"How much capital are you willing to invest?", opts:[["zero","$0 — no-capital paths only","Revenue from existing assets only"],["low","Under $10K","Small pilot investment"],["medium","$10K–$50K","Moderate investment if the return case is clear"],["high","$50K+","Meaningful investment for the right opportunity"]] },
+    { key:"capitalAppetite", title:"How much capital are you willing to invest?", opts:[["zero","$0 ����� no-capital paths only","Revenue from existing assets only"],["low","Under $10K","Small pilot investment"],["medium","$10K–$50K","Moderate investment if the return case is clear"],["high","$50K+","Meaningful investment for the right opportunity"]] },
     { key:"timeAppetite", title:"How much personal time can you commit?", opts:[["minimal","Less than 5 hours/week","Largely passive or handled by existing labor"],["moderate","5–15 hours/week","Can add a side activity without sacrificing core operations"],["significant","15+ hours/week","Willing to restructure around a new primary activity"]] },
   ];
   const Radio = ({ on }) => <div style={{ width:18, height:18, borderRadius:"50%", border:`2px solid ${on?T.blue:T.border}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>{on && <div style={{ width:8, height:8, borderRadius:"50%", background:T.blue }} />}</div>;
@@ -2666,11 +2653,17 @@ function RD2({ rd, setRData }) {
           ))}
         </div>
       ))}
+      <div style={cardStyle({ borderTop:`4px solid ${T.moss}` })}>
+        <div style={cardLblStyle()}>Income and opportunity lens</div>
+        <p style={{ fontSize:13, color:T.fgM, lineHeight:1.55, marginTop:0 }}>Diversification is not limited to a new farm enterprise. Off-farm wages, a spouse&apos;s income, a part-time job, buying an existing ag-adjacent business, or collaborating with another farm can all improve the household&apos;s revenue mix.</p>
+        {legRow("What off-farm income or work is already part of the household picture, or could realistically be added?", <textarea style={inputStyle({ minHeight:62 })} value={g.offFarmIncome||""} onChange={e=>set("offFarmIncome",e.target.value)} placeholder="W-2 income, spouse income, consulting, part-time work, or none." />)}
+        {legRow("Which possibility is worth exploring first?", <select style={inputStyle()} value={g.opportunityMode||""} onChange={e=>set("opportunityMode",e.target.value)}><option value="">Select</option><option value="farm">A new on-farm enterprise</option><option value="offFarm">Off-farm income or service work</option><option value="collaboration">A partnership or collaboration with another farm</option><option value="acquisition">Acquire an existing ag-adjacent business</option><option value="unsure">I need to widen the opportunity set first</option></select>)}
+      </div>
     </div>
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// ──────────────���──────────────────────────────────────────────────────────────
 // RD STAGE 3 — Human capital, assets & financial capital
 // ─────────────────────────────────────────────────────────────────────────────
 function RD3({ rd, setRData }) {
@@ -2710,6 +2703,12 @@ function RD3({ rd, setRData }) {
           </div>
         );
       })}
+      <div style={cardStyle({ borderTop:`4px solid ${T.blue}` })}>
+        <div style={cardLblStyle()}>The right hands on the right work</div>
+        <p style={{ fontSize:13, color:T.fgM, lineHeight:1.55, marginTop:0 }}>Farmers in the workshop emphasized that human capital is often the most leverageable asset. A new venture needs the right skills, motivation, personality, and decision style — not simply more labor.</p>
+        {legRow("What strengths, experience, and competencies could this household leverage?", <textarea style={inputStyle({ minHeight:62 })} value={rd.data.humanStrengths||""} onChange={e=>setRData(s=>({ ...s, humanStrengths:e.target.value }))} placeholder="Record keeping, livestock, sales, mechanics, relationships, teaching, technology, etc." />)}
+        {legRow("Who is best suited to lead the work, and what personality or working style matters?", <textarea style={inputStyle({ minHeight:62 })} value={rd.data.humanFit||""} onChange={e=>setRData(s=>({ ...s, humanFit:e.target.value }))} placeholder="Who likes uncertainty, selling, managing people, or building something new?" />)}
+      </div>
       {allWeak && touched && <Flag type="danger">All three levers score below 34% — only zero-capital, passive paths are appropriate until at least one lever is strengthened.</Flag>}
       {!allWeak && touched && (
         <div style={cardStyle({ borderTop:`4px solid ${T.green}` })}>
@@ -2732,156 +2731,17 @@ function RD3({ rd, setRData }) {
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// ───────────────────────────────────���─────���───���────���──────────────────────────
 // RD STAGE 4 — Opportunity mapping
-// ─────────────────────────────────────────────────────────────────────────────
+// ────���────────────────────────────────────────────────────────────────────────
 const GROWTH_TIER_LABEL = { 1:"Tier 1 · Fastest structural growth", 2:"Tier 2 · Strong growth", 3:"Tier 3 · Steady & selective" };
 const GROWTH_TIER_COLOR = { 1:T.dgreen, 2:T.blue, 3:T.tan };
-
-
-// ── RD Stage 4 — Moving the labor constraint ─────────────────────────────────
-function RDHumanCapital({ rd, setRData, fa }) {
-  const d = rd.data || {};
-  const lev = d.leverItems || {};
-  const chosen = d.hcMoves || [];
-  const toggle = (id) => setRData(s => { const cur = s.hcMoves||[]; return { ...s, hcMoves: cur.includes(id)?cur.filter(x=>x!==id):[...cur,id] }; });
-
-  const before = scoredOpps(rd, faEnterpriseKinds(fa), fa.s3vals);
-  const after = useMemo(() => {
-    if (!chosen.length) return before;
-    const shadow = { ...rd, data:{ ...d, leverItems:{ ...lev, trust: applyHCMoves(lev, chosen) } } };
-    return scoredOpps(shadow, faEnterpriseKinds(fa), fa.s3vals);
-  }, [chosen, rd, fa]);
-
-  const viable = (list) => list.filter(o => o.score >= 0.35);
-  const vBefore = viable(before), vAfter = viable(after);
-  const newly = vAfter.filter(a => !vBefore.some(b => b.id === a.id));
-  const spof = operatorIsSPOF(lev);
-  const hcNow = lev.trust || {};
-  const hcAfter = applyHCMoves(lev, chosen);
-
-  return (
-    <div>
-      <Head eyebrow="Revenue Diversification · Stage 4" title="Moving the labor constraint" sub="The last stage treated your labour as a fixed fact. It is not. Every move here came from farmers describing what they already do when help does not show up." />
-
-      <div style={cardStyle({ borderTop:`4px solid ${T.amber}` })}>
-        <div style={cardLblStyle()}>Why this stage exists</div>
-        <p style={{ fontSize:14, color:T.fgM, marginTop:0, lineHeight:1.65 }}>
-          Across 300 operations, workforce composition planning scores <b style={{ color:T.navy }}>2.35 out of 5</b>, among the weakest areas measured. In twelve farmer interviews, <b style={{ color:T.navy }}>ten named finding reliable skilled labour</b> as a core challenge. The other two rely on family and neighbours.
-        </p>
-        <p style={{ fontSize:14, color:T.fgM, margin:0, lineHeight:1.65 }}>
-          Diversification is usually blocked by labour as currently arranged rather than by labour as such. That distinction is the whole point of this stage.
-        </p>
-      </div>
-
-      {spof && (
-        <div style={cardStyle({ borderLeft:`3px solid ${T.red}` })}>
-          <div style={cardLblStyle()}>The pattern worth naming first</div>
-          <p style={{ fontSize:15, color:T.fg, fontStyle:"italic", marginTop:0, marginBottom:9, lineHeight:1.6 }}>
-            "If there's no one here that is able to do it, it's all on me."
-          </p>
-          <p style={{ fontSize:13.5, color:T.fgM, margin:0, lineHeight:1.65 }}>
-            You rated both available capacity and successor involvement low, which is the configuration where the operator absorbs every gap personally. It caps how much the operation can take on regardless of what the balance sheet says, and it is the same finding the Farm Risk module reaches from the other direction.
-          </p>
-        </div>
-      )}
-
-      <div style={cardStyle()}>
-        <div style={cardLblStyle()}>What you could change</div>
-        <div style={{ fontSize:12.5, color:T.fgM, marginBottom:16, lineHeight:1.55 }}>
-          Mark anything realistic in the next year or two. Nothing commits you; the point is to see what each one opens up.
-        </div>
-        {HC_MOVES.map(mv => {
-          const on = chosen.includes(mv.id);
-          return (
-            <div key={mv.id} onClick={()=>toggle(mv.id)} style={{ border:`1px solid ${on?T.moss:T.border}`, background:on?T.greenL:"#fff", borderRadius:9, padding:"14px 16px", marginBottom:11, cursor:"pointer" }}>
-              <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:7, flexWrap:"wrap" }}>
-                <input type="checkbox" checked={on} onChange={()=>toggle(mv.id)} onClick={e=>e.stopPropagation()} />
-                <span style={{ fontSize:15, fontWeight:600, color:on?T.dgreen:T.fg }}>{mv.label}</span>
-                {mv.link === "legacy" && <span style={pillStyle("info")}>Legacy module</span>}
-              </div>
-              <div style={{ paddingLeft:28 }}>
-                {mv.quote && <p style={{ fontSize:13, color:T.blue, fontStyle:"italic", margin:"0 0 8px", lineHeight:1.6 }}>"{mv.quote}"</p>}
-                <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))", gap:11, marginBottom:mv.caution?9:0 }}>
-                  {[["What it unlocks", mv.unlocks],["What it costs", mv.cost],["What it needs", mv.needs]].map(([h,b],k)=>(
-                    <div key={k}>
-                      <div style={{ fontSize:10.5, letterSpacing:"0.1em", textTransform:"uppercase", color:T.fgS, marginBottom:3 }}>{h}</div>
-                      <div style={{ fontSize:12.5, color:T.fgM, lineHeight:1.55 }}>{b}</div>
-                    </div>
-                  ))}
-                </div>
-                {mv.caution && <div style={{ marginTop:4 }}><Flag type="warn">{mv.caution}</Flag></div>}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      {chosen.length > 0 && (
-        <div style={cardStyle({ borderTop:`4px solid ${T.navy}` })}>
-          <div style={cardLblStyle()}>What that changes</div>
-          <div style={{ marginBottom:16 }}>
-            {HUMAN_ITEMS.map(h => {
-              const was = parseFloat(hcNow[h.id]) || h.default || 0;
-              const now = parseFloat(hcAfter[h.id]) || was;
-              const moved = now > was;
-              return (
-                <div key={h.id} style={{ display:"flex", alignItems:"center", gap:12, padding:"7px 0", borderBottom:`1px dashed ${T.border}` }}>
-                  <span style={{ width:230, fontSize:12.5, color:T.fgM, flexShrink:0 }}>{h.label}</span>
-                  <div style={{ flex:1, height:8, background:"#dde1e8", borderRadius:4, overflow:"hidden", position:"relative" }}>
-                    <div style={{ position:"absolute", left:0, top:0, bottom:0, width:`${now}%`, background:moved?T.moss:T.silver, borderRadius:4 }} />
-                    <div style={{ position:"absolute", left:0, top:0, bottom:0, width:`${was}%`, background:T.blue, borderRadius:4 }} />
-                  </div>
-                  <span style={{ width:92, textAlign:"right", fontSize:12.5, flexShrink:0, color: moved?T.dgreen:T.fgS, fontWeight:moved?600:400 }}>
-                    {was}{moved ? ` → ${now}` : ""}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-          <div style={{ display:"flex", gap:26, flexWrap:"wrap", marginBottom:newly.length?14:0 }}>
-            {[["Viable before", vBefore.length],["Viable after", vAfter.length],["Newly opened", newly.length]].map(([l,v],k)=>(
-              <div key={k}><div style={{ fontSize:11, color:T.fgS, marginBottom:3 }}>{l}</div>
-              <div style={{ fontSize:24, fontWeight:600, color: k===2 && newly.length>0 ? T.dgreen : T.navy }}>{v}</div></div>
-            ))}
-          </div>
-          {newly.length > 0 && (
-            <>
-              <div style={{ fontSize:11, letterSpacing:"0.13em", textTransform:"uppercase", color:T.fgS, marginBottom:10 }}>What opens up</div>
-              {newly.slice(0,6).map(o => (
-                <div key={o.id} style={{ borderLeft:`2px solid ${T.moss}`, paddingLeft:13, marginBottom:11 }}>
-                  <div style={{ fontSize:14.5, fontWeight:600, color:T.fg }}>{o.label}</div>
-                  <div style={{ fontSize:12.5, color:T.fgM, lineHeight:1.55 }}>{o.desc}</div>
-                  <div style={{ fontSize:11.5, color:T.fgS, marginTop:3 }}>{o.capital} · {o.time}</div>
-                </div>
-              ))}
-              {newly.length > 6 && <p style={{ fontSize:12, color:T.fgS, margin:0 }}>Plus {newly.length-6} more, all ranked in the next stage.</p>}
-            </>
-          )}
-          {newly.length === 0 && (
-            <Flag type="info">These moves raise your capacity but do not cross the threshold on anything new. That usually means the binding constraint is capital or assets rather than labour, which the next stage will show.</Flag>
-          )}
-        </div>
-      )}
-
-      <div style={cardStyle()}>
-        <div style={cardLblStyle()}>The market nobody is serving</div>
-        <p style={{ fontSize:14, color:T.fgM, marginTop:0, marginBottom:9, lineHeight:1.65 }}>
-          Asked what would help most, one farmer answered: <i>"If they had a recruiting firm for this, like they do for office jobs, that would really help."</i>
-        </p>
-        <p style={{ fontSize:13.5, color:T.fgM, margin:0, lineHeight:1.65 }}>
-          No tool fixes that. It is worth naming because it is the gap underneath several of the moves above, and because the workaround most farms land on, paying more for the same scarce person, is the one that does not scale.
-        </p>
-      </div>
-    </div>
-  );
-}
 
 function RD4({ rd, setRData, fa }) {
   const d = rd.data; const selected = d.selectedOpps || []; const lev = d.leverItems || {}; const b = d.baseline || {};
   const [clusterFilter, setClusterFilter] = useState("all");
   const toggle = (id) => setRData(s => { const cur=s.selectedOpps||[]; return { ...s, selectedOpps: cur.includes(id)?cur.filter(x=>x!==id):[...cur,id] }; });
-  const allOpps = scoredOpps(rd, faEnterpriseKinds(fa), fa.s3vals);
+  const allOpps = scoredOpps(rd, fa.enterprises||[], fa.s3vals);
   const opps = clusterFilter==="all" ? allOpps : allOpps.filter(o=>o.cluster===clusterFilter);
   const sizeBucket = sizeBucketFromTier(b.revTier);
   const faSignal = faFinancialSignal(fa.s3vals);
@@ -2962,9 +2822,9 @@ function RD4({ rd, setRData, fa }) {
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────��───────
 // RD STAGE 5 — Barrier identification
-// ─────────────────────────────────────────────────────────────────────────────
+// ────────����───────────────────────────────────────────────────────────────────
 // Cross-cutting regulatory & compliance checklist — surfaces for any selected path with
 // meaningful regulatory load (reg >= 3), independent of that path's specific barrier list.
 const COMPLIANCE_ITEMS = {
@@ -2984,9 +2844,16 @@ function RD5({ rd, setRData }) {
     <div>
       <Head eyebrow="Revenue Diversification · Stage 5" title="Barrier & compliance review" sub="Known barriers and regulatory considerations for each selected path. Check each one to confirm you've reviewed it before proceeding." />
       {selected.length===0 && <Flag type="warn">No opportunities selected. Go back to Stage 4.</Flag>}
+      <div style={cardStyle({ borderTop:`4px solid ${T.tan}` })}>
+        <div style={cardLblStyle()}>Workshop questions to carry into every opportunity</div>
+        <p style={{ fontSize:13, color:T.fgM, lineHeight:1.55, marginTop:0 }}>Use these prompts before treating a market idea as a strategy: separate a short-lived fad from a durable future, identify the legal and regulatory expertise you need, find an objective sounding board, and define how you would exit if the work no longer fits.</p>
+        {legRow("What would make this opportunity durable rather than a fad, and what is the short-term test?", <textarea style={inputStyle({ minHeight:58 })} value={d.fadFuture||""} onChange={e=>setRData(s=>({ ...s, fadFuture:e.target.value }))} placeholder="Name the long-term customer, capability, or asset this test would build." />)}
+        {legRow("Who will provide objective feedback and rural/ag-law guidance?", <textarea style={inputStyle({ minHeight:58 })} value={d.soundingBoard||""} onChange={e=>setRData(s=>({ ...s, soundingBoard:e.target.value }))} placeholder="A peer group, partner, attorney, accountant, extension advisor, or lender." />)}
+        {legRow("What is the exit path if the opportunity does not work?", <textarea style={inputStyle({ minHeight:58 })} value={d.exitPlan||""} onChange={e=>setRData(s=>({ ...s, exitPlan:e.target.value }))} placeholder="Time limit, resale value, lease end, buyer, or stop-loss decision." />)}
+      </div>
       {maxReg>=3 && (
         <div style={cardStyle({ borderTop:`4px solid ${T.amber}` })}>
-          <div style={cardLblStyle()}><Apex color={T.amber} />Regulatory & compliance review — before you commit capital</div>
+          <div style={cardLblStyle()}><Apex color={T.amber} />Regulatory & compliance review ��� before you commit capital</div>
           <div style={{ fontSize:12.5, color:T.fgM, marginBottom:12, lineHeight:1.5 }}>At least one selected path carries meaningful regulatory load. Review these before signing contracts, leases, or making capital purchases.</div>
           {Object.entries(COMPLIANCE_ITEMS).map(([key,text]) => {
             const on = complianceAcked[key];
@@ -3024,9 +2891,9 @@ function RD5({ rd, setRData }) {
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// ────────────────────────────────────────────────────────────────────��───����────
 // RD STAGE 6 — Policy & grant enablers
-// ─────────────────────────────────────────────────────────────────────────────
+// ────────────────────────────────────────────────────���───────────────────��────
 // Deliberately mirrors Barrier Identification's structure — same per-opportunity card
 // layout, same checkbox-to-acknowledge pattern — but framed as tailwinds rather than
 // obstacles: policy and grant programs that could actively support a selected path,
@@ -3206,9 +3073,9 @@ function OpportunityCostLens({ financialSel, physicalSel, setRData }) {
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// ───────────────────────────────────────────────────────────────────���─────────
 // RD STAGE 7 — Financial reserves & sequencing
-// ─────────────────────────────────────────────────────────────────────────────
+// ────────��────────────────────────────────────────────────────────────────────
 // Distinct from Stage 4 (which opportunity to pursue): this stage is about capital
 // placement and timing — where reserve money sits, and in what order to fund the
 // equipment reserve, diversify income, and layer in longer-horizon investments.
@@ -3340,7 +3207,7 @@ function RD7({ rd, setRData, fa }) {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // RD STAGE 8 — Action plan
-// ─────────────────────────────────────────────────────────────────────────────
+// ───────────────────────────────────────────────────────────���──────��──────────
 function RD8({ rd, fa }) {
   const d = rd.data; const selected = d.selectedOpps || []; const ranked = d.rankedOpps || []; const lev = d.leverItems || {}; const b = d.baseline || {};
   const sel = selected.map(id => OPPS.find(o=>o.id===id)).filter(Boolean).sort((a,c) => { const ra=(ranked.find(r=>r.id===a.id)||{}).rank||99, rb=(ranked.find(r=>r.id===c.id)||{}).rank||99; return ra-rb; });
@@ -3430,12 +3297,12 @@ function EfficiencyValueImpact({ sel, lev }) {
   );
 }
 
-// ═════════════════════════════════════════════════════════════════════════════
+// ══════���════════════════════════════════════════��════��═══════����═════��══════��═══
 // FARM PROFILE — a single 360° farm view that fills in as the farmer completes
 // onboarding and assessments, and feeds relevant fields back into FA, RD, and Risk
 // so nothing has to be entered twice.
 // ═════════════════════════════════════════════════════════════════════════════
-const ENT_KEYWORDS = { grain:["corn","soy","soybean","wheat","grain","oats"], dairy:["dairy","milk"], beef:["cattle","beef","cow-calf","cow calf"] };
+const ENT_KEYWORDS = { grain:["corn","soy","soybean","wheat","grain","oats"], dairy:["dairy","milk"], beef:["cattle","beef","cow-calf","cow calf"], hogs:["hog","hogs","swine","pork"], perennials:["perennial","orchard","vineyard","agroforestry"], produce:["produce","vegetable","vegetables","market garden"], other:["other","mixed enterprise"] };
 const matchEnterprisesFromText = (text) => {
   const t = (text||"").toLowerCase();
   return Object.entries(ENT_KEYWORDS).filter(([,kws]) => kws.some(k=>t.includes(k))).map(([id])=>id);
@@ -3473,9 +3340,9 @@ const FindingBlock = ({ kind, tag, heading, source, children }) => {
   );
 };
 
-// ═════════════════════════════════════════════════════════════════════════════
+// ═══════════════════��══��════════���═════════════════════════════════════════════
 // ACTION PLAN — twelve business areas, ranked into three priorities
-// ════════════════════════════════════════��════════════════════════════════════
+// ═════════════════════════════���══���═════════════════════════════════════���══════
 // Areas map to one of the four MFP categories, and some map to a guided module.
 // Ranking is weight-aware: a constraint area gates everything downstream, a value
 // area produces the largest near-term lift, so neither is ranked on raw score alone.
@@ -3616,7 +3483,7 @@ const FinancialHealthStrip = ({ fa }) => {
 function FarmProfilePage({ profile, setProfile, fa, rd, goFA, goRD, goRisk, goLegacy }) {
   const set = (field) => (e) => setProfile(s => ({ ...s, [field]: e.target.value }));
   const [pri, setPri] = useState(0);
-  const [view, setView] = useState("actions");
+  const [view, setView] = useState("glance");
   const { hasData: faHasData, categories: faCategories } = computeFARatios(fa.s3vals);
   const lenderOpps = lenderOpportunities(fa);
 
@@ -3646,7 +3513,7 @@ function FarmProfilePage({ profile, setProfile, fa, rd, goFA, goRD, goRisk, goLe
     </div>
   );
 
-  const sourceCount = (((fa||{}).ent||{}).list||[]).length + (rd.data?.selectedOpps||[]).length;
+  const sourceCount = (fa.enterprises||[]).length + (rd.data?.selectedOpps||[]).length;
   const divLabel = sourceCount===0 ? null : sourceCount<=1 ? "Highly concentrated" : sourceCount<=3 ? "Moderately concentrated" : "Well diversified";
 
   return (
@@ -3655,7 +3522,7 @@ function FarmProfilePage({ profile, setProfile, fa, rd, goFA, goRD, goRisk, goLe
 
       {/* view tabs */}
       <div style={{ display:"flex", gap:8, borderBottom:`1px solid ${T.border}`, marginBottom:20 }}>
-        {[["actions","Priority actions"],["glance","Business at a glance"]].map(([k,lab]) => {
+        {[["glance","Business at a glance"],["actions","Priority actions"]].map(([k,lab]) => {
           const on = view===k;
           return (
             <button key={k} onClick={()=>setView(k)} style={{ background:"none", border:"none", borderBottom:`2px solid ${on?T.navy:"transparent"}`, padding:"9px 4px", marginBottom:-1, cursor:"pointer", font:"inherit", fontSize:14, fontWeight:on?600:500, color:on?T.navy:T.fgS, marginRight:14 }}>{lab}</button>
@@ -3764,7 +3631,7 @@ function FarmProfilePage({ profile, setProfile, fa, rd, goFA, goRD, goRisk, goLe
                     <p style={{ fontSize:11, color:T.fgS, margin:0, whiteSpace:"nowrap" }}>{t[1]}</p>
                   </div>
                   <p style={{ fontSize:12.5, color:T.fgM, margin:"4px 0 8px" }}>{t[2]}</p>
-                  <p style={{ fontSize:12, color:T.green, margin:0 }}>▸ {t[3]}</p>
+                  <p style={{ fontSize:12, color:T.green, margin:0 }}>��� {t[3]}</p>
                 </div>
               ))}
             </div>
@@ -3948,7 +3815,7 @@ function FarmProfilePage({ profile, setProfile, fa, rd, goFA, goRD, goRisk, goLe
 }
 
 
-// ═════════════════════════════════════════════════════════════════════════════
+// ══════════════════════���══════════════════════════════════════════════════════
 // LEGACY — Transition readiness
 // ═════════════════════════════════════════════════════════════════════════════
 // Deliberately does NOT open with assets. Operational transition is about who runs
@@ -3959,37 +3826,29 @@ function FarmProfilePage({ profile, setProfile, fa, rd, goFA, goRD, goRisk, goLe
 // Three rules this module holds to: the three transfers stay separated everywhere,
 // nothing here scores the family, and the tool is willing to say "not yet".
 
-
-// Patterns families recognise themselves in. The point is not advice, it is that
-// someone arriving frightened sees their own situation described plainly and
-// learns it is ordinary. Anxiety is the thing most likely to stop this process
-// before it starts, so the module opens by lowering it rather than by asking
-// questions of someone who is not ready to answer them.
 const LEG_NORMALIZE = [
-  { tag:"THE TIMING", head:"Almost nobody starts this early",
-    body:"Most families begin when something forces it. A health scare, a bad year, a conversation that went badly, a neighbour's transfer that fell apart. Arriving late is the normal way to arrive." },
-  { tag:"THE SILENCE", head:"The conversation has probably been avoided for years",
-    body:"Both generations are usually waiting for the other to raise it. The senior generation does not want to look like they are leaving. The successor does not want to look like they are asking. So nobody speaks, sometimes for a decade." },
-  { tag:"THE IDENTITY", head:"Stepping back feels like being erased",
-    body:"For many operators the farm is not what they do, it is who they are. That is why plans stall on something that looks financial and is not. It is the most common reason a workable plan never gets signed." },
-  { tag:"THE RESENTMENT", head:"There is often something nobody has said",
-    body:"Years of below-market wages. A promise that was heard differently than it was meant. A sibling who left and still expects a share. These sit underneath the financial questions and make them harder than they look." },
-  { tag:"THE MONEY", head:"The operation often cannot support two households",
-    body:"This is extremely common and it is not a verdict on the farm. It is a number the plan has to solve rather than a reason to stop." },
+  { tag:"THE TIMING", head:"Almost nobody starts this early", body:"Most families begin when something forces it. A health scare, a bad year, a conversation that went badly, or a neighbour's transfer that fell apart. Arriving late is the normal way to arrive." },
+  { tag:"THE SILENCE", head:"The conversation has probably been avoided for years", body:"Both generations are usually waiting for the other to raise it. The senior generation does not want to look like they are leaving. The successor does not want to look like they are asking." },
+  { tag:"THE IDENTITY", head:"Stepping back can feel like being erased", body:"For many operators the farm is not what they do, it is who they are. That is why plans stall on something that looks financial and is not." },
+  { tag:"THE RESENTMENT", head:"There is often something nobody has said", body:"Years of below-market wages, a promise heard differently, or a sibling who left and still expects a share can sit underneath the financial questions." },
+  { tag:"THE MONEY", head:"The operation often cannot support two households", body:"This is common and it is not a verdict on the farm. It is a number the plan has to solve rather than a reason to stop." },
 ];
 
 const LEG_STAGES = [
   { n:1,  label:"Before you start" },
-  { n:2,  label:"Where you are today" },
-  { n:3,  label:"The three transfers" },
-  { n:4,  label:"The next chapter" },
-  { n:5,  label:"Two households" },
-  { n:6,  label:"Successor readiness" },
-  { n:7,  label:"Who knows what" },
-  { n:8,  label:"Fair is not equal" },
-  { n:9,  label:"Triggers & contingencies" },
-  { n:10, label:"Rented ground & relationships" },
-  { n:11, label:"Where this leaves you" },
+  { n:2,  label:"The people" },
+  { n:3,  label:"The successor question" },
+  { n:4,  label:"What exists on paper" },
+  { n:5,  label:"The three transfers" },
+  { n:6,  label:"The next chapter" },
+  { n:7,  label:"Two households" },
+  { n:8,  label:"Successor readiness" },
+  { n:9,  label:"Who knows what" },
+  { n:10, label:"Fair is not equal" },
+  { n:11, label:"Triggers & contingencies" },
+  { n:12, label:"Rented ground & relationships" },
+  { n:13, label:"Parcels and land valuation" },
+  { n:14, label:"Where this leaves you" },
 ];
 
 const TRANSFERS = [
@@ -4074,18 +3933,64 @@ const legacyTier = (leg) => {
   return "structural";
 };
 
-const legRow = (label, children, sub) => (
-  <div style={{ marginBottom:16 }}>
-    <label style={labelStyle}>{label}</label>
-    {sub && <div style={{ fontSize:11.5, color:T.fgS, marginBottom:6, fontStyle:"italic" }}>{sub}</div>}
-    {children}
-  </div>
-);
+function LegacyVoiceField({ children }) {
+  const [listening, setListening] = useState(false);
+  const [supported, setSupported] = useState(true);
+  const recognitionRef = useRef(null);
 
+  useEffect(() => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) { setSupported(false); return undefined; }
+    const recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = "en-US";
+    recognition.onresult = (event) => {
+      const spoken = event.results?.[0]?.[0]?.transcript?.trim();
+      if (!spoken || !children?.props?.onChange) return;
+      const current = children.props.value || "";
+      children.props.onChange({ target: { value: `${current}${current ? " " : ""}${spoken}` } });
+    };
+    recognition.onend = () => setListening(false);
+    recognition.onerror = () => setListening(false);
+    recognitionRef.current = recognition;
+    return () => { recognition.stop(); recognitionRef.current = null; };
+  }, [children]);
 
+  const toggleListening = () => {
+    if (!supported) return;
+    if (listening) { recognitionRef.current?.stop(); setListening(false); return; }
+    recognitionRef.current?.start();
+    setListening(true);
+  };
 
-// ═════════════════════════════════════════════════════════════════════════════
-// LAND VALUATION — Phase 1 engine
+  return (
+    <div>
+      <div style={{ display:"flex", alignItems:"flex-start", gap:8 }}>
+        <div style={{ flex:1 }}>{children}</div>
+        <button type="button" onClick={toggleListening} disabled={!supported} aria-label={listening ? "Stop voice input" : "Answer by voice"} aria-pressed={listening} style={{ ...btnStyle(listening ? "primary" : "outline", T.blue), fontSize:11.5, padding:"7px 10px", whiteSpace:"nowrap", opacity:supported?1:.5 }}>
+          {listening ? "Stop" : "Speak"}
+        </button>
+      </div>
+      {listening && <div role="status" style={{ marginTop:5, fontSize:11.5, color:T.blue }}>Listening… pause when you&apos;re finished.</div>}
+      {!supported && <div style={{ marginTop:4, fontSize:11, color:T.fgS }}>Voice input is unavailable in this browser.</div>}
+    </div>
+  );
+}
+
+const legRow = (label, children, sub) => {
+  const isVoiceAnswer = children?.type === "textarea" || (children?.type === "input" && children?.props?.type === "text");
+  return (
+    <div style={{ marginBottom:16 }}>
+      <label style={labelStyle}>{label}</label>
+      {sub && <div style={{ fontSize:11.5, color:T.fgS, marginBottom:6, fontStyle:"italic" }}>{sub}</div>}
+      {isVoiceAnswer ? <LegacyVoiceField>{children}</LegacyVoiceField> : children}
+    </div>
+  );
+};
+
+// ═══════════════════════════════════════════��══════════════���══════════════════
+// LAND VALUATION �� Phase 1 engine
 // ═════════════════════════════════════════════════════════════════════════════
 // Land class routes to a method rather than one model with adjustments bolted on.
 // Two independent methods run on income-producing classes and their divergence
@@ -4223,9 +4128,9 @@ const valueParcel = (p) => {
 };
 
 
-// ═════════════════════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════��══════════════
 // BLIND COMPARE — the same questions, answered independently
-// ═════════════════════════════════════════════════════════════════════════════
+// ��════��═══════════════════════════════════════════════════════════════════════
 // One array drives both sides and the comparison, so the two generations are
 // provably answering the same question rather than two similar ones.
 //
@@ -4361,54 +4266,45 @@ const SUCC_STAGES = [
   { n:6, label:"What you need to commit" },
 ];
 
-
-// ── Legacy 0 — Before you start ──────────────────────────────────────────────
+// ── Stage 1 — Before you start ────────────────────────────────────────────────
 function LEG0({ leg, setLegData }) {
   const d = leg.data || {};
-  return (
-    <div>
-      <Head eyebrow="Legacy · Before you start" title="You are not the first family to be here" sub="Nothing on this page asks anything of you. Succession work stalls on anxiety more than on money, so it is worth a minute to see how ordinary your situation probably is." />
-
-      <div style={cardStyle({ borderTop:`4px solid ${T.moss}` })}>
-        <div style={cardLblStyle()}>What this module is, and what it is not</div>
-        <p style={{ fontSize:14.5, color:T.fgM, marginTop:0, lineHeight:1.65 }}>
-          This works through <b style={{ color:T.navy }}>who will run the business</b> before it touches who will own it. Those are different questions and families get stuck because they are treated as one.
-        </p>
-        <p style={{ fontSize:14.5, color:T.fgM, margin:"0 0 0", lineHeight:1.65 }}>
-          Most of what follows is about people rather than assets. That is deliberate. The business side of a transition is largely arithmetic and professionals who do it well are easy to find. <b style={{ color:T.navy }}>The people side is where the heavy lifting is</b>, and it is where plans actually fail.
-        </p>
-      </div>
-
-      <div style={{ fontSize:11, letterSpacing:"0.13em", textTransform:"uppercase", color:T.fgS, margin:"0 0 12px" }}>What families usually bring with them</div>
-      {LEG_NORMALIZE.map((n,i) => (
-        <FindingBlock key={i} kind="neutral" tag={n.tag} heading={n.head}>
-          <p style={{ fontSize:13.5, color:T.fgM, margin:0, lineHeight:1.65 }}>{n.body}</p>
-        </FindingBlock>
-      ))}
-
-      <div style={cardStyle()}>
-        <div style={cardLblStyle()}>Optional, and only for you</div>
-        <div style={{ fontSize:12.5, color:T.fgM, marginBottom:14, lineHeight:1.55 }}>Nothing here is published, compared, or shown to anyone else. Skip it if you would rather just begin.</div>
-        {legRow("Which of those sounded like your situation?",
-          <textarea style={inputStyle({ minHeight:64 })} value={d.normalizeRecognised||""} onChange={e=>setLegData({ normalizeRecognised:e.target.value })} placeholder="" />)}
-        {legRow("What brought you to look at this now?",
-          <textarea style={inputStyle({ minHeight:64 })} value={d.whyNow||""} onChange={e=>setLegData({ whyNow:e.target.value })} placeholder="" />,
-          "Most families can name a specific thing. It is usually worth remembering later, when the work gets uncomfortable.")}
-      </div>
-
-      <Flag type="info">A reasonable way to use this: work through it yourself first, then go back through the parts that matter with the people it affects. The second pass is the one that changes anything.</Flag>
-    </div>
-  );
+  const set = (key) => (event) => setLegData({ [key]: event.target.value });
+  return <div><Head eyebrow="Legacy · Stage 1" title="Before you start" sub="If this feels late, awkward, or harder than it should, that is normal. Most families arrive here because something made the conversation impossible to keep avoiding." /><div style={cardStyle()}><div style={cardLblStyle()}>What families recognise themselves in</div>{LEG_NORMALIZE.map((item) => <div key={item.tag} style={{ borderTop:`1px solid ${T.div}`, padding:"14px 0" }}><div style={{ color:T.fgS, fontSize:10.5, fontWeight:700, letterSpacing:".12em" }}>{item.tag}</div><h3 style={{ color:T.navy, fontSize:17, margin:"5px 0 4px" }}>{item.head}</h3><p style={{ color:T.fgM, fontSize:13.5, lineHeight:1.6, margin:0 }}>{item.body}</p></div>)}</div><div style={cardStyle()}><div style={cardLblStyle()}>Optional, private starting point</div>{legRow("What made you open this today?", <textarea style={inputStyle({ minHeight:70 })} value={d.startedWhy || ""} onChange={set("startedWhy")} placeholder="A change, a worry, a conversation, or simply that it is time." />)}{legRow("What would make this feel useful rather than intrusive?", <textarea style={inputStyle({ minHeight:70 })} value={d.usefulNotIntrusive || ""} onChange={set("usefulNotIntrusive")} placeholder="Optional. This stays private and is not included in any output." />)}</div></div>;
 }
 
-// ── Stage 1 — Where you are today ────────────────────────────────────────────
+// ── Stage 2 — The people ───────────────────────────────────────────────────────
 function LEG1({ leg, setLegData }) {
+  const d = leg.data || {};
+  const v = (k) => d[k] || "";
+  const set = (k) => (e) => setLegData({ [k]: e.target.value });
+  return <div><Head eyebrow="Legacy · Stage 2" title="The people" sub="Start with the people who make the operation work today and the family members whose interests may shape what comes next." /><div style={cardStyle()}><div style={cardLblStyle()}>The people</div>{legRow("Who is involved in the operation today, and what does each person do?", <textarea style={inputStyle({ minHeight:100 })} value={v("people")} onChange={set("people")} placeholder="Names, roles, rough ages. Include anyone whose absence would be felt." />)}{legRow("Who is off the farm but still part of the family picture?", <textarea style={inputStyle({ minHeight:80 })} value={v("offFarmPeople")} onChange={set("offFarmPeople")} placeholder="Off-farm children, siblings with an interest in the ground, anyone with an expectation." />, "These are the people most often left out and the most common source of trouble later.")}</div></div>;
+}
+
+// ── Stage 2 — The successor question ────────────────────────────────���────────
+function LEG2({ leg, setLegData }) {
+  const d = leg.data || {};
+  const v = (k) => d[k] || "";
+  const set = (k) => (e) => setLegData({ [k]: e.target.value });
+  return <div><Head eyebrow="Legacy · Stage 3" title="The successor question" sub="There may be a clear successor, several possibilities, or no successor at all. Naming the reality is the useful first step." /><div style={cardStyle()}><div style={cardLblStyle()}>The successor question</div>{legRow("Is there an identified successor?", <select style={inputStyle()} value={v("successorStatus")} onChange={set("successorStatus")}><option value="">Select</option><option value="working">Yes, and they are already working in the business</option><option value="identified">Yes, identified but not yet involved day to day</option><option value="maybe">Maybe, more than one candidate or nobody has said it out loud</option><option value="none">No, there is no successor</option></select>)}{d.successorStatus === "none" && <><Flag type="info">No successor is a legitimate path, not a failure. It deserves the same rigour as a family transition.</Flag>{legRow("Which direction makes most sense to explore?", <select style={inputStyle()} value={v("noSuccessorPath")} onChange={set("noSuccessorPath")}><option value="">Select</option><option value="sale">Orderly sale of the operation</option><option value="lease">Lease the ground to a neighbouring operation</option><option value="employee">Transition to a non-family employee</option><option value="winddown">Planned wind-down over a set number of years</option><option value="unsure">Genuinely unsure, that is the question</option></select>)}</>}{d.successorStatus === "maybe" && <Flag type="warn">More than one candidate, or nobody having said it out loud, is a common starting point. Naming it is the work of the next few stages.</Flag>}</div></div>;
+}
+
+// ── Stage 3 — What exists on paper ────────────────────���──────────────────────
+function LEG3({ leg, setLegData }) {
+  const d = leg.data || {};
+  const v = (k) => d[k] || "";
+  const set = (k) => (e) => setLegData({ [k]: e.target.value });
+  return <div><Head eyebrow="Legacy · Stage 4" title="What exists on paper" sub="A quick inventory of what is written down shows whether the next conversation starts with documents, assumptions, or a blank page." /><div style={cardStyle()}><div style={cardLblStyle()}>What exists on paper</div>{legRow("What is in writing today?", <textarea style={inputStyle({ minHeight:100 })} value={v("inWriting")} onChange={set("inWriting")} placeholder="Wills, trusts, operating agreements, buy-sell, leases, anything. If the answer is nothing, that is a common and useful answer." />)}{legRow("If you had to hand the whole thing over Monday morning, what would break first?", <textarea style={inputStyle({ minHeight:100 })} value={v("breakFirst")} onChange={set("breakFirst")} placeholder="Name the first decision, relationship, or process that would be exposed." />, "This question usually locates the real gap faster than anything else in the module.")}</div></div>;
+}
+
+// ── Legacy compatibility: the original combined page is retained below for saved records. ──
+function LEG1_COMBINED({ leg, setLegData }) {
   const d = leg.data || {};
   const v = (k) => d[k] || "";
   const set = (k) => (e) => setLegData({ [k]: e.target.value });
   return (
     <div>
-      <Head eyebrow="Legacy · Stage 2" title="Where you are today" sub="Before anything hard, just the situation. Who is involved, who is on the farm, who is not, and whether anything is written down." />
+      <Head eyebrow="Legacy · Stage 1" title="Where you are today" sub="Before anything hard, just the situation. Who is involved, who is on the farm, who is not, and whether anything is written down." />
       <div style={cardStyle()}>
         <div style={cardLblStyle()}>The people</div>
         {legRow("Who is involved in the operation today, and what does each person do?",
@@ -4457,8 +4353,8 @@ function LEG1({ leg, setLegData }) {
   );
 }
 
-// ── Stage 2 — The three transfers ────────────────────────────────────────────
-function LEG2({ leg, setLegData }) {
+// ── Stage 2 — The three transfers ───────────────────────────────────────────�����
+function LEG4({ leg, setLegData }) {
   const d = leg.data || {};
   const t = d.transfers || {};
   const setT = (tid, hid, val) => setLegData({ transfers:{ ...t, [tid]:{ ...(t[tid]||{}), [hid]:val } } });
@@ -4468,7 +4364,7 @@ function LEG2({ leg, setLegData }) {
   };
   return (
     <div>
-      <Head eyebrow="Legacy · Stage 3" title="The three transfers" sub="Labor, management, and ownership move independently. Farmers experience transition as one event, which is what creates the standoff. Separating them is most of the work." />
+      <Head eyebrow="Legacy · Stage 5" title="The three transfers" sub="Labor, management, and ownership move independently. Farmers experience transition as one event, which is what creates the standoff. Separating them is most of the work." />
       <Flag type="info">Zero means entirely senior generation. One hundred means entirely successor. Set where each one sits today, then where it should sit at each horizon.</Flag>
       {TRANSFERS.map(tr => (
         <div key={tr.id} style={cardStyle()}>
@@ -4484,7 +4380,7 @@ function LEG2({ leg, setLegData }) {
             return (
               <div key={h.id} style={{ display:"flex", alignItems:"center", gap:12, padding:"7px 0" }}>
                 <span style={{ width:82, fontSize:12.5, color:T.fgM, flexShrink:0 }}>{h.label}</span>
-                <input type="range" min="0" max="100" step="5" value={val} onChange={e=>setT(tr.id, h.id, e.target.value)} style={{ flex:1 }} />
+                <input type="range" min="0" max="100" step="20" value={val} onChange={e=>setT(tr.id, h.id, e.target.value)} style={{ flex:1 }} aria-label={`${tr.label} — ${h.label}`} />
                 <span style={{ width:74, textAlign:"right", fontSize:12.5, color:T.fgM, flexShrink:0 }}>{val}% successor</span>
               </div>
             );
@@ -4524,14 +4420,14 @@ function LEG2({ leg, setLegData }) {
   );
 }
 
-// ── Stage 3 — The next chapter ───────────────────────────────────────────────
-function LEG3({ leg, setLegData }) {
+// ── Stage 3 — The next chapter ──────���─────���─���──���──�����──────��───────────────────
+function LEG5({ leg, setLegData }) {
   const d = leg.data || {};
   const v = (k) => d[k] || "";
   const set = (k) => (e) => setLegData({ [k]: e.target.value });
   return (
     <div>
-      <Head eyebrow="Legacy · Stage 4" title="The next chapter" sub="Asked before anything financial, because this is where most plans actually stall. For many operators the farm is not what they do, it is who they are, and transition can read as erasure." />
+      <Head eyebrow="Legacy · Stage 6" title="The next chapter" sub="Asked before anything financial, because this is where most plans actually stall. For many operators the farm is not what they do, it is who they are, and transition can read as erasure." />
       <div style={cardStyle()}>
         <div style={cardLblStyle()}>For the senior generation</div>
         {legRow("What does your week look like in the first year after transition?",
@@ -4562,7 +4458,7 @@ function LEG3({ leg, setLegData }) {
 }
 
 // ── Stage 4 — Two households ─────────────────────────────────────────────────
-function LEG4({ leg, setLegData, fa }) {
+function LEG6({ leg, setLegData, fa }) {
   const d = leg.data || {};
   const v = (k) => d[k] || "";
   const set = (k) => (e) => setLegData({ [k]: e.target.value });
@@ -4573,7 +4469,7 @@ function LEG4({ leg, setLegData, fa }) {
   const independent = n("seniorNonFarmIncome");
   return (
     <div>
-      <Head eyebrow="Legacy · Stage 5" title="Can the operation support two households?" sub="The financial question that governs everything else, and the honest answer is often no. Better to know that now than to discover it after the paperwork is signed." />
+      <Head eyebrow="Legacy · Stage 7" title="Can the operation support two households?" sub="The financial question that governs everything else, and the honest answer is often no. Better to know that now than to discover it after the paperwork is signed." />
       <FinancialHealthStrip fa={fa} />
       <div style={cardStyle()}>
         <div style={cardLblStyle()}>What each household needs</div>
@@ -4600,6 +4496,14 @@ function LEG4({ leg, setLegData, fa }) {
             : <Flag type="ok">On these numbers the operation covers both households with {fmt$(covered)} left over. Worth stress-testing against a bad year before treating it as settled.</Flag>}
         </div>
       )}
+      <div style={cardStyle({ borderTop:`4px solid ${T.amber}` })}>
+        <div style={cardLblStyle()}>Who has actually seen this</div>
+        <p style={{ fontSize:14.5, color:T.fgM, marginTop:0, lineHeight:1.65 }}>Knowing the number is half of it. The other half is whether the people affected by it can see how the business cash flows and pays its bills.</p>
+        {legRow("Who has seen the actual cash flow of this operation?", <select style={inputStyle()} value={d.cashflowSeen||""} onChange={e=>setLegData({ cashflowSeen:e.target.value })}><option value="">Select</option><option value="meOnly">Only me</option><option value="meSpouse">Me and my spouse</option><option value="successor">The successor has seen it</option><option value="all">Everyone with a stake has seen it</option></select>)}
+        {(d.cashflowSeen === "meOnly" || d.cashflowSeen === "meSpouse") && <Flag type="warn">The successor has not seen how the business actually cash flows. Asking someone to commit their working life to an operation whose finances they have never been shown is a common reason a successor quietly disengages.</Flag>}
+        {legRow("Could the successor explain how this business pays its bills?", <select style={inputStyle()} value={d.cashflowUnderstood||""} onChange={e=>setLegData({ cashflowUnderstood:e.target.value })}><option value="">Select</option><option value="no">No</option><option value="roughly">Roughly</option><option value="yes">Yes, in detail</option></select>, "Seeing the numbers and understanding them are different things.")}
+        {legRow("What is not transparent today that should be?", <textarea style={inputStyle({ minHeight:64 })} value={d.notTransparent||""} onChange={e=>setLegData({ notTransparent:e.target.value })} placeholder="Debt, draws, land payments, what the operation actually clears." />)}
+      </div>
       <div style={cardStyle()}>
         <div style={cardLblStyle()}>The two failure modes, named</div>
         <FindingBlock kind="t" tag="FAILURE MODE ONE" heading="The senior generation has no income independent of the operation" source={independent > 0 ? `You have recorded ${fmt$(independent)} of non-farm income` : "You have not recorded any non-farm income"}>
@@ -4626,40 +4530,12 @@ function LEG4({ leg, setLegData, fa }) {
           We have actually run these numbers, not just estimated them
         </label>
       </div>
-
-      <div style={cardStyle({ borderTop:`4px solid ${T.amber}` })}>
-        <div style={cardLblStyle()}>Who has actually seen this</div>
-        <p style={{ fontSize:14.5, color:T.fgM, marginTop:0, lineHeight:1.65 }}>
-          Knowing the number is half of it. The other half is whether the people affected by it can see how the business cash flows and pays its bills. Where that is not visible, a successor is being asked to commit to something they cannot evaluate, and a spouse is being asked to accept a plan they cannot check.
-        </p>
-        {legRow("Who has seen the actual cash flow of this operation?",
-          <select style={inputStyle()} value={d.cashflowSeen||""} onChange={e=>setLegData({ cashflowSeen:e.target.value })}>
-            <option value="">Select</option>
-            <option value="meOnly">Only me</option>
-            <option value="meSpouse">Me and my spouse</option>
-            <option value="successor">The successor has seen it</option>
-            <option value="all">Everyone with a stake has seen it</option>
-          </select>)}
-        {(d.cashflowSeen === "meOnly" || d.cashflowSeen === "meSpouse") && (
-          <Flag type="warn">The successor has not seen how the business actually cash flows. Asking someone to commit their working life to an operation whose finances they have never been shown is a large ask, and it is one of the more common reasons a successor quietly disengages.</Flag>
-        )}
-        {legRow("Could the successor explain how this business pays its bills?",
-          <select style={inputStyle()} value={d.cashflowUnderstood||""} onChange={e=>setLegData({ cashflowUnderstood:e.target.value })}>
-            <option value="">Select</option>
-            <option value="no">No</option>
-            <option value="roughly">Roughly</option>
-            <option value="yes">Yes, in detail</option>
-          </select>,
-          "Seeing the numbers and understanding them are different things.")}
-        {legRow("What is not transparent today that should be?",
-          <textarea style={inputStyle({ minHeight:64 })} value={d.notTransparent||""} onChange={e=>setLegData({ notTransparent:e.target.value })} placeholder="Debt, draws, land payments, what the operation actually clears." />)}
-      </div>
     </div>
   );
 }
 
 // ── Stage 5 — Successor readiness ────────────────────────────────────────────
-function LEG5({ leg, setLegData }) {
+function LEG7({ leg, setLegData }) {
   const d = leg.data || {};
   const ex = d.exposure || {};
   const toggle = (id) => setLegData({ exposure:{ ...ex, [id]: !ex[id] } });
@@ -4667,7 +4543,7 @@ function LEG5({ leg, setLegData }) {
   const done = SUCCESSOR_EXPOSURE.length - gaps.length;
   return (
     <div>
-      <Head eyebrow="Legacy · Stage 6" title="Successor readiness" sub="An exposure checklist, not a competence judgement. The question is only whether they have done a thing yet, and every unchecked box is a specific decision to hand over this year." />
+      <Head eyebrow="Legacy · Stage 8" title="Successor readiness" sub="An exposure checklist, not a competence judgement. The question is only whether they have done a thing yet, and every unchecked box is a specific decision to hand over this year." />
       <Flag type="info">This is a curriculum, not a report card. The senior generation is being asked to hand over specific decisions, which is a much easier ask than handing over "management".</Flag>
       <div style={cardStyle()}>
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12, gap:12, flexWrap:"wrap" }}>
@@ -4704,38 +4580,25 @@ function LEG5({ leg, setLegData }) {
         {legRow("Which decision would you find hardest to hand over?",
           <textarea style={inputStyle({ minHeight:64 })} value={d.hardestToHand || ""} onChange={e=>setLegData({ hardestToHand:e.target.value })} placeholder="" />)}
       </div>
-
-      <div style={cardStyle({ borderTop:`4px solid ${T.amber}` })}>
-        <div style={cardLblStyle()}>The question underneath</div>
-        <p style={{ fontSize:14.5, color:T.fgM, marginTop:0, lineHeight:1.65 }}>
-          This is yours to give. It is not theirs to take. That framing matters in both directions, and the second direction is the one nobody asks about.
-        </p>
-        <p style={{ fontSize:14.5, color:T.fgM, margin:"0 0 4px", lineHeight:1.65 }}>
-          <b style={{ color:T.navy }}>How easy is it to give something to someone you are upset with?</b>
-        </p>
-        <p style={{ fontSize:13.5, color:T.fgM, margin:"0 0 16px", lineHeight:1.6 }}>
-          A transfer held up by resentment looks identical from the outside to one held up by readiness. The successor is told they are not ready. More exposure is arranged. Nothing moves, because readiness was never the problem. The two have completely different fixes, which is why it is worth separating them here.
-        </p>
-        {legRow("Is anything you are holding onto about resentment rather than readiness?",
-          <textarea style={inputStyle({ minHeight:70 })} value={d.resentment || ""} onChange={e=>setLegData({ resentment:e.target.value })} placeholder="Nobody sees this. It is not published, compared, or carried into any output." />,
-          "Something that was said. A choice they made. A way they do things. It does not have to be reasonable to be real.")}
-        {(d.resentment||"").trim().length > 15 && (
-          <Flag type="warn">Worth knowing before you go further: no amount of successor readiness work will move a transfer that is actually held up by this. It is a different conversation, and it is usually one a third party helps with more than a tool does.</Flag>
-        )}
+      <div style={cardStyle({ borderTop:`4px solid ${T.red}` })}>
+        <div style={cardLblStyle()}>A private resentment check</div>
+        <p style={{ fontSize:13.5, color:T.fgM, lineHeight:1.6, marginTop:0 }}>Sometimes the readiness problem is not readiness. It is an old grievance, an unkept promise, or a feeling that the transfer is unfair. This answer is private and excluded from every output.</p>
+        {legRow("Is there something unresolved that could hold up a transfer even if the successor were ready?", <textarea style={inputStyle({ minHeight:90 })} value={d.privateResentment || ""} onChange={e=>setLegData({ privateResentment:e.target.value })} placeholder="Optional. Name it plainly, or skip it." />)}
+        {!!d.privateResentment?.trim() && <Flag type="warn">No amount of successor-readiness work will move a transfer that is actually held up by this. Keep it private, and bring it to the right conversation when you are ready.</Flag>}
       </div>
     </div>
   );
 }
 
 // ── Stage 6 — Who knows what ─────────────────────────────────────────────────
-function LEG6({ leg, setLegData }) {
+function LEG8({ leg, setLegData }) {
   const d = leg.data || {};
   const k = d.knows || {};
   const setK = (id, val) => setLegData({ knows:{ ...k, [id]: val } });
   const unvoiced = KNOWS_WHAT.filter(p => (k[p.id] === 0 || k[p.id] === 1));
   return (
     <div>
-      <Head eyebrow="Legacy · Stage 7" title="Who actually knows what" sub="The most common regret in farm succession is an assumption nobody voiced. One person assumed they would inherit the home place, the other assumed it would be bought, and neither asked for twenty years." />
+      <Head eyebrow="Legacy · Stage 9" title="Who actually knows what" sub="The most common regret in farm succession is an assumption nobody voiced. One person assumed they would inherit the home place, the other assumed it would be bought, and neither asked for twenty years." />
       <div style={cardStyle()}>
         <div style={cardLblStyle()}>Where each person actually stands</div>
         {KNOWS_WHAT.map(p => (
@@ -4798,15 +4661,15 @@ function LEG6({ leg, setLegData }) {
   );
 }
 
-// ── Stage 7 — Fair is not equal ──────────────────────────────────────────────
-function LEG7({ leg, setLegData }) {
+// ── Stage 7 — Fair is not equal ───────────────────────────────────────────��──
+function LEG9({ leg, setLegData }) {
   const d = leg.data || {};
   const chosen = d.fairApproaches || {};
   const toggle = (id) => setLegData({ fairApproaches:{ ...chosen, [id]: !chosen[id] } });
   const para = d.fairParagraph || "";
   return (
     <div>
-      <Head eyebrow="Legacy · Stage 8" title="Fair is not equal" sub="One heir farms and three do not. Land is both the family's wealth and the business's means of production, so dividing it equally destroys the thing everyone says they want to preserve." />
+      <Head eyebrow="Legacy · Stage 10" title="Fair is not equal" sub="One heir farms and three do not. Land is both the family's wealth and the business's means of production, so dividing it equally destroys the thing everyone says they want to preserve." />
       <div style={cardStyle()}>
         <div style={cardLblStyle()}>Approaches families use</div>
         <div style={{ fontSize:12.5, color:T.fgM, marginBottom:14 }}>Presented, not recommended. Mark any worth exploring. Which one fits is a question for your attorney and accountant.</div>
@@ -4842,14 +4705,14 @@ function LEG7({ leg, setLegData }) {
   );
 }
 
-// ── Stage 8 — Triggers & contingencies ───────────────────────────────────────
-function LEG8({ leg, setLegData }) {
+// ── Stage 8 — Triggers & contingencies ──────���─────────���────���────────��────────
+function LEG10({ leg, setLegData }) {
   const d = leg.data || {};
   const c = d.contingency || {};
   const set = (id) => (e) => setLegData({ contingency:{ ...c, [id]: e.target.value } });
   return (
     <div>
-      <Head eyebrow="Legacy · Stage 9" title="Triggers and contingencies" sub="Plans without dates do not happen, and plans that only work if everyone stays healthy until seventy-five are not plans." />
+      <Head eyebrow="Legacy · Stage 11" title="Triggers and contingencies" sub="Plans without dates do not happen, and plans that only work if everyone stays healthy until seventy-five are not plans." />
       <div style={cardStyle()}>
         <div style={cardLblStyle()}>Target dates</div>
         <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16 }}>
@@ -4873,7 +4736,7 @@ function LEG8({ leg, setLegData }) {
 }
 
 // ── Stage 9 — Rented ground & relationships ──────────────────────────────────
-function LEG9({ leg, setLegData }) {
+function LEG11({ leg, setLegData }) {
   const d = leg.data || {};
   const ll = d.landlords || [];
   const setLL = (i, field, val) => { const next = ll.map((x,k)=>k===i?{...x,[field]:val}:x); setLegData({ landlords:next }); };
@@ -4882,7 +4745,7 @@ function LEG9({ leg, setLegData }) {
   const notMet = ll.filter(x => x.name && x.met === "no");
   return (
     <div>
-      <Head eyebrow="Legacy · Stage 10" title="Rented ground and relationships" sub="If a meaningful share of the operation is rented, its viability rests on leases and relationships that do not transfer automatically. They are personal, often built over decades, and a successor who has never met the landlords can lose the acres." />
+      <Head eyebrow="Legacy · Stage 12" title="Rented ground and relationships" sub="If a meaningful share of the operation is rented, its viability rests on leases and relationships that do not transfer automatically. They are personal, often built over decades, and a successor who has never met the landlords can lose the acres." />
       <div style={cardStyle()}>
         {legRow("Roughly what share of the operation is rented ground?",
           <select style={inputStyle()} value={d.rentedShare||""} onChange={e=>setLegData({ rentedShare:e.target.value })}>
@@ -4948,8 +4811,8 @@ function LEG9({ leg, setLegData }) {
 }
 
 
-// ── Stage 11 — Parcels and land valuation ────────────────────────────────────
-function LEG11({ leg, setLegData, profile }) {
+// ── Stage 12 — Parcels and land valuation ─────���────────���─────────────────────
+function LEG12({ leg, setLegData, profile }) {
   const d = leg.data || {};
   const parcels = d.parcels || [];
   const tierKey = legacyTier(leg);
@@ -4969,7 +4832,7 @@ function LEG11({ leg, setLegData, profile }) {
 
   return (
     <div>
-      <Head eyebrow="Legacy · Stage 11" title="Parcels and land valuation" sub="A value for every parcel the family owns. That number flows into estate size, buy-sell funding, insurance sizing, and the equalisation maths between heirs, so if it is wrong everything downstream is wrong." />
+      <Head eyebrow="Legacy · Stage 13" title="Parcels and land valuation" sub="A value for every parcel the family owns. That number flows into estate size, buy-sell funding, insurance sizing, and the equalisation maths between heirs, so if it is wrong everything downstream is wrong." />
 
       {!ready && (
         <Flag type="warn">The readiness stages put this family at {READINESS_TIERS[tierKey].label.toLowerCase()}. You can value parcels here, but the numbers will sit in front of decisions that have not been made yet. {READINESS_TIERS[tierKey].rec}</Flag>
@@ -5152,9 +5015,9 @@ function LEG11({ leg, setLegData, profile }) {
 }
 
 
-// ═════════════════════════════════════════════════════════════════════════════
+// ══════���══════════════════════════════════════════════════════���═══���══������═════���═
 // SUCCESSOR TRACK
-// ═════════════════════════════════════════════════════════════════════════════
+// ════════════════════���════���══════���═════════��══════════════════════════════════
 // Written to the successor, not about them. Their entry point is not "help plan a
 // retirement" but "find out what you would be inheriting and put your version on
 // the table". Nothing in this track is visible to the senior generation until the
@@ -5167,39 +5030,6 @@ function SUCC1({ leg, setSucc }) {
   return (
     <div>
       <Head eyebrow="Successor track · Stage 1" title="Your read on where things stand" sub="Answer as it actually is, not as it is supposed to be. Nobody sees this until you both finish and you both agree to compare." />
-
-      <div style={cardStyle({ borderTop:`4px solid ${T.moss}` })}>
-        <div style={cardLblStyle()}>Before anything else, the hard part</div>
-        <p style={{ fontSize:14.5, color:T.fgM, marginTop:0, lineHeight:1.65 }}>
-          Raising succession with your own parents is the single hardest step in this, and most successors wait years. It can read as asking them to plan their own exit, or as asking for something.
-        </p>
-        <p style={{ fontSize:14.5, color:T.fgM, margin:"0 0 14px", lineHeight:1.65 }}>
-          So do not raise succession. <b style={{ color:T.navy }}>Ask them to look at something you worked through.</b> That is a much smaller thing to say, it is true, and it puts the questions in front of them without you having to be the one asking for anything.
-        </p>
-        <div style={{ borderLeft:`2px solid ${T.moss}`, background:T.greenL, borderRadius:"0 5px 5px 0", padding:"13px 16px", marginBottom:12 }}>
-          <div style={{ fontSize:10, letterSpacing:"0.12em", fontWeight:600, color:T.dgreen, marginBottom:6 }}>SOMETHING YOU COULD ACTUALLY SAY</div>
-          <p style={{ fontSize:14.5, color:T.fg, margin:0, lineHeight:1.65, fontStyle:"italic" }}>
-            "I went through something about how the farm runs and who does what. It asks you the same questions separately. Would you take twenty minutes and go through your side?"
-          </p>
-        </div>
-        <p style={{ fontSize:13, color:T.fgM, margin:0, lineHeight:1.6 }}>
-          Nothing about ownership. Nothing about money. Nothing about when. Those come later and they come easier once both of you have answered the same questions.
-        </p>
-      </div>
-
-      <div style={cardStyle()}>
-        {legRow("Have you ever tried to raise this with them?",
-          <select style={inputStyle()} value={s.triedRaising||""} onChange={e=>setSucc({ triedRaising:e.target.value })}>
-            <option value="">Select</option>
-            <option value="never">Never brought it up</option>
-            <option value="hinted">Hinted at it, never directly</option>
-            <option value="once">Tried once, it did not go well</option>
-            <option value="ongoing">We talk about it</option>
-          </select>)}
-        {(s.triedRaising === "once" || s.triedRaising === "hinted") && (
-          <Flag type="info">A conversation that went badly is usually about timing or framing rather than the answer. Handing them something to work through separately removes both problems, because nobody has to perform a reaction in the moment.</Flag>
-        )}
-      </div>
       <Flag type="info">The senior generation is answering these same three questions separately. The point is not who is right. It is that the two answers are almost never the same, and the difference is usually the thing nobody has said out loud.</Flag>
       {TRANSFERS.map(tr => {
         const m = MIRROR.find(x => x.id === tr.id);
@@ -5501,1211 +5331,7 @@ function LegCompare({ leg, setLegData, setSucc }) {
   );
 }
 
-// ── Stage 10 — Where this leaves you ─────────────────────────────────────────
-function LEG10({ leg, profile }) {
-  const d = leg.data || {};
-  const tierKey = legacyTier(leg);
-  const tier = READINESS_TIERS[tierKey];
-  const t = d.transfers || {};
-  const gaps = SUCCESSOR_EXPOSURE.filter(s => !(d.exposure||{})[s.id]);
-  const notMet = (d.landlords||[]).filter(x => x.name && x.met === "no");
-  const unvoiced = KNOWS_WHAT.filter(p => ((d.knows||{})[p.id] === 0 || (d.knows||{})[p.id] === 1));
-  const ready = tierKey === "structural" || tierKey === "execution";
-
-  const H = ({children}) => <div style={{ fontSize:11, letterSpacing:"0.13em", textTransform:"uppercase", color:T.fgS, margin:"24px 0 11px", paddingBottom:6, borderBottom:`1px solid ${T.border}` }}>{children}</div>;
-
-  return (
-    <div>
-      <Head eyebrow="Legacy · Stage 11" title="Where this leaves you" sub="Not a plan. A readiness profile, and a sequenced list of what to actually do next." />
-
-      <div style={cardStyle({ borderTop:`4px solid ${tierKey==="execution"?T.moss:tierKey==="conversation"?T.red:T.amber}` })}>
-        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", gap:12, flexWrap:"wrap", marginBottom:10 }}>
-          <div style={{ fontSize:22, fontWeight:600, color:T.navy }}>{tier.label}</div>
-          <span style={pillStyle(tier.pill)}>{tierKey}</span>
-        </div>
-        <p style={{ fontSize:14, color:T.fgM, margin:"0 0 12px", lineHeight:1.6 }}>{tier.signal}</p>
-        <div style={{ borderLeft:`2px solid ${T.blue}`, background:T.blueL, borderRadius:"0 5px 5px 0", padding:"12px 15px" }}>
-          <div style={{ fontSize:10, letterSpacing:"0.12em", fontWeight:600, color:T.blue, marginBottom:5 }}>WHAT TO DO NEXT</div>
-          <p style={{ fontSize:13.5, color:T.navy, margin:0, lineHeight:1.6 }}>{tier.rec}</p>
-        </div>
-        <p style={{ fontSize:12, color:T.fgS, marginTop:12, marginBottom:0, fontStyle:"italic" }}>This describes where the process is, not the people in it.</p>
-      </div>
-
-      <div style={cardStyle({ borderTop:`4px solid ${T.blue}` })}>
-        <div style={cardLblStyle()}>Where the work actually sits</div>
-        <div style={{ display:"flex", gap:0, height:28, borderRadius:6, overflow:"hidden", marginBottom:11 }}>
-          <div style={{ flex:8, background:T.blue, display:"flex", alignItems:"center", justifyContent:"center", color:"#fff", fontSize:11.5, fontWeight:600 }}>People</div>
-          <div style={{ flex:2, background:T.silver, display:"flex", alignItems:"center", justifyContent:"center", color:T.fgM, fontSize:11.5, fontWeight:600 }}>Business</div>
-        </div>
-        <p style={{ fontSize:13.5, color:T.fgM, margin:0, lineHeight:1.65 }}>
-          Eight of the ten questions you just worked through were about people. That is not an accident. The business side of a transition is largely arithmetic, and professionals who do it well are straightforward to find. The people side is where plans stall, and it is the part no accountant or attorney can do for you.
-        </p>
-      </div>
-
-      <div style={cardStyle()}>
-        <H>The three transfers, today</H>
-        {TRANSFERS.map((tr,k) => {
-          const now = Number((t[tr.id]||{}).now || 0), y10 = Number((t[tr.id]||{}).y10 || 0);
-          return (
-            <div key={tr.id} style={{ display:"flex", alignItems:"center", gap:12, padding:"8px 0", borderBottom:`1px dashed ${T.border}` }}>
-              <span style={{ width:110, fontSize:13.5, fontWeight:600, color:T.fg, flexShrink:0 }}>{tr.label}</span>
-              <div style={{ flex:1, height:8, background:"#dde1e8", borderRadius:4, overflow:"hidden", position:"relative" }}>
-                <div style={{ width:`${now}%`, height:"100%", background:[T.moss,T.blue,T.navy][k], borderRadius:4 }} />
-              </div>
-              <span style={{ width:150, textAlign:"right", fontSize:12.5, color:T.fgM, flexShrink:0 }}>{now}% now, {y10}% at ten years</span>
-            </div>
-          );
-        })}
-
-        {gaps.length > 0 && (<>
-          <H>Management to hand over</H>
-          <ol style={{ margin:0, paddingLeft:20, fontSize:14, color:T.fgM, lineHeight:1.8 }}>
-            {gaps.slice(0,3).map(g => <li key={g.id}>{g.label}</li>)}
-          </ol>
-          {gaps.length > 3 && <p style={{ fontSize:12.5, color:T.fgS, marginTop:8, marginBottom:0 }}>Plus {gaps.length-3} more. Two per year is a realistic pace.</p>}
-        </>)}
-
-        {unvoiced.length > 0 && (<>
-          <H>Conversations not yet had</H>
-          <ul style={{ margin:0, paddingLeft:20, fontSize:14, color:T.fgM, lineHeight:1.8 }}>
-            {unvoiced.map(p => <li key={p.id}>{p.label}</li>)}
-          </ul>
-        </>)}
-
-        {d.nextChapterRole && (<>
-          <H>The senior generation's ongoing role</H>
-          <div style={{ borderLeft:`2px solid ${T.moss}`, background:T.greenL, borderRadius:"0 5px 5px 0", padding:"12px 15px", fontSize:13.5, color:T.fg, lineHeight:1.6 }}>{d.nextChapterRole}</div>
-        </>)}
-
-        {(d.fairParagraph||"").trim() && (<>
-          <H>Why unequal is fair, in their words</H>
-          <div style={{ borderLeft:`2px solid ${T.navy}`, background:T.bgAlt, borderRadius:"0 5px 5px 0", padding:"12px 15px", fontSize:13.5, color:T.fg, lineHeight:1.7 }}>{d.fairParagraph}</div>
-          {!d.fairSaid && <p style={{ fontSize:12.5, color:T.amberT, marginTop:8, marginBottom:0 }}>Written but not yet said out loud.</p>}
-        </>)}
-
-        {notMet.length > 0 && (<>
-          <H>Landlords to introduce</H>
-          <ul style={{ margin:0, paddingLeft:20, fontSize:14, color:T.fgM, lineHeight:1.8 }}>
-            {notMet.map((x,i) => <li key={i}>{x.name}{x.acres?` · ${x.acres} acres`:""}</li>)}
-          </ul>
-        </>)}
-      </div>
-
-      <div style={cardStyle({ borderTop:`4px solid ${ready?T.moss:T.silver}` })}>
-        <div style={cardLblStyle()}>Asset inventory and valuation</div>
-        {ready ? (
-          <>
-            <p style={{ fontSize:14, color:T.fgM, marginTop:0, lineHeight:1.6 }}>The operating question has been tested far enough that the ownership question can be answered intelligently. Legacy Acres picks up here, and it opens with context rather than a blank form: which ground is operationally central, which is exposed to the fair-versus-equal problem, and which is rented out versus farmed.</p>
-            <a href="https://legacyacres.co/" target="_blank" rel="noopener noreferrer" style={{ ...btnStyle("primary"), display:"inline-block", textDecoration:"none" }}>Continue in Legacy Acres →</a>
-          </>
-        ) : (
-          <>
-            <Flag type="warn">Not yet. Filling out an asset inventory from here would produce a tidy document that changes nothing, and it is the most common way succession software gets opened once and abandoned.</Flag>
-            <p style={{ fontSize:14, color:T.fgM, marginBottom:0, lineHeight:1.6 }}>Work the recommendation above first. Come back to this page afterwards and the handoff will open on its own.</p>
-          </>
-        )}
-      </div>
-
-      <div style={cardStyle()}>
-        <div style={cardLblStyle()}>What this module does not do</div>
-        <ul style={{ margin:0, paddingLeft:20, fontSize:13.5, color:T.fgM, lineHeight:1.9 }}>
-          <li>No legal documents. No operating agreements, buy-sells, or wills.</li>
-          <li>No tax advice. Sequencing questions go to your accountant before assets move.</li>
-          <li>No scoring of your family. The tier above describes the process, never the people.</li>
-        </ul>
-      </div>
-    </div>
-  );
-}
-
-
-// ═════════════════════════════════════════════════════════════════════════════
-// STRATEGIC VISION
-// ═════════════════════════════════════════════════════════════════════════════
-// Takes what the farmer already wrote in the Farm Profile and makes it harder,
-// then converts what survives into rules an employee could actually follow and,
-// more importantly, could cite back at the owner.
-//
-// The test that governs the whole module: a vision one person holds is a
-// preference. A vision the organization holds is a constraint. If someone other
-// than the owner cannot invoke it to stop something, it is not institutional yet.
-
-const VIS_STAGES = [
-  { n:1, label:"What you have already said" },
-  { n:2, label:"Test it" },
-  { n:3, label:"What it has cost you" },
-  { n:4, label:"Turn it into rules" },
-  { n:5, label:"Who holds this" },
-  { n:6, label:"Where it binds" },
-  { n:7, label:"The statement" },
-  { n:8, label:"The document" },
-];
-
-// The four tests. Most answers fail at least one, which is the point of running them.
-const VIS_TESTS = [
-  { id:"neighbour", label:"The neighbour test",
-    q:"If the operation across the road did exactly this, would it work as well for them?",
-    fail:"yes", failVerdict:"table stakes",
-    failNote:"Then it is table stakes, not an advantage. Worth doing, but it does not distinguish this operation." },
-  { id:"absence", label:"The absence test",
-    q:"Would this still be true if you were not here?",
-    fail:"no", failVerdict:"person-dependent",
-    failNote:"Then it is a person, not a business asset. That is not a criticism, it is the single most useful thing this module can tell a succession plan." },
-  { id:"evidence", label:"The evidence test",
-    q:"What happened in the last two years that proves this?",
-    kind:"text",
-    failNote:"An advantage with no evidence behind it is a self-image. Worth either finding the evidence or demoting the claim." },
-  { id:"cost", label:"The cost test",
-    q:"What have you turned down, or what has it cost you, because of this?",
-    kind:"text",
-    failNote:"A value that has never cost anything is not governing behaviour yet. This is the question most operators have a real answer to and have never been asked." },
-];
-
-const VIS_VERDICTS = {
-  real:            { label:"Holds up", pill:"strong",  note:"Survives the tests. This belongs in the statement." },
-  "table stakes":  { label:"Table stakes", pill:"watch", note:"Real, but not distinguishing. Keep doing it; do not build the strategy on it." },
-  "person-dependent":{ label:"Person-dependent", pill:"vuln", note:"Lives in a person rather than the business. Carries straight into the Legacy module as a knowledge transfer target." },
-  unproven:        { label:"Unproven", pill:"watch", note:"No evidence recorded yet. Find it, or soften the claim." },
-  untested:        { label:"Not tested yet", pill:"blank", note:"" },
-};
-
-// Decision points elsewhere in MFP where a rule can actually bind. This is what
-// separates an operational vision from wall decoration.
-const VIS_BINDS = [
-  { id:"diversification", label:"New enterprise or venture decisions", where:"Revenue Diversification, scenario comparison" },
-  { id:"capital",         label:"Capital purchases and borrowing",     where:"Financial Analysis, Revenue Diversification sequencing" },
-  { id:"land",            label:"Taking on ground, rented or owned",   where:"Revenue Diversification, Legacy" },
-  { id:"risk",            label:"What risk to carry, transfer or avoid", where:"Farm Risk, strategy selection" },
-  { id:"people",          label:"Hiring, roles and who decides what",  where:"Legacy, successor readiness" },
-  { id:"market",          label:"Who we sell to and on what terms",    where:"Revenue Diversification" },
-  { id:"succession",      label:"Ownership and transition decisions",  where:"Legacy, fair versus equal" },
-];
-
-const VIS_HOLDERS = [
-  { id:"successor", label:"The successor" },
-  { id:"spouse",    label:"Your spouse or partner" },
-  { id:"family",    label:"Other family with a stake" },
-  { id:"employees", label:"Employees" },
-  { id:"advisors",  label:"Lender, accountant, agent" },
-];
-const VIS_HOLD_LEVEL = ["Never discussed","I assume they agree","We have discussed it","They could state it themselves"];
-
-// Seeds the item list from what the farmer already wrote in the Farm Profile,
-// so the module never re-asks a question they have already answered.
-const visSeedItems = (profile) => {
-  const out = [];
-  const push = (kind, field, label) => {
-    const raw = (profile||{})[field];
-    if (!raw || !String(raw).trim()) return;
-    String(raw).split(/\.\s+|\n/).map(s=>s.trim()).filter(s=>s.length>8).slice(0,4)
-      .forEach((text,i) => out.push({ id:`${field}-${i}`, kind, sourceLabel:label, text:text.replace(/\.$/,""), tests:{}, verdict:"untested" }));
-  };
-  push("advantage","advantage","Competitive advantage");
-  push("value","values","Core values");
-  push("goal","nearTerm","Near-term objectives");
-  push("goal","longTerm","Long-term objectives");
-  return out;
-};
-
-const visVerdictOf = (item) => {
-  const t = item.tests || {};
-  if (t.neighbour === "yes") return "table stakes";
-  if (t.absence === "no") return "person-dependent";
-  if (item.kind !== "goal" && t.neighbour && t.absence && !(t.evidence||"").trim()) return "unproven";
-  if (t.neighbour && t.absence) return "real";
-  return "untested";
-};
-
-const visStats = (vis) => {
-  const items = vis.items || [];
-  const tested = items.filter(i => visVerdictOf(i) !== "untested");
-  return {
-    total: items.length,
-    tested: tested.length,
-    real: items.filter(i => visVerdictOf(i) === "real").length,
-    personDependent: items.filter(i => visVerdictOf(i) === "person-dependent").length,
-    tableStakes: items.filter(i => visVerdictOf(i) === "table stakes").length,
-    rules: (vis.rules||[]).length,
-    boundRules: (vis.rules||[]).filter(r => (r.binds||[]).length > 0).length,
-  };
-};
-
-
-// ── Vision 1 — What you have already said ────────────────────────────────────
-function VIS1({ vis, setVis, profile, goProfile }) {
-  const items = vis.items || [];
-  const seeded = !!vis.seeded;
-  const seed = () => setVis({ items: visSeedItems(profile), seeded:true });
-  const setItem = (id, patch) => setVis({ items: items.map(i => i.id===id ? {...i,...patch} : i) });
-  const add = () => setVis({ items:[...items, { id:"custom-"+Date.now(), kind:"advantage", sourceLabel:"Added here", text:"", tests:{}, verdict:"untested" }], seeded:true });
-  const remove = (id) => setVis({ items: items.filter(i => i.id!==id) });
-  const hasProfile = ["advantage","values","nearTerm","longTerm"].some(f => (profile||{})[f] && String(profile[f]).trim());
-
-  return (
-    <div>
-      <Head eyebrow="Strategic vision · Stage 1" title="What you have already said" sub="You have written some of this down before. Nothing here asks you to start over. This pulls it forward so the rest of the module can make it harder." />
-      {!hasProfile && (
-        <Flag type="warn">Your Farm Profile does not have competitive advantage, core values, or objectives filled in yet. You can add items here directly, but filling the profile first gives this module something to work with.
-          {goProfile && <div style={{ marginTop:9 }}><button onClick={goProfile} style={{ ...btnStyle("outline"), fontSize:12, padding:"6px 13px" }}>Open Farm Profile</button></div>}
-        </Flag>
-      )}
-      {!seeded && hasProfile && (
-        <div style={cardStyle({ borderTop:`4px solid ${T.moss}` })}>
-          <div style={cardLblStyle()}>Pull it forward</div>
-          <p style={{ fontSize:14, color:T.fgM, marginTop:0, lineHeight:1.6 }}>Your profile already holds competitive advantage, core values, and near and long-term objectives. This breaks them into separate claims so each one can be tested on its own.</p>
-          <button onClick={seed} style={btnStyle("primary")}>Bring in what I have written →</button>
-        </div>
-      )}
-      {items.length > 0 && (
-        <div style={cardStyle()}>
-          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", gap:12, flexWrap:"wrap", marginBottom:12 }}>
-            <div style={cardLblStyle({ marginBottom:0 })}>{items.length} claims to work with</div>
-            <button onClick={add} style={{ ...btnStyle("outline"), fontSize:12, padding:"6px 13px" }}>+ Add one</button>
-          </div>
-          <div style={{ fontSize:12.5, color:T.fgM, marginBottom:14, lineHeight:1.55 }}>Edit anything that came across wrong, split anything that is really two claims, and delete anything you no longer stand behind. What is missing matters as much as what is here.</div>
-          {items.map(it => (
-            <div key={it.id} style={{ border:`1px solid ${T.border}`, borderRadius:8, padding:"12px 14px", marginBottom:10 }}>
-              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", gap:10, marginBottom:8, flexWrap:"wrap" }}>
-                <select style={{ ...inputStyle(), width:"auto", fontSize:12, padding:"4px 9px" }} value={it.kind} onChange={e=>setItem(it.id,{kind:e.target.value})}>
-                  <option value="advantage">Competitive advantage</option>
-                  <option value="value">Core value</option>
-                  <option value="goal">Objective</option>
-                </select>
-                <span style={{ fontSize:11, color:T.fgS }}>from {it.sourceLabel}</span>
-              </div>
-              <textarea style={inputStyle({ minHeight:52, fontSize:14 })} value={it.text} onChange={e=>setItem(it.id,{text:e.target.value})} placeholder="State it as plainly as you can" />
-              <button onClick={()=>remove(it.id)} style={{ ...btnStyle("ghost"), marginTop:7, fontSize:11.5 }}>Remove</button>
-            </div>
-          ))}
-        </div>
-      )}
-      {items.length > 0 && (
-        <div style={cardStyle()}>
-          {legRow("What is true about why this operation wins that you have never written down?",
-            <textarea style={inputStyle({ minHeight:70 })} value={vis.missing||""} onChange={e=>setVis({ missing:e.target.value })} placeholder="" />,
-            "The most valuable answer in this module is usually the one that was never in the profile.")}
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ── Vision 2 — Test it ───────────────────────────────────────────────────────
-function VIS2({ vis, setVis }) {
-  const items = (vis.items||[]).filter(i => i.text && i.text.trim());
-  const setTest = (id, tid, val) => setVis({ items: (vis.items||[]).map(i => i.id===id ? { ...i, tests:{ ...(i.tests||{}), [tid]:val } } : i) });
-  const s = visStats(vis);
-
-  if (!items.length) return <div><Head eyebrow="Strategic vision · Stage 2" title="Test it" sub="" /><Flag type="warn">Nothing to test yet. Go back a stage and bring in what you have written.</Flag></div>;
-
-  return (
-    <div>
-      <Head eyebrow="Strategic vision · Stage 2" title="Test it" sub="Most operations answer the competitive advantage question with hard work and quality. Neither one is an advantage. These questions find out which of your claims actually are." />
-      <Flag type="info">Expect several of these to get demoted. That is the module working. An honest short list is worth more than a long one nobody believes.</Flag>
-
-      {items.map(it => {
-        const t = it.tests || {};
-        const verdict = visVerdictOf(it);
-        const v = VIS_VERDICTS[verdict];
-        const isGoal = it.kind === "goal";
-        const tests = VIS_TESTS.filter(x => isGoal ? x.id === "evidence" : (it.kind === "value" ? x.id !== "neighbour" : x.id !== "cost"));
-        return (
-          <div key={it.id} style={cardStyle(verdict==="person-dependent" ? { borderLeft:`3px solid ${T.red}` } : verdict==="table stakes" ? { borderLeft:`3px solid ${T.amber}` } : verdict==="real" ? { borderLeft:`3px solid ${T.moss}` } : {})}>
-            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"baseline", gap:12, flexWrap:"wrap", marginBottom:4 }}>
-              <span style={{ fontSize:10.5, letterSpacing:"0.12em", textTransform:"uppercase", color:T.fgS }}>{it.kind === "advantage" ? "Advantage" : it.kind === "value" ? "Value" : "Objective"}</span>
-              <span style={pillStyle(v.pill)}>{v.label}</span>
-            </div>
-            <div style={{ fontSize:15.5, fontWeight:600, color:T.navy, marginBottom:14, lineHeight:1.45 }}>{it.text}</div>
-
-            {tests.map(test => (
-              <div key={test.id} style={{ marginBottom:13 }}>
-                <div style={{ fontSize:12.5, fontWeight:600, color:T.fgM, marginBottom:3 }}>{test.label}</div>
-                <div style={{ fontSize:13.5, color:T.fg, marginBottom:7 }}>{test.q}</div>
-                {test.kind === "text" ? (
-                  <textarea style={inputStyle({ minHeight:52, fontSize:13.5 })} value={t[test.id]||""} onChange={e=>setTest(it.id,test.id,e.target.value)} placeholder="Be specific. A real instance, not a general claim." />
-                ) : (
-                  <div style={{ display:"flex", gap:7 }}>
-                    {["yes","no"].map(val => {
-                      const on = t[test.id] === val;
-                      return <button key={val} onClick={()=>setTest(it.id,test.id,val)} style={{ background:on?T.navy:"#fff", color:on?"#fff":T.fgM, border:`1px solid ${on?T.navy:T.border}`, borderRadius:5, padding:"7px 20px", fontSize:13, cursor:"pointer", font:"inherit", fontWeight:on?600:400 }}>{val === "yes" ? "Yes" : "No"}</button>;
-                    })}
-                  </div>
-                )}
-                {t[test.id] === test.fail && <div style={{ marginTop:8 }}><Flag type="warn">{test.failNote}</Flag></div>}
-              </div>
-            ))}
-
-            {verdict !== "untested" && v.note && (
-              <div style={{ borderLeft:`2px solid ${scColor(v.pill)}`, background:T.bgAlt, borderRadius:"0 5px 5px 0", padding:"10px 13px", fontSize:13, color:T.fgM, lineHeight:1.55 }}>{v.note}</div>
-            )}
-          </div>
-        );
-      })}
-
-      {s.tested > 0 && (
-        <div style={cardStyle({ borderTop:`4px solid ${T.navy}` })}>
-          <div style={cardLblStyle()}>Where that leaves you</div>
-          <div style={{ display:"flex", gap:26, flexWrap:"wrap" }}>
-            {[["Holds up", s.real, T.dgreen],["Table stakes", s.tableStakes, T.amberT],["Person-dependent", s.personDependent, T.red]].map(([lab,n,col],k)=>(
-              <div key={k}><div style={{ fontSize:11, color:T.fgS, marginBottom:3 }}>{lab}</div><div style={{ fontSize:24, fontWeight:600, color:n>0?col:T.fgS }}>{n}</div></div>
-            ))}
-          </div>
-          {s.personDependent > 0 && <div style={{ marginTop:13 }}><Flag type="warn">{s.personDependent === 1 ? "One advantage lives" : `${s.personDependent} advantages live`} in a person rather than the business. That is the most important finding this module produces, and it carries into the Legacy module as a knowledge transfer target.</Flag></div>}
-          {s.real === 0 && s.tested >= 2 && <div style={{ marginTop:11 }}><Flag type="info">Nothing has survived intact yet. That is common and it is not a verdict on the operation. It usually means the real advantage has not been named yet rather than that there is not one.</Flag></div>}
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ── Vision 3 — What it has cost you ──────────────────────────────────────────
-function VIS3({ vis, setVis }) {
-  const values = (vis.items||[]).filter(i => i.kind === "value" && i.text);
-  const setTest = (id, val) => setVis({ items: (vis.items||[]).map(i => i.id===id ? { ...i, tests:{ ...(i.tests||{}), cost:val } } : i) });
-  const answered = values.filter(v => ((v.tests||{}).cost||"").trim().length > 10).length;
-  return (
-    <div>
-      <Head eyebrow="Strategic vision · Stage 3" title="What it has cost you" sub="A value that has never cost anything is not governing behaviour, it is decoration. This is the question most operators have a real answer to and have never been asked." />
-      {values.length === 0 ? (
-        <Flag type="warn">No core values recorded yet. Go back to stage 1 and mark at least one claim as a core value.</Flag>
-      ) : (
-        <>
-          <Flag type="info">A good answer names a specific thing you turned down, lost, or paid more for. If nothing comes to mind, that is worth knowing too.</Flag>
-          {values.map(v => (
-            <div key={v.id} style={cardStyle()}>
-              <div style={{ fontSize:15.5, fontWeight:600, color:T.navy, marginBottom:4, lineHeight:1.45 }}>{v.text}</div>
-              <div style={{ fontSize:13, color:T.fgM, marginBottom:11 }}>What has this cost you, or what have you turned down because of it?</div>
-              <textarea style={inputStyle({ minHeight:64 })} value={(v.tests||{}).cost||""} onChange={e=>setTest(v.id, e.target.value)} placeholder="A contract you did not take. A tenant you did not renew. A price you did not chase." />
-            </div>
-          ))}
-          {answered > 0 && answered < values.length && (
-            <Flag type="warn">{values.length - answered} of {values.length} have no cost recorded. Those are the ones most likely to be aspirations rather than operating values.</Flag>
-          )}
-          {answered === values.length && values.length > 0 && (
-            <Flag type="ok">Every value has a real cost behind it. These are governing behaviour rather than describing it, which is what makes them usable as rules in the next stage.</Flag>
-          )}
-        </>
-      )}
-    </div>
-  );
-}
-
-// ── Vision 4 — Turn it into rules ────────────────────────────────────────────
-function VIS4({ vis, setVis }) {
-  const items = (vis.items||[]).filter(i => i.text && visVerdictOf(i) !== "table stakes");
-  const rules = vis.rules || [];
-  const setRule = (i, patch) => setVis({ rules: rules.map((r,k)=>k===i?{...r,...patch}:r) });
-  const add = (fromId) => setVis({ rules:[...rules, { id:"r"+Date.now(), fromItem:fromId||"", statement:"", owner:"", exception:"", binds:[] }] });
-  const remove = (i) => setVis({ rules: rules.filter((_,k)=>k!==i) });
-
-  return (
-    <div>
-      <Head eyebrow="Strategic vision · Stage 4" title="Turn it into rules" sub="This is where a personal vision becomes an organizational one. A value cannot be followed by an employee. A rule can, and more importantly a rule can be cited back at you." />
-      <div style={cardStyle({ borderTop:`4px solid ${T.blue}` })}>
-        <div style={cardLblStyle()}>What the conversion looks like</div>
-        {[["We value stewardship","We do not rent ground we cannot farm to our own standard, even when the rent is good"],
-          ["We are known for doing what we said","A landlord hears bad news from us before they hear it anywhere else"],
-          ["We are careful with debt","No capital purchase that takes debt-to-asset above forty percent"]].map(([before,after],k)=>(
-          <div key={k} style={{ display:"grid", gridTemplateColumns:"1fr auto 1.4fr", gap:12, alignItems:"center", padding:"9px 0", borderBottom:k<2?`1px dashed ${T.border}`:"none" }}>
-            <span style={{ fontSize:13, color:T.fgS, fontStyle:"italic" }}>{before}</span>
-            <span style={{ color:T.green, fontSize:15 }}>→</span>
-            <span style={{ fontSize:13.5, color:T.fg, fontWeight:500 }}>{after}</span>
-          </div>
-        ))}
-      </div>
-
-      <div style={cardStyle()}>
-        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", gap:12, flexWrap:"wrap", marginBottom:12 }}>
-          <div style={cardLblStyle({ marginBottom:0 })}>Your rules</div>
-          <button onClick={()=>add("")} style={{ ...btnStyle("outline"), fontSize:12, padding:"6px 13px" }}>+ Add a rule</button>
-        </div>
-        {rules.length === 0 && <p style={{ fontSize:13.5, color:T.fgS, fontStyle:"italic", margin:0 }}>None yet. Three or four real rules beat a dozen aspirational ones.</p>}
-        {rules.map((r,i) => (
-          <div key={r.id} style={{ border:`1px solid ${T.border}`, borderRadius:8, padding:"13px 15px", marginBottom:11 }}>
-            <div style={{ marginBottom:11 }}>
-              <label style={labelStyle}>The rule, stated so someone else could apply it</label>
-              <textarea style={inputStyle({ minHeight:54, fontSize:14 })} value={r.statement} onChange={e=>setRule(i,{statement:e.target.value})} placeholder="We do not... / We always... / No decision to... without..." />
-            </div>
-            {items.length > 0 && (
-              <div style={{ marginBottom:11 }}>
-                <label style={labelStyle}>Which claim does this come from?</label>
-                <select style={inputStyle()} value={r.fromItem} onChange={e=>setRule(i,{fromItem:e.target.value})}>
-                  <option value="">Not linked</option>
-                  {items.map(it => <option key={it.id} value={it.id}>{it.text.slice(0,70)}</option>)}
-                </select>
-              </div>
-            )}
-            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12 }}>
-              <div>
-                <label style={labelStyle}>Who owns it</label>
-                <input style={inputStyle()} value={r.owner} onChange={e=>setRule(i,{owner:e.target.value})} placeholder="A named person" />
-              </div>
-              <div>
-                <label style={labelStyle}>How an exception gets made</label>
-                <input style={inputStyle()} value={r.exception} onChange={e=>setRule(i,{exception:e.target.value})} placeholder="Who can override it, and how" />
-              </div>
-            </div>
-            {!r.exception && r.statement && (
-              <div style={{ marginTop:10 }}><Flag type="warn">No exception path. A rule with no stated way to break it openly gets broken quietly the first time it is inconvenient, and then it is dead.</Flag></div>
-            )}
-            <button onClick={()=>remove(i)} style={{ ...btnStyle("ghost"), marginTop:10, fontSize:11.5 }}>Remove</button>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// ── Vision 5 — Who holds this ────────────────────────────────────────────────
-function VIS5({ vis, setVis, goLegacy }) {
-  const h = vis.holders || {};
-  const setH = (id,val) => setVis({ holders:{ ...h, [id]:val } });
-  const assumed = VIS_HOLDERS.filter(p => h[p.id] === 1);
-  const unspoken = VIS_HOLDERS.filter(p => h[p.id] === 0 || h[p.id] === 1);
-  const canState = VIS_HOLDERS.filter(p => h[p.id] === 3);
-  return (
-    <div>
-      <Head eyebrow="Strategic vision · Stage 5" title="Who holds this" sub="A vision one person holds is a preference. A vision the organization holds is a constraint. The difference is whether anyone else could state it, and whether they could use it to stop something." />
-      <div style={cardStyle()}>
-        <div style={cardLblStyle()}>Where each person actually stands</div>
-        {VIS_HOLDERS.map(p => (
-          <div key={p.id} style={{ padding:"11px 0", borderBottom:`1px solid ${T.div}` }}>
-            <div style={{ fontSize:14, color:T.fg, marginBottom:7 }}>{p.label}</div>
-            <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
-              {VIS_HOLD_LEVEL.map((lab,idx) => {
-                const on = h[p.id] === idx;
-                return <button key={idx} onClick={()=>setH(p.id,idx)} style={{ background:on?T.navy:"#fff", color:on?"#fff":T.fgM, border:`1px solid ${on?T.navy:T.border}`, borderRadius:4, padding:"5px 11px", fontSize:12, cursor:"pointer", font:"inherit", fontWeight:on?600:400 }}>{lab}</button>;
-              })}
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {assumed.length > 0 && (
-        <div style={cardStyle({ borderLeft:`3px solid ${T.amber}` })}>
-          <div style={cardLblStyle()}>The assumption you have not checked</div>
-          <p style={{ fontSize:14, color:T.fgM, marginTop:0, lineHeight:1.6 }}>
-            You have recorded that {assumed.map(p=>p.label.toLowerCase()).join(", ")} {assumed.length===1?"agrees":"agree"} with this, without having asked. That is an assumption, and unvoiced assumptions are the most common thing families get wrong about each other.
-          </p>
-          <p style={{ fontSize:13.5, color:T.fgM, marginBottom:goLegacy?12:0, lineHeight:1.6 }}>
-            This module can only record what you believe. The Legacy module has a blind compare where both generations answer the same questions independently and the gaps are shown. That is where an assumption gets tested rather than noted.
-          </p>
-          {goLegacy && <button onClick={goLegacy} style={btnStyle("primary")}>Open the Legacy blind compare →</button>}
-        </div>
-      )}
-
-      <div style={cardStyle()}>
-        {legRow("Who could stop a decision by pointing at this vision, and would that hold?",
-          <textarea style={inputStyle({ minHeight:70 })} value={vis.whoCanInvoke||""} onChange={e=>setVis({ whoCanInvoke:e.target.value })} placeholder="" />,
-          "If the honest answer is nobody, it is not institutional yet. That is worth knowing and it is fixable.")}
-        {legRow("Has anyone ever disagreed with the direction out loud?",
-          <textarea style={inputStyle({ minHeight:60 })} value={vis.disagreed||""} onChange={e=>setVis({ disagreed:e.target.value })} placeholder="" />,
-          "A vision nobody has ever pushed back on is usually one nobody has engaged with.")}
-      </div>
-
-      {canState.length >= 2 && <Flag type="ok">{canState.length} people could state this themselves. That is the threshold where it starts behaving like an organizational vision rather than the owner's view.</Flag>}
-      {unspoken.length === VIS_HOLDERS.length && <Flag type="warn">Nobody has discussed this yet. The statement in stage 7 is worth producing anyway, because it gives you something concrete to discuss rather than starting from a blank page.</Flag>}
-    </div>
-  );
-}
-
-// ── Vision 6 — Where it binds ────────────────────────────────────────────────
-function VIS6({ vis, setVis }) {
-  const rules = vis.rules || [];
-  const toggle = (i, bindId) => {
-    const r = rules[i]; const cur = r.binds || [];
-    const next = cur.includes(bindId) ? cur.filter(x=>x!==bindId) : [...cur, bindId];
-    setVis({ rules: rules.map((x,k)=>k===i?{...x,binds:next}:x) });
-  };
-  const unbound = rules.filter(r => r.statement && (r.binds||[]).length === 0);
-  return (
-    <div>
-      <Head eyebrow="Strategic vision · Stage 6" title="Where it binds" sub="A vision that does not show up where decisions get made is wall decoration. Mark which decisions each rule actually governs." />
-      {rules.length === 0 ? (
-        <Flag type="warn">No rules yet. Go back to stage 4 and write at least one.</Flag>
-      ) : (
-        <>
-          {rules.map((r,i) => (
-            <div key={r.id} style={cardStyle()}>
-              <div style={{ fontSize:15, fontWeight:600, color:T.navy, marginBottom:4, lineHeight:1.45 }}>{r.statement || <span style={{ color:T.fgS, fontStyle:"italic" }}>Unwritten rule</span>}</div>
-              {r.owner && <div style={{ fontSize:12, color:T.fgS, marginBottom:11 }}>Owned by {r.owner}</div>}
-              <div style={{ fontSize:12.5, color:T.fgM, marginBottom:9 }}>Which decisions does this govern?</div>
-              <div style={{ display:"flex", flexWrap:"wrap", gap:7 }}>
-                {VIS_BINDS.map(b => {
-                  const on = (r.binds||[]).includes(b.id);
-                  return (
-                    <button key={b.id} onClick={()=>toggle(i,b.id)} title={b.where}
-                      style={{ background:on?T.greenL:"#fff", color:on?T.dgreen:T.fgM, border:`1px solid ${on?T.moss:T.border}`, borderRadius:5, padding:"7px 12px", fontSize:12.5, cursor:"pointer", font:"inherit", fontWeight:on?600:400, textAlign:"left" }}>
-                      {b.label}
-                    </button>
-                  );
-                })}
-              </div>
-              {(r.binds||[]).length > 0 && (
-                <div style={{ marginTop:11, fontSize:12, color:T.fgS, lineHeight:1.6 }}>
-                  Shows up in: {VIS_BINDS.filter(b=>(r.binds||[]).includes(b.id)).map(b=>b.where).filter((v,k,a)=>a.indexOf(v)===k).join(" · ")}
-                </div>
-              )}
-            </div>
-          ))}
-          {unbound.length > 0 && (
-            <Flag type="warn">{unbound.length === 1 ? "One rule governs" : `${unbound.length} rules govern`} no decision yet. A rule that never binds anything is a statement of preference. Either name where it applies or drop it.</Flag>
-          )}
-        </>
-      )}
-    </div>
-  );
-}
-
-// ── Vision 7 — The statement ─────────────────────────────────────────────────
-function VIS7({ vis, setVis, profile }) {
-  const s = visStats(vis);
-  const pub = vis.published || {};
-  const setPub = (k,v) => setVis({ published:{ ...pub, [k]:v } });
-  const approved = vis.approved || {};
-  const setApproved = (k,v) => setVis({ approved:{ ...approved, [k]:v } });
-
-  const real = (vis.items||[]).filter(i => visVerdictOf(i) === "real");
-  const goals = (vis.items||[]).filter(i => i.kind === "goal" && i.text);
-  const rules = (vis.rules||[]).filter(r => r.statement);
-  const personDep = (vis.items||[]).filter(i => visVerdictOf(i) === "person-dependent");
-
-  const assemble = () => setVis({ published:{
-    doWhat: pub.doWhat || (profile||{}).productionMix || "",
-    whyWeWin: pub.whyWeWin || real.filter(i=>i.kind==="advantage").map(i=>i.text).join(". "),
-    wontDo: pub.wontDo || rules.map(r=>r.statement).join("\n"),
-    whereGoing: pub.whereGoing || goals.filter(g=>g.sourceLabel.includes("Long")).map(g=>g.text).join(". ") || goals.map(g=>g.text).join(". "),
-    howKnow: pub.howKnow || "",
-  }, assembled:true });
-
-  const SECTIONS = [
-    { k:"doWhat",     label:"What we do",            hint:"One line. A specific business, not a category." },
-    { k:"whyWeWin",   label:"Why we win",            hint:"Only what survived the tests in stage 2." },
-    { k:"wontDo",     label:"What we will not do",   hint:"The hardest section and the most useful. Your rules go here." },
-    { k:"whereGoing", label:"Where we are going",    hint:"Concrete enough that someone could disagree with it." },
-    { k:"howKnow",    label:"How we will know",      hint:"Three or four measures." },
-  ];
-
-  return (
-    <div>
-      <Head eyebrow="Strategic vision · Stage 7" title="The statement" sub="Assembled from your own words rather than rewritten. A farm team can tell instantly when a document was not written by the person who runs the place." />
-
-      {!vis.assembled && (
-        <div style={cardStyle({ borderTop:`4px solid ${T.moss}` })}>
-          <div style={cardLblStyle()}>Build the draft</div>
-          <p style={{ fontSize:14, color:T.fgM, marginTop:0, lineHeight:1.6 }}>This pulls together what survived the tests, the rules you wrote, and your objectives. Every section stays editable and nothing publishes until you approve it.</p>
-          <button onClick={assemble} style={btnStyle("primary")}>Assemble the draft →</button>
-        </div>
-      )}
-
-      {vis.assembled && (
-        <>
-          {personDep.length > 0 && (
-            <Flag type="warn">Staying private: {personDep.length === 1 ? "one advantage that depends" : `${personDep.length} advantages that depend`} on a specific person. Naming a key-person risk in a document handed to the team is rarely what you want. It stays in your working record and carries into Legacy.</Flag>
-          )}
-          {SECTIONS.map(sec => (
-            <div key={sec.k} style={cardStyle(approved[sec.k] ? { borderLeft:`3px solid ${T.moss}` } : {})}>
-              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", gap:12, flexWrap:"wrap", marginBottom:4 }}>
-                <div style={cardLblStyle({ marginBottom:0 })}>{sec.label}</div>
-                <label style={{ display:"flex", alignItems:"center", gap:7, fontSize:12.5, color:T.fgM, cursor:"pointer" }}>
-                  <input type="checkbox" checked={!!approved[sec.k]} onChange={e=>setApproved(sec.k, e.target.checked)} />
-                  Approved to publish
-                </label>
-              </div>
-              <div style={{ fontSize:11.5, color:T.fgS, fontStyle:"italic", marginBottom:9 }}>{sec.hint}</div>
-              <textarea style={inputStyle({ minHeight:sec.k==="wontDo"?96:64, fontSize:14, lineHeight:1.65 })} value={pub[sec.k]||""} onChange={e=>setPub(sec.k, e.target.value)} placeholder="" />
-            </div>
-          ))}
-
-          <div style={cardStyle({ borderTop:`4px solid ${T.navy}` })}>
-            <div style={cardLblStyle()}>Rolling it out</div>
-            <p style={{ fontSize:13.5, color:T.fgM, marginTop:0, lineHeight:1.6 }}>Handing people a document accomplishes nothing. This is where these usually die.</p>
-            {legRow("Who hears it first, and in what order?", <textarea style={inputStyle({ minHeight:58 })} value={vis.rolloutWho||""} onChange={e=>setVis({ rolloutWho:e.target.value })} placeholder="" />)}
-            {legRow("What happens when someone disagrees?", <textarea style={inputStyle({ minHeight:58 })} value={vis.rolloutDisagree||""} onChange={e=>setVis({ rolloutDisagree:e.target.value })} placeholder="" />, "If the answer is that they do not get to, that is worth knowing about how institutional this really is.")}
-            {legRow("When does this get revisited?", <input style={inputStyle()} value={vis.reviewCadence||""} onChange={e=>setVis({ reviewCadence:e.target.value })} placeholder="A date, or an event that triggers it" />)}
-          </div>
-
-          <div style={cardStyle()}>
-            <div style={cardLblStyle()}>Where this stands</div>
-            <div style={{ display:"flex", gap:26, flexWrap:"wrap", marginBottom:12 }}>
-              {[["Claims that held up", s.real],["Rules written", s.rules],["Rules that bind a decision", s.boundRules],["Sections approved", SECTIONS.filter(x=>approved[x.k]).length + " of 5"]].map(([lab,n],k)=>(
-                <div key={k}><div style={{ fontSize:11, color:T.fgS, marginBottom:3 }}>{lab}</div><div style={{ fontSize:22, fontWeight:600, color:T.navy }}>{n}</div></div>
-              ))}
-            </div>
-            {s.boundRules === 0 && s.rules > 0 && <Flag type="warn">No rule binds a decision yet. Until one does, this is a statement rather than an operating vision.</Flag>}
-            {SECTIONS.filter(x=>approved[x.k]).length === 5 && <Flag type="ok">Every section approved. Print this, take it to the people in stage 5, and expect the first real conversation to change it.</Flag>}
-          </div>
-        </>
-      )}
-    </div>
-  );
-}
-
-
-// ── Vision 8 — The document ──────────────────────────────────────────────────
-// Renders ONLY approved sections. Everything diagnostic stays in the working
-// record: demoted claims, person-dependent advantages, cost-test answers and the
-// who-holds-this ratings never appear here. Publishing a document that names a
-// key-person risk to the team is the failure mode this split exists to prevent.
-function VIS8({ vis, profile }) {
-  const [form, setForm] = useState("full");
-  const pub = vis.published || {};
-  const approved = vis.approved || {};
-  const rules = (vis.rules || []).filter(r => r.statement && r.statement.trim());
-  const SECTIONS = [
-    { k:"doWhat",     label:"What we do" },
-    { k:"whyWeWin",   label:"Why we win" },
-    { k:"wontDo",     label:"What we will not do" },
-    { k:"whereGoing", label:"Where we are going" },
-    { k:"howKnow",    label:"How we will know" },
-  ];
-  const live = SECTIONS.filter(s => approved[s.k] && (pub[s.k]||"").trim());
-  const held = SECTIONS.filter(s => !approved[s.k] && (pub[s.k]||"").trim());
-  const personDep = (vis.items||[]).filter(i => visVerdictOf(i) === "person-dependent");
-  const farmName = (profile||{}).location ? `${profile.location}` : "";
-
-  // Short form takes the first sentence of each approved section, plus the rules.
-  const firstLine = (t) => {
-    const s = String(t||"").split(/\.\s|\n/)[0].trim();
-    return s ? s.replace(/\.$/,"") : "";
-  };
-
-  if (!live.length) {
-    return (
-      <div>
-        <Head eyebrow="Strategic vision · Stage 8" title="The document" sub="Nothing is approved for publishing yet." />
-        <Flag type="warn">Go back to stage 7 and tick "Approved to publish" on the sections you are willing to stand behind in front of your team. Nothing appears here until you do, which is deliberate.</Flag>
-        {held.length > 0 && (
-          <div style={cardStyle()}>
-            <div style={cardLblStyle()}>Written but not approved</div>
-            <ul style={{ margin:0, paddingLeft:20, fontSize:14, color:T.fgM, lineHeight:1.9 }}>
-              {held.map(s => <li key={s.k}>{s.label}</li>)}
-            </ul>
-          </div>
-        )}
-      </div>
-    );
-  }
-
-  return (
-    <div>
-      <Head eyebrow="Strategic vision · Stage 8" title="The document" sub="What actually gets handed to the team. Only approved sections appear. Everything diagnostic stays in your working record." />
-
-      <div style={{ display:"flex", gap:8, alignItems:"center", borderBottom:`1px solid ${T.border}`, marginBottom:18, flexWrap:"wrap" }}>
-        {[["full","The one-pager"],["short","Short form"],["rollout","Rollout guide"]].map(([k,lab]) => {
-          const on = form === k;
-          return <button key={k} onClick={()=>setForm(k)} style={{ background:"none", border:"none", borderBottom:`2px solid ${on?T.navy:"transparent"}`, padding:"9px 4px", marginBottom:-1, marginRight:14, cursor:"pointer", font:"inherit", fontSize:14, fontWeight:on?600:500, color:on?T.navy:T.fgS }}>{lab}</button>;
-        })}
-        <button onClick={()=>window.print()} style={{ ...btnStyle("outline"), fontSize:12, padding:"6px 14px", marginLeft:"auto" }}>Print or save as PDF</button>
-      </div>
-
-      {(held.length > 0 || personDep.length > 0) && (
-        <Flag type="info">
-          Staying in your working record and not in this document:
-          {held.length > 0 && ` ${held.length} unapproved ${held.length===1?"section":"sections"}.`}
-          {personDep.length > 0 && ` ${personDep.length} person-dependent ${personDep.length===1?"advantage":"advantages"}, because naming a key-person risk in a document handed to the team is rarely what you want.`}
-        </Flag>
-      )}
-
-      {/* ── THE ONE-PAGER ── */}
-      {form === "full" && (
-        <div style={cardStyle({ padding:"34px 38px" })}>
-          <div style={{ borderBottom:`2px solid ${T.navy}`, paddingBottom:14, marginBottom:22 }}>
-            <div style={{ fontSize:10.5, letterSpacing:"0.15em", textTransform:"uppercase", color:T.fgS, marginBottom:5 }}>How we operate</div>
-            <div style={{ fontSize:23, fontWeight:600, color:T.navy, lineHeight:1.25 }}>{farmName || "Our strategic vision"}</div>
-            {vis.reviewCadence && <div style={{ fontSize:12, color:T.fgS, marginTop:5 }}>Next review: {vis.reviewCadence}</div>}
-          </div>
-
-          {live.map(s => (
-            <div key={s.k} style={{ marginBottom:24 }}>
-              <div style={{ fontSize:11, letterSpacing:"0.13em", textTransform:"uppercase", color:T.fgS, marginBottom:9 }}>{s.label}</div>
-              {s.k === "wontDo" && rules.length > 0 ? (
-                <div>
-                  {rules.map(r => (
-                    <div key={r.id} style={{ borderLeft:`2px solid ${T.moss}`, paddingLeft:14, marginBottom:13 }}>
-                      <div style={{ fontSize:15, color:T.fg, lineHeight:1.55 }}>{r.statement}</div>
-                      {(r.owner || r.exception) && (
-                        <div style={{ fontSize:12, color:T.fgS, marginTop:4 }}>
-                          {r.owner && <span>Held by {r.owner}</span>}
-                          {r.owner && r.exception && <span> · </span>}
-                          {r.exception && <span>Exception: {r.exception}</span>}
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div style={{ fontSize:15.5, color:T.fg, lineHeight:1.7, whiteSpace:"pre-wrap" }}>{pub[s.k]}</div>
-              )}
-            </div>
-          ))}
-
-          <div style={{ borderTop:`1px solid ${T.border}`, paddingTop:14, marginTop:28 }}>
-            <p style={{ fontSize:12, color:T.fgS, margin:0, lineHeight:1.6 }}>
-              This is how we make decisions. If something we are about to do contradicts what is written here, say so.
-              {vis.rolloutDisagree ? ` ${vis.rolloutDisagree}` : ""}
-            </p>
-          </div>
-        </div>
-      )}
-
-      {/* ── SHORT FORM ── */}
-      {form === "short" && (
-        <>
-          <div style={cardStyle({ padding:"30px 34px" })}>
-            <div style={{ fontSize:10.5, letterSpacing:"0.15em", textTransform:"uppercase", color:T.fgS, marginBottom:16 }}>{farmName || "How we operate"}</div>
-            {live.filter(s => s.k !== "wontDo").map(s => {
-              const line = firstLine(pub[s.k]);
-              if (!line) return null;
-              return (
-                <div key={s.k} style={{ marginBottom:13 }}>
-                  <span style={{ fontSize:11.5, color:T.fgS, display:"block", marginBottom:2 }}>{s.label}</span>
-                  <span style={{ fontSize:17, color:T.navy, fontWeight:500, lineHeight:1.45 }}>{line}</span>
-                </div>
-              );
-            })}
-            {approved.wontDo && rules.length > 0 && (
-              <div style={{ marginTop:20, paddingTop:16, borderTop:`1px solid ${T.border}` }}>
-                <span style={{ fontSize:11.5, color:T.fgS, display:"block", marginBottom:9 }}>What we will not do</span>
-                {rules.slice(0,4).map(r => (
-                  <div key={r.id} style={{ fontSize:15, color:T.fg, lineHeight:1.5, marginBottom:7, paddingLeft:14, borderLeft:`2px solid ${T.moss}` }}>{r.statement}</div>
-                ))}
-              </div>
-            )}
-          </div>
-          <Flag type="info">Built for a shop wall, the first page of a handbook, or the back of a business card. Each line is the opening sentence of the fuller section, so nothing here contradicts the one-pager.</Flag>
-        </>
-      )}
-
-      {/* ── ROLLOUT GUIDE ── */}
-      {form === "rollout" && (
-        <div style={cardStyle({ padding:"30px 34px" })}>
-          <div style={{ fontSize:11, letterSpacing:"0.13em", textTransform:"uppercase", color:T.fgS, marginBottom:14 }}>Rolling this out</div>
-          <p style={{ fontSize:14.5, color:T.fgM, marginTop:0, lineHeight:1.65 }}>Handing people a document accomplishes nothing on its own. This is the part that decides whether any of it holds.</p>
-
-          {[["Who hears it first", vis.rolloutWho, "Order matters. Anyone who finds out second-hand starts from a worse place."],
-            ["What happens when someone disagrees", vis.rolloutDisagree, "If the honest answer is that they do not get to, this is still the owner's vision rather than the operation's."],
-            ["When it gets revisited", vis.reviewCadence, "A vision with no review date is a document. One with a date is a process."]].map(([lab,val,note],k)=>(
-            <div key={k} style={{ marginBottom:20 }}>
-              <div style={{ fontSize:13.5, fontWeight:600, color:T.navy, marginBottom:5 }}>{lab}</div>
-              {val ? <div style={{ fontSize:14.5, color:T.fg, lineHeight:1.6, marginBottom:5 }}>{val}</div>
-                   : <div style={{ fontSize:13.5, color:T.fgS, fontStyle:"italic", marginBottom:5 }}>Not answered yet. Stage 7 asks this.</div>}
-              <div style={{ fontSize:12, color:T.fgS, lineHeight:1.5 }}>{note}</div>
-            </div>
-          ))}
-
-          <div style={{ borderTop:`1px solid ${T.border}`, paddingTop:16, marginTop:8 }}>
-            <div style={{ fontSize:13.5, fontWeight:600, color:T.navy, marginBottom:9 }}>What to expect</div>
-            <ol style={{ margin:0, paddingLeft:20, fontSize:14, color:T.fgM, lineHeight:1.85 }}>
-              <li>The first real conversation will change something in this document. That is the conversation working, not the document failing.</li>
-              <li>Read the rules out loud rather than handing them over. People agree with documents they never read.</li>
-              <li>The first time someone invokes a rule against a decision you wanted to make is the moment this becomes organizational. Let it hold.</li>
-              <li>If nobody has questions, nobody has engaged. Go back and ask each person directly.</li>
-            </ol>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-
-// ═════════════════════════════════════════════════════════════════════════════
-// LOCAL PERSISTENCE — the farm record stays on the farmer's own machine
-// ═════════════════════════════════════════════════════════════════════════════
-// Everything a farmer enters saves to their browser automatically and reloads
-// next time. Nothing is transmitted. For this data in particular — succession
-// tensions, sweat equity figures, who the operator thinks is not ready — that is
-// a feature rather than a limitation, and it is a real answer to a question
-// farmers will ask.
-//
-// Export produces a single file they can back up, move to another machine, or
-// hand to a lender, an accountant, a facilitator, or the next generation.
-
-const MFP_STORE_KEY = "mfp-farm-record-v1";
-const MFP_SCHEMA = 1;
-
-const storageAvailable = () => {
-  try {
-    const k = "__mfp_probe__";
-    window.localStorage.setItem(k, "1");
-    window.localStorage.removeItem(k);
-    return true;
-  } catch (e) { return false; }
-};
-
-const buildRecord = (s) => ({
-  schema: MFP_SCHEMA,
-  savedAt: new Date().toISOString(),
-  module: s.module,
-  profile: s.profile, fa: s.fa, rd: s.rd, risk: s.risk, leg: s.leg, vis: s.vis,
-});
-
-const saveRecord = (s) => {
-  try {
-    window.localStorage.setItem(MFP_STORE_KEY, JSON.stringify(buildRecord(s)));
-    return { ok:true };
-  } catch (e) {
-    // Quota is the realistic failure here, not a missing API.
-    return { ok:false, reason: e && e.name === "QuotaExceededError" ? "full" : "blocked" };
-  }
-};
-
-const loadRecord = () => {
-  try {
-    const raw = window.localStorage.getItem(MFP_STORE_KEY);
-    if (!raw) return null;
-    const p = JSON.parse(raw);
-    if (!p || typeof p !== "object") return null;
-    if (p.schema !== MFP_SCHEMA) return { ...p, _schemaMismatch:true };
-    return p;
-  } catch (e) { return null; }
-};
-
-const clearRecord = () => { try { window.localStorage.removeItem(MFP_STORE_KEY); } catch(e){} };
-
-// Validates an imported file before it is allowed to replace anything.
-const validateRecord = (p) => {
-  if (!p || typeof p !== "object") return "That file is not a readable farm record.";
-  if (typeof p.schema !== "number") return "That file is missing its version marker, so it is probably not an MFP record.";
-  if (p.schema > MFP_SCHEMA) return "That record was saved by a newer version of MFP than this one. Update first, then import.";
-  const known = ["profile","fa","rd","risk","leg","vis"];
-  if (!known.some(k => p[k] && typeof p[k] === "object")) return "That record has no module data in it.";
-  return null;
-};
-
-const downloadRecord = (s, label) => {
-  const rec = buildRecord(s);
-  const stamp = new Date().toISOString().slice(0,10);
-  const safe = String(label||"farm").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,40) || "farm";
-  const blob = new Blob([JSON.stringify(rec, null, 2)], { type:"application/json" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url; a.download = `mfp-${safe}-${stamp}.json`;
-  document.body.appendChild(a); a.click(); document.body.removeChild(a);
-  setTimeout(()=>URL.revokeObjectURL(url), 1000);
-};
-
-const relTime = (iso) => {
-  if (!iso) return "";
-  const secs = Math.floor((Date.now() - new Date(iso).getTime())/1000);
-  if (secs < 5) return "just now";
-  if (secs < 60) return `${secs}s ago`;
-  if (secs < 3600) return `${Math.floor(secs/60)}m ago`;
-  if (secs < 86400) return `${Math.floor(secs/3600)}h ago`;
-  return new Date(iso).toLocaleDateString();
-};
-
-// Header control: save state, export, import, and start over.
-function DataControls({ state, savedAt, storageOk, onImport, onClear }) {
-  const [open, setOpen] = useState(false);
-  const [err, setErr] = useState("");
-  const fileRef = useRef(null);
-
-  const pick = () => { setErr(""); fileRef.current && fileRef.current.click(); };
-  const handleFile = (e) => {
-    const f = e.target.files && e.target.files[0];
-    e.target.value = "";
-    if (!f) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      let parsed = null;
-      try { parsed = JSON.parse(reader.result); }
-      catch (x) { setErr("That file could not be read as JSON."); return; }
-      const bad = validateRecord(parsed);
-      if (bad) { setErr(bad); return; }
-      const when = parsed.savedAt ? new Date(parsed.savedAt).toLocaleString() : "an unknown date";
-      if (!window.confirm(`Load the record saved ${when}?\n\nThis replaces everything currently entered.`)) return;
-      onImport(parsed); setErr(""); setOpen(false);
-    };
-    reader.onerror = () => setErr("That file could not be read.");
-    reader.readAsText(f);
-  };
-
-  return (
-    <div style={{ position:"relative" }}>
-      <button onClick={()=>setOpen(o=>!o)} style={{ background:"none", border:`1px solid ${T.border}`, borderRadius:5, padding:"6px 12px", cursor:"pointer", font:"inherit", fontSize:12, color:T.fgM, display:"flex", alignItems:"center", gap:7 }}>
-        <span style={{ width:7, height:7, borderRadius:"50%", background: storageOk ? (savedAt ? T.green : T.silver) : T.amber }} />
-        {storageOk ? (savedAt ? `Saved ${relTime(savedAt)}` : "Not saved yet") : "Not saving"}
-      </button>
-      {open && (
-        <>
-          <div onClick={()=>setOpen(false)} style={{ position:"fixed", inset:0, zIndex:40 }} />
-          <div style={{ position:"absolute", right:0, top:"calc(100% + 6px)", width:310, background:"#fff", border:`1px solid ${T.border}`, borderRadius:9, boxShadow:"0 6px 24px rgba(14,28,57,.12)", padding:14, zIndex:41 }}>
-            <div style={{ fontSize:10.5, letterSpacing:"0.13em", textTransform:"uppercase", color:T.fgS, marginBottom:9 }}>Your farm record</div>
-            {storageOk ? (
-              <p style={{ fontSize:12.5, color:T.fgM, margin:"0 0 12px", lineHeight:1.55 }}>
-                Saved on this computer as you work. Nothing is sent anywhere. Close the tab and come back whenever you like.
-              </p>
-            ) : (
-              <div style={{ marginBottom:12 }}><Flag type="warn">This browser is blocking local storage, which usually means private browsing. Your work will be lost on refresh. Export before you close the tab.</Flag></div>
-            )}
-            <button onClick={()=>{ downloadRecord(state, (state.profile||{}).location); setOpen(false); }} style={{ ...btnStyle("primary"), width:"100%", marginBottom:8 }}>Export to a file</button>
-            <button onClick={pick} style={{ ...btnStyle("outline"), width:"100%", marginBottom:8 }}>Import a file</button>
-            <input ref={fileRef} type="file" accept=".json,application/json" onChange={handleFile} style={{ display:"none" }} />
-            {err && <div style={{ marginBottom:8 }}><Flag type="danger">{err}</Flag></div>}
-            <button onClick={()=>{ if (window.confirm("Clear everything on this computer and start over?\n\nExport first if you want a copy.")) { onClear(); setOpen(false); } }}
-              style={{ ...btnStyle("ghost"), width:"100%" }}>Start over</button>
-            <p style={{ fontSize:11, color:T.fgS, margin:"11px 0 0", lineHeight:1.5 }}>
-              The exported file is the whole record. Back it up, move it to another computer, or hand it to your lender, accountant, or facilitator.
-            </p>
-          </div>
-        </>
-      )}
-    </div>
-  );
-}
-
-// ═════════════════════════════════════════════════════════════════════════════
-// ROOT APP
-// ═════════════════════════════════════════════════════════════════════════════
-// Generic farm SWOT, pre-populated so the quadrants open with a real starting point
-// rather than four empty boxes. Every line is editable and meant to be replaced with
-// the operation's own read once the conversation gets specific.
-const GENERIC_FARM_SWOT = {
-  swotStrengths: "Owned land base and established equity position. Multi-generational operating knowledge and a known local reputation. Long-standing relationships with buyers, lenders, and suppliers. Equipment and infrastructure already in place and paid down.",
-  swotWeaknesses: "Income concentrated in a small number of commodities and buyers. Records kept for tax filing rather than management decisions. No documented succession or transition plan. Limited visibility into cost and margin at the enterprise level.",
-  swotOpportunities: "Underused equipment, storage, and labour capacity across the season. Local and regional demand for direct-marketed or value-added product. Conservation and energy programs that pay for practices already underway. Adjacent ventures that use existing assets without buying land.",
-  swotThreats: "Margin compression as supply chain concentration continues. Input cost and interest rate volatility. Weather variability and more frequent extreme events. An aging operator base and thin local labour availability.",
-};
-
-
-// Generic strategy and values, seeded alongside the SWOT so the glance view opens
-// with a coherent operating picture rather than empty fields.
-const GENERIC_FARM_STRATEGY = {
-  location: "Midwest corn belt, mixed county",
-  size: "1,100 acres owned and rented",
-  productionMix: "Corn and soybean rotation with a small cow-calf herd on marginal ground",
-  ventures: "Custom planting and harvest for two neighbours, on-farm grain storage",
-  grossIncome: "920000",
-  nearTerm: "Complete a written succession plan. Get enterprise-level cost visibility in place before the next operating loan renewal. Hold gross margin steady through the current input cost cycle.",
-  longTerm: "Transition ownership and management to the next generation on agreed terms. Add a second meaningful income stream that does not move with commodity price. Grow the land base slowly, and only where it adjoins existing ground.",
-  advantage: "Long-standing local relationships that surface land and business opportunities before they are publicly listed, paired with a reputation for doing what was agreed.",
-  values: "Leave the operation stronger than it was received. Keep the family involved in the decisions that matter. Farm in a way the next generation can be proud of and the ground can sustain.",
-};
-
-// Illustrative whole-farm financials, seeded so the four health categories compute
-// on first load. Replaced the moment a real operation enters its own numbers.
-const GENERIC_FARM_FINANCIALS = {
-  gross:"920000", opex:"690000", inputs:"310000", rent:"145000", depr:"78000",
-  interest:"52000", acres:"1100", principal:"40000",
-  currentAssets:"480000", currentLiab:"190000",
-  beginAssets:"2850000", beginLiab:"1240000", endAssets:"2960000", endLiab:"1195000",
-  livingWithdrawals:"68000", incomeTaxes:"34000",
-};
-
-function LEG12({ leg, setLegData, profile }) {
-  const d = leg.data || {};
-  const parcels = d.parcels || [];
-  const tierKey = legacyTier(leg);
-  const ready = tierKey === "structural" || tierKey === "execution";
-  const [open, setOpen] = useState(null);
-
-  const setP = (i, field, val) => setLegData({ parcels: parcels.map((x,k)=>k===i?{...x,[field]:val}:x) });
-  const add = () => { setLegData({ parcels:[...parcels, { label:"", state:(profile?.location||"").slice(-2).toUpperCase(), county:"", landClass:"dryland", deededAcres:"", tillableAcres:"", nccpi:"", irrigated:"", waterRight:"", useValue:"", boundary:"acreage" }] }); setOpen(parcels.length); };
-  const remove = (i) => setLegData({ parcels: parcels.filter((_,k)=>k!==i) });
-
-  const results = parcels.map(valueParcel);
-  const totalMid = results.reduce((s,r,i) => s + (parseFloat(parcels[i].overrideValue) || r.mid || 0), 0);
-  const needAppraisal = results.filter(r => r.requiresAppraisal).length;
-  const noBoundary = parcels.filter(p => !p.nccpi).length;
-
-  const confPill = (c) => c==="High" ? "strong" : c==="Medium" ? "watch" : c==="Refer" ? "info" : "vuln";
-
-  return (
-    <div>
-      <Head eyebrow="Legacy · Stage 13" title="Parcels and land valuation" sub="A value for every parcel the family owns. That number flows into estate size, buy-sell funding, insurance sizing, and the equalisation maths between heirs, so if it is wrong everything downstream is wrong." />
-
-      {!ready && (
-        <Flag type="warn">The readiness stages put this family at {READINESS_TIERS[tierKey].label.toLowerCase()}. You can value parcels here, but the numbers will sit in front of decisions that have not been made yet. {READINESS_TIERS[tierKey].rec}</Flag>
-      )}
-
-      <Flag type="danger">These are planning estimates, not qualified appraisals. Estate and gift tax filings require a qualified appraisal. No use-value or assessed figure appears anywhere in this module as an asset value, because those are tax figures and routinely sit thirty to eighty percent below market.</Flag>
-
-      <div style={cardStyle({ borderTop:`4px solid ${T.amber}` })}>
-        <div style={cardLblStyle()}>Before you trust these numbers</div>
-        <p style={{ fontSize:13.5, color:T.fgM, margin:"0 0 10px", lineHeight:1.6 }}>The benchmark values behind this engine are <b>placeholders</b>, not USDA figures. Live SSURGO soil queries and the NASS land value and cash rent series belong in a scheduled ingestion job writing to our own table, which needs a backend this app does not have yet.</p>
-        <p style={{ fontSize:13.5, color:T.fgM, margin:0, lineHeight:1.6 }}>Every benchmark, cash rent, and cap rate below is editable per parcel. Provenance records whether each figure came from the placeholder table or from you, so a placeholder can never be mistaken for a survey figure.</p>
-      </div>
-
-      <div style={cardStyle()}>
-        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", gap:12, flexWrap:"wrap", marginBottom:12 }}>
-          <div style={cardLblStyle({ marginBottom:0 })}>Parcels</div>
-          <button onClick={add} style={{ ...btnStyle("outline"), fontSize:12, padding:"6px 13px" }}>+ Add a parcel</button>
-        </div>
-        {parcels.length === 0 && <p style={{ fontSize:13.5, color:T.fgS, fontStyle:"italic", margin:0 }}>No parcels yet. Add the ground the family owns, one parcel per deed where you can.</p>}
-
-        {parcels.map((p,i) => {
-          const r = results[i];
-          const isOpen = open === i;
-          const override = parseFloat(p.overrideValue) || null;
-          return (
-            <div key={i} style={{ border:`1px solid ${r.requiresAppraisal?T.amber:T.border}`, borderRadius:9, marginBottom:11, overflow:"hidden" }}>
-              <div onClick={()=>setOpen(isOpen?null:i)} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", gap:12, padding:"12px 15px", cursor:"pointer", background:isOpen?T.bgAlt:"#fff", flexWrap:"wrap" }}>
-                <div>
-                  <div style={{ fontSize:14.5, fontWeight:600, color:T.navy }}>{p.label || `Parcel ${i+1}`}</div>
-                  <div style={{ fontSize:12, color:T.fgS }}>{r.cls.label}{p.deededAcres?` · ${p.deededAcres} acres`:""}{p.state?` · ${p.state}`:""}</div>
-                </div>
-                <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-                  <span style={pillStyle(confPill(r.confidence))}>{r.confidence}</span>
-                  <span style={{ fontSize:16, fontWeight:600, color:override?T.blue:T.navy }}>
-                    {override ? fmt$(override) : r.mid ? fmt$(r.mid) : "—"}
-                  </span>
-                </div>
-              </div>
-
-              {isOpen && (
-                <div style={{ padding:"14px 15px", borderTop:`1px solid ${T.border}` }}>
-                  <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:12, marginBottom:12 }}>
-                    <div><label style={labelStyle}>Label</label><input style={inputStyle()} value={p.label} onChange={e=>setP(i,"label",e.target.value)} placeholder="Home place, north 80" /></div>
-                    <div><label style={labelStyle}>State</label>
-                      <select style={inputStyle()} value={p.state} onChange={e=>setP(i,"state",e.target.value)}>
-                        <option value="">Select</option>
-                        {BENCH_STATES.map(s=><option key={s} value={s}>{s}</option>)}
-                      </select></div>
-                    <div><label style={labelStyle}>County</label><input style={inputStyle()} value={p.county} onChange={e=>setP(i,"county",e.target.value)} /></div>
-                  </div>
-
-                  <div style={{ marginBottom:12 }}>
-                    <label style={labelStyle}>Land class</label>
-                    <select style={inputStyle()} value={p.landClass} onChange={e=>setP(i,"landClass",e.target.value)}>
-                      {LAND_CLASSES.map(c=><option key={c.id} value={c.id}>{c.label}</option>)}
-                    </select>
-                    <div style={{ fontSize:11.5, color:T.fgS, marginTop:5, fontStyle:"italic" }}>{r.cls.note}</div>
-                  </div>
-
-                  <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:12, marginBottom:12 }}>
-                    <div><label style={labelStyle}>Deeded acres</label><input type="number" style={inputStyle()} value={p.deededAcres} onChange={e=>setP(i,"deededAcres",e.target.value)} /></div>
-                    <div><label style={labelStyle}>Tillable acres</label><input type="number" style={inputStyle()} value={p.tillableAcres} onChange={e=>setP(i,"tillableAcres",e.target.value)} /></div>
-                    <div><label style={labelStyle}>Productivity index</label><input type="number" step="0.01" min="0" max="1" style={inputStyle()} value={p.nccpi} onChange={e=>setP(i,"nccpi",e.target.value)} placeholder="state mean" />
-                      <div style={{ fontSize:11, color:T.fgS, marginTop:4 }}>NCCPI 0 to 1. Blank uses the state mean.</div></div>
-                  </div>
-
-                  <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:12, marginBottom:12 }}>
-                    <div><label style={labelStyle}>Irrigated</label>
-                      <select style={inputStyle()} value={p.irrigated} onChange={e=>setP(i,"irrigated",e.target.value)}>
-                        <option value="">Unknown</option><option value="yes">Yes</option><option value="no">No</option></select></div>
-                    <div><label style={labelStyle}>Water right</label>
-                      <select style={inputStyle()} value={p.waterRight} onChange={e=>setP(i,"waterRight",e.target.value)}>
-                        <option value="">Unknown</option><option value="conveyed">Conveys with the land</option>
-                        <option value="separate">Separately held</option><option value="na">Not applicable</option></select></div>
-                    <div><label style={labelStyle}>Use-value enrolled</label>
-                      <select style={inputStyle()} value={p.useValue} onChange={e=>setP(i,"useValue",e.target.value)}>
-                        <option value="">Unknown</option><option value="yes">Yes</option><option value="no">No</option></select></div>
-                  </div>
-
-                  {p.landClass === "crp" && (
-                    <div style={{ marginBottom:12 }}><label style={labelStyle}>CRP contract payment per acre</label>
-                      <input type="number" style={inputStyle()} value={p.crpPayment||""} onChange={e=>setP(i,"crpPayment",e.target.value)} placeholder="$ per acre per year" /></div>
-                  )}
-
-                  <details style={{ marginBottom:12 }}>
-                    <summary style={{ fontSize:12.5, color:T.blue, cursor:"pointer", marginBottom:8 }}>Override the benchmark figures for this parcel</summary>
-                    <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:12, marginTop:8 }}>
-                      <div><label style={labelStyle}>Value per acre</label><input type="number" style={inputStyle()} value={p.benchOverride||""} onChange={e=>setP(i,"benchOverride",e.target.value)} placeholder={r.provenance.benchmark ? String(Math.round(r.provenance.benchmark)) : ""} /></div>
-                      <div><label style={labelStyle}>Cash rent per acre</label><input type="number" style={inputStyle()} value={p.rentOverride||""} onChange={e=>setP(i,"rentOverride",e.target.value)} placeholder={r.provenance.cashRent ? String(Math.round(r.provenance.cashRent)) : ""} /></div>
-                      <div><label style={labelStyle}>Cap rate %</label><input type="number" step="0.1" style={inputStyle()} value={p.capOverride||""} onChange={e=>setP(i,"capOverride",e.target.value)} placeholder={r.provenance.capRate ? (r.provenance.capRate*100).toFixed(2) : ""} /></div>
-                    </div>
-                  </details>
-
-                  {/* the two methods and their divergence */}
-                  {r.requiresAppraisal && r.why && !r.methodA ? (
-                    <Flag type="warn">{r.why}</Flag>
-                  ) : (
-                    <div style={{ background:T.bgAlt, borderRadius:8, padding:"13px 15px", marginBottom:12 }}>
-                      <div style={{ fontSize:10.5, letterSpacing:"0.13em", textTransform:"uppercase", color:T.fgS, marginBottom:10 }}>Two methods, compared</div>
-                      <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:12 }}>
-                        {[["Market comparison", r.methodA, "Benchmark per acre, indexed by soil productivity"],
-                          ["Income capitalisation", r.methodB, "County cash rent divided by the cap rate"],
-                          ["Divergence", r.divergence!=null ? Math.round(r.divergence*100)+"%" : null, "How far apart the two methods land"]].map(([lab,val,sub],k)=>(
-                          <div key={k}>
-                            <div style={{ fontSize:11, color:T.fgS, marginBottom:3 }}>{lab}</div>
-                            <div style={{ fontSize:17, fontWeight:600, color:k===2?(r.divergence>0.35?T.red:r.divergence>0.15?T.amberT:T.dgreen):T.navy }}>
-                              {k===2 ? (val||"—") : (val ? fmt$(val) : "not run")}
-                            </div>
-                            <div style={{ fontSize:10.5, color:T.fgS, marginTop:3, lineHeight:1.4 }}>{sub}</div>
-                          </div>
-                        ))}
-                      </div>
-                      {r.mid && (
-                        <div style={{ marginTop:12, paddingTop:11, borderTop:`1px solid ${T.border}` }}>
-                          <div style={{ fontSize:11, color:T.fgS, marginBottom:3 }}>Working range</div>
-                          <div style={{ fontSize:15, color:T.fg }}>{fmt$(r.low)} to {fmt$(r.high)}, midpoint <b>{fmt$(r.mid)}</b></div>
-                        </div>
-                      )}
-                      {r.why && <div style={{ marginTop:11 }}><Flag type="warn">{r.why}</Flag></div>}
-                      {r.divergence === 0 && r.methodB && (
-                        <div style={{ marginTop:9, fontSize:11.5, color:T.fgS, fontStyle:"italic" }}>
-                          Zero divergence here is a limitation, not a result. At state-average productivity with a derived cap rate, the two methods reduce to the same expression. The check only does real work once soil differs from the state mean or a benchmark is overridden.
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {p.waterRight === "separate" && (
-                    <Flag type="warn">The water right on this parcel is held separately from the land. A family dividing ground among heirs can strand the water on the wrong parcel. This module flags it and does not value it. Take it to counsel.</Flag>
-                  )}
-                  {p.useValue === "yes" && (
-                    <Flag type="info">This parcel is enrolled in current-use assessment. Transfer can trigger rollback or recoupment, which varies by state and routinely blindsides families. The tax bill's figure is not the estate's figure.</Flag>
-                  )}
-
-                  <div style={{ display:"grid", gridTemplateColumns:"1fr 2fr", gap:12, marginBottom:10 }}>
-                    <div><label style={labelStyle}>Override the value</label><input type="number" style={inputStyle()} value={p.overrideValue||""} onChange={e=>setP(i,"overrideValue",e.target.value)} placeholder="$ total" /></div>
-                    <div><label style={labelStyle}>Reason for the override</label><input style={inputStyle()} value={p.overrideReason||""} onChange={e=>setP(i,"overrideReason",e.target.value)} placeholder="Required. An appraisal, a recent offer, a known sale next door." /></div>
-                  </div>
-
-                  <details>
-                    <summary style={{ fontSize:12.5, color:T.blue, cursor:"pointer" }}>Provenance, every input and where it came from</summary>
-                    <div style={{ marginTop:9, background:"#fff", border:`1px solid ${T.border}`, borderRadius:6, padding:"11px 13px" }}>
-                      {Object.entries(r.provenance).filter(([,v])=>v!==null&&v!==undefined).map(([k,v])=>(
-                        <div key={k} style={{ display:"flex", gap:10, fontSize:11.5, padding:"3px 0", borderBottom:`1px dashed ${T.div}` }}>
-                          <span style={{ width:170, color:T.fgS, flexShrink:0 }}>{k}</span>
-                          <span style={{ color:T.fg }}>{typeof v === "number" ? (v<1 && v>0 ? v.toFixed(4) : Math.round(v).toLocaleString()) : String(v)}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </details>
-
-                  <button onClick={()=>remove(i)} style={{ ...btnStyle("ghost"), marginTop:11, fontSize:11.5 }}>Remove this parcel</button>
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
-
-      {parcels.length > 0 && (
-        <div style={cardStyle({ borderTop:`4px solid ${T.navy}` })}>
-          <div style={cardLblStyle()}>Portfolio</div>
-          <div style={{ display:"flex", gap:26, flexWrap:"wrap", marginBottom:14 }}>
-            {[["Parcels", parcels.length],
-              ["Total acres", parcels.reduce((s,p)=>s+(parseFloat(p.deededAcres)||0),0).toLocaleString()],
-              ["Working value", fmt$(totalMid)],
-              ["Need an appraisal", needAppraisal]].map(([lab,val],k)=>(
-              <div key={k}>
-                <div style={{ fontSize:11, color:T.fgS, marginBottom:3 }}>{lab}</div>
-                <div style={{ fontSize:21, fontWeight:600, color:k===3&&needAppraisal>0?T.amberT:T.navy }}>{val}</div>
-              </div>
-            ))}
-          </div>
-          {needAppraisal > 0 && <Flag type="warn">{needAppraisal === 1 ? "One parcel needs" : `${needAppraisal} parcels need`} professional appraisal before the number is usable in a plan. That is the engine working, not failing.</Flag>}
-          {noBoundary > 0 && <Flag type="info">{noBoundary === 1 ? "One parcel is" : `${noBoundary} parcels are`} using the state mean productivity index because no soil index was entered. Adding a real index is the single biggest improvement available to these estimates.</Flag>}
-        </div>
-      )}
-    </div>
-  );
-}
-
-
-// ══════���══════════════════════════════════════════════════════���═══���══������═════���═
-// SUCCESSOR TRACK
-// ════════════════════���════���══════���═════════��══════════════════════════════════
-// Written to the successor, not about them. Their entry point is not "help plan a
-// retirement" but "find out what you would be inheriting and put your version on
-// the table". Nothing in this track is visible to the senior generation until the
-// compare view unlocks, and the successor controls that consent themselves.
-
-
+// ── Stage 13 — Where this leaves you ─────────────────────────────────────────
 function LEG13({ leg, profile }) {
   const d = leg.data || {};
   const tierKey = legacyTier(leg);
@@ -6830,6 +5456,1038 @@ function LEG13({ leg, profile }) {
 // preference. A vision the organization holds is a constraint. If someone other
 // than the owner cannot invoke it to stop something, it is not institutional yet.
 
+const VIS_STAGES = [
+  { n:1, label:"Core Competencies and Competitive Advantage" },
+  { n:2, label:"Test competitive advantage" },
+  { n:3, label:"Core values" },
+  { n:4, label:"Test core values" },
+  { n:5, label:"What it has cost you" },
+  { n:6, label:"Turn it into rules" },
+  { n:7, label:"Who holds this" },
+  { n:8, label:"Where it binds" },
+  { n:9, label:"The statement" },
+  { n:10, label:"Farm profile & SWOT" },
+  { n:11, label:"The document" },
+];
+
+// The four tests. Most answers fail at least one, which is the point of running them.
+const VIS_TESTS = [
+  { id:"neighbour", label:"The neighbour test",
+    q:"If the operation across the road did exactly this, would it work as well for them?",
+    fail:"yes", failVerdict:"table stakes",
+    failNote:"Then it is table stakes, not an advantage. Worth doing, but it does not distinguish this operation." },
+  { id:"absence", label:"The absence test",
+    q:"Would this still be true if you were not here?",
+    fail:"no", failVerdict:"person-dependent",
+    failNote:"Then it is a person, not a business asset. That is not a criticism, it is the single most useful thing this module can tell a succession plan." },
+  { id:"evidence", label:"The evidence test",
+    q:"What happened in the last two years that proves this?",
+    kind:"text",
+    failNote:"An advantage with no evidence behind it is a self-image. Worth either finding the evidence or demoting the claim." },
+  { id:"cost", label:"The cost test",
+    q:"What have you turned down, or what has it cost you, because of this?",
+    kind:"text",
+    failNote:"A value that has never cost anything is not governing behaviour yet. This is the question most operators have a real answer to and have never been asked." },
+];
+
+const VIS_VERDICTS = {
+  real:            { label:"Holds up", pill:"strong",  note:"Survives the tests. This belongs in the statement." },
+  "table stakes":  { label:"Table stakes", pill:"watch", note:"Real, but not distinguishing. Keep doing it; do not build the strategy on it." },
+  "person-dependent":{ label:"Person-dependent", pill:"vuln", note:"Lives in a person rather than the business. Carries straight into the Legacy module as a knowledge transfer target." },
+  unproven:        { label:"Unproven", pill:"watch", note:"No evidence recorded yet. Find it, or soften the claim." },
+  untested:        { label:"Not tested yet", pill:"blank", note:"" },
+};
+
+// Decision points elsewhere in MFP where a rule can actually bind. This is what
+// separates an operational vision from wall decoration.
+const VIS_BINDS = [
+  { id:"diversification", label:"New enterprise or venture decisions", where:"Revenue Diversification, scenario comparison" },
+  { id:"capital",         label:"Capital purchases and borrowing",     where:"Financial Analysis, Revenue Diversification sequencing" },
+  { id:"land",            label:"Taking on ground, rented or owned",   where:"Revenue Diversification, Legacy" },
+  { id:"risk",            label:"What risk to carry, transfer or avoid", where:"Farm Risk, strategy selection" },
+  { id:"people",          label:"Hiring, roles and who decides what",  where:"Legacy, successor readiness" },
+  { id:"market",          label:"Who we sell to and on what terms",    where:"Revenue Diversification" },
+  { id:"succession",      label:"Ownership and transition decisions",  where:"Legacy, fair versus equal" },
+];
+
+const VIS_HOLDERS = [
+  { id:"successor", label:"The successor" },
+  { id:"spouse",    label:"Your spouse or partner" },
+  { id:"family",    label:"Other family with a stake" },
+  { id:"employees", label:"Employees" },
+  { id:"advisors",  label:"Lender, accountant, agent" },
+];
+const VIS_HOLD_LEVEL = ["Never discussed","I assume they agree","We have discussed it","They could state it themselves"];
+
+// Seeds the item list from what the farmer already wrote in the Farm Profile,
+// so the module never re-asks a question they have already answered.
+const visSeedItems = (profile) => {
+  const out = [];
+  const push = (kind, field, label) => {
+    const raw = (profile||{})[field];
+    if (!raw || !String(raw).trim()) return;
+    String(raw).split(/\.\s+|\n/).map(s=>s.trim()).filter(s=>s.length>8).slice(0,4)
+      .forEach((text,i) => out.push({ id:`${field}-${i}`, kind, sourceLabel:label, text:text.replace(/\.$/,""), tests:{}, verdict:"untested" }));
+  };
+  push("advantage","advantage","Competitive advantage");
+  push("value","values","Core values");
+  push("goal","nearTerm","Near-term objectives");
+  push("goal","longTerm","Long-term objectives");
+  return out;
+};
+
+const visVerdictOf = (item) => {
+  const t = item.tests || {};
+  if (t.neighbour === "yes") return "table stakes";
+  if (t.absence === "no") return "person-dependent";
+  if (item.kind !== "goal" && t.neighbour && t.absence && !(t.evidence||"").trim()) return "unproven";
+  if (t.neighbour && t.absence) return "real";
+  return "untested";
+};
+
+const visStats = (vis) => {
+  const items = vis.items || [];
+  const tested = items.filter(i => visVerdictOf(i) !== "untested");
+  return {
+    total: items.length,
+    tested: tested.length,
+    real: items.filter(i => visVerdictOf(i) === "real").length,
+    personDependent: items.filter(i => visVerdictOf(i) === "person-dependent").length,
+    tableStakes: items.filter(i => visVerdictOf(i) === "table stakes").length,
+    rules: (vis.rules||[]).length,
+    boundRules: (vis.rules||[]).filter(r => (r.binds||[]).length > 0).length,
+  };
+};
+
+
+// ── Vision 1 — What you have already said ────────────────────────────────�������───
+function VIS1({ vis, setVis, profile, goProfile }) {
+  const items = (vis.items || []).filter(i => i.kind === "advantage");
+  const carouselRef = useRef(null);
+  const [activeAdvantage, setActiveAdvantage] = useState(0);
+  const [draftAdvantage, setDraftAdvantage] = useState("");
+  const seeded = !!vis.seeded;
+  const seed = () => setVis({ items: visSeedItems(profile).filter(i => i.kind === "advantage"), seeded:true });
+  const setItem = (id, patch) => setVis({ items: (vis.items || []).map(i => i.id===id ? {...i,...patch} : i) });
+  const add = () => setVis({ items:[...(vis.items || []), { id:"custom-"+Date.now(), kind:"advantage", sourceLabel:"Added here", text:"", tests:{}, verdict:"untested" }], seeded:true });
+  const addDraft = () => { if (!draftAdvantage.trim()) return; setVis({ items:[...(vis.items||[]), { id:"custom-"+Date.now(), kind:"advantage", sourceLabel:"Added here", text:draftAdvantage.trim(), tests:{}, verdict:"untested" }], seeded:true }); setDraftAdvantage(""); };
+  const remove = (id) => setVis({ items: items.filter(i => i.id!==id) });
+  const hasProfile = ["advantage","values","nearTerm","longTerm"].some(f => (profile||{})[f] && String(profile[f]).trim());
+  const importProfile = e => { const file=e.target.files?.[0]; e.target.value=""; if(!file) return; const reader=new FileReader(); reader.onload=()=>{ try { const imported=profileFromMFPExport(JSON.parse(reader.result)); if(imported) { setProfile(s=>({ ...s, ...imported })); setVis(s=>({ ...s, items:[...(s.items||[]), ...visSeedItems(imported).filter(i=>!s.items?.some(existing=>existing.text===i.text))], seeded:true })); } } catch { window.alert("That profile file could not be imported."); } }; reader.readAsText(file); };
+
+  return (
+    <div>
+      <Head eyebrow="Strategic vision · Stage 1" title="Core Competencies and Competitive Advantage" sub="Start with the reason customers, employees, landlords, or partners choose this operation over another." /><VisionInlineVisual stageLabel="Core capability → defensible advantage" /><div style={cardStyle({ borderTop:`4px solid ${T.blue}`, marginBottom:18 })}><div style={cardLblStyle()}>Bring existing profile</div><p style={{ color:T.fgM, fontSize:13.5, lineHeight:1.5, marginTop:0 }}>Upload a Maximum Farm Potential JSON export to update the profile fields used across the Strategic Vision categories.</p><input type="file" accept=".json,application/json" onChange={importProfile} /></div>
+      <div style={{ display:"grid", gridTemplateColumns:"minmax(0,1fr) minmax(280px,420px)", gap:24, alignItems:"center", marginBottom:24, padding:"22px 0", borderBottom:`1px solid ${T.div}` }}><div><div style={cardLblStyle()}>The capability behind the farm</div><p style={{ fontSize:15, color:T.fgM, lineHeight:1.55, margin:0, maxWidth:560 }}>What can this operation do exceptionally well—and what would be difficult for another farm to copy?</p></div><img src="/vision-competitive-advantage.png" alt="Infographic connecting farm enterprises, family ownership, cash flow, customers, and long-term growth" style={{ width:"100%", height:180, objectFit:"cover", borderRadius:16 }} /></div>
+      {!hasProfile && (<>
+        <Flag type="warn">Your Farm Profile does not have competitive advantage, core values, or objectives filled in yet. You can add items here directly, or fill the profile first.
+          {goProfile && <div style={{ marginTop:9 }}><button onClick={goProfile} style={{ ...btnStyle("outline"), fontSize:12, padding:"6px 13px" }}>Open Farm Profile</button></div>}
+        </Flag>
+        <div style={cardStyle({ borderTop:`4px solid ${T.moss}` })}><div style={cardLblStyle()}>What makes this farm hard to copy?</div><p style={{ fontSize:14, color:T.fgM, lineHeight:1.6, marginTop:0 }}>Think about a capability, relationship, reputation, location, or way of operating that creates value for customers, employees, landlords, or partners.</p><textarea value={draftAdvantage} onChange={e=>setDraftAdvantage(e.target.value)} placeholder="In one or two sentences, what is this operation especially good at?" style={inputStyle({ minHeight:100, fontSize:14 })} /><button type="button" onClick={addDraft} disabled={!draftAdvantage.trim()} style={{ ...btnStyle("primary"), marginTop:12, opacity:draftAdvantage.trim()?1:0.5 }}>Save competitive advantage →</button></div>
+      </>)}
+
+      {items.length > 0 && (
+        <div style={cardStyle()}>
+          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", gap:12, flexWrap:"wrap", marginBottom:12 }}>
+            <div style={cardLblStyle({ marginBottom:0 })}>{items.length} claims to work with</div>
+            <button onClick={add} style={{ ...btnStyle("outline"), fontSize:12, padding:"6px 13px" }}>+ Add one</button>
+          </div>
+          <div style={{ fontSize:12.5, color:T.fgM, marginBottom:14, lineHeight:1.55 }}>Swipe horizontally through the claims pulled from your Farm Profile. Edit anything that came across wrong, split anything that is really two claims, and remove anything you no longer stand behind.</div>
+          <div ref={carouselRef} onScroll={(event) => { const track = event.currentTarget; const cardWidth = track.clientWidth + 12; setActiveAdvantage(Math.min(items.length - 1, Math.max(0, Math.round(track.scrollLeft / cardWidth)))); }} style={{ display:"flex", gap:12, overflowX:"auto", overscrollBehaviorX:"contain", scrollSnapType:"x mandatory", padding:"2px 2px 12px", margin:"0 -2px", WebkitOverflowScrolling:"touch" }}>
+            {items.map((it, index) => (
+              <div key={it.id} style={{ flex:"0 0 100%", scrollSnapAlign:"start", border:`1px solid ${T.border}`, borderTop:`4px solid ${T.moss}`, borderRadius:10, padding:"14px 15px", background:T.bg, display:"flex", flexDirection:"column", minHeight:190 }}>
+                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", gap:10, marginBottom:12 }}>
+                  <span style={{ fontSize:10.5, fontWeight:700, letterSpacing:"0.1em", textTransform:"uppercase", color:T.moss }}>Advantage {index + 1}</span>
+                  <span style={{ fontSize:10.5, color:T.fgS }}>from {it.sourceLabel}</span>
+                </div>
+                <LegacyVoiceField><textarea style={inputStyle({ minHeight:82, fontSize:14, flex:1 })} value={it.text} onChange={e=>setItem(it.id,{text:e.target.value})} placeholder="State it as plainly as you can" /></LegacyVoiceField>
+                <button onClick={()=>remove(it.id)} style={{ ...btnStyle("ghost"), alignSelf:"flex-start", marginTop:9, fontSize:11.5 }}>Remove</button>
+              </div>
+            ))}
+  </div>
+  {items.length > 1 && <>
+    <div style={{ display:"flex", justifyContent:"center", alignItems:"center", gap:7, marginTop:4 }} aria-label={`${items.length} advantages available to swipe through`}>
+      {items.map((it, index) => <button key={`dot-${it.id}`} type="button" aria-label={`Show advantage ${index + 1}`} onClick={() => { const track = carouselRef.current; if (track) track.scrollTo({ left:index * (track.clientWidth + 12), behavior:"smooth" }); setActiveAdvantage(index); }} style={{ width:6, height:6, minWidth:6, maxWidth:6, minHeight:6, maxHeight:6, aspectRatio:"1 / 1", padding:0, margin:0, border:0, borderRadius:"50%", background:index === activeAdvantage ? T.moss : "#c7d0d8", opacity:index === activeAdvantage ? 1 : 0.85, display:"block", lineHeight:0, flex:"0 0 6px", alignSelf:"center", appearance:"none", cursor:"pointer" }} />)}
+    </div>
+    <div style={{ textAlign:"center", fontSize:11.5, color:T.fgS, marginTop:6 }}>Swipe right to see the next advantage. The dark dot marks the card you are viewing.</div>
+  </>}
+  </div>
+      )}
+      {items.length > 0 && (
+        <div style={cardStyle()}>
+          {legRow("What is true about why this operation wins that you have never written down?",
+            <textarea style={inputStyle({ minHeight:70 })} value={vis.missing||""} onChange={e=>setVis({ missing:e.target.value })} placeholder="" />,
+            "The most valuable answer in this module is usually the one that was never in the profile.")}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Vision 2 — Core values ───────────────────────────────────────────────────
+  function VIS_VALUES({ vis, setVis, profile }) {
+  const values = (vis.items || []).filter(i => i.kind === "value");
+  const setValue = (id, text) => setVis({ items:(vis.items || []).map(i => i.id===id ? { ...i, text } : i) });
+  const add = () => setVis({ items:[...(vis.items || []), { id:"value-"+Date.now(), kind:"value", sourceLabel:"Added here", text:"", tests:{}, verdict:"untested" }] });
+  const seed = () => setVis({ items:[...(vis.items || []), ...(profile.values && !values.length ? [{ id:"profile-value-"+Date.now(), kind:"value", sourceLabel:"Farm Profile", text:profile.values, tests:{}, verdict:"untested" }] : [])], valuesSeeded:true });
+  return <div>
+    <Head eyebrow="Strategic vision · Stage 2" title="Core values" sub="Identify the principles that should guide choices when the easiest or most profitable option is not automatically the right one." /><VisionInlineVisual stageLabel="Core values → consistent decisions" />
+    <div style={cardStyle({ borderTop:`4px solid ${T.blue}` })}>
+      <div style={cardLblStyle()}>Why this matters</div>
+      <p style={{ fontSize:14, color:T.fgM, lineHeight:1.65, margin:0 }}>Core values turn a farm&apos;s identity into a decision filter. They help the household decide what work to accept, how to treat land and people, and what trade-offs are worth making. A value becomes useful when it can change a decision ��� not when it is only a good-sounding word.</p>
+    </div>
+    {!values.length && profile.values && !vis.valuesSeeded && <div style={cardStyle()}><div style={cardLblStyle()}>Bring forward what you already wrote</div><p style={{ fontSize:13, color:T.fgM }}>Your Farm Profile already has a values statement. Start there, then make it more specific if needed.</p><button onClick={seed} style={btnStyle("primary")}>Bring in core values →</button></div>}
+    <div style={cardStyle()}><div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12 }}><div style={cardLblStyle({ marginBottom:0 })}>Your core values</div><button onClick={add} style={{ ...btnStyle("outline"), fontSize:12, padding:"6px 13px" }}>+ Add one</button></div>{values.length ? values.map(v=><div key={v.id} style={{ marginBottom:12 }}><LegacyVoiceField><textarea style={inputStyle({ minHeight:64, fontSize:14 })} value={v.text} onChange={e=>setValue(v.id,e.target.value)} placeholder="Name the principle and what it means in practice" /></LegacyVoiceField></div>) : <div style={{ color:T.fgS, fontSize:13 }}>Add the principles you want this operation to be known for.</div>}</div>
+  </div>;
+  }
+
+// ── Vision 3 — Test it ────────────�����──────��────────────���─────���───���─���─────────
+  function VIS2({ vis, setVis, kind="advantage" }) {
+  const isValuesTest = kind === "value";
+  const items = (vis.items||[]).filter(i => i.kind === kind && i.text && i.text.trim());
+  const setTest = (id, tid, val) => setVis({ items: (vis.items||[]).map(i => i.id===id ? { ...i, tests:{ ...(i.tests||{}), [tid]:val } } : i) });
+  const s = visStats(vis);
+
+  const title = isValuesTest ? "Test core values" : "Test competitive advantage";
+  const eyebrow = isValuesTest ? "Strategic vision · Stage 4" : "Strategic vision · Stage 2";
+  const sub = isValuesTest ? "Test whether each value changes a real decision." : "Test which advantages are real, specific, and defensible.";
+  if (!items.length) return <div><Head eyebrow={eyebrow} title={title} sub="" /><Flag type="warn">Nothing to test yet. Go back a stage and bring in what you have written.</Flag></div>;
+  
+  return (
+  <div>
+  <Head eyebrow={eyebrow} title={title} sub={sub} /><VisionInlineVisual stageLabel={isValuesTest ? "Core values → tested decisions" : "Competitive advantage → proof"} />
+      <Flag type="info">A shorter, honest list is more useful than a long one.</Flag>
+
+      {items.map(it => {
+        const t = it.tests || {};
+        const verdict = visVerdictOf(it);
+        const v = VIS_VERDICTS[verdict];
+        const isGoal = it.kind === "goal";
+        const tests = VIS_TESTS.filter(x => isGoal ? x.id === "evidence" : (it.kind === "value" ? x.id !== "neighbour" : x.id !== "cost"));
+        return (
+          <div key={it.id} style={cardStyle(verdict==="person-dependent" ? { borderLeft:`3px solid ${T.red}` } : verdict==="table stakes" ? { borderLeft:`3px solid ${T.amber}` } : verdict==="real" ? { borderLeft:`3px solid ${T.moss}` } : {})}>
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"baseline", gap:12, flexWrap:"wrap", marginBottom:4 }}>
+              <span style={{ fontSize:10.5, letterSpacing:"0.12em", textTransform:"uppercase", color:T.fgS }}>{it.kind === "advantage" ? "Advantage" : it.kind === "value" ? "Value" : "Objective"}</span>
+              <span style={pillStyle(v.pill)}>{v.label}</span>
+            </div>
+            <div style={{ fontSize:15.5, fontWeight:600, color:T.navy, marginBottom:14, lineHeight:1.45 }}>{it.text}</div>
+
+            {tests.map(test => (
+              <div key={test.id} style={{ marginBottom:13 }}>
+                <div style={{ fontSize:12.5, fontWeight:600, color:T.fgM, marginBottom:3 }}>{test.label}</div>
+                <div style={{ fontSize:13.5, color:T.fg, marginBottom:7 }}>{test.q}</div>
+                {test.kind === "text" ? (
+                  <textarea style={inputStyle({ minHeight:52, fontSize:13.5 })} value={t[test.id]||""} onChange={e=>setTest(it.id,test.id,e.target.value)} placeholder="Be specific. A real instance, not a general claim." />
+                ) : (
+                  <div style={{ display:"flex", gap:7 }}>
+                    {["yes","no"].map(val => {
+                      const on = t[test.id] === val;
+                      return <button key={val} onClick={()=>setTest(it.id,test.id,val)} style={{ background:on?T.navy:"#fff", color:on?"#fff":T.fgM, border:`1px solid ${on?T.navy:T.border}`, borderRadius:5, padding:"7px 20px", fontSize:13, cursor:"pointer", font:"inherit", fontWeight:on?600:400 }}>{val === "yes" ? "Yes" : "No"}</button>;
+                    })}
+                  </div>
+                )}
+                {t[test.id] === test.fail && <div style={{ marginTop:8 }}><Flag type="warn">{test.failNote}</Flag></div>}
+              </div>
+            ))}
+
+            {verdict !== "untested" && v.note && (
+              <div style={{ borderLeft:`2px solid ${scColor(v.pill)}`, background:T.bgAlt, borderRadius:"0 5px 5px 0", padding:"10px 13px", fontSize:13, color:T.fgM, lineHeight:1.55 }}>{v.note}</div>
+            )}
+          </div>
+        );
+      })}
+
+      {s.tested > 0 && (
+        <div style={cardStyle({ borderTop:`4px solid ${T.navy}` })}>
+          <div style={cardLblStyle()}>Where that leaves you</div>
+          <div style={{ display:"flex", gap:26, flexWrap:"wrap" }}>
+            {[["Holds up", s.real, T.dgreen],["Table stakes", s.tableStakes, T.amberT],["Person-dependent", s.personDependent, T.red]].map(([lab,n,col],k)=>(
+              <div key={k}><div style={{ fontSize:11, color:T.fgS, marginBottom:3 }}>{lab}</div><div style={{ fontSize:24, fontWeight:600, color:n>0?col:T.fgS }}>{n}</div></div>
+            ))}
+          </div>
+          {s.personDependent > 0 && <div style={{ marginTop:13 }}><Flag type="warn">{s.personDependent === 1 ? "One advantage lives" : `${s.personDependent} advantages live`} in a person rather than the business. That is the most important finding this module produces, and it carries into the Legacy module as a knowledge transfer target.</Flag></div>}
+          {s.real === 0 && s.tested >= 2 && <div style={{ marginTop:11 }}><Flag type="info">Nothing has survived intact yet. That is common and it is not a verdict on the operation. It usually means the real advantage has not been named yet rather than that there is not one.</Flag></div>}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Vision 3 — What it has cost you ──────────────────────────────────────────
+function VIS3({ vis, setVis }) {
+  const values = (vis.items||[]).filter(i => i.kind === "value" && i.text);
+  const setTest = (id, val) => setVis({ items: (vis.items||[]).map(i => i.id===id ? { ...i, tests:{ ...(i.tests||{}), cost:val } } : i) });
+  const answered = values.filter(v => ((v.tests||{}).cost||"").trim().length > 10).length;
+  return (
+    <div>
+      <Head eyebrow="Strategic vision · Stage 5" title="What it has cost you" sub="A value becomes real when it changes a decision." /><VisionInlineVisual stageLabel="Trade-offs → tested principles" />
+      {values.length === 0 ? (
+        <Flag type="warn">No core values recorded yet. Go back to stage 1 and mark at least one claim as a core value.</Flag>
+      ) : (
+        <>
+          <Flag type="info">Name one decision, contract, tenant, or price you gave up to keep this value.</Flag>
+          {values.map(v => (
+            <div key={v.id} style={cardStyle()}>
+              <div style={{ fontSize:15.5, fontWeight:600, color:T.navy, marginBottom:4, lineHeight:1.45 }}>{v.text}</div>
+              <div style={{ fontSize:13, color:T.fgM, marginBottom:11 }}>What has this cost you, or what have you turned down because of it?</div>
+              <LegacyVoiceField><textarea style={inputStyle({ minHeight:64 })} value={(v.tests||{}).cost||""} onChange={e=>setTest(v.id, e.target.value)} placeholder="A contract you did not take. A tenant you did not renew. A price you did not chase." /></LegacyVoiceField>
+            </div>
+          ))}
+          {answered > 0 && answered < values.length && (
+            <Flag type="warn">{values.length - answered} of {values.length} have no cost recorded. Those are the ones most likely to be aspirations rather than operating values.</Flag>
+          )}
+          {answered === values.length && values.length > 0 && (
+            <Flag type="ok">Every value has a real cost behind it. These are governing behaviour rather than describing it, which is what makes them usable as rules in the next stage.</Flag>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
+// ── Vision 4 — Turn it into rules ────────────────────────────────────────────
+function VIS4({ vis, setVis }) {
+  const items = (vis.items||[]).filter(i => i.text && visVerdictOf(i) !== "table stakes");
+  const rules = vis.rules || [];
+  const setRule = (i, patch) => setVis({ rules: rules.map((r,k)=>k===i?{...r,...patch}:r) });
+  const add = (fromId) => setVis({ rules:[...rules, { id:"r"+Date.now(), fromItem:fromId||"", statement:"", owner:"", exception:"", binds:[] }] });
+  const remove = (i) => setVis({ rules: rules.filter((_,k)=>k!==i) });
+
+  return (
+    <div>
+      <Head eyebrow="Strategic vision · Stage 6" title="Turn it into rules" sub="This is where a personal vision becomes an organizational one. A value cannot be followed by an employee. A rule can, and more importantly a rule can be cited back at you." /><VisionInlineVisual stageLabel="Values → operating rules" />
+      <div style={cardStyle({ borderTop:`4px solid ${T.blue}` })}>
+        <div style={cardLblStyle()}>What the conversion looks like</div>
+        {[["We value stewardship","We do not rent ground we cannot farm to our own standard, even when the rent is good"],
+          ["We are known for doing what we said","A landlord hears bad news from us before they hear it anywhere else"],
+          ["We are careful with debt","No capital purchase that takes debt-to-asset above forty percent"]].map(([before,after],k)=>(
+          <div key={k} style={{ display:"grid", gridTemplateColumns:"1fr auto 1.4fr", gap:12, alignItems:"center", padding:"9px 0", borderBottom:k<2?`1px dashed ${T.border}`:"none" }}>
+            <span style={{ fontSize:13, color:T.fgS, fontStyle:"italic" }}>{before}</span>
+            <span style={{ color:T.green, fontSize:15 }}>→</span>
+            <span style={{ fontSize:13.5, color:T.fg, fontWeight:500 }}>{after}</span>
+          </div>
+        ))}
+      </div>
+
+      <div style={cardStyle()}>
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", gap:12, flexWrap:"wrap", marginBottom:12 }}>
+          <div style={cardLblStyle({ marginBottom:0 })}>Your rules</div>
+          <button onClick={()=>add("")} style={{ ...btnStyle("outline"), fontSize:12, padding:"6px 13px" }}>+ Add a rule</button>
+        </div>
+        {rules.length === 0 && <p style={{ fontSize:13.5, color:T.fgS, fontStyle:"italic", margin:0 }}>None yet. Three or four real rules beat a dozen aspirational ones.</p>}
+        {rules.map((r,i) => (
+          <div key={r.id} style={{ border:`1px solid ${T.border}`, borderRadius:8, padding:"13px 15px", marginBottom:11 }}>
+            <div style={{ marginBottom:11 }}>
+              <label style={labelStyle}>The rule, stated so someone else could apply it</label>
+              <textarea style={inputStyle({ minHeight:54, fontSize:14 })} value={r.statement} onChange={e=>setRule(i,{statement:e.target.value})} placeholder="We do not... / We always... / No decision to... without..." />
+            </div>
+            {items.length > 0 && (
+              <div style={{ marginBottom:11 }}>
+                <label style={labelStyle}>Which claim does this come from?</label>
+                <select style={inputStyle()} value={r.fromItem} onChange={e=>setRule(i,{fromItem:e.target.value})}>
+                  <option value="">Not linked</option>
+                  {items.map(it => <option key={it.id} value={it.id}>{it.text.slice(0,70)}</option>)}
+                </select>
+              </div>
+            )}
+            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12 }}>
+              <div>
+                <label style={labelStyle}>Who owns it</label>
+                <input style={inputStyle()} value={r.owner} onChange={e=>setRule(i,{owner:e.target.value})} placeholder="A named person" />
+              </div>
+              <div>
+                <label style={labelStyle}>How an exception gets made</label>
+                <input style={inputStyle()} value={r.exception} onChange={e=>setRule(i,{exception:e.target.value})} placeholder="Who can override it, and how" />
+              </div>
+            </div>
+            {!r.exception && r.statement && (
+              <div style={{ marginTop:10 }}><Flag type="warn">No exception path. A rule with no stated way to break it openly gets broken quietly the first time it is inconvenient, and then it is dead.</Flag></div>
+            )}
+            <button onClick={()=>remove(i)} style={{ ...btnStyle("ghost"), marginTop:10, fontSize:11.5 }}>Remove</button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── Vision 5 — Who holds this ────────���────────────��────────────���─────────────
+function VIS5({ vis, setVis, goLegacy }) {
+  const h = vis.holders || {};
+  const setH = (id,val) => setVis({ holders:{ ...h, [id]:val } });
+  const assumed = VIS_HOLDERS.filter(p => h[p.id] === 1);
+  const unspoken = VIS_HOLDERS.filter(p => h[p.id] === 0 || h[p.id] === 1);
+  const canState = VIS_HOLDERS.filter(p => h[p.id] === 3);
+  return (
+    <div>
+      <Head eyebrow="Strategic vision · Stage 7" title="Who holds this" sub="A vision one person holds is a preference. A vision the organization holds is a constraint. The difference is whether anyone else could state it, and whether they could use it to stop something." /><VisionInlineVisual stageLabel="Shared ownership → organizational constraint" />
+      <div style={cardStyle()}>
+        <div style={cardLblStyle()}>Where each person actually stands</div>
+        {VIS_HOLDERS.map(p => (
+          <div key={p.id} style={{ padding:"11px 0", borderBottom:`1px solid ${T.div}` }}>
+            <div style={{ fontSize:14, color:T.fg, marginBottom:7 }}>{p.label}</div>
+            <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
+              {VIS_HOLD_LEVEL.map((lab,idx) => {
+                const on = h[p.id] === idx;
+                return <button key={idx} onClick={()=>setH(p.id,idx)} style={{ background:on?T.navy:"#fff", color:on?"#fff":T.fgM, border:`1px solid ${on?T.navy:T.border}`, borderRadius:4, padding:"5px 11px", fontSize:12, cursor:"pointer", font:"inherit", fontWeight:on?600:400 }}>{lab}</button>;
+              })}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {assumed.length > 0 && (
+        <div style={cardStyle({ borderLeft:`3px solid ${T.amber}` })}>
+          <div style={cardLblStyle()}>The assumption you have not checked</div>
+          <p style={{ fontSize:14, color:T.fgM, marginTop:0, lineHeight:1.6 }}>
+            You have recorded that {assumed.map(p=>p.label.toLowerCase()).join(", ")} {assumed.length===1?"agrees":"agree"} with this, without having asked. That is an assumption, and unvoiced assumptions are the most common thing families get wrong about each other.
+          </p>
+          <p style={{ fontSize:13.5, color:T.fgM, marginBottom:goLegacy?12:0, lineHeight:1.6 }}>
+            This module can only record what you believe. The Legacy module has a blind compare where both generations answer the same questions independently and the gaps are shown. That is where an assumption gets tested rather than noted.
+          </p>
+          {goLegacy && <button onClick={goLegacy} style={btnStyle("primary")}>Open the Legacy blind compare →</button>}
+        </div>
+      )}
+
+      <div style={cardStyle()}>
+        {legRow("Who could stop a decision by pointing at this vision, and would that hold?",
+          <textarea style={inputStyle({ minHeight:70 })} value={vis.whoCanInvoke||""} onChange={e=>setVis({ whoCanInvoke:e.target.value })} placeholder="" />,
+          "If the honest answer is nobody, it is not institutional yet. That is worth knowing and it is fixable.")}
+        {legRow("Has anyone ever disagreed with the direction out loud?",
+          <textarea style={inputStyle({ minHeight:60 })} value={vis.disagreed||""} onChange={e=>setVis({ disagreed:e.target.value })} placeholder="" />,
+          "A vision nobody has ever pushed back on is usually one nobody has engaged with.")}
+      </div>
+
+      {canState.length >= 2 && <Flag type="ok">{canState.length} people could state this themselves. That is the threshold where it starts behaving like an organizational vision rather than the owner's view.</Flag>}
+      {unspoken.length === VIS_HOLDERS.length && <Flag type="warn">Nobody has discussed this yet. The statement in stage 7 is worth producing anyway, because it gives you something concrete to discuss rather than starting from a blank page.</Flag>}
+    </div>
+  );
+}
+
+// ── Vision 6 — Where it binds ────���─��────�����───────────��───────��────���───────────
+function VIS6({ vis, setVis }) {
+  const rules = vis.rules || [];
+  const toggle = (i, bindId) => {
+    const r = rules[i]; const cur = r.binds || [];
+    const next = cur.includes(bindId) ? cur.filter(x=>x!==bindId) : [...cur, bindId];
+    setVis({ rules: rules.map((x,k)=>k===i?{...x,binds:next}:x) });
+  };
+  const unbound = rules.filter(r => r.statement && (r.binds||[]).length === 0);
+  return (
+    <div>
+      <Head eyebrow="Strategic vision · Stage 8" title="Where it binds" sub="A vision that does not show up where decisions get made is wall decoration. Mark which decisions each rule actually governs." /><VisionInlineVisual stageLabel="Rules → decisions and actions" />
+      {rules.length === 0 ? (
+        <Flag type="warn">No rules yet. Go back to stage 4 and write at least one.</Flag>
+      ) : (
+        <>
+          {rules.map((r,i) => (
+            <div key={r.id} style={cardStyle()}>
+              <div style={{ fontSize:15, fontWeight:600, color:T.navy, marginBottom:4, lineHeight:1.45 }}>{r.statement || <span style={{ color:T.fgS, fontStyle:"italic" }}>Unwritten rule</span>}</div>
+              {r.owner && <div style={{ fontSize:12, color:T.fgS, marginBottom:11 }}>Owned by {r.owner}</div>}
+              <div style={{ fontSize:12.5, color:T.fgM, marginBottom:9 }}>Which decisions does this govern?</div>
+              <div style={{ display:"flex", flexWrap:"wrap", gap:7 }}>
+                {VIS_BINDS.map(b => {
+                  const on = (r.binds||[]).includes(b.id);
+                  return (
+                    <button key={b.id} onClick={()=>toggle(i,b.id)} title={b.where}
+                      style={{ background:on?T.greenL:"#fff", color:on?T.dgreen:T.fgM, border:`1px solid ${on?T.moss:T.border}`, borderRadius:5, padding:"7px 12px", fontSize:12.5, cursor:"pointer", font:"inherit", fontWeight:on?600:400, textAlign:"left" }}>
+                      {b.label}
+                    </button>
+                  );
+                })}
+              </div>
+              {(r.binds||[]).length > 0 && (
+                <div style={{ marginTop:11, fontSize:12, color:T.fgS, lineHeight:1.6 }}>
+                  Shows up in: {VIS_BINDS.filter(b=>(r.binds||[]).includes(b.id)).map(b=>b.where).filter((v,k,a)=>a.indexOf(v)===k).join(" · ")}
+                </div>
+              )}
+            </div>
+          ))}
+          {unbound.length > 0 && (
+            <Flag type="warn">{unbound.length === 1 ? "One rule governs" : `${unbound.length} rules govern`} no decision yet. A rule that never binds anything is a statement of preference. Either name where it applies or drop it.</Flag>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
+// ── Vision 7 — The statement ───────────────────────────���───────���──��──────────
+function VIS7({ vis, setVis, profile }) {
+  const s = visStats(vis);
+  const pub = vis.published || {};
+  const setPub = (k,v) => setVis({ published:{ ...pub, [k]:v } });
+  const approved = vis.approved || {};
+  const setApproved = (k,v) => setVis({ approved:{ ...approved, [k]:v } });
+
+  const real = (vis.items||[]).filter(i => visVerdictOf(i) === "real");
+  const goals = (vis.items||[]).filter(i => i.kind === "goal" && i.text);
+  const rules = (vis.rules||[]).filter(r => r.statement);
+  const personDep = (vis.items||[]).filter(i => visVerdictOf(i) === "person-dependent");
+
+  const assemble = () => setVis({ published:{
+    doWhat: pub.doWhat || (profile||{}).productionMix || "",
+    whyWeWin: pub.whyWeWin || real.filter(i=>i.kind==="advantage").map(i=>i.text).join(". "),
+    wontDo: pub.wontDo || rules.map(r=>r.statement).join("\n"),
+    whereGoing: pub.whereGoing || goals.filter(g=>g.sourceLabel.includes("Long")).map(g=>g.text).join(". ") || goals.map(g=>g.text).join(". "),
+    howKnow: pub.howKnow || "",
+  }, assembled:true });
+
+  const SECTIONS = [
+    { k:"doWhat",     label:"What we do",            hint:"One line. A specific business, not a category." },
+    { k:"whyWeWin",   label:"Why we win",            hint:"Only what survived the tests in stage 2." },
+    { k:"wontDo",     label:"What we will not do",   hint:"The hardest section and the most useful. Your rules go here." },
+    { k:"whereGoing", label:"Where we are going",    hint:"Concrete enough that someone could disagree with it." },
+    { k:"howKnow",    label:"How we will know",      hint:"Three or four measures." },
+  ];
+
+  return (
+    <div>
+      <Head eyebrow="Strategic vision · Stage 9" title="The statement" sub="Assembled from your own words rather than rewritten. A farm team can tell instantly when a document was not written by the person who runs the place." /><VisionInlineVisual stageLabel="Tested insight → shared operating statement" />
+
+      {!vis.assembled && (
+        <div style={cardStyle({ borderTop:`4px solid ${T.moss}` })}>
+          <div style={cardLblStyle()}>Build the draft</div>
+          <p style={{ fontSize:14, color:T.fgM, marginTop:0, lineHeight:1.6 }}>This pulls together what survived the tests, the rules you wrote, and your objectives. Every section stays editable and nothing publishes until you approve it.</p>
+          <button onClick={assemble} style={btnStyle("primary")}>Assemble the draft →</button>
+        </div>
+      )}
+
+      {vis.assembled && (
+        <>
+          {personDep.length > 0 && (
+            <Flag type="warn">Staying private: {personDep.length === 1 ? "one advantage that depends" : `${personDep.length} advantages that depend`} on a specific person. Naming a key-person risk in a document handed to the team is rarely what you want. It stays in your working record and carries into Legacy.</Flag>
+          )}
+          {SECTIONS.map(sec => (
+            <div key={sec.k} style={cardStyle(approved[sec.k] ? { borderLeft:`3px solid ${T.moss}` } : {})}>
+              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", gap:12, flexWrap:"wrap", marginBottom:4 }}>
+                <div style={cardLblStyle({ marginBottom:0 })}>{sec.label}</div>
+                <label style={{ display:"flex", alignItems:"center", gap:7, fontSize:12.5, color:T.fgM, cursor:"pointer" }}>
+                  <input type="checkbox" checked={!!approved[sec.k]} onChange={e=>setApproved(sec.k, e.target.checked)} />
+                  Approved to publish
+                </label>
+              </div>
+              <div style={{ fontSize:11.5, color:T.fgS, fontStyle:"italic", marginBottom:9 }}>{sec.hint}</div>
+              <textarea style={inputStyle({ minHeight:sec.k==="wontDo"?96:64, fontSize:14, lineHeight:1.65 })} value={pub[sec.k]||""} onChange={e=>setPub(sec.k, e.target.value)} placeholder="" />
+            </div>
+          ))}
+
+          <div style={cardStyle({ borderTop:`4px solid ${T.navy}` })}>
+            <div style={cardLblStyle()}>Rolling it out</div>
+            <p style={{ fontSize:13.5, color:T.fgM, marginTop:0, lineHeight:1.6 }}>Handing people a document accomplishes nothing. This is where these usually die.</p>
+            {legRow("Who hears it first, and in what order?", <textarea style={inputStyle({ minHeight:58 })} value={vis.rolloutWho||""} onChange={e=>setVis({ rolloutWho:e.target.value })} placeholder="" />)}
+            {legRow("What happens when someone disagrees?", <textarea style={inputStyle({ minHeight:58 })} value={vis.rolloutDisagree||""} onChange={e=>setVis({ rolloutDisagree:e.target.value })} placeholder="" />, "If the answer is that they do not get to, that is worth knowing about how institutional this really is.")}
+            {legRow("When does this get revisited?", <input style={inputStyle()} value={vis.reviewCadence||""} onChange={e=>setVis({ reviewCadence:e.target.value })} placeholder="A date, or an event that triggers it" />)}
+          </div>
+
+          <div style={cardStyle()}>
+            <div style={cardLblStyle()}>Where this stands</div>
+            <div style={{ display:"flex", gap:26, flexWrap:"wrap", marginBottom:12 }}>
+              {[["Claims that held up", s.real],["Rules written", s.rules],["Rules that bind a decision", s.boundRules],["Sections approved", SECTIONS.filter(x=>approved[x.k]).length + " of 5"]].map(([lab,n],k)=>(
+                <div key={k}><div style={{ fontSize:11, color:T.fgS, marginBottom:3 }}>{lab}</div><div style={{ fontSize:22, fontWeight:600, color:T.navy }}>{n}</div></div>
+              ))}
+            </div>
+            {s.boundRules === 0 && s.rules > 0 && <Flag type="warn">No rule binds a decision yet. Until one does, this is a statement rather than an operating vision.</Flag>}
+            {SECTIONS.filter(x=>approved[x.k]).length === 5 && <Flag type="ok">Every section approved. Print this, take it to the people in stage 5, and expect the first real conversation to change it.</Flag>}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+
+// ── Vision 8 — Farm profile and SWOT ─────────────────────────────────────
+function VIS_PROFILE({ vis, profile, setProfile, goFA, fa }) {
+  const advantages = (vis.items||[]).filter(i=>i.kind==="advantage" && i.text?.trim()).map(i=>i.text.trim());
+  const values = (vis.items||[]).filter(i=>i.kind==="value" && i.text?.trim()).map(i=>i.text.trim());
+  const hasVisionInputs = advantages.length > 0 || values.length > 0 || !!vis.seeded;
+  const [draft, setDraft] = useState(profile||{});
+  const [profileTab, setProfileTab] = useState("profile");
+  const update = key => e => setDraft(s=>({ ...s, [key]:e.target.value }));
+  const importJSON = e => { const file=e.target.files?.[0]; e.target.value=""; if(!file) return; const reader=new FileReader(); reader.onload=()=>{ try { const imported=profileFromMFPExport(JSON.parse(reader.result)); if(imported) { setDraft(s=>({ ...s, ...imported })); setProfile(s=>({ ...s, ...imported })); } } catch { /* Invalid files stay out of the working profile. */ } }; reader.readAsText(file); };
+  const save = () => setProfile(s=>({ ...s, ...draft, swotStrengths:advantages.join("; ") || draft.swotStrengths || "", swotWeaknesses:draft.swotWeaknesses||"", swotOpportunities:draft.swotOpportunities||draft.nearTerm||"", swotThreats:draft.swotThreats||draft.productionMix||"" }));
+  const field = (label,key,placeholder,multi=false) => <label style={{ ...labelStyle, display:"block" }}>{label}{multi?<textarea value={draft[key]||""} onChange={update(key)} placeholder={placeholder} style={inputStyle({ minHeight:70, marginTop:6 })} />:<input value={draft[key]||""} onChange={update(key)} placeholder={placeholder} style={inputStyle({ marginTop:6 })} />}</label>;
+  const box = (title, text, color) => <div style={cardStyle({ marginBottom:0, borderTop:`4px solid ${color}` })}><div style={cardLblStyle()}>{title}</div><div style={{ color:text?T.fgM:T.fgS, fontSize:13.5, lineHeight:1.5 }}>{text || "This section will populate after the Strategic Vision intake or a JSON profile import."}</div></div>;
+  const swot = { strengths:advantages.join("; "), weaknesses:draft.swotWeaknesses, opportunities:draft.swotOpportunities||draft.nearTerm, threats:draft.swotThreats||draft.productionMix };
+  return <div><Head eyebrow="Strategic Vision · Profile and SWOT" title="Farm profile and SWOT" sub="This section combines the farm profile, JSON import, and vision-derived SWOT. It stays intentionally empty until the first two vision steps or an uploaded profile provide content." /><VisionInlineVisual stageLabel="Farm profile → SWOT decision context" /><div style={{ display:"flex", gap:24, alignItems:"flex-end", borderBottom:`1px solid ${T.border}`, marginBottom:24 }}><button type="button" onClick={()=>setProfileTab("profile")} style={{ background:"none", border:0, borderBottom:`3px solid ${profileTab==="profile"?T.blue:"transparent"}`, padding:"0 2px 12px", color:profileTab==="profile"?T.blue:T.fgS, fontWeight:700, cursor:"pointer" }}>Farm Profile</button><button type="button" onClick={()=>setProfileTab("swot")} style={{ background:"none", border:0, borderBottom:`3px solid ${profileTab==="swot"?T.blue:"transparent"}`, padding:"0 2px 12px", color:profileTab==="swot"?T.blue:T.fgS, fontWeight:700, cursor:"pointer" }}>Farm SWOT</button><button type="button" onClick={()=>setProfileTab("glance")} style={{ background:"none", border:0, borderBottom:`3px solid ${profileTab==="glance"?T.blue:"transparent"}`, padding:"0 2px 12px", color:profileTab==="glance"?T.blue:T.fgS, fontWeight:700, cursor:"pointer" }}>Business at a glance</button></div><div style={{ display:profileTab==="profile"?"block":"none" }}><div style={cardStyle({ borderTop:`4px solid ${T.blue}`, display:"none" })}><div style={cardLblStyle()}>Bring in an existing profile</div><p style={{ color:T.fgM, fontSize:13.5, lineHeight:1.5, marginTop:0 }}>Upload a Maximum Farm Potential JSON export to prefill these fields. The import stays in this working session until you save it.</p><input type="file" accept=".json,application/json" onChange={importJSON} /></div><div style={cardStyle()}><div style={cardLblStyle()}>Farm profile</div>{field("Farm name","name","e.g., Jensen Family Farms")}{field("Location","location","State and county")}{field("Size and production mix","productionMix","Acres, livestock, and primary enterprises",true)}{field("Business ventures beyond production","ventures","Services, shops, leases, or other ventures",true)}{field("Near-term objective","nearTerm","What should improve in the next 1–3 years?",true)}{field("Long-term direction","longTerm","Where is the farm headed?",true)}{field("Core values","values","What will this operation not trade away?",true)}{field("Competitive advantage","advantage","What makes this operation difficult to copy?",true)}</div></div><div style={{ display:profileTab==="swot"?"block":"none" }}><div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(250px,1fr))", gap:14 }}>{box("Strengths",hasVisionInputs?swot.strengths:"",T.green)}{box("Weaknesses / trade-offs",hasVisionInputs?swot.weaknesses:"",T.amber)}{box("Opportunities",hasVisionInputs?swot.opportunities:"",T.blue)}{box("Threats / conditions",hasVisionInputs?swot.threats:"",T.red)}</div></div><div style={{ display:profileTab==="glance"?"block":"none" }}><div style={cardStyle()}><div style={cardLblStyle()}>Business at a glance</div><div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))", gap:12 }}>{[["Farm name",draft.name],["Location",draft.location],["Production mix",draft.productionMix],["Near-term direction",draft.nearTerm],["Financial basis",fa?.accounting?.basis],["Working capital",fa?.budget ? `$${((Number(fa.budget.cash)||0)+(Number(fa.budget.line)||0)-(Number(fa.budget.committed)||0)-(Number(fa.budget.debt)||0)).toLocaleString()}` : ""]].map(([label,value])=><div key={label} style={{ padding:14, background:value?T.bgAlt:"#f2f4f6", borderRadius:8, color:value?T.navy:T.fgS }}><div style={{ fontSize:11, fontWeight:700, textTransform:"uppercase", letterSpacing:"0.05em", marginBottom:5 }}>{label}</div><div style={{ fontSize:14 }}>{value||"Not updated yet"}</div></div>)}</div><p style={{ color:T.fgS, fontSize:12.5, lineHeight:1.5, marginBottom:0 }}>Financial values update from Financial Analysis as records, budgets, and working capital assumptions are completed.</p></div></div><div style={cardStyle({ background:T.blueL, borderColor:"#c8d9e8", marginTop:16 })}><strong>Save profile for Eagle Eye and MFP modules</strong><p style={{ margin:"5px 0 13px", color:T.fgM, fontSize:13, lineHeight:1.5 }}>Saving makes the profile available to Eagle Eye Intelligence, Financial Analysis, Revenue Diversification, and Farm Risk.</p><button type="button" onClick={() => { save(); goFA(1); }} style={btnStyle("primary")}>Save profile and continue to Financial Analysis ���</button></div></div>;
+}
+
+// ── Vision 9 — The document ────────�����─���────────���─��───────────────────────────
+// Renders ONLY approved sections. Everything diagnostic stays in the working
+// record: demoted claims, person-dependent advantages, cost-test answers and the
+// who-holds-this ratings never appear here. Publishing a document that names a
+// key-person risk to the team is the failure mode this split exists to prevent.
+function VIS8({ vis, profile }) {
+  const [form, setForm] = useState("full");
+  const pub = vis.published || {};
+  const approved = vis.approved || {};
+  const rules = (vis.rules || []).filter(r => r.statement && r.statement.trim());
+  const SECTIONS = [
+    { k:"doWhat",     label:"What we do" },
+    { k:"whyWeWin",   label:"Why we win" },
+    { k:"wontDo",     label:"What we will not do" },
+    { k:"whereGoing", label:"Where we are going" },
+    { k:"howKnow",    label:"How we will know" },
+  ];
+  const live = SECTIONS.filter(s => approved[s.k] && (pub[s.k]||"").trim());
+  const held = SECTIONS.filter(s => !approved[s.k] && (pub[s.k]||"").trim());
+  const personDep = (vis.items||[]).filter(i => visVerdictOf(i) === "person-dependent");
+  const farmName = (profile||{}).location ? `${profile.location}` : "";
+
+  // Short form takes the first sentence of each approved section, plus the rules.
+  const firstLine = (t) => {
+    const s = String(t||"").split(/\.\s|\n/)[0].trim();
+    return s ? s.replace(/\.$/,"") : "";
+  };
+
+  if (!live.length) {
+    return (
+      <div>
+        <Head eyebrow="Strategic vision · Stage 8" title="The document" sub="Nothing is approved for publishing yet." /><VisionInlineVisual stageLabel="Approved sections → decision-ready document" />
+        <Flag type="warn">Go back to stage 7 and tick "Approved to publish" on the sections you are willing to stand behind in front of your team. Nothing appears here until you do, which is deliberate.</Flag>
+        {held.length > 0 && (
+          <div style={cardStyle()}>
+            <div style={cardLblStyle()}>Written but not approved</div>
+            <ul style={{ margin:0, paddingLeft:20, fontSize:14, color:T.fgM, lineHeight:1.9 }}>
+              {held.map(s => <li key={s.k}>{s.label}</li>)}
+            </ul>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <Head eyebrow="Strategic vision · Stage 8" title="The document" sub="What actually gets handed to the team. Only approved sections appear. Everything diagnostic stays in your working record." /><VisionInlineVisual stageLabel="Approved sections → decision-ready document" />
+
+      <div style={{ display:"flex", gap:8, alignItems:"center", borderBottom:`1px solid ${T.border}`, marginBottom:18, flexWrap:"wrap" }}>
+        {[["full","The one-pager"],["short","Short form"],["rollout","Rollout guide"]].map(([k,lab]) => {
+          const on = form === k;
+          return <button key={k} onClick={()=>setForm(k)} style={{ background:"none", border:"none", borderBottom:`2px solid ${on?T.navy:"transparent"}`, padding:"9px 4px", marginBottom:-1, marginRight:14, cursor:"pointer", font:"inherit", fontSize:14, fontWeight:on?600:500, color:on?T.navy:T.fgS }}>{lab}</button>;
+        })}
+        <button onClick={()=>window.print()} style={{ ...btnStyle("outline"), fontSize:12, padding:"6px 14px", marginLeft:"auto" }}>Print or save as PDF</button>
+      </div>
+
+      {(held.length > 0 || personDep.length > 0) && (
+        <Flag type="info">
+          Staying in your working record and not in this document:
+          {held.length > 0 && ` ${held.length} unapproved ${held.length===1?"section":"sections"}.`}
+          {personDep.length > 0 && ` ${personDep.length} person-dependent ${personDep.length===1?"advantage":"advantages"}, because naming a key-person risk in a document handed to the team is rarely what you want.`}
+        </Flag>
+      )}
+
+      {/* ── THE ONE-PAGER ── */}
+      {form === "full" && (
+        <div style={cardStyle({ padding:"34px 38px" })}>
+          <div style={{ borderBottom:`2px solid ${T.navy}`, paddingBottom:14, marginBottom:22 }}>
+            <div style={{ fontSize:10.5, letterSpacing:"0.15em", textTransform:"uppercase", color:T.fgS, marginBottom:5 }}>How we operate</div>
+            <div style={{ fontSize:23, fontWeight:600, color:T.navy, lineHeight:1.25 }}>{farmName || "Our strategic vision"}</div>
+            {vis.reviewCadence && <div style={{ fontSize:12, color:T.fgS, marginTop:5 }}>Next review: {vis.reviewCadence}</div>}
+          </div>
+
+          {live.map(s => (
+            <div key={s.k} style={{ marginBottom:24 }}>
+              <div style={{ fontSize:11, letterSpacing:"0.13em", textTransform:"uppercase", color:T.fgS, marginBottom:9 }}>{s.label}</div>
+              {s.k === "wontDo" && rules.length > 0 ? (
+                <div>
+                  {rules.map(r => (
+                    <div key={r.id} style={{ borderLeft:`2px solid ${T.moss}`, paddingLeft:14, marginBottom:13 }}>
+                      <div style={{ fontSize:15, color:T.fg, lineHeight:1.55 }}>{r.statement}</div>
+                      {(r.owner || r.exception) && (
+                        <div style={{ fontSize:12, color:T.fgS, marginTop:4 }}>
+                          {r.owner && <span>Held by {r.owner}</span>}
+                          {r.owner && r.exception && <span> · </span>}
+                          {r.exception && <span>Exception: {r.exception}</span>}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div style={{ fontSize:15.5, color:T.fg, lineHeight:1.7, whiteSpace:"pre-wrap" }}>{pub[s.k]}</div>
+              )}
+            </div>
+          ))}
+
+          <div style={{ borderTop:`1px solid ${T.border}`, paddingTop:14, marginTop:28 }}>
+            <p style={{ fontSize:12, color:T.fgS, margin:0, lineHeight:1.6 }}>
+              This is how we make decisions. If something we are about to do contradicts what is written here, say so.
+              {vis.rolloutDisagree ? ` ${vis.rolloutDisagree}` : ""}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* ── SHORT FORM ── */}
+      {form === "short" && (
+        <>
+          <div style={cardStyle({ padding:"30px 34px" })}>
+            <div style={{ fontSize:10.5, letterSpacing:"0.15em", textTransform:"uppercase", color:T.fgS, marginBottom:16 }}>{farmName || "How we operate"}</div>
+            {live.filter(s => s.k !== "wontDo").map(s => {
+              const line = firstLine(pub[s.k]);
+              if (!line) return null;
+              return (
+                <div key={s.k} style={{ marginBottom:13 }}>
+                  <span style={{ fontSize:11.5, color:T.fgS, display:"block", marginBottom:2 }}>{s.label}</span>
+                  <span style={{ fontSize:17, color:T.navy, fontWeight:500, lineHeight:1.45 }}>{line}</span>
+                </div>
+              );
+            })}
+            {approved.wontDo && rules.length > 0 && (
+              <div style={{ marginTop:20, paddingTop:16, borderTop:`1px solid ${T.border}` }}>
+                <span style={{ fontSize:11.5, color:T.fgS, display:"block", marginBottom:9 }}>What we will not do</span>
+                {rules.slice(0,4).map(r => (
+                  <div key={r.id} style={{ fontSize:15, color:T.fg, lineHeight:1.5, marginBottom:7, paddingLeft:14, borderLeft:`2px solid ${T.moss}` }}>{r.statement}</div>
+                ))}
+              </div>
+            )}
+          </div>
+          <Flag type="info">Built for a shop wall, the first page of a handbook, or the back of a business card. Each line is the opening sentence of the fuller section, so nothing here contradicts the one-pager.</Flag>
+        </>
+      )}
+
+      {/* ── ROLLOUT GUIDE ── */}
+      {form === "rollout" && (
+        <div style={cardStyle({ padding:"30px 34px" })}>
+          <div style={{ fontSize:11, letterSpacing:"0.13em", textTransform:"uppercase", color:T.fgS, marginBottom:14 }}>Rolling this out</div>
+          <p style={{ fontSize:14.5, color:T.fgM, marginTop:0, lineHeight:1.65 }}>Handing people a document accomplishes nothing on its own. This is the part that decides whether any of it holds.</p>
+
+          {[["Who hears it first", vis.rolloutWho, "Order matters. Anyone who finds out second-hand starts from a worse place."],
+            ["What happens when someone disagrees", vis.rolloutDisagree, "If the honest answer is that they do not get to, this is still the owner's vision rather than the operation's."],
+            ["When it gets revisited", vis.reviewCadence, "A vision with no review date is a document. One with a date is a process."]].map(([lab,val,note],k)=>(
+            <div key={k} style={{ marginBottom:20 }}>
+              <div style={{ fontSize:13.5, fontWeight:600, color:T.navy, marginBottom:5 }}>{lab}</div>
+              {val ? <div style={{ fontSize:14.5, color:T.fg, lineHeight:1.6, marginBottom:5 }}>{val}</div>
+                   : <div style={{ fontSize:13.5, color:T.fgS, fontStyle:"italic", marginBottom:5 }}>Not answered yet. Stage 7 asks this.</div>}
+              <div style={{ fontSize:12, color:T.fgS, lineHeight:1.5 }}>{note}</div>
+            </div>
+          ))}
+
+          <div style={{ borderTop:`1px solid ${T.border}`, paddingTop:16, marginTop:8 }}>
+            <div style={{ fontSize:13.5, fontWeight:600, color:T.navy, marginBottom:9 }}>What to expect</div>
+            <ol style={{ margin:0, paddingLeft:20, fontSize:14, color:T.fgM, lineHeight:1.85 }}>
+              <li>The first real conversation will change something in this document. That is the conversation working, not the document failing.</li>
+              <li>Read the rules out loud rather than handing them over. People agree with documents they never read.</li>
+              <li>The first time someone invokes a rule against a decision you wanted to make is the moment this becomes organizational. Let it hold.</li>
+              <li>If nobody has questions, nobody has engaged. Go back and ask each person directly.</li>
+            </ol>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+
+// ══════════════════════════════════════════════����══════════════════════════════
+// LOCAL PERSISTENCE — the farm record stays on the farmer's own machine
+// ═════════════════════════�����═══════════════════════════════════════════════���═══
+// Everything a farmer enters saves to their browser automatically and reloads
+// next time. Nothing is transmitted. For this data in particular — succession
+// tensions, sweat equity figures, who the operator thinks is not ready — that is
+// a feature rather than a limitation, and it is a real answer to a question
+// farmers will ask.
+//
+// Export produces a single file they can back up, move to another machine, or
+// hand to a lender, an accountant, a facilitator, or the next generation.
+
+const MFP_STORE_KEY = "mfp-farm-record-v1";
+const MFP_SCHEMA = 1;
+
+const storageAvailable = () => {
+  try {
+    const k = "__mfp_probe__";
+    window.localStorage.setItem(k, "1");
+    window.localStorage.removeItem(k);
+    return true;
+  } catch (e) { return false; }
+};
+
+const buildRecord = (s) => ({
+  schema: MFP_SCHEMA,
+  savedAt: new Date().toISOString(),
+  module: s.module,
+  profile: s.profile, fa: s.fa, rd: s.rd, risk: s.risk, leg: s.leg, vis: s.vis,
+});
+
+const saveRecord = (s) => {
+  try {
+    window.localStorage.setItem(MFP_STORE_KEY, JSON.stringify(buildRecord(s)));
+    return { ok:true };
+  } catch (e) {
+    // Quota is the realistic failure here, not a missing API.
+    return { ok:false, reason: e && e.name === "QuotaExceededError" ? "full" : "blocked" };
+  }
+};
+
+const loadRecord = () => {
+  try {
+    const raw = window.localStorage.getItem(MFP_STORE_KEY);
+    if (!raw) return null;
+    const p = JSON.parse(raw);
+    if (!p || typeof p !== "object") return null;
+    if (p.schema !== MFP_SCHEMA) return { ...p, _schemaMismatch:true };
+    return p;
+  } catch (e) { return null; }
+};
+
+const clearRecord = () => { try { window.localStorage.removeItem(MFP_STORE_KEY); } catch(e){} };
+
+// Validates an imported file before it is allowed to replace anything.
+const validateRecord = (p) => {
+  if (!p || typeof p !== "object") return "That file is not a readable farm record.";
+  if (typeof p.schema !== "number") return "That file is missing its version marker, so it is probably not an MFP record.";
+  if (p.schema > MFP_SCHEMA) return "That record was saved by a newer version of MFP than this one. Update first, then import.";
+  const known = ["profile","fa","rd","risk","leg","vis"];
+  if (!known.some(k => p[k] && typeof p[k] === "object")) return "That record has no module data in it.";
+  return null;
+};
+
+// Accepts a Maximum Farm Potential profile export without requiring the two tools
+// to share an internal schema. Field aliases keep this first integration test
+// useful while the production contract is finalized.
+const profileFromMFPExport = (raw) => {
+  const source = raw?.profile || raw?.farmProfile || raw?.farm?.profile || raw;
+  const value = (...keys) => {
+    for (const key of keys) {
+      const parts = key.split(".");
+      let current = source;
+      for (const part of parts) current = current?.[part];
+      if (current !== undefined && current !== null && current !== "") return String(current);
+    }
+    return "";
+  };
+  const profile = {
+    location: value("location", "farmLocation", "address", "farm.location"),
+    size: value("size", "farmSize", "acreage", "acres", "land.acres"),
+    productionMix: value("productionMix", "production", "commodities", "enterprises", "farmType"),
+    ventures: value("ventures", "diversification", "otherIncome", "businesses"),
+    grossIncome: value("grossIncome", "revenue", "grossRevenue", "financials.grossIncome", "financial.grossRevenue"),
+    nearTerm: value("nearTerm", "nearTermObjectives", "objectives.nearTerm", "goals.shortTerm"),
+    longTerm: value("longTerm", "longTermObjectives", "objectives.longTerm", "goals.longTerm"),
+    advantage: value("advantage", "competitiveAdvantage", "strengths", "strategy.advantage"),
+    values: value("values", "coreValues", "familyValues", "strategy.values"),
+    swotStrengths: value("swotStrengths", "swot.strengths", "strengths"),
+    swotWeaknesses: value("swotWeaknesses", "swot.weaknesses", "weaknesses"),
+    swotOpportunities: value("swotOpportunities", "swot.opportunities", "opportunities"),
+    swotThreats: value("swotThreats", "swot.threats", "threats"),
+  };
+  const populated = Object.fromEntries(Object.entries(profile).filter(([, v]) => v));
+  return Object.keys(populated).length ? populated : null;
+};
+
+const profileFromMFPText = (text) => {
+  const aliases = {
+    location: "location|farm location|address",
+    size: "size|farm size|acreage|acres",
+    productionMix: "production mix|production|commodities|enterprises|farm type",
+    ventures: "ventures|diversification|other income|businesses",
+    grossIncome: "gross income|revenue|gross revenue",
+    nearTerm: "near-term objectives|near term objectives|short-term goals|short term goals",
+    longTerm: "long-term objectives|long term objectives|long-term goals|long term goals",
+    advantage: "competitive advantage|advantage|strengths",
+    values: "core values|family values|values",
+    swotStrengths: "swot strengths",
+    swotWeaknesses: "swot weaknesses",
+    swotOpportunities: "swot opportunities",
+    swotThreats: "swot threats",
+  };
+  const profile = {};
+  for (const [field, pattern] of Object.entries(aliases)) {
+    const match = String(text).match(new RegExp(`(?:^|\\n)\\s*(?:${pattern})\\s*[:—-]\\s*(.+)`, "im"));
+    if (match?.[1]?.trim()) profile[field] = match[1].trim();
+  }
+  return Object.keys(profile).length ? profile : null;
+};
+
+const downloadRecord = (s, label) => {
+  const rec = buildRecord(s);
+  const stamp = new Date().toISOString().slice(0,10);
+  const safe = String(label||"farm").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,40) || "farm";
+  const blob = new Blob([JSON.stringify(rec, null, 2)], { type:"application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = `mfp-${safe}-${stamp}.json`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url), 1000);
+};
+
+const relTime = (iso) => {
+  if (!iso) return "";
+  const secs = Math.floor((Date.now() - new Date(iso).getTime())/1000);
+  if (secs < 5) return "just now";
+  if (secs < 60) return `${secs}s ago`;
+  if (secs < 3600) return `${Math.floor(secs/60)}m ago`;
+  if (secs < 86400) return `${Math.floor(secs/3600)}h ago`;
+  return new Date(iso).toLocaleDateString();
+};
+
+// Header control: save state, export, import, and start over.
+function DataControls({ state, savedAt, storageOk, onImport, onImportProfile, onClear }) {
+  const [open, setOpen] = useState(false);
+  const [err, setErr] = useState("");
+  const [profileStatus, setProfileStatus] = useState("");
+  const [profileImportOpen, setProfileImportOpen] = useState(false);
+  const [profileJson, setProfileJson] = useState("");
+  const fileRef = useRef(null);
+  const profileFileRef = useRef(null);
+
+  useEffect(() => {
+    const openImport = () => { setErr(""); setProfileStatus(""); setProfileImportOpen(true); };
+    window.addEventListener("mfp:open-profile-import", openImport);
+    return () => window.removeEventListener("mfp:open-profile-import", openImport);
+  }, []);
+
+  const pick = () => { setErr(""); fileRef.current && fileRef.current.click(); };
+  const pickProfile = () => { setErr(""); setProfileStatus(""); setProfileImportOpen(true); };
+  const importProfileJson = (text) => {
+    let parsed = null;
+    try { parsed = JSON.parse(text); }
+    catch (x) { setErr("That profile file could not be read as JSON."); return; }
+    const profile = profileFromMFPExport(parsed);
+    if (!profile) { setErr("No recognizable farm profile fields were found in that file."); return; }
+    if (!window.confirm("Import this Maximum Farm Potential profile? Matching profile fields will be replaced; your module answers will stay intact.")) return;
+    onImportProfile(profile);
+    setProfileStatus(`${Object.keys(profile).length} profile fields imported`);
+    setProfileJson("");
+    setProfileImportOpen(false);
+    setOpen(false);
+  };
+  const handleProfileFile = (e) => {
+    const f = e.target.files && e.target.files[0];
+    e.target.value = "";
+    if (!f) return;
+    setErr("");
+    const reader = new FileReader();
+    reader.onload = () => importProfileJson(reader.result);
+    reader.onerror = () => setErr("That profile file could not be read as JSON.");
+    reader.readAsText(f);
+  };
+  const handleFile = (e) => {
+    const f = e.target.files && e.target.files[0];
+    e.target.value = "";
+    if (!f) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      let parsed = null;
+      try { parsed = JSON.parse(reader.result); }
+      catch (x) { setErr("That file could not be read as JSON."); return; }
+      const bad = validateRecord(parsed);
+      if (bad) { setErr(bad); return; }
+      const when = parsed.savedAt ? new Date(parsed.savedAt).toLocaleString() : "an unknown date";
+      if (!window.confirm(`Load the record saved ${when}?\n\nThis replaces everything currently entered.`)) return;
+      onImport(parsed); setErr(""); setOpen(false);
+    };
+    reader.onerror = () => setErr("That file could not be read.");
+    reader.readAsText(f);
+  };
+
+  return (
+    <div style={{ position:"relative" }}>
+      {profileImportOpen && (
+        <div role="dialog" aria-modal="true" aria-labelledby="mfp-import-title" style={{ position:"fixed", inset:0, zIndex:100, background:"rgba(14,28,57,.42)", display:"flex", alignItems:"center", justifyContent:"center", padding:20 }}>
+          <div style={{ width:"min(560px, 100%)", background:"#fff", borderRadius:12, boxShadow:"0 18px 60px rgba(14,28,57,.28)", padding:24 }}>
+            <div style={{ display:"flex", justifyContent:"space-between", gap:16, alignItems:"flex-start" }}>
+              <div>
+                <div style={eyebrowStyle}>Maximum Farm Potential</div>
+                <h2 id="mfp-import-title" style={{ ...h1Style, fontSize:20 }}>Import your farm profile</h2>
+                <p style={{ ...subStyle, marginBottom:16 }}>Choose a JSON profile export from Maximum Farm Potential, or paste the JSON below. Your existing module answers will stay intact.</p>
+              </div>
+              <button type="button" aria-label="Close import dialog" onClick={() => setProfileImportOpen(false)} style={{ ...btnStyle("ghost"), padding:"4px 9px", fontSize:18, lineHeight:1 }}>×</button>
+            </div>
+  <label style={{ display:"block", border:`1px dashed ${T.blue}`, borderRadius:6, padding:"12px 14px", marginBottom:12, background:T.blueL, color:T.blue, cursor:"pointer", fontSize:13, fontWeight:600, textAlign:"center" }}>
+  Choose Maximum Farm Potential JSON file
+  <input ref={profileFileRef} type="file" accept=".json,application/json" onChange={handleProfileFile} style={{ display:"block", width:"100%", marginTop:8, fontSize:12, fontWeight:400, color:T.fg, cursor:"pointer" }} />
+  </label>
+  <textarea aria-label="Paste Maximum Farm Potential JSON" value={profileJson} onChange={(e) => setProfileJson(e.target.value)} placeholder={'Paste the exported JSON here'} style={{ ...inputStyle(), minHeight:150, resize:"vertical", fontFamily:"ui-monospace, SFMono-Regular, Menlo, monospace", fontSize:12 }} />
+            {err && <div style={{ marginTop:10 }}><Flag type="danger">{err}</Flag></div>}
+            <div style={{ display:"flex", justifyContent:"flex-end", gap:8, marginTop:14 }}>
+              <button type="button" onClick={() => setProfileImportOpen(false)} style={btnStyle("ghost")}>Cancel</button>
+              <button type="button" disabled={!profileJson.trim()} onClick={() => importProfileJson(profileJson)} style={{ ...btnStyle("primary"), opacity: profileJson.trim() ? 1 : .5, cursor: profileJson.trim() ? "pointer" : "not-allowed" }}>Import pasted profile</button>
+            </div>
+          </div>
+        </div>
+      )}
+      <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+        <button onClick={pickProfile} style={{ ...btnStyle("outline"), padding:"6px 12px", fontSize:12, whiteSpace:"nowrap" }}>
+          Import MFP profile
+        </button>
+        <button onClick={()=>setOpen(o=>!o)} style={{ background:"none", border:`1px solid ${T.border}`, borderRadius:5, padding:"6px 12px", cursor:"pointer", font:"inherit", fontSize:12, color:T.fgM, display:"flex", alignItems:"center", gap:7 }}>
+          <span style={{ width:7, height:7, borderRadius:"50%", background: storageOk ? (savedAt ? T.green : T.silver) : T.amber }} />
+          {storageOk ? (savedAt ? `Saved ${relTime(savedAt)}` : "Not saved yet") : "Not saving"}
+        </button>
+      </div>
+      {open && (
+        <>
+          <div onClick={()=>setOpen(false)} style={{ position:"fixed", inset:0, zIndex:40 }} />
+          <div style={{ position:"absolute", right:0, top:"calc(100% + 6px)", width:310, background:"#fff", border:`1px solid ${T.border}`, borderRadius:9, boxShadow:"0 6px 24px rgba(14,28,57,.12)", padding:14, zIndex:41 }}>
+            <div style={{ fontSize:10.5, letterSpacing:"0.13em", textTransform:"uppercase", color:T.fgS, marginBottom:9 }}>Your farm record</div>
+            {storageOk ? (
+              <p style={{ fontSize:12.5, color:T.fgM, margin:"0 0 12px", lineHeight:1.55 }}>
+                Saved on this computer as you work. Nothing is sent anywhere. Close the tab and come back whenever you like.
+              </p>
+            ) : (
+              <div style={{ marginBottom:12 }}><Flag type="warn">This browser is blocking local storage, which usually means private browsing. Your work will be lost on refresh. Export before you close the tab.</Flag></div>
+            )}
+            <button onClick={()=>{ downloadRecord(state, (state.profile||{}).location); setOpen(false); }} style={{ ...btnStyle("primary"), width:"100%", marginBottom:8 }}>Export to a file</button>
+            <button onClick={pick} style={{ ...btnStyle("outline"), width:"100%", marginBottom:8 }}>Import a file</button>
+            <button onClick={pickProfile} style={{ ...btnStyle("outline"), width:"100%", marginBottom:8 }}>Import Maximum Farm Potential profile</button>
+            <input ref={fileRef} type="file" accept=".json,application/json" onChange={handleFile} style={{ display:"none" }} />
+                      {profileStatus && <div style={{ marginBottom:8 }}><Flag type="ok">{profileStatus}. Your Legacy, Financial Analysis, and Revenue Diversification modules can now use the imported profile.</Flag></div>}
+            {err && <div style={{ marginBottom:8 }}><Flag type="danger">{err}</Flag></div>}
+            <button onClick={()=>{ if (window.confirm("Clear everything on this computer and start over?\n\nExport first if you want a copy.")) { onClear(); setOpen(false); } }}
+              style={{ ...btnStyle("ghost"), width:"100%" }}>Start over</button>
+            <p style={{ fontSize:11, color:T.fgS, margin:"11px 0 0", lineHeight:1.5 }}>
+              The exported file is the whole record. Back it up, move it to another computer, or hand it to your lender, accountant, or facilitator.
+            </p>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+// ═══════════════════��═══════���════════════════════════════════════════════════��
+// ROOT APP
+// ═════════════════════════════════════════════���═══════════════════════════════
+// Generic farm SWOT, pre-populated so the quadrants open with a real starting point
+// rather than four empty boxes. Every line is editable and meant to be replaced with
+// the operation's own read once the conversation gets specific.
+const GENERIC_FARM_SWOT = {
+  swotStrengths: "Owned land base and established equity position. Multi-generational operating knowledge and a known local reputation. Long-standing relationships with buyers, lenders, and suppliers. Equipment and infrastructure already in place and paid down.",
+  swotWeaknesses: "Income concentrated in a small number of commodities and buyers. Records kept for tax filing rather than management decisions. No documented succession or transition plan. Limited visibility into cost and margin at the enterprise level.",
+  swotOpportunities: "Underused equipment, storage, and labour capacity across the season. Local and regional demand for direct-marketed or value-added product. Conservation and energy programs that pay for practices already underway. Adjacent ventures that use existing assets without buying land.",
+  swotThreats: "Margin compression as supply chain concentration continues. Input cost and interest rate volatility. Weather variability and more frequent extreme events. An aging operator base and thin local labour availability.",
+};
+
+
+// Generic strategy and values, seeded alongside the SWOT so the glance view opens
+// with a coherent operating picture rather than empty fields.
+const GENERIC_FARM_STRATEGY = {
+  location: "Midwest corn belt, mixed county",
+  size: "1,100 acres owned and rented",
+  productionMix: "Corn and soybean rotation with a small cow-calf herd on marginal ground",
+  ventures: "Custom planting and harvest for two neighbours, on-farm grain storage",
+  grossIncome: "920000",
+  nearTerm: "Complete a written succession plan. Get enterprise-level cost visibility in place before the next operating loan renewal. Hold gross margin steady through the current input cost cycle.",
+  longTerm: "Transition ownership and management to the next generation on agreed terms. Add a second meaningful income stream that does not move with commodity price. Grow the land base slowly, and only where it adjoins existing ground.",
+  advantage: "Long-standing local relationships that surface land and business opportunities before they are publicly listed, paired with a reputation for doing what was agreed.",
+  values: "Leave the operation stronger than it was received. Keep the family involved in the decisions that matter. Farm in a way the next generation can be proud of and the ground can sustain.",
+};
+
+// Illustrative whole-farm financials, seeded so the four health categories compute
+// on first load. Replaced the moment a real operation enters its own numbers.
+const GENERIC_FARM_FINANCIALS = {
+  gross:"920000", opex:"690000", inputs:"310000", rent:"145000", depr:"78000",
+  interest:"52000", acres:"1100", principal:"40000",
+  currentAssets:"480000", currentLiab:"190000",
+  beginAssets:"2850000", beginLiab:"1240000", endAssets:"2960000", endLiab:"1195000",
+  livingWithdrawals:"68000", incomeTaxes:"34000",
+};
+
+const VisionInlineVisual = ({ stageLabel }) => <div style={{ margin:"4px 0 26px", borderRadius:16, overflow:"hidden", border:`1px solid ${T.div}`, background:T.bgAlt }}><img src="/strategic-vision-roadmap.png" alt="Strategic vision roadmap toward a decision-ready farm document" style={{ display:"block", width:"100%", height:150, objectFit:"cover" }} /><div style={{ display:"flex", justifyContent:"space-between", gap:10, padding:"10px 14px", color:T.fgS, fontSize:11.5 }}><span>{stageLabel}</span><span style={{ color:T.green, fontWeight:700 }}>Vision in progress</span></div></div>;
 
 export default function App() {
   const [module, setModule] = useState("vision");
