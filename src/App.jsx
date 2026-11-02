@@ -28,7 +28,7 @@ const FontStyles = () => (
     @media (max-width:760px){.mfp-root{font-size:16px}.mfp-root button{min-height:46px}.mfp-body-shell{padding:20px 16px!important}.mfp-stage-rail{overflow-x:auto!important;padding-bottom:8px}.mfp-stage-rail>div{min-width:145px}}
     @keyframes mfpFade{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
     .mfp-body-anim{animation:mfpFade .32s cubic-bezier(0.16,1,0.3,1);}
-  .mfp-stage-card{max-width:760px;margin:0 auto;width:100%;}
+  .mfp-stage-card{max-width:none;margin:0;width:100%;}
   .mfp-stage-card>*{scroll-margin-top:20px;}
   .mfp-root.mfp-turbotax-flow{background:#f3f6fb!important;color:#17233d;}
   .mfp-root.mfp-turbotax-flow .mfp-flow-header{min-height:74px!important;padding:0 34px!important;border-bottom:1px solid #d5e0ea!important;box-shadow:0 1px 10px rgba(14,28,57,.06);background:#fff!important;}
@@ -47,7 +47,7 @@ const FontStyles = () => (
   .mfp-root.mfp-turbotax-flow .mfp-flow-main>div:first-child{height:66px!important;padding:0 42px!important;background:#fff!important;}
   .mfp-root.mfp-turbotax-flow .mfp-flow-main>div:nth-child(2){height:5px!important;background:#dfe8f0!important;}
   .mfp-root.mfp-turbotax-flow .mfp-flow-main>div:nth-child(2)>div{background:linear-gradient(90deg,#0c4477,#1ca8c9)!important;}
-  .mfp-root.mfp-turbotax-flow .mfp-stage-card{background:#fff;border:1px solid #d5e0ea;border-radius:14px;padding:34px 38px;box-shadow:0 7px 22px rgba(14,28,57,.07);}
+  .mfp-root.mfp-turbotax-flow .mfp-stage-card{background:transparent;border:0;border-radius:0;padding:0;box-shadow:none;}
   .mfp-root.mfp-turbotax-flow .mfp-stage-card h1{font-size:32px!important;line-height:1.2!important;letter-spacing:-.02em!important;color:#17233d;}
   .mfp-root.mfp-turbotax-flow .mfp-stage-card button{border-radius:8px;}
   .mfp-root.mfp-turbotax-flow .mfp-stage-card button[style*="background"]{box-shadow:0 2px 5px rgba(12,68,119,.14);}
@@ -164,9 +164,9 @@ const Head = ({ eyebrow, title, sub }) => (
 // DATA
 // ─────────────────────────────────────────────────────────────────────────────
 const FA_STAGES = [
-  { n:1, label:"Your accounting profile" }, { n:2, label:"Enterprise registry & shared costs" }, { n:3, label:"Goal alignment" }, { n:4, label:"Ratio deep dive" },
-  { n:5, label:"Peer benchmarking" },
-];
+  { n:1, label:"Your accounting profile" }, { n:2, label:"Enterprise registry & shared costs" }, { n:3, label:"Goal alignment" },
+  { n:4, label:"Upload your documents" }, { n:5, label:"Budgeting & working capital" }, { n:6, label:"Ratio deep dive" }, { n:7, label:"Peer benchmarking" },
+  ];
 
 const BOOK_PREPARER = [
   ["self", "I do it myself"], ["family", "My spouse or a family member"], ["bookkeeper", "A bookkeeper we employ"],
@@ -214,24 +214,27 @@ const parseFinancialCsv = (text) => {
 
 function FA0({ fa, setFA }) {
   const p = fa.accounting || {};
+  const q = Number(fa.accountingQuestion || 0);
   const set = (key, value) => setFA(s => ({ ...s, accounting:{ ...(s.accounting||{}), [key]:value } }));
+  const setQ = value => setFA(s => ({ ...s, accountingQuestion: Math.max(0, Math.min(5, value)) }));
   const Option = ({ group, value, children }) => <button type="button" onClick={() => set(group, value)} style={{ display:"block", width:"100%", padding:"13px 15px", marginBottom:8, textAlign:"left", borderRadius:8, border:p[group]===value?`2px solid ${T.blue}`:`1px solid ${T.border}`, background:p[group]===value?T.blueL:"#fff", color:p[group]===value?T.blue:T.navy, cursor:"pointer", fontSize:14, fontWeight:600 }}>{children}</button>;
   return <div>
     <Head eyebrow="Financial Analysis · Stage 1" title="Start with how you keep the books" sub="Every farm tracks costs differently. We will first establish what your numbers mean, so the analysis does not compare apples to oranges or mistake tax timing for business performance." />
-    <div style={cardStyle()}><div style={cardLblStyle()}>What accounting basis do you use?</div>
+    <div style={{ ...cardStyle(), display:q===0?"block":"none" }}><div style={cardLblStyle()}>What accounting basis do you use?</div>
       <Option group="basis" value="cash">Cash basis — I mostly track money when it moves</Option>
       <Option group="basis" value="accrual">Accrual basis — revenue and expenses are matched to the year earned</Option>
       <Option group="basis" value="mixed">A mixture — some parts are accrual, others are cash</Option>
       <div style={{ marginTop:12, color:T.fgS, fontSize:12.5, lineHeight:1.5 }}>Not sure? Choose cash basis. The next stages will show which adjustments matter and let you use estimates.</div>
     </div>
-    {p.basis && p.basis !== "accrual" && <div style={cardStyle()}><div style={cardLblStyle()}>What may distort the tax picture?</div><p style={{ margin:"0 0 12px", color:T.fgM, fontSize:13, lineHeight:1.5 }}>These are common tax-management decisions—not mistakes. We ask because tax records and business performance answer different questions.</p>{TAX_DISTORTIONS.map(([id,label,note])=><label key={id} style={{ display:"flex", gap:10, alignItems:"flex-start", padding:"10px 0", borderBottom:`1px solid ${T.div}`, cursor:"pointer" }}><input type="checkbox" checked={p.distortions?.[id] === "yes"} onChange={e=>set("distortions",{ ...(p.distortions||{}), [id]:e.target.checked?"yes":"no" })} style={{ marginTop:3 }} /><span><strong style={{ display:"block", color:T.navy, fontSize:13 }}>{label}</strong><span style={{ color:T.fgS, fontSize:12 }}>{note}</span></span></label>)}</div>}
-    {p.basis && p.basis !== "accrual" && <div style={cardStyle()}><div style={cardLblStyle()}>Can we convert cash results when needed?</div><p style={{ margin:"0 0 12px", color:T.fgM, fontSize:13, lineHeight:1.5 }}>A balance-sheet conversion improves comparability. Only confirm what you can actually provide.</p>{CONVERSION_CHECKS.map((label,i)=><label key={label} style={{ display:"flex", gap:10, alignItems:"center", padding:"9px 0", fontSize:13 }}><input type="checkbox" checked={p.conv?.[i] === "yes"} onChange={e=>set("conv",{ ...(p.conv||{}), [i]:e.target.checked?"yes":"no" })} /><span>{label}</span></label>)}</div>}
-    <div style={cardStyle()}><div style={cardLblStyle()}>Who prepares your financial records?</div>{BOOK_PREPARER.map(([id,label])=><Option key={id} group="preparer" value={id}>{label}</Option>)}</div>
-    <div style={cardStyle()}><div style={cardLblStyle()}>Where do you keep the records?</div>{BOOK_SYSTEM.map(([id,label])=><Option key={id} group="system" value={id}>{label}</Option>)}</div>
-    <div style={cardStyle()}><div style={cardLblStyle()}>Import transactions for a first-pass categorization</div><div style={{ color:T.fgM, fontSize:13, lineHeight:1.5, marginBottom:12 }}>Upload a CSV exported from your bank, bookkeeping system, or spreadsheet. We suggest categories from the description and flag shared expenses for your review. Your file stays in this working session.</div><input type="file" accept=".csv,text/csv" onChange={e=>{ const file=e.target.files?.[0]; if(!file) return; const reader=new FileReader(); reader.onload=ev=>setFA(s=>({ ...s, csvTransactions:parseFinancialCsv(String(ev.target.result||"")) })); reader.readAsText(file); }} style={{ width:"100%", padding:"10px", border:`1px dashed ${T.blue}`, borderRadius:8, background:T.blueL }} />
+    {p.basis && p.basis !== "accrual" && <div style={{ ...cardStyle(), display:q>=3?"block":"none" }}><div style={cardLblStyle()}>What may distort the tax picture?</div><p style={{ margin:"0 0 12px", color:T.fgM, fontSize:13, lineHeight:1.5 }}>These are common tax-management decisions—not mistakes. We ask because tax records and business performance answer different questions.</p>{TAX_DISTORTIONS.map(([id,label,note])=><label key={id} style={{ display:"flex", gap:10, alignItems:"flex-start", padding:"10px 0", borderBottom:`1px solid ${T.div}`, cursor:"pointer" }}><input type="checkbox" checked={p.distortions?.[id] === "yes"} onChange={e=>set("distortions",{ ...(p.distortions||{}), [id]:e.target.checked?"yes":"no" })} style={{ marginTop:3 }} /><span><strong style={{ display:"block", color:T.navy, fontSize:13 }}>{label}</strong><span style={{ color:T.fgS, fontSize:12 }}>{note}</span></span></label>)}</div>}
+    {p.basis && p.basis !== "accrual" && <div style={{ ...cardStyle(), display:q>=3?"block":"none" }}><div style={cardLblStyle()}>Can we convert cash results when needed?</div><p style={{ margin:"0 0 12px", color:T.fgM, fontSize:13, lineHeight:1.5 }}>A balance-sheet conversion improves comparability. Only confirm what you can actually provide.</p>{CONVERSION_CHECKS.map((label,i)=><label key={label} style={{ display:"flex", gap:10, alignItems:"center", padding:"9px 0", fontSize:13 }}><input type="checkbox" checked={p.conv?.[i] === "yes"} onChange={e=>set("conv",{ ...(p.conv||{}), [i]:e.target.checked?"yes":"no" })} /><span>{label}</span></label>)}</div>}
+    <div style={{ ...cardStyle(), display:q===1?"block":"none" }}><div style={cardLblStyle()}>Who prepares your financial records?</div>{BOOK_PREPARER.map(([id,label])=><Option key={id} group="preparer" value={id}>{label}</Option>)}</div>
+    <div style={{ ...cardStyle(), display:q===2?"block":"none" }}><div style={cardLblStyle()}>Where do you keep the records?</div>{BOOK_SYSTEM.map(([id,label])=><Option key={id} group="system" value={id}>{label}</Option>)}</div>
+    <div style={{ ...cardStyle(), display:q===3?"block":"none" }}><div style={cardLblStyle()}>Import transactions for a first-pass categorization</div><div style={{ color:T.fgM, fontSize:13, lineHeight:1.5, marginBottom:12 }}>Upload a CSV exported from your bank, bookkeeping system, or spreadsheet. We suggest categories from the description and flag shared expenses for your review. Your file stays in this working session.</div><input type="file" accept=".csv,text/csv" onChange={e=>{ const file=e.target.files?.[0]; if(!file) return; const reader=new FileReader(); reader.onload=ev=>setFA(s=>({ ...s, csvTransactions:parseFinancialCsv(String(ev.target.result||"")) })); reader.readAsText(file); }} style={{ width:"100%", padding:"10px", border:`1px dashed ${T.blue}`, borderRadius:8, background:T.blueL }} />
       {(fa.csvTransactions||[]).length>0 && <div style={{ marginTop:16 }}><div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:8 }}><strong>{fa.csvTransactions.length} transactions ready for review</strong><span style={{ fontSize:12, color:T.fgS }}>Suggestions are not final</span></div><div style={{ overflowX:"auto", border:`1px solid ${T.border}`, borderRadius:8 }}><table style={{ width:"100%", borderCollapse:"collapse", fontSize:12 }}><thead><tr>{["Description","Amount","Suggested category","Allocation","Why / action"].map(h=><th key={h} style={{ textAlign:"left", padding:"9px 10px", background:T.bgAlt, color:T.fgM, whiteSpace:"nowrap" }}>{h}</th>)}</tr></thead><tbody>{fa.csvTransactions.slice(0,50).map((row,i)=>{ const desc=row.Description||row.description||row.Memo||row.memo||Object.values(row)[0]||"Transaction"; const amount=row.Amount||row.amount||row.Debit||row.debit||"—"; return <tr key={row.id||i}><td style={{ padding:"8px 10px", borderTop:`1px solid ${T.div}` }}>{desc}</td><td style={{ padding:"8px 10px", borderTop:`1px solid ${T.div}`, whiteSpace:"nowrap" }}>{amount}</td><td style={{ padding:"8px 10px", borderTop:`1px solid ${T.div}` }}><select value={row.category} onChange={e=>setFA(s=>({...s,csvTransactions:s.csvTransactions.map((r,j)=>j===i?{...r,category:e.target.value,confidence:"Reviewed"}:r)}))} style={{ ...inputStyle(), minHeight:34, padding:"4px 8px", fontSize:12 }}>{FINANCIAL_CATEGORIES.map(c=><option key={c}>{c}</option>)}</select></td><td style={{ padding:"8px 10px", borderTop:`1px solid ${T.div}`, minWidth:130 }}><input type="range" min="0" max="100" step="25" value={row.allocation??100} onChange={e=>setFA(s=>({...s,csvTransactions:s.csvTransactions.map((r,j)=>j===i?{...r,allocation:Number(e.target.value),category:Number(e.target.value)<100?"Shared / allocate":r.category,confidence:"Reviewed"}:r)}))} /><div style={{ fontSize:11, color:T.fgM }}>{row.allocation??100}% to selected enterprise</div></td><td style={{ padding:"8px 10px", borderTop:`1px solid ${T.div}`, color:row.confidence==="Needs review"||row.confidence==="Review"?T.amberT:T.dgreen }}>{row.confidence==="Review"?"Shared expense — allocate across enterprises":row.confidence}</td></tr>})}</tbody></table></div>{fa.csvTransactions.length>50&&<div style={{ fontSize:12, color:T.fgS, marginTop:6 }}>Showing the first 50 rows. All imported rows remain available for the analysis.</div>}</div>}
     </div>
-    <div style={cardStyle({ background:T.blueL, borderColor:"#c8d9e8" })}><div style={{ display:"flex", gap:10, alignItems:"flex-start" }}><IconChart color={T.blue} size={20} /><div><div style={{ fontWeight:700, color:T.navy }}>Why this comes first</div><div style={{ color:T.fgM, fontSize:13, lineHeight:1.5, marginTop:3 }}>Tax records can be perfectly correct and still be the wrong starting point for enterprise profitability. Your answers determine which ratios can be compared confidently and where we should ask for a balance-sheet adjustment.</div></div></div></div>
+    <div style={{ ...cardStyle({ background:T.blueL, borderColor:"#c8d9e8" }), display:q>=3?"block":"none" }}><div style={{ display:"flex", gap:10, alignItems:"flex-start" }}><IconChart color={T.blue} size={20} /><div><div style={{ fontWeight:700, color:T.navy }}>Why this comes first</div><div style={{ color:T.fgM, fontSize:13, lineHeight:1.5, marginTop:3 }}>Tax records can be perfectly correct and still be the wrong starting point for enterprise profitability. Your answers determine which ratios can be compared confidently and where we should ask for a balance-sheet adjustment.</div></div></div></div>
+    <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:16, margin:"24px 0 18px", paddingTop:18, borderTop:`1px solid ${T.div}` }}><button type="button" onClick={()=>setQ(q-1)} disabled={q===0} style={{ ...btnStyle("ghost"), opacity:q===0?0.45:1 }}>← Previous</button><div style={{ display:"flex", alignItems:"center", gap:7 }}>{["Accounting basis","Preparer","Records","Transactions","Tax timing","Conversion"].map((label,i)=><button key={label} type="button" aria-label={label} onClick={()=>setQ(i)} style={{ width:7, height:7, minWidth:7, border:0, borderRadius:"50%", padding:0, background:i===q?T.blue:T.border, cursor:"pointer" }} />)}</div><button type="button" onClick={()=>setQ(q+1)} disabled={q===5} style={{ ...btnStyle("primary"), opacity:q===5?0.55:1 }}>{q>=3?"Continue to enterprise profile →":"Next question →"}</button></div>
   </div>;
 }
 const RD_STAGES = [
@@ -809,7 +812,7 @@ function FA3({ fa, setFA }) {
   ];
   return (
     <div>
-      <Head eyebrow="Financial Analysis · Stage 4" title="Ratio deep dive" sub="Enter your financial data — from your MFP Financial Data Worksheet, your own records, or your best estimate. Ratios calculate automatically as you type." />
+      <Head eyebrow="Financial Analysis · Stage 6" title="Ratio deep dive" sub="Enter your financial data — from your MFP Financial Data Worksheet, your own records, or your best estimate. Ratios calculate automatically as you type." />
       <DocumentScanUpload fa={fa} setFA={setFA} />
       <div style={cardStyle()}>
         <div style={cardLblStyle()}>Financial data</div>
@@ -900,7 +903,7 @@ function FA3({ fa, setFA }) {
   );
 }
 
-// ───────────────────────────────────────────��─────────────────────────────────
+// ────────────���───────────────��──────────────���─────────────────────────────────
 // FA STAGE 4 — Peer benchmarking
 // ─────────────────────────────────────────────────────────────────────────────
 function FA4({ fa, setFA }) {
@@ -914,7 +917,7 @@ function FA4({ fa, setFA }) {
   const unitSuf = bb => bb.unit==="%"?"%":bb.unit==="x"?"x":"";
   return (
     <div>
-      <Head eyebrow="Financial Analysis · Stage 5" title="Peer benchmarking" sub="Compeer Financial and IFBA 2023–24 data. Mid-size row crop, $500K–$5M revenue, Midwest region." />
+      <Head eyebrow="Financial Analysis · Stage 7" title="Peer benchmarking" sub="Compeer Financial and IFBA 2023–24 data. Mid-size row crop, $500K–$5M revenue, Midwest region." />
       <div style={cardStyle()}>
         <div style={cardLblStyle()}>Enter your values</div>
         <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:14 }}>
@@ -2532,7 +2535,7 @@ const scoredOpps = (rd, faEnterprises, faS3vals) => { const d=rd.data||{}; const
     if (sizeMatch) leverMatch = leverMatch * 1.15; // modest boost for farms this opportunity typically suits
     if (o.entSpecific && !entMatch) leverMatch = leverMatch * 0.15; // heavily suppress enterprise-specific paths that don't apply
     if (isRelevant) leverMatch = leverMatch * 1.2; // boost — this complements an enterprise the farm already runs
-    if (isExcluded) leverMatch = leverMatch * 0.2; // heavily suppress — this isn't diversification if you already run it
+    if (isExcluded) leverMatch = leverMatch * 0.2; // heavily suppress ��� this isn't diversification if you already run it
 
     // Financial-health adjustment, embedded directly from FA Stage 3's ratios
     let faAdj = 1;
@@ -2815,9 +2818,9 @@ function RD4({ rd, setRData, fa }) {
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────��───────
 // RD STAGE 5 — Barrier identification
-// ─────────��───────────────────────────────────────────────────────────────────
+// ────────����───────────────────────────────────────────────────────────────────
 // Cross-cutting regulatory & compliance checklist — surfaces for any selected path with
 // meaningful regulatory load (reg >= 3), independent of that path's specific barrier list.
 const COMPLIANCE_ITEMS = {
@@ -2884,7 +2887,7 @@ function RD5({ rd, setRData }) {
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// ────────────────────────────────────────────────────────────────────��───����────
 // RD STAGE 6 — Policy & grant enablers
 // ────────────────────────────────────────────────────────────────────────��────
 // Deliberately mirrors Barrier Identification's structure — same per-opportunity card
@@ -3335,7 +3338,7 @@ const FindingBlock = ({ kind, tag, heading, source, children }) => {
 
 // ═══════════════════��══��════════���═════════════════════════════════════════════
 // ACTION PLAN — twelve business areas, ranked into three priorities
-// ════════════════════════════════���═════════════════════════════════════���══════
+// ═════════════════════════════���══���═════════════════════════════════════���══════
 // Areas map to one of the four MFP categories, and some map to a guided module.
 // Ranking is weight-aware: a constraint area gates everything downstream, a value
 // area produces the largest near-term lift, so neither is ranked on raw score alone.
@@ -3624,7 +3627,7 @@ function FarmProfilePage({ profile, setProfile, fa, rd, goFA, goRD, goRisk, goLe
                     <p style={{ fontSize:11, color:T.fgS, margin:0, whiteSpace:"nowrap" }}>{t[1]}</p>
                   </div>
                   <p style={{ fontSize:12.5, color:T.fgM, margin:"4px 0 8px" }}>{t[2]}</p>
-                  <p style={{ fontSize:12, color:T.green, margin:0 }}>▸ {t[3]}</p>
+                  <p style={{ fontSize:12, color:T.green, margin:0 }}>��� {t[3]}</p>
                 </div>
               ))}
             </div>
@@ -3982,7 +3985,7 @@ const legRow = (label, children, sub) => {
   );
 };
 
-// ═════════════════════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════��══════════════���══════════════════
 // LAND VALUATION �� Phase 1 engine
 // ═════════════════════════════════════════════════════════════════════════════
 // Land class routes to a method rather than one model with adjustments bolted on.
@@ -5008,7 +5011,7 @@ function LEG12({ leg, setLegData, profile }) {
 }
 
 
-// ═════════════════════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════════���════════
 // SUCCESSOR TRACK
 // ═════════════════════════════════════════════════════════════════════════════
 // Written to the successor, not about them. Their entry point is not "help plan a
@@ -5558,10 +5561,12 @@ function VIS1({ vis, setVis, profile, goProfile }) {
   const items = (vis.items || []).filter(i => i.kind === "advantage");
   const carouselRef = useRef(null);
   const [activeAdvantage, setActiveAdvantage] = useState(0);
+  const [draftAdvantage, setDraftAdvantage] = useState("");
   const seeded = !!vis.seeded;
   const seed = () => setVis({ items: visSeedItems(profile).filter(i => i.kind === "advantage"), seeded:true });
   const setItem = (id, patch) => setVis({ items: (vis.items || []).map(i => i.id===id ? {...i,...patch} : i) });
   const add = () => setVis({ items:[...(vis.items || []), { id:"custom-"+Date.now(), kind:"advantage", sourceLabel:"Added here", text:"", tests:{}, verdict:"untested" }], seeded:true });
+  const addDraft = () => { if (!draftAdvantage.trim()) return; setVis({ items:[...(vis.items||[]), { id:"custom-"+Date.now(), kind:"advantage", sourceLabel:"Added here", text:draftAdvantage.trim(), tests:{}, verdict:"untested" }], seeded:true }); setDraftAdvantage(""); };
   const remove = (id) => setVis({ items: items.filter(i => i.id!==id) });
   const hasProfile = ["advantage","values","nearTerm","longTerm"].some(f => (profile||{})[f] && String(profile[f]).trim());
 
@@ -5572,16 +5577,18 @@ function VIS1({ vis, setVis, profile, goProfile }) {
         <div style={cardLblStyle()}>Why this matters</div>
         <p style={{ fontSize:14, color:T.fgM, lineHeight:1.65, margin:0 }}>A competitive advantage is more than working hard or producing quality. It is a capability, relationship, reputation, location, or way of operating that creates value and is difficult for another farm to copy. Naming it clearly helps you protect it, invest in it, and make better decisions about where the business is headed.</p>
       </div>
-      {!hasProfile && (
-        <Flag type="warn">Your Farm Profile does not have competitive advantage, core values, or objectives filled in yet. You can add items here directly, but filling the profile first gives this module something to work with.
+      {!hasProfile && (<>
+        <Flag type="warn">Your Farm Profile does not have competitive advantage, core values, or objectives filled in yet. You can add items here directly, or fill the profile first.
           {goProfile && <div style={{ marginTop:9 }}><button onClick={goProfile} style={{ ...btnStyle("outline"), fontSize:12, padding:"6px 13px" }}>Open Farm Profile</button></div>}
         </Flag>
-      )}
+        <div style={cardStyle({ borderTop:`4px solid ${T.moss}` })}><div style={cardLblStyle()}>What makes this farm hard to copy?</div><p style={{ fontSize:14, color:T.fgM, lineHeight:1.6, marginTop:0 }}>Think about a capability, relationship, reputation, location, or way of operating that creates value for customers, employees, landlords, or partners.</p><textarea value={draftAdvantage} onChange={e=>setDraftAdvantage(e.target.value)} placeholder="In one or two sentences, what is this operation especially good at?" style={inputStyle({ minHeight:100, fontSize:14 })} /><button type="button" onClick={addDraft} disabled={!draftAdvantage.trim()} style={{ ...btnStyle("primary"), marginTop:12, opacity:draftAdvantage.trim()?1:0.5 }}>Save competitive advantage →</button></div>
+      </>)}
       {!seeded && hasProfile && (
         <div style={cardStyle({ borderTop:`4px solid ${T.moss}` })}>
           <div style={cardLblStyle()}>Pull it forward</div>
           <p style={{ fontSize:14, color:T.fgM, marginTop:0, lineHeight:1.6 }}>Your profile already holds competitive advantage, core values, and near and long-term objectives. This breaks them into separate claims so each one can be tested on its own.</p>
           <button onClick={seed} style={btnStyle("primary")}>Bring in what I have written →</button>
+          <div style={{ marginTop:18, paddingTop:18, borderTop:`1px solid ${T.div}` }}><div style={cardLblStyle()}>Or answer this directly</div><p style={{ fontSize:13.5, color:T.fgM, lineHeight:1.6, marginTop:0 }}>What makes this operation especially good at creating value or difficult for another farm to copy?</p><textarea value={draftAdvantage} onChange={e=>setDraftAdvantage(e.target.value)} placeholder="Describe the capability, relationship, reputation, location, or way of operating..." style={inputStyle({ minHeight:100, fontSize:14 })} /><button type="button" onClick={addDraft} disabled={!draftAdvantage.trim()} style={{ ...btnStyle("outline"), marginTop:10, opacity:draftAdvantage.trim()?1:0.5 }}>Save my answer →</button></div>
         </div>
       )}
       {items.length > 0 && (
@@ -5996,17 +6003,19 @@ function VIS7({ vis, setVis, profile }) {
 
 
 // ── Vision 8 — Farm profile and SWOT ─────────────────────────────────────
-function VIS_PROFILE({ vis, profile, setProfile, goFA }) {
+function VIS_PROFILE({ vis, profile, setProfile, goFA, fa }) {
   const advantages = (vis.items||[]).filter(i=>i.kind==="advantage" && i.text?.trim()).map(i=>i.text.trim());
   const values = (vis.items||[]).filter(i=>i.kind==="value" && i.text?.trim()).map(i=>i.text.trim());
-  const strengths = advantages.length ? advantages : [profile.advantage || "Your farm's distinctive strengths will appear here after you test the vision."];
-  const weaknesses = values.length ? values.map(v=>`Capacity or trade-off: ${v}`) : ["Name the constraint that could make the vision hard to deliver."];
-  const opportunities = [profile.nearTerm, profile.longTerm].filter(Boolean);
-  const threats = [profile.productionMix, profile.ventures].filter(Boolean);
-  const swot = { strengths, weaknesses, opportunities:opportunities.length?opportunities:["Add a near-term opportunity in your vision."], threats:threats.length?threats:["Add an external condition that could change the plan."] };
-  const save = () => setProfile(p=>({ ...p, swotStrengths:swot.strengths.join("; "), swotWeaknesses:swot.weaknesses.join("; "), swotOpportunities:swot.opportunities.join("; "), swotThreats:swot.threats.join("; "), advantage:swot.strengths.join("; "), values:values.join("; ") }));
-  const box = (title, items, color) => <div style={cardStyle({ marginBottom:0, borderTop:`4px solid ${color}` })}><div style={cardLblStyle()}>{title}</div>{items.map((item,i)=><div key={i} style={{ padding:"9px 0", borderBottom:i<items.length-1?`1px solid ${T.div}`:"none", color:T.fgM, fontSize:13.5, lineHeight:1.5 }}>{item}</div>)}</div>;
-  return <div><Head eyebrow="Strategic Vision · Farm profile" title="Your farm profile and SWOT" sub="This is the working profile generated from what you said—not a generic score. Confirm it, then Eagle Eye can use it to filter signals and explain what matters to your farm." /><div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(260px,1fr))", gap:14 }}>{box("Strengths",swot.strengths,T.green)}{box("Weaknesses / trade-offs",swot.weaknesses,T.amber)}{box("Opportunities",swot.opportunities,T.blue)}{box("Threats / conditions",swot.threats,T.red)}</div><div style={cardStyle({ background:T.blueL, borderColor:"#c8d9e8", marginTop:16 })}><strong>Use this profile across MFP</strong><p style={{ margin:"5px 0 13px", color:T.fgM, fontSize:13, lineHeight:1.5 }}>Saving this profile makes it available to Eagle Eye Intelligence, Financial Analysis, Revenue Diversification, and Farm Risk. You can revise it later as your priorities change.</p><button type="button" onClick={() => { save(); goFA(1); }} style={btnStyle("primary")}>Save profile and continue to Financial Analysis →</button></div></div>;
+  const hasVisionInputs = advantages.length > 0 || values.length > 0 || !!vis.seeded;
+  const [draft, setDraft] = useState(profile||{});
+  const [profileTab, setProfileTab] = useState("profile");
+  const update = key => e => setDraft(s=>({ ...s, [key]:e.target.value }));
+  const importJSON = e => { const file=e.target.files?.[0]; e.target.value=""; if(!file) return; const reader=new FileReader(); reader.onload=()=>{ try { const imported=profileFromMFPExport(JSON.parse(reader.result)); if(imported) { setDraft(s=>({ ...s, ...imported })); setProfile(s=>({ ...s, ...imported })); } } catch { /* Invalid files stay out of the working profile. */ } }; reader.readAsText(file); };
+  const save = () => setProfile(s=>({ ...s, ...draft, swotStrengths:advantages.join("; ") || draft.swotStrengths || "", swotWeaknesses:draft.swotWeaknesses||"", swotOpportunities:draft.swotOpportunities||draft.nearTerm||"", swotThreats:draft.swotThreats||draft.productionMix||"" }));
+  const field = (label,key,placeholder,multi=false) => <label style={{ ...labelStyle, display:"block" }}>{label}{multi?<textarea value={draft[key]||""} onChange={update(key)} placeholder={placeholder} style={inputStyle({ minHeight:70, marginTop:6 })} />:<input value={draft[key]||""} onChange={update(key)} placeholder={placeholder} style={inputStyle({ marginTop:6 })} />}</label>;
+  const box = (title, text, color) => <div style={cardStyle({ marginBottom:0, borderTop:`4px solid ${color}` })}><div style={cardLblStyle()}>{title}</div><div style={{ color:text?T.fgM:T.fgS, fontSize:13.5, lineHeight:1.5 }}>{text || "This section will populate after the Strategic Vision intake or a JSON profile import."}</div></div>;
+  const swot = { strengths:advantages.join("; "), weaknesses:draft.swotWeaknesses, opportunities:draft.swotOpportunities||draft.nearTerm, threats:draft.swotThreats||draft.productionMix };
+  return <div><Head eyebrow="Strategic Vision · Profile and SWOT" title="Farm profile and SWOT" sub="This section combines the farm profile, JSON import, and vision-derived SWOT. It stays intentionally empty until the first two vision steps or an uploaded profile provide content." /><div style={{ display:"flex", gap:24, alignItems:"flex-end", borderBottom:`1px solid ${T.border}`, marginBottom:24 }}><button type="button" onClick={()=>setProfileTab("profile")} style={{ background:"none", border:0, borderBottom:`3px solid ${profileTab==="profile"?T.blue:"transparent"}`, padding:"0 2px 12px", color:profileTab==="profile"?T.blue:T.fgS, fontWeight:700, cursor:"pointer" }}>Farm Profile</button><button type="button" onClick={()=>setProfileTab("swot")} style={{ background:"none", border:0, borderBottom:`3px solid ${profileTab==="swot"?T.blue:"transparent"}`, padding:"0 2px 12px", color:profileTab==="swot"?T.blue:T.fgS, fontWeight:700, cursor:"pointer" }}>Farm SWOT</button><button type="button" onClick={()=>setProfileTab("glance")} style={{ background:"none", border:0, borderBottom:`3px solid ${profileTab==="glance"?T.blue:"transparent"}`, padding:"0 2px 12px", color:profileTab==="glance"?T.blue:T.fgS, fontWeight:700, cursor:"pointer" }}>Business at a glance</button></div><div style={{ display:profileTab==="profile"?"block":"none" }}><div style={cardStyle({ borderTop:`4px solid ${T.blue}` })}><div style={cardLblStyle()}>Bring in an existing profile</div><p style={{ color:T.fgM, fontSize:13.5, lineHeight:1.5, marginTop:0 }}>Upload a Maximum Farm Potential JSON export to prefill these fields. The import stays in this working session until you save it.</p><input type="file" accept=".json,application/json" onChange={importJSON} /></div><div style={cardStyle()}><div style={cardLblStyle()}>Farm profile</div>{field("Farm name","name","e.g., Jensen Family Farms")}{field("Location","location","State and county")}{field("Size and production mix","productionMix","Acres, livestock, and primary enterprises",true)}{field("Business ventures beyond production","ventures","Services, shops, leases, or other ventures",true)}{field("Near-term objective","nearTerm","What should improve in the next 1–3 years?",true)}{field("Long-term direction","longTerm","Where is the farm headed?",true)}{field("Core values","values","What will this operation not trade away?",true)}{field("Competitive advantage","advantage","What makes this operation difficult to copy?",true)}</div></div><div style={{ display:profileTab==="swot"?"block":"none" }}><div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(250px,1fr))", gap:14 }}>{box("Strengths",hasVisionInputs?swot.strengths:"",T.green)}{box("Weaknesses / trade-offs",hasVisionInputs?swot.weaknesses:"",T.amber)}{box("Opportunities",hasVisionInputs?swot.opportunities:"",T.blue)}{box("Threats / conditions",hasVisionInputs?swot.threats:"",T.red)}</div></div><div style={{ display:profileTab==="glance"?"block":"none" }}><div style={cardStyle()}><div style={cardLblStyle()}>Business at a glance</div><div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))", gap:12 }}>{[["Farm name",draft.name],["Location",draft.location],["Production mix",draft.productionMix],["Near-term direction",draft.nearTerm],["Financial basis",fa?.accounting?.basis],["Working capital",fa?.budget ? `$${((Number(fa.budget.cash)||0)+(Number(fa.budget.line)||0)-(Number(fa.budget.committed)||0)-(Number(fa.budget.debt)||0)).toLocaleString()}` : ""]].map(([label,value])=><div key={label} style={{ padding:14, background:value?T.bgAlt:"#f2f4f6", borderRadius:8, color:value?T.navy:T.fgS }}><div style={{ fontSize:11, fontWeight:700, textTransform:"uppercase", letterSpacing:"0.05em", marginBottom:5 }}>{label}</div><div style={{ fontSize:14 }}>{value||"Not updated yet"}</div></div>)}</div><p style={{ color:T.fgS, fontSize:12.5, lineHeight:1.5, marginBottom:0 }}>Financial values update from Financial Analysis as records, budgets, and working capital assumptions are completed.</p></div></div><div style={cardStyle({ background:T.blueL, borderColor:"#c8d9e8", marginTop:16 })}><strong>Save profile for Eagle Eye and MFP modules</strong><p style={{ margin:"5px 0 13px", color:T.fgM, fontSize:13, lineHeight:1.5 }}>Saving makes the profile available to Eagle Eye Intelligence, Financial Analysis, Revenue Diversification, and Farm Risk.</p><button type="button" onClick={() => { save(); goFA(1); }} style={btnStyle("primary")}>Save profile and continue to Financial Analysis →</button></div></div>;
 }
 
 // ── Vision 9 — The document ────────────────────���─────────────────────────────
@@ -6623,9 +6632,19 @@ else if (isRD) { if (rd.stage<rdTotal) goRD(rd.stage+1); else goLegacy(1); }
   if (isLeg && leg.stage===legTotal) nextLabel = "Farm Risk →";
   if (isRisk && risk.stage===riskTotal) nextLabel = "Start over ↺";
 
-const FA_BODY = [
+  function FADocuments({ fa, setFA }) {
+    const docs = fa.documents || [];
+    const addDocs = (files) => setFA(s => ({ ...s, documents:[...(s.documents||[]), ...Array.from(files).map(file => ({ id:`doc-${Date.now()}-${file.name}`, name:file.name, size:file.size, type:file.type || "Document", status:"Ready for review" }))] }));
+    const remove = id => setFA(s => ({ ...s, documents:(s.documents||[]).filter(doc=>doc.id!==id) }));
+    return <div><Head eyebrow="Financial Analysis · Stage 4" title="Upload your documents" sub="Bring the records you already have. We will use them to reduce re-entry, identify missing periods, and make the analysis easier to explain—not silently decide what a number means." /><div style={cardStyle({ borderTop:`4px solid ${T.blue}` })}><div style={cardLblStyle()}>Choose files to review</div><p style={{ color:T.fgM, fontSize:13.5, lineHeight:1.6, marginTop:0 }}>Upload statements, enterprise reports, tax summaries, budgets, or CSV exports. PDF, CSV, XLS, XLSX, and common image files are supported.</p><input type="file" multiple accept=".pdf,.csv,.xls,.xlsx,.png,.jpg,.jpeg" onChange={e=>addDocs(e.target.files)} style={{ width:"100%", padding:16, border:`1px dashed ${T.blue}`, borderRadius:8, background:T.blueL }} /><div style={{ marginTop:10, color:T.fgS, fontSize:12 }}>Documents remain associated with this analysis session until you confirm what should be used.</div></div>{docs.length===0?<div style={cardStyle({ background:T.bgAlt })}><div style={{ color:T.fgM, fontSize:13.5 }}>No documents uploaded yet. You can continue with estimates, or add the records you trust most.</div></div>:<div style={cardStyle()}><div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}><div style={cardLblStyle()}>Documents in this analysis</div><span style={{ fontSize:12, color:T.fgS }}>{docs.length} file{docs.length===1?"":"s"}</span></div>{docs.map(doc=><div key={doc.id} style={{ display:"flex", justifyContent:"space-between", gap:12, alignItems:"center", padding:"11px 0", borderBottom:`1px solid ${T.div}` }}><div><strong style={{ color:T.navy, fontSize:13 }}>{doc.name}</strong><div style={{ color:T.fgS, fontSize:12, marginTop:3 }}>{doc.type} · {Math.max(1,Math.round(doc.size/1024))} KB · {doc.status}</div></div><button type="button" onClick={()=>remove(doc.id)} style={btnStyle("ghost")}>Remove</button></div>)}</div>}<div style={cardStyle({ background:T.blueL, borderColor:"#c8d9e8" })}><strong>Review before using</strong><p style={{ margin:"5px 0 0", color:T.fgM, fontSize:13, lineHeight:1.5 }}>A document can be accurate and still use a different period, allocation method, or accounting basis. The next steps keep source and assumption visible.</p></div></div>;
+  }
+  function FABudget({ fa, setFA }) {
+    const b=fa.budget||{}; const set=(key,value)=>setFA(s=>({...s,budget:{...(s.budget||{}),[key]:value}})); const n=k=>Number(b[k])||0; const available=n("cash")+n("line")-n("committed")-n("debt"); const gap=Math.max(0,-available); const fields=[["cash","Cash available today","0"],["line","Available operating line","0"],["committed","Committed bills and inputs","0"],["debt","Debt service due before next receipts","0"],["receipts","Expected receipts before next major payment","0"]];
+    return <div><Head eyebrow="Financial Analysis · Stage 5" title="Budgeting and working capital" sub="A profitable year can still create a cash squeeze. This view separates what the business earns from when cash arrives and when obligations come due." /><div style={cardStyle()}><div style={cardLblStyle()}>Near-term cash position</div><div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(190px,1fr))", gap:12 }}>{fields.map(([key,label,placeholder])=><label key={key} style={labelStyle}>{label}<input type="number" min="0" step="100" placeholder={placeholder} value={b[key]||""} onChange={e=>set(key,e.target.value)} style={inputStyle()} /></label>)}</div></div><div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))", gap:14 }}><div style={cardStyle({ borderTop:`4px solid ${available>=0?T.green:T.red}`, marginBottom:0 })}><div style={cardLblStyle()}>Working capital before receipts</div><div style={{ fontSize:30, fontWeight:800, color:available>=0?T.green:T.red }}>{available<0?"-":""}${Math.abs(available).toLocaleString()}</div><div style={{ color:T.fgM, fontSize:13, marginTop:5 }}>{available>=0?"Positive room after committed obligations.":`Potential shortfall of $${gap.toLocaleString()} before the next receipts.`}</div></div><div style={cardStyle({ borderTop:`4px solid ${T.blue}`, marginBottom:0 })}><div style={cardLblStyle()}>Receipts to plan against</div><div style={{ fontSize:30, fontWeight:800, color:T.blue }}>${n("receipts").toLocaleString()}</div><div style={{ color:T.fgM, fontSize:13, marginTop:5 }}>Use confirmed timing where possible; estimates should be labeled.</div></div></div><div style={cardStyle({ background:T.blueL, borderColor:"#c8d9e8" })}><strong>What this is for</strong><p style={{ margin:"5px 0 0", color:T.fgM, fontSize:13, lineHeight:1.5 }}>This is a planning screen, not a borrowing recommendation. It highlights when to ask your accountant, lender, or advisor to review timing, terms, and contingency options.</p></div></div>;
+  }
+  const FA_BODY = [
   <FA0 fa={fa} setFA={setFA} />, <FA1Registry fa={fa} setFA={setFA} />, <FA2 fa={fa} setFA={setFA} />, <FA3 fa={fa} setFA={setFA} />,
-    <FA4 fa={fa} setFA={setFA} />,
+  <FADocuments fa={fa} setFA={setFA} />, <FABudget fa={fa} setFA={setFA} />, <FA3 fa={fa} setFA={setFA} />, <FA4 fa={fa} setFA={setFA} />,
   ];
   const RD_BODY = [
     <RD1 rd={rd} setRData={setRData} fa={fa} />, <RD2 rd={rd} setRData={setRData} />, <RD3 rd={rd} setRData={setRData} />,
@@ -6661,13 +6680,13 @@ const FA_BODY = [
     : legRole === "compare" ? <LegCompare leg={leg} setLegData={setLegData} setSucc={setSucc} />
     : LEG_BODY[stage-1];
   const VIS_BODY = [
-  <VIS1 vis={vis} setVis={setVis} profile={profile} goProfile={()=>setModule("profile")} />,
+  <VIS1 vis={vis} setVis={setVis} profile={profile} goProfile={()=>goVision(10)} />,
   <VIS2 vis={vis} setVis={setVis} kind="advantage" />,
   <VIS_VALUES vis={vis} setVis={setVis} profile={profile} />,
   <VIS2 vis={vis} setVis={setVis} kind="value" />,
   <VIS3 vis={vis} setVis={setVis} />, <VIS4 vis={vis} setVis={setVis} />, <VIS5 vis={vis} setVis={setVis} goLegacy={()=>{ setModule("legacy"); setLeg(s=>({...s, role:"compare"})); }} />,
     <VIS6 vis={vis} setVis={setVis} />, <VIS7 vis={vis} setVis={setVis} profile={profile} />,
-    <VIS_PROFILE vis={vis} profile={profile} setProfile={setProfile} goFA={goFA} />,
+    <VIS_PROFILE vis={vis} profile={profile} setProfile={setProfile} goFA={goFA} fa={fa} />,
     <VIS8 vis={vis} profile={profile} />,
   ];
   const body = riskConvoActive
@@ -6677,7 +6696,7 @@ const FA_BODY = [
   const moduleSupport = isVis
     ? "Start with what you want this farm to make possible. We will work from your reality, not a textbook answer."
     : isFA
-      ? "The numbers are here to support your judgment—not to grade you. We will focus on what the numbers mean for cash, time, and choices."
+      ? (stage <= 3 ? "First we build the intake together, one question at a time. Your answers determine what the numbers can and cannot tell us." : stage <= 5 ? "Use your records to build an ongoing view of cash flow, accrual adjustments, budgets, and actuals." : "Use the scorecard to compare performance and understand which ratios deserve attention.")
       : isRD
         ? "New income only helps if it fits your people, equipment, market, and appetite for more complexity. We will test the fit before chasing an idea."
         : isRisk
@@ -6689,7 +6708,7 @@ const FA_BODY = [
         <span>{moduleName}</span>
         <span>Question {stage} of {total}</span>
       </div>
-      <div style={{ background:"#f7fafc", borderLeft:`3px solid ${T.blue}`, borderRadius:"0 8px 8px 0", padding:"10px 13px", marginBottom:20, color:T.fgS, fontSize:14, lineHeight:1.55 }}>{moduleSupport}</div>
+      <div style={{ maxWidth:900, marginBottom:26, color:T.fgS, fontSize:14, lineHeight:1.6 }}>{moduleSupport}</div>
       {body}
     </section>
   );
@@ -6723,16 +6742,6 @@ const FA_BODY = [
           <div onClick={()=>setModule("eagle-eye")} style={{ ...profileTabStyle, background:isEagleEye?T.blueL:"transparent" }}>
             <IconShield />
             <div><div style={{ ...lblOff, color:isEagleEye?T.blue:T.fgM, fontWeight:isEagleEye?700:600 }}>Eagle Eye Intelligence</div><div style={{ fontSize:10.5, color:T.fgS, marginTop:2 }}>Farm signals & source watch</div></div>
-          </div>
-          <div onClick={()=>setModule("profile")} style={profileTabStyle}>
-            <IconProfile />
-            <div>
-              <div style={isProfile?lblOn:lblOff}>Farm Profile</div>
-              <div style={{ display:"flex", alignItems:"center", gap:7, marginTop:3 }}>
-                <div style={{ width:62, height:4, background:T.border, borderRadius:2, overflow:"hidden" }}><div style={{ height:"100%", width:`${profilePct}%`, background:T.green, borderRadius:2 }} /></div>
-                <span style={{ fontSize:11, color:T.fgS, whiteSpace:"nowrap" }}>{profilePct}%</span>
-              </div>
-            </div>
           </div>
           <div onClick={()=>setModule("vision")} style={visTabStyle}>
             <IconProfile />
@@ -6802,7 +6811,7 @@ const FA_BODY = [
 
       <div style={{ display:"flex", flex:1, overflow:"hidden" }}>
 
-        {isEagleEye ? <EagleEye profile={profile} vision={vis} onBack={() => setModule("profile")} /> : isProfile ? (
+        {isEagleEye ? <EagleEye profile={profile} vision={vis} onBack={() => goVision(10)} /> : isProfile ? (
           <>
             <aside className="mfp-flow-rail" style={{ width:240, background:"#0b5577", borderRight:`1px solid #062f4b`, display:"flex", flexDirection:"column", flexShrink:0, overflowY:"auto" }}>
               <div style={{ padding:"22px 18px 14px" }}>
@@ -6831,7 +6840,7 @@ const FA_BODY = [
                 <div style={{ fontSize:13, fontWeight:700, letterSpacing:"0.06em", textTransform:"uppercase", color:T.fgM }}>Farm Profile</div>
               </div>
               <div style={{ height:3, background:T.div, flexShrink:0 }}><div style={{ height:"100%", width:`${profilePct}%`, background:T.green, transition:"width .4s" }} /></div>
-              <div style={{ flex:1, padding:"30px 34px", maxWidth:960, width:"100%", margin:"0 auto", boxSizing:"border-box" }}>
+<div style={{ flex:1, padding:"46px 58px", maxWidth:"none", width:"100%", margin:0, boxSizing:"border-box" }}>
                 <div key="profile" className="mfp-body-anim"><FarmProfilePage profile={profile} setProfile={setProfile} fa={fa} rd={rd} goFA={goFA} goRD={goRD} goRisk={goRisk} goLegacy={goLegacy} /></div>
                 <div style={{ display:"flex", justifyContent:"flex-end", alignItems:"center", paddingTop:22, borderTop:`1px solid ${T.border}`, marginTop:26 }}>
                   <button onClick={()=>goVision(1)} style={btnStyle("primary")}>Continue to Strategic Vision →</button>
@@ -6845,24 +6854,21 @@ const FA_BODY = [
         <aside className="mfp-flow-rail" style={{ width:240, background:"#0b5577", borderRight:`1px solid #062f4b`, display:"flex", flexDirection:"column", flexShrink:0, overflowY:"auto" }}>
           <div style={{ padding:"22px 18px 14px" }}>
 <div style={{ fontWeight:700, fontSize:11, letterSpacing:"0.16em", textTransform:"uppercase", color:T.blue, display:"flex", alignItems:"center", gap:7, marginBottom:4 }}>{isVis?"Strategic Vision":isFA?"Financial Analysis":isLeg?"Legacy":isRD?"Revenue Diversification":"Farm Risk Assessment"}</div>
-  <div style={{ fontSize:12, color:T.fgM }}>{isVis?`${visTotal}-stage planning`:isFA?"4-stage diagnostic":isLeg?`${legTotal}-stage transition plan`:isRD?"9-stage planning":"12-stage risk review"}</div>
+  <div style={{ fontSize:12, color:T.fgM }}>{isVis?`${visTotal}-stage planning`:isFA?"7-stage analysis":isLeg?`${legTotal}-stage transition plan`:isRD?"9-stage planning":"12-stage risk review"}</div>
           </div>
           <div style={{ height:1, background:"rgba(255,255,255,0.09)", margin:"0 0 8px" }} />
           <div style={{ padding:"10px 12px 12px" }}>
             <div style={{ color:"rgba(255,255,255,0.72)", fontSize:10, fontWeight:700, letterSpacing:"0.12em", textTransform:"uppercase", marginBottom:7 }}>Ask your farm record</div>
             <FarmKnowledgeSearch state={{ profile, vision:vis, fa, rd, legacy:leg, risk }} onNavigate={(nextModule) => setModule(nextModule)} />
           </div>
-          <nav style={{ flex:1 }}>
-            {stageDefs.map(s => {
+          <nav style={{ flex:1, paddingTop:4 }}>
+            {isFA ? <>
+              {[{ label:"Financial profile", sub:"Accounting, enterprises & goals", start:1, end:3 }, { label:"Document upload", sub:"Source records for review", start:4, end:4 }, { label:"Budget & working capital", sub:"Cash flow and accrual planning", start:5, end:5 }, { label:"Peer benchmarking & ratio scorecard", sub:"Performance context", start:6, end:7 }].map((item,i) => { const active=stage>=item.start&&stage<=item.end; const done=stage>item.end; return <div key={item.label} onClick={()=>goFA(item.start)} style={{ display:"flex", alignItems:"flex-start", gap:11, padding:"13px 16px", cursor:"pointer", background:active?"rgba(123,191,50,0.14)":"transparent", borderLeft:active?`3px solid ${T.green}`:"3px solid transparent" }}><div style={{ width:23, height:23, borderRadius:"50%", flexShrink:0, display:"flex", alignItems:"center", justifyContent:"center", fontSize:11, fontWeight:700, background:done?T.green:active?T.blue:"rgba(255,255,255,0.12)", color:done||active?"#fff":"rgba(255,255,255,0.58)" }}>{done?<IconCheckSm size={11}/>:i+1}</div><div><div style={{ fontSize:12.5, fontWeight:active?700:600, color:active?"#fff":done?T.green:"rgba(255,255,255,0.72)", lineHeight:1.35 }}>{item.label}</div><div style={{ fontSize:10.5, color:"rgba(255,255,255,0.45)", lineHeight:1.35, marginTop:3 }}>{item.sub}</div></div></div>; })}
+            </> : isVis ? <>
+              {[{ label:"Core competencies and values", sub:"What your farm is built on", start:1, end:8 }, { label:"The statement", sub:"Your shared strategic direction", start:9, end:9 }, { label:"Profile and SWOT", sub:"The intelligence-ready farm profile", start:10, end:10 }, { label:"The document", sub:"Approved vision outputs", start:11, end:11 }].map((item,i) => { const active=stage>=item.start&&stage<=item.end; const done=stage>item.end; return <div key={item.label} onClick={()=>goVision(item.start)} style={{ display:"flex", alignItems:"flex-start", gap:11, padding:"13px 16px", cursor:"pointer", background:active?"rgba(123,191,50,0.14)":"transparent", borderLeft:active?`3px solid ${T.green}`:"3px solid transparent" }}><div style={{ width:23, height:23, borderRadius:"50%", flexShrink:0, display:"flex", alignItems:"center", justifyContent:"center", fontSize:11, fontWeight:700, background:done?T.green:active?T.blue:"rgba(255,255,255,0.12)", color:done||active?"#fff":"rgba(255,255,255,0.58)" }}>{done?<IconCheckSm size={11}/>:i+1}</div><div><div style={{ fontSize:12.5, fontWeight:active?700:600, color:active?"#fff":done?T.green:"rgba(255,255,255,0.72)", lineHeight:1.35 }}>{item.label}</div><div style={{ fontSize:10.5, color:"rgba(255,255,255,0.45)", lineHeight:1.35, marginTop:3 }}>{item.sub}</div></div></div>; })}
+            </> : stageDefs.map(s => {
               const active = s.n===stage, done = s.n<stage;
-              return (
-                <div key={s.n} onClick={()=>{ if (s.n<=stage) { isVis?goVision(s.n):isFA?goFA(s.n):isLeg?goLegacy(s.n):isRD?goRD(s.n):goRisk(s.n); } }} style={{ display:"flex", alignItems:"flex-start", gap:11, padding:"10px 16px", cursor:s.n<=stage?"pointer":"default", background:active?"rgba(123,191,50,0.12)":"transparent", borderLeft:active?`3px solid ${T.green}`:"3px solid transparent" }}>
-                  <div style={{ width:21, height:21, borderRadius:"50%", flexShrink:0, marginTop:1, display:"flex", alignItems:"center", justifyContent:"center", fontSize:11, fontWeight:700, background:done?T.green:active?T.blue:"rgba(255,255,255,0.12)", color:done||active?"#fff":"rgba(255,255,255,0.5)" }}>
-                    {done ? <IconCheckSm size={11} /> : s.n}
-                  </div>
-                  <div style={{ fontSize:12.5, fontWeight:active?600:400, color:done?T.blue:active?T.navy:T.fgS, lineHeight:1.4 }}>{s.label}</div>
-                </div>
-              );
+              return <div key={s.n} onClick={()=>{ if (s.n<=stage) { isVis?goVision(s.n):isLeg?goLegacy(s.n):isRD?goRD(s.n):goRisk(s.n); } }} style={{ display:"flex", alignItems:"flex-start", gap:11, padding:"10px 16px", cursor:s.n<=stage?"pointer":"default", background:active?"rgba(123,191,50,0.12)":"transparent", borderLeft:active?`3px solid ${T.green}`:"3px solid transparent" }}><div style={{ width:21, height:21, borderRadius:"50%", flexShrink:0, marginTop:1, display:"flex", alignItems:"center", justifyContent:"center", fontSize:11, fontWeight:700, background:done?T.green:active?T.blue:"rgba(255,255,255,0.12)", color:done||active?"#fff":"rgba(255,255,255,0.5)" }}>{done?<IconCheckSm size={11}/>:s.n}</div><div style={{ fontSize:12.5, fontWeight:active?600:400, color:done?T.green:active?"#fff":"rgba(255,255,255,0.65)", lineHeight:1.4 }}>{s.label}</div></div>;
             })}
           </nav>
           {isRD && (
@@ -6881,7 +6887,7 @@ const FA_BODY = [
         {/* Main */}
         <div className="mfp-flow-main" style={{ flex:1, overflowY:"auto", display:"flex", flexDirection:"column" }}>
           <div style={{ background:"#fff", borderBottom:`1px solid ${T.border}`, padding:"0 28px", height:50, display:"flex", alignItems:"center", justifyContent:"space-between", flexShrink:0 }}>
-            <div style={{ fontSize:13, fontWeight:700, letterSpacing:"0.06em", textTransform:"uppercase", color:T.fgM }}>Stage {stage} of {total} · {stageDefs[stage-1].label}</div>
+            <div style={{ fontSize:14, fontWeight:700, letterSpacing:"0.04em", color:T.navy }}>Financial Analysis <span style={{ color:T.fgS, fontWeight:500 }}>· Stage {stage} of {total}</span><span style={{ color:T.fgS, fontWeight:500 }}> / {stageDefs[stage-1].label}</span></div>
             <div style={{ display:"flex", gap:6 }}>{chips.map((c,i) => (<span key={i} style={{ fontSize:11, fontWeight:600, padding:"3px 10px", borderRadius:999, background:T.greenL, color:"#2F6E28", whiteSpace:"nowrap" }}>{c.label}</span>))}</div>
           </div>
           <div style={{ height:3, background:T.div, flexShrink:0 }}><div style={{ height:"100%", width:`${pct}%`, background:T.green, transition:"width .4s" }} /></div>
