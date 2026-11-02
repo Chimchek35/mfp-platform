@@ -28,7 +28,7 @@ const FontStyles = () => (
     @media (max-width:760px){.mfp-root{font-size:16px}.mfp-root button{min-height:46px}.mfp-body-shell{padding:20px 16px!important}.mfp-stage-rail{overflow-x:auto!important;padding-bottom:8px}.mfp-stage-rail>div{min-width:145px}}
     @keyframes mfpFade{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
     .mfp-body-anim{animation:mfpFade .32s cubic-bezier(0.16,1,0.3,1);}
-  .mfp-stage-card{max-width:760px;margin:0 auto;width:100%;}
+  .mfp-stage-card{max-width:none;margin:0;width:100%;}
   .mfp-stage-card>*{scroll-margin-top:20px;}
   .mfp-root.mfp-turbotax-flow{background:#f3f6fb!important;color:#17233d;}
   .mfp-root.mfp-turbotax-flow .mfp-flow-header{min-height:74px!important;padding:0 34px!important;border-bottom:1px solid #d5e0ea!important;box-shadow:0 1px 10px rgba(14,28,57,.06);background:#fff!important;}
@@ -47,7 +47,7 @@ const FontStyles = () => (
   .mfp-root.mfp-turbotax-flow .mfp-flow-main>div:first-child{height:66px!important;padding:0 42px!important;background:#fff!important;}
   .mfp-root.mfp-turbotax-flow .mfp-flow-main>div:nth-child(2){height:5px!important;background:#dfe8f0!important;}
   .mfp-root.mfp-turbotax-flow .mfp-flow-main>div:nth-child(2)>div{background:linear-gradient(90deg,#0c4477,#1ca8c9)!important;}
-  .mfp-root.mfp-turbotax-flow .mfp-stage-card{background:#fff;border:1px solid #d5e0ea;border-radius:14px;padding:34px 38px;box-shadow:0 7px 22px rgba(14,28,57,.07);}
+  .mfp-root.mfp-turbotax-flow .mfp-stage-card{background:transparent;border:0;border-radius:0;padding:0;box-shadow:none;}
   .mfp-root.mfp-turbotax-flow .mfp-stage-card h1{font-size:32px!important;line-height:1.2!important;letter-spacing:-.02em!important;color:#17233d;}
   .mfp-root.mfp-turbotax-flow .mfp-stage-card button{border-radius:8px;}
   .mfp-root.mfp-turbotax-flow .mfp-stage-card button[style*="background"]{box-shadow:0 2px 5px rgba(12,68,119,.14);}
@@ -900,7 +900,7 @@ function FA3({ fa, setFA }) {
   );
 }
 
-// ───────────────────────────────────────────���─────────────────────────────────
+// ────────────���──────────────────────────────���─────────────────────────────────
 // FA STAGE 4 — Peer benchmarking
 // ─────────────────────────────────────────────────────────────────────────────
 function FA4({ fa, setFA }) {
@@ -3982,7 +3982,7 @@ const legRow = (label, children, sub) => {
   );
 };
 
-// ═════════════════════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════��═════════════════════════════════
 // LAND VALUATION �� Phase 1 engine
 // ═════════════════════════════════════════════════════════════════════════════
 // Land class routes to a method rather than one model with adjustments bolted on.
@@ -6699,7 +6699,7 @@ else if (isRD) { if (rd.stage<rdTotal) goRD(rd.stage+1); else goLegacy(1); }
         <span>{moduleName}</span>
         <span>Question {stage} of {total}</span>
       </div>
-      <div style={{ background:"#f7fafc", borderLeft:`3px solid ${T.blue}`, borderRadius:"0 8px 8px 0", padding:"10px 13px", marginBottom:20, color:T.fgS, fontSize:14, lineHeight:1.55 }}>{moduleSupport}</div>
+      <div style={{ maxWidth:900, marginBottom:26, color:T.fgS, fontSize:14, lineHeight:1.6 }}>{moduleSupport}</div>
       {body}
     </section>
   );
@@ -6841,7 +6841,7 @@ else if (isRD) { if (rd.stage<rdTotal) goRD(rd.stage+1); else goLegacy(1); }
                 <div style={{ fontSize:13, fontWeight:700, letterSpacing:"0.06em", textTransform:"uppercase", color:T.fgM }}>Farm Profile</div>
               </div>
               <div style={{ height:3, background:T.div, flexShrink:0 }}><div style={{ height:"100%", width:`${profilePct}%`, background:T.green, transition:"width .4s" }} /></div>
-              <div style={{ flex:1, padding:"30px 34px", maxWidth:960, width:"100%", margin:"0 auto", boxSizing:"border-box" }}>
+<div style={{ flex:1, padding:"46px 58px", maxWidth:"none", width:"100%", margin:0, boxSizing:"border-box" }}>
                 <div key="profile" className="mfp-body-anim"><FarmProfilePage profile={profile} setProfile={setProfile} fa={fa} rd={rd} goFA={goFA} goRD={goRD} goRisk={goRisk} goLegacy={goLegacy} /></div>
                 <div style={{ display:"flex", justifyContent:"flex-end", alignItems:"center", paddingTop:22, borderTop:`1px solid ${T.border}`, marginTop:26 }}>
                   <button onClick={()=>goVision(1)} style={btnStyle("primary")}>Continue to Strategic Vision →</button>
@@ -6862,17 +6862,12 @@ else if (isRD) { if (rd.stage<rdTotal) goRD(rd.stage+1); else goLegacy(1); }
             <div style={{ color:"rgba(255,255,255,0.72)", fontSize:10, fontWeight:700, letterSpacing:"0.12em", textTransform:"uppercase", marginBottom:7 }}>Ask your farm record</div>
             <FarmKnowledgeSearch state={{ profile, vision:vis, fa, rd, legacy:leg, risk }} onNavigate={(nextModule) => setModule(nextModule)} />
           </div>
-          <nav style={{ flex:1 }}>
-            {stageDefs.map(s => {
+          <nav style={{ flex:1, paddingTop:4 }}>
+            {isFA ? <>
+              {[{ label:"Financial profile", sub:"Accounting, enterprises & goals", start:1, end:3 }, { label:"Document upload", sub:"Source records for review", start:4, end:4 }, { label:"Budget & working capital", sub:"Cash flow and accrual planning", start:5, end:5 }, { label:"Peer benchmarking & ratio scorecard", sub:"Performance context", start:6, end:7 }].map((item,i) => { const active=stage>=item.start&&stage<=item.end; const done=stage>item.end; return <div key={item.label} onClick={()=>goFA(item.start)} style={{ display:"flex", alignItems:"flex-start", gap:11, padding:"13px 16px", cursor:"pointer", background:active?"rgba(123,191,50,0.14)":"transparent", borderLeft:active?`3px solid ${T.green}`:"3px solid transparent" }}><div style={{ width:23, height:23, borderRadius:"50%", flexShrink:0, display:"flex", alignItems:"center", justifyContent:"center", fontSize:11, fontWeight:700, background:done?T.green:active?T.blue:"rgba(255,255,255,0.12)", color:done||active?"#fff":"rgba(255,255,255,0.58)" }}>{done?<IconCheckSm size={11}/>:i+1}</div><div><div style={{ fontSize:12.5, fontWeight:active?700:600, color:active?"#fff":done?T.green:"rgba(255,255,255,0.72)", lineHeight:1.35 }}>{item.label}</div><div style={{ fontSize:10.5, color:"rgba(255,255,255,0.45)", lineHeight:1.35, marginTop:3 }}>{item.sub}</div></div></div>; })}
+            </> : stageDefs.map(s => {
               const active = s.n===stage, done = s.n<stage;
-              return (
-                <div key={s.n} onClick={()=>{ if (s.n<=stage) { isVis?goVision(s.n):isFA?goFA(s.n):isLeg?goLegacy(s.n):isRD?goRD(s.n):goRisk(s.n); } }} style={{ display:"flex", alignItems:"flex-start", gap:11, padding:"10px 16px", cursor:s.n<=stage?"pointer":"default", background:active?"rgba(123,191,50,0.12)":"transparent", borderLeft:active?`3px solid ${T.green}`:"3px solid transparent" }}>
-                  <div style={{ width:21, height:21, borderRadius:"50%", flexShrink:0, marginTop:1, display:"flex", alignItems:"center", justifyContent:"center", fontSize:11, fontWeight:700, background:done?T.green:active?T.blue:"rgba(255,255,255,0.12)", color:done||active?"#fff":"rgba(255,255,255,0.5)" }}>
-                    {done ? <IconCheckSm size={11} /> : s.n}
-                  </div>
-                  <div style={{ fontSize:12.5, fontWeight:active?600:400, color:done?T.blue:active?T.navy:T.fgS, lineHeight:1.4 }}>{s.label}</div>
-                </div>
-              );
+              return <div key={s.n} onClick={()=>{ if (s.n<=stage) { isVis?goVision(s.n):isLeg?goLegacy(s.n):isRD?goRD(s.n):goRisk(s.n); } }} style={{ display:"flex", alignItems:"flex-start", gap:11, padding:"10px 16px", cursor:s.n<=stage?"pointer":"default", background:active?"rgba(123,191,50,0.12)":"transparent", borderLeft:active?`3px solid ${T.green}`:"3px solid transparent" }}><div style={{ width:21, height:21, borderRadius:"50%", flexShrink:0, marginTop:1, display:"flex", alignItems:"center", justifyContent:"center", fontSize:11, fontWeight:700, background:done?T.green:active?T.blue:"rgba(255,255,255,0.12)", color:done||active?"#fff":"rgba(255,255,255,0.5)" }}>{done?<IconCheckSm size={11}/>:s.n}</div><div style={{ fontSize:12.5, fontWeight:active?600:400, color:done?T.green:active?"#fff":"rgba(255,255,255,0.65)", lineHeight:1.4 }}>{s.label}</div></div>;
             })}
           </nav>
           {isRD && (
@@ -6891,7 +6886,7 @@ else if (isRD) { if (rd.stage<rdTotal) goRD(rd.stage+1); else goLegacy(1); }
         {/* Main */}
         <div className="mfp-flow-main" style={{ flex:1, overflowY:"auto", display:"flex", flexDirection:"column" }}>
           <div style={{ background:"#fff", borderBottom:`1px solid ${T.border}`, padding:"0 28px", height:50, display:"flex", alignItems:"center", justifyContent:"space-between", flexShrink:0 }}>
-            <div style={{ fontSize:13, fontWeight:700, letterSpacing:"0.06em", textTransform:"uppercase", color:T.fgM }}>Stage {stage} of {total} · {stageDefs[stage-1].label}</div>
+            <div style={{ fontSize:14, fontWeight:700, letterSpacing:"0.04em", color:T.navy }}>Financial Analysis <span style={{ color:T.fgS, fontWeight:500 }}>· Stage {stage} of {total}</span><span style={{ color:T.fgS, fontWeight:500 }}> / {stageDefs[stage-1].label}</span></div>
             <div style={{ display:"flex", gap:6 }}>{chips.map((c,i) => (<span key={i} style={{ fontSize:11, fontWeight:600, padding:"3px 10px", borderRadius:999, background:T.greenL, color:"#2F6E28", whiteSpace:"nowrap" }}>{c.label}</span>))}</div>
           </div>
           <div style={{ height:3, background:T.div, flexShrink:0 }}><div style={{ height:"100%", width:`${pct}%`, background:T.green, transition:"width .4s" }} /></div>
@@ -6911,7 +6906,6 @@ else if (isRD) { if (rd.stage<rdTotal) goRD(rd.stage+1); else goLegacy(1); }
                 })}
               </div>
             )}
-            {isFA && stage >= 4 && <div style={{ display:"flex", gap:24, alignItems:"flex-end", borderBottom:`1px solid ${T.border}`, marginBottom:24 }}><button type="button" onClick={()=>goFA(4)} style={{ background:"none", border:0, borderBottom:`3px solid ${stage<=5?T.blue:"transparent"}`, padding:"0 2px 12px", color:stage<=5?T.blue:T.fgS, fontWeight:stage<=5?750:600, fontSize:14, cursor:"pointer" }}>Documents & cash flow<span style={{ display:"block", fontSize:11, fontWeight:500, color:T.fgS, marginTop:3 }}>Ongoing projections and actuals</span></button><button type="button" onClick={()=>goFA(6)} style={{ background:"none", border:0, borderBottom:`3px solid ${stage>=6?T.blue:"transparent"}`, padding:"0 2px 12px", color:stage>=6?T.blue:T.fgS, fontWeight:stage>=6?750:600, fontSize:14, cursor:"pointer" }}>Peer benchmarking & ratio scorecard<span style={{ display:"block", fontSize:11, fontWeight:500, color:T.fgS, marginTop:3 }}>Performance context and signals</span></button></div>}
             {schemaWarn && (
               <div style={{ marginBottom:16 }}>
                 <Flag type="warn">A saved record from a different version of MFP was found. It has been loaded, but some fields may not line up. If anything looks wrong, export a copy and then start over.</Flag>
