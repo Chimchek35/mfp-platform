@@ -164,7 +164,7 @@ const Head = ({ eyebrow, title, sub }) => (
   </div>
 );
 
-// ────────────────────────────────────────────────────────��────────────────────
+// ────────────────────────────────────────────────────────���────────────────────
 // DATA
 // ─────────────────────────────────────────────────────────────────────────────
 const FA_STAGES = [
@@ -522,7 +522,7 @@ function FA1Registry({ fa, setFA }) {
   </div>;
 }
 
-// ─────────────────────────��───────��───────────────────────────────────────────
+// ─────────────────────────�����──────��───────────────────────────────────────────
 // FA STAGE 2 — Goal alignment
 // ─────────────────────────────────────────────────────────────────────────────
 function FA2({ fa, setFA }) {
@@ -571,7 +571,7 @@ function FA2({ fa, setFA }) {
   );
 }
 
-// ─────────────────────────────────────────────────────────���─────��─────────────
+// ───────────────────────────────────────────────────────���─���─────��─────────────
 // FA STAGE 3 — Ratio deep dive
 // ─────────────────────────────────────────────────────────────────────────────
 // Shared ratio engine for Financial Analysis Stage 3. Extracted to a single function so
@@ -2635,7 +2635,7 @@ function RD2({ rd, setRData }) {
   const Qs = [
     { key:"trigger", title:"What is prompting you to think about diversification?", opts:[["income","Add a new income stream","Grow total revenue beyond the primary commodity"],["risk","Reduce commodity price dependence","One bad year in grain or milk prices is too much exposure"],["assets","Put underutilized assets to work","Land, equipment or facilities that could generate more"],["succession","Build something to pass on","Diversification as part of a legacy and transition plan"],["curiosity","Understand my options first","No specific trigger — want to see what's possible"]] },
     { key:"horizon", title:"What time horizon are you planning for?", opts:[["1yr","First revenue within 12 months","Need results quickly"],["3yr","Building toward a 3-year plan","Willing to invest in groundwork now"],["5yr","Long-term structural change","A fundamental shift in how the farm generates income"]] },
-    { key:"capitalAppetite", title:"How much capital are you willing to invest?", opts:[["zero","$0 ��� no-capital paths only","Revenue from existing assets only"],["low","Under $10K","Small pilot investment"],["medium","$10K–$50K","Moderate investment if the return case is clear"],["high","$50K+","Meaningful investment for the right opportunity"]] },
+    { key:"capitalAppetite", title:"How much capital are you willing to invest?", opts:[["zero","$0 ����� no-capital paths only","Revenue from existing assets only"],["low","Under $10K","Small pilot investment"],["medium","$10K–$50K","Moderate investment if the return case is clear"],["high","$50K+","Meaningful investment for the right opportunity"]] },
     { key:"timeAppetite", title:"How much personal time can you commit?", opts:[["minimal","Less than 5 hours/week","Largely passive or handled by existing labor"],["moderate","5–15 hours/week","Can add a side activity without sacrificing core operations"],["significant","15+ hours/week","Willing to restructure around a new primary activity"]] },
   ];
   const Radio = ({ on }) => <div style={{ width:18, height:18, borderRadius:"50%", border:`2px solid ${on?T.blue:T.border}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>{on && <div style={{ width:8, height:8, borderRadius:"50%", background:T.blue }} />}</div>;
@@ -2853,7 +2853,7 @@ function RD5({ rd, setRData }) {
       </div>
       {maxReg>=3 && (
         <div style={cardStyle({ borderTop:`4px solid ${T.amber}` })}>
-          <div style={cardLblStyle()}><Apex color={T.amber} />Regulatory & compliance review — before you commit capital</div>
+          <div style={cardLblStyle()}><Apex color={T.amber} />Regulatory & compliance review ��� before you commit capital</div>
           <div style={{ fontSize:12.5, color:T.fgM, marginBottom:12, lineHeight:1.5 }}>At least one selected path carries meaningful regulatory load. Review these before signing contracts, leases, or making capital purchases.</div>
           {Object.entries(COMPLIANCE_ITEMS).map(([key,text]) => {
             const on = complianceAcked[key];
@@ -3297,7 +3297,7 @@ function EfficiencyValueImpact({ sel, lev }) {
   );
 }
 
-// ══════���═════════════════════════════════════════════��═══════����═════��══════��═══
+// ══════���════════════════════════════════════════��════��═══════����═════��══════��═══
 // FARM PROFILE — a single 360° farm view that fills in as the farmer completes
 // onboarding and assessments, and feeds relevant fields back into FA, RD, and Risk
 // so nothing has to be entered twice.
@@ -4705,7 +4705,7 @@ function LEG9({ leg, setLegData }) {
   );
 }
 
-// ── Stage 8 — Triggers & contingencies ─────────────────────���────────��────────
+// ── Stage 8 — Triggers & contingencies ────────────────���────���────────��────────
 function LEG10({ leg, setLegData }) {
   const d = leg.data || {};
   const c = d.contingency || {};
@@ -5577,7 +5577,7 @@ function VIS1({ vis, setVis, profile, goProfile }) {
   return (
     <div>
       <Head eyebrow="Strategic vision · Stage 1" title="Competitive advantage" sub="Start with the reason customers, employees, landlords, or partners choose this operation over another." />
-      <div style={{ display:"grid", gridTemplateColumns:"minmax(0,1fr) minmax(280px,420px)", gap:24, alignItems:"center", marginBottom:24, padding:"22px 0", borderBottom:`1px solid ${T.div}` }}><div><div style={cardLblStyle()}>The capability behind the farm</div><p style={{ fontSize:15, color:T.fgM, lineHeight:1.55, margin:0, maxWidth:560 }}>What can this operation do exceptionally well—and what would be difficult for another farm to copy?</p></div><img src="/vision-competitive-advantage.png" alt="Farm capabilities represented by crops, livestock, people, and a path forward" style={{ width:"100%", height:180, objectFit:"cover", borderRadius:16 }} /></div>
+      <div style={{ display:"grid", gridTemplateColumns:"minmax(0,1fr) minmax(280px,420px)", gap:24, alignItems:"center", marginBottom:24, padding:"22px 0", borderBottom:`1px solid ${T.div}` }}><div><div style={cardLblStyle()}>The capability behind the farm</div><p style={{ fontSize:15, color:T.fgM, lineHeight:1.55, margin:0, maxWidth:560 }}>What can this operation do exceptionally well—and what would be difficult for another farm to copy?</p></div><img src="/vision-competitive-advantage.png" alt="Infographic connecting farm enterprises, family ownership, cash flow, customers, and long-term growth" style={{ width:"100%", height:180, objectFit:"cover", borderRadius:16 }} /></div>
       {!hasProfile && (<>
         <Flag type="warn">Your Farm Profile does not have competitive advantage, core values, or objectives filled in yet. You can add items here directly, or fill the profile first.
           {goProfile && <div style={{ marginTop:9 }}><button onClick={goProfile} style={{ ...btnStyle("outline"), fontSize:12, padding:"6px 13px" }}>Open Farm Profile</button></div>}
@@ -5870,7 +5870,7 @@ function VIS5({ vis, setVis, goLegacy }) {
   );
 }
 
-// ── Vision 6 — Where it binds ───────────────────────────────��────���───────────
+// ── Vision 6 — Where it binds ──────��────────────────────────��────���───────────
 function VIS6({ vis, setVis }) {
   const rules = vis.rules || [];
   const toggle = (i, bindId) => {
@@ -6019,7 +6019,7 @@ function VIS_PROFILE({ vis, profile, setProfile, goFA, fa }) {
   return <div><Head eyebrow="Strategic Vision · Profile and SWOT" title="Farm profile and SWOT" sub="This section combines the farm profile, JSON import, and vision-derived SWOT. It stays intentionally empty until the first two vision steps or an uploaded profile provide content." /><div style={{ display:"flex", gap:24, alignItems:"flex-end", borderBottom:`1px solid ${T.border}`, marginBottom:24 }}><button type="button" onClick={()=>setProfileTab("profile")} style={{ background:"none", border:0, borderBottom:`3px solid ${profileTab==="profile"?T.blue:"transparent"}`, padding:"0 2px 12px", color:profileTab==="profile"?T.blue:T.fgS, fontWeight:700, cursor:"pointer" }}>Farm Profile</button><button type="button" onClick={()=>setProfileTab("swot")} style={{ background:"none", border:0, borderBottom:`3px solid ${profileTab==="swot"?T.blue:"transparent"}`, padding:"0 2px 12px", color:profileTab==="swot"?T.blue:T.fgS, fontWeight:700, cursor:"pointer" }}>Farm SWOT</button><button type="button" onClick={()=>setProfileTab("glance")} style={{ background:"none", border:0, borderBottom:`3px solid ${profileTab==="glance"?T.blue:"transparent"}`, padding:"0 2px 12px", color:profileTab==="glance"?T.blue:T.fgS, fontWeight:700, cursor:"pointer" }}>Business at a glance</button></div><div style={{ display:profileTab==="profile"?"block":"none" }}><div style={cardStyle({ borderTop:`4px solid ${T.blue}` })}><div style={cardLblStyle()}>Bring in an existing profile</div><p style={{ color:T.fgM, fontSize:13.5, lineHeight:1.5, marginTop:0 }}>Upload a Maximum Farm Potential JSON export to prefill these fields. The import stays in this working session until you save it.</p><input type="file" accept=".json,application/json" onChange={importJSON} /></div><div style={cardStyle()}><div style={cardLblStyle()}>Farm profile</div>{field("Farm name","name","e.g., Jensen Family Farms")}{field("Location","location","State and county")}{field("Size and production mix","productionMix","Acres, livestock, and primary enterprises",true)}{field("Business ventures beyond production","ventures","Services, shops, leases, or other ventures",true)}{field("Near-term objective","nearTerm","What should improve in the next 1–3 years?",true)}{field("Long-term direction","longTerm","Where is the farm headed?",true)}{field("Core values","values","What will this operation not trade away?",true)}{field("Competitive advantage","advantage","What makes this operation difficult to copy?",true)}</div></div><div style={{ display:profileTab==="swot"?"block":"none" }}><div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(250px,1fr))", gap:14 }}>{box("Strengths",hasVisionInputs?swot.strengths:"",T.green)}{box("Weaknesses / trade-offs",hasVisionInputs?swot.weaknesses:"",T.amber)}{box("Opportunities",hasVisionInputs?swot.opportunities:"",T.blue)}{box("Threats / conditions",hasVisionInputs?swot.threats:"",T.red)}</div></div><div style={{ display:profileTab==="glance"?"block":"none" }}><div style={cardStyle()}><div style={cardLblStyle()}>Business at a glance</div><div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))", gap:12 }}>{[["Farm name",draft.name],["Location",draft.location],["Production mix",draft.productionMix],["Near-term direction",draft.nearTerm],["Financial basis",fa?.accounting?.basis],["Working capital",fa?.budget ? `$${((Number(fa.budget.cash)||0)+(Number(fa.budget.line)||0)-(Number(fa.budget.committed)||0)-(Number(fa.budget.debt)||0)).toLocaleString()}` : ""]].map(([label,value])=><div key={label} style={{ padding:14, background:value?T.bgAlt:"#f2f4f6", borderRadius:8, color:value?T.navy:T.fgS }}><div style={{ fontSize:11, fontWeight:700, textTransform:"uppercase", letterSpacing:"0.05em", marginBottom:5 }}>{label}</div><div style={{ fontSize:14 }}>{value||"Not updated yet"}</div></div>)}</div><p style={{ color:T.fgS, fontSize:12.5, lineHeight:1.5, marginBottom:0 }}>Financial values update from Financial Analysis as records, budgets, and working capital assumptions are completed.</p></div></div><div style={cardStyle({ background:T.blueL, borderColor:"#c8d9e8", marginTop:16 })}><strong>Save profile for Eagle Eye and MFP modules</strong><p style={{ margin:"5px 0 13px", color:T.fgM, fontSize:13, lineHeight:1.5 }}>Saving makes the profile available to Eagle Eye Intelligence, Financial Analysis, Revenue Diversification, and Farm Risk.</p><button type="button" onClick={() => { save(); goFA(1); }} style={btnStyle("primary")}>Save profile and continue to Financial Analysis →</button></div></div>;
 }
 
-// ── Vision 9 — The document ────────────────────���─────────────────────────────
+// ── Vision 9 — The document ────────��───────────���─────────────────────────────
 // Renders ONLY approved sections. Everything diagnostic stays in the working
 // record: demoted claims, person-dependent advantages, cost-test answers and the
 // who-holds-this ratings never appear here. Publishing a document that names a
