@@ -2887,7 +2887,7 @@ function RD5({ rd, setRData }) {
   );
 }
 
-// ────────────────────────────────────────────────────────────────────────����────
+// ────────────────────────────────────────────────────────────────────��───����────
 // RD STAGE 6 — Policy & grant enablers
 // ────────────────────────────────────────────────────────────────────────��────
 // Deliberately mirrors Barrier Identification's structure — same per-opportunity card
@@ -5011,7 +5011,7 @@ function LEG12({ leg, setLegData, profile }) {
 }
 
 
-// ═════════════════════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════════���════════
 // SUCCESSOR TRACK
 // ═════════════════════════════════════════════════════════════════════════════
 // Written to the successor, not about them. Their entry point is not "help plan a
@@ -6006,14 +6006,15 @@ function VIS7({ vis, setVis, profile }) {
 function VIS_PROFILE({ vis, profile, setProfile, goFA }) {
   const advantages = (vis.items||[]).filter(i=>i.kind==="advantage" && i.text?.trim()).map(i=>i.text.trim());
   const values = (vis.items||[]).filter(i=>i.kind==="value" && i.text?.trim()).map(i=>i.text.trim());
-  const strengths = advantages.length ? advantages : [profile.advantage || "Your farm's distinctive strengths will appear here after you test the vision."];
-  const weaknesses = values.length ? values.map(v=>`Capacity or trade-off: ${v}`) : ["Name the constraint that could make the vision hard to deliver."];
-  const opportunities = [profile.nearTerm, profile.longTerm].filter(Boolean);
-  const threats = [profile.productionMix, profile.ventures].filter(Boolean);
-  const swot = { strengths, weaknesses, opportunities:opportunities.length?opportunities:["Add a near-term opportunity in your vision."], threats:threats.length?threats:["Add an external condition that could change the plan."] };
-  const save = () => setProfile(p=>({ ...p, swotStrengths:swot.strengths.join("; "), swotWeaknesses:swot.weaknesses.join("; "), swotOpportunities:swot.opportunities.join("; "), swotThreats:swot.threats.join("; "), advantage:swot.strengths.join("; "), values:values.join("; ") }));
-  const box = (title, items, color) => <div style={cardStyle({ marginBottom:0, borderTop:`4px solid ${color}` })}><div style={cardLblStyle()}>{title}</div>{items.map((item,i)=><div key={i} style={{ padding:"9px 0", borderBottom:i<items.length-1?`1px solid ${T.div}`:"none", color:T.fgM, fontSize:13.5, lineHeight:1.5 }}>{item}</div>)}</div>;
-  return <div><Head eyebrow="Strategic Vision · Farm profile" title="Your farm profile and SWOT" sub="This is the working profile generated from what you said—not a generic score. Confirm it, then Eagle Eye can use it to filter signals and explain what matters to your farm." /><div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(260px,1fr))", gap:14 }}>{box("Strengths",swot.strengths,T.green)}{box("Weaknesses / trade-offs",swot.weaknesses,T.amber)}{box("Opportunities",swot.opportunities,T.blue)}{box("Threats / conditions",swot.threats,T.red)}</div><div style={cardStyle({ background:T.blueL, borderColor:"#c8d9e8", marginTop:16 })}><strong>Use this profile across MFP</strong><p style={{ margin:"5px 0 13px", color:T.fgM, fontSize:13, lineHeight:1.5 }}>Saving this profile makes it available to Eagle Eye Intelligence, Financial Analysis, Revenue Diversification, and Farm Risk. You can revise it later as your priorities change.</p><button type="button" onClick={() => { save(); goFA(1); }} style={btnStyle("primary")}>Save profile and continue to Financial Analysis →</button></div></div>;
+  const hasVisionInputs = advantages.length > 0 || values.length > 0 || !!vis.seeded;
+  const [draft, setDraft] = useState(profile||{});
+  const update = key => e => setDraft(s=>({ ...s, [key]:e.target.value }));
+  const importJSON = e => { const file=e.target.files?.[0]; e.target.value=""; if(!file) return; const reader=new FileReader(); reader.onload=()=>{ try { const imported=profileFromMFPExport(JSON.parse(reader.result)); if(imported) { setDraft(s=>({ ...s, ...imported })); setProfile(s=>({ ...s, ...imported })); } } catch { /* Invalid files stay out of the working profile. */ } }; reader.readAsText(file); };
+  const save = () => setProfile(s=>({ ...s, ...draft, swotStrengths:advantages.join("; ") || draft.swotStrengths || "", swotWeaknesses:draft.swotWeaknesses||"", swotOpportunities:draft.swotOpportunities||draft.nearTerm||"", swotThreats:draft.swotThreats||draft.productionMix||"" }));
+  const field = (label,key,placeholder,multi=false) => <label style={{ ...labelStyle, display:"block" }}>{label}{multi?<textarea value={draft[key]||""} onChange={update(key)} placeholder={placeholder} style={inputStyle({ minHeight:70, marginTop:6 })} />:<input value={draft[key]||""} onChange={update(key)} placeholder={placeholder} style={inputStyle({ marginTop:6 })} />}</label>;
+  const box = (title, text, color) => <div style={cardStyle({ marginBottom:0, borderTop:`4px solid ${color}` })}><div style={cardLblStyle()}>{title}</div><div style={{ color:text?T.fgM:T.fgS, fontSize:13.5, lineHeight:1.5 }}>{text || "This section will populate after the Strategic Vision intake or a JSON profile import."}</div></div>;
+  const swot = { strengths:advantages.join("; "), weaknesses:draft.swotWeaknesses, opportunities:draft.swotOpportunities||draft.nearTerm, threats:draft.swotThreats||draft.productionMix };
+  return <div><Head eyebrow="Strategic Vision · Profile and SWOT" title="Farm profile and SWOT" sub="This section combines the farm profile, JSON import, and vision-derived SWOT. It stays intentionally empty until the first two vision steps or an uploaded profile provide content." /><div style={cardStyle({ borderTop:`4px solid ${T.blue}` })}><div style={cardLblStyle()}>Bring in an existing profile</div><p style={{ color:T.fgM, fontSize:13.5, lineHeight:1.5, marginTop:0 }}>Upload a Maximum Farm Potential JSON export to prefill these fields. The import stays in this working session until you save it.</p><input type="file" accept=".json,application/json" onChange={importJSON} /></div><div style={cardStyle()}><div style={cardLblStyle()}>Farm profile</div>{field("Farm name","name","e.g., Jensen Family Farms")}{field("Location","location","State and county")}{field("Size and production mix","productionMix","Acres, livestock, and primary enterprises",true)}{field("Business ventures beyond production","ventures","Services, shops, leases, or other ventures",true)}{field("Near-term objective","nearTerm","What should improve in the next 1–3 years?",true)}{field("Long-term direction","longTerm","Where is the farm headed?",true)}{field("Core values","values","What will this operation not trade away?",true)}{field("Competitive advantage","advantage","What makes this operation difficult to copy?",true)}</div><div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(250px,1fr))", gap:14 }}>{box("Strengths",hasVisionInputs?swot.strengths:"",T.green)}{box("Weaknesses / trade-offs",hasVisionInputs?swot.weaknesses:"",T.amber)}{box("Opportunities",hasVisionInputs?swot.opportunities:"",T.blue)}{box("Threats / conditions",hasVisionInputs?swot.threats:"",T.red)}</div><div style={cardStyle({ background:T.blueL, borderColor:"#c8d9e8", marginTop:16 })}><strong>Save profile for Eagle Eye and MFP modules</strong><p style={{ margin:"5px 0 13px", color:T.fgM, fontSize:13, lineHeight:1.5 }}>Saving makes the profile available to Eagle Eye Intelligence, Financial Analysis, Revenue Diversification, and Farm Risk.</p><button type="button" onClick={() => { save(); goFA(1); }} style={btnStyle("primary")}>Save profile and continue to Financial Analysis →</button></div></div>;
 }
 
 // ── Vision 9 — The document ────────────────────���─────────────────────────────
