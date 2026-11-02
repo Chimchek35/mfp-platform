@@ -164,7 +164,7 @@ const Head = ({ eyebrow, title, sub }) => (
   </div>
 );
 
-// ────────────────────────────────────────────────────────���────────────────────
+// ────────────────────────────────────────────────────────����────────────────────
 // DATA
 // ─────────────────────────────────────────────────────────────────────────────
 const FA_STAGES = [
@@ -223,7 +223,7 @@ function FA0({ fa, setFA }) {
   const setQ = value => setFA(s => ({ ...s, accountingQuestion: Math.max(0, Math.min(5, value)) }));
   const Option = ({ group, value, children }) => <button type="button" onClick={() => set(group, value)} style={{ display:"block", width:"100%", padding:"13px 15px", marginBottom:8, textAlign:"left", borderRadius:8, border:p[group]===value?`2px solid ${T.blue}`:`1px solid ${T.border}`, background:p[group]===value?T.blueL:"#fff", color:p[group]===value?T.blue:T.navy, cursor:"pointer", fontSize:14, fontWeight:600 }}>{children}</button>;
   return <div>
-    <Head eyebrow="Financial Analysis · Stage 1" title="Start with how you keep the books" sub="Every farm tracks costs differently. We will first establish what your numbers mean, so the analysis does not compare apples to oranges or mistake tax timing for business performance." />
+    <Head eyebrow="Financial Analysis · Stage 1" title="Start with how you keep the books" sub="First, define what your records can tell us." /><img src="/financial-analysis-dashboard.png" alt="Financial analysis dashboard connecting documents, cash flow, budgets, and benchmarking" style={{ width:"100%", maxHeight:170, objectFit:"cover", borderRadius:16, marginBottom:22 }} />
     <div style={{ ...cardStyle(), display:q===0?"block":"none" }}><div style={cardLblStyle()}>What accounting basis do you use?</div>
       <Option group="basis" value="cash">Cash basis — I mostly track money when it moves</Option>
       <Option group="basis" value="accrual">Accrual basis — revenue and expenses are matched to the year earned</Option>
@@ -571,7 +571,7 @@ function FA2({ fa, setFA }) {
   );
 }
 
-// ───────────────────────────────────────────────────────���─���─────��─────────────
+// ────────────────────────────────────────────────────���──���─���─────��─────────────
 // FA STAGE 3 — Ratio deep dive
 // ─────────────────────────────────────────────────────────────────────────────
 // Shared ratio engine for Financial Analysis Stage 3. Extracted to a single function so
@@ -4705,7 +4705,7 @@ function LEG9({ leg, setLegData }) {
   );
 }
 
-// ── Stage 8 — Triggers & contingencies ────────────────���────���────────��────────
+// ── Stage 8 — Triggers & contingencies ──────���─────────���────���────────��────────
 function LEG10({ leg, setLegData }) {
   const d = leg.data || {};
   const c = d.contingency || {};
@@ -5576,7 +5576,7 @@ function VIS1({ vis, setVis, profile, goProfile }) {
 
   return (
     <div>
-      <Head eyebrow="Strategic vision · Stage 1" title="Competitive advantage" sub="Start with the reason customers, employees, landlords, or partners choose this operation over another." />
+      <Head eyebrow="Strategic vision · Stage 1" title="Competitive advantage" sub="Start with the reason customers, employees, landlords, or partners choose this operation over another." /><img src="/strategic-vision-roadmap.png" alt="Four-part strategic vision roadmap from farm capabilities to a strategic document" style={{ width:"100%", maxHeight:170, objectFit:"cover", borderRadius:16, marginBottom:22 }} />
       <div style={{ display:"grid", gridTemplateColumns:"minmax(0,1fr) minmax(280px,420px)", gap:24, alignItems:"center", marginBottom:24, padding:"22px 0", borderBottom:`1px solid ${T.div}` }}><div><div style={cardLblStyle()}>The capability behind the farm</div><p style={{ fontSize:15, color:T.fgM, lineHeight:1.55, margin:0, maxWidth:560 }}>What can this operation do exceptionally well—and what would be difficult for another farm to copy?</p></div><img src="/vision-competitive-advantage.png" alt="Infographic connecting farm enterprises, family ownership, cash flow, customers, and long-term growth" style={{ width:"100%", height:180, objectFit:"cover", borderRadius:16 }} /></div>
       {!hasProfile && (<>
         <Flag type="warn">Your Farm Profile does not have competitive advantage, core values, or objectives filled in yet. You can add items here directly, or fill the profile first.
@@ -5656,13 +5656,13 @@ function VIS1({ vis, setVis, profile, goProfile }) {
 
   const title = isValuesTest ? "Test core values" : "Test competitive advantage";
   const eyebrow = isValuesTest ? "Strategic vision · Stage 4" : "Strategic vision · Stage 2";
-  const sub = isValuesTest ? "A value is useful when it changes a real decision. Test whether each principle is specific, observable, and strong enough to guide the operation." : "Most operations answer the competitive advantage question with hard work and quality. Neither one is an advantage. These questions find out which of your claims actually are.";
+  const sub = isValuesTest ? "Test whether each value changes a real decision." : "Test which advantages are real, specific, and defensible.";
   if (!items.length) return <div><Head eyebrow={eyebrow} title={title} sub="" /><Flag type="warn">Nothing to test yet. Go back a stage and bring in what you have written.</Flag></div>;
   
   return (
   <div>
   <Head eyebrow={eyebrow} title={title} sub={sub} />
-      <Flag type="info">Expect several of these to get demoted. That is the module working. An honest short list is worth more than a long one nobody believes.</Flag>
+      <Flag type="info">A shorter, honest list is more useful than a long one.</Flag>
 
       {items.map(it => {
         const t = it.tests || {};
@@ -5726,12 +5726,12 @@ function VIS3({ vis, setVis }) {
   const answered = values.filter(v => ((v.tests||{}).cost||"").trim().length > 10).length;
   return (
     <div>
-      <Head eyebrow="Strategic vision · Stage 5" title="What it has cost you" sub="A value that has never cost anything is not governing behaviour, it is decoration. This is the question most operators have a real answer to and have never been asked." />
+      <Head eyebrow="Strategic vision · Stage 5" title="What it has cost you" sub="A value becomes real when it changes a decision." />
       {values.length === 0 ? (
         <Flag type="warn">No core values recorded yet. Go back to stage 1 and mark at least one claim as a core value.</Flag>
       ) : (
         <>
-          <Flag type="info">A good answer names a specific thing you turned down, lost, or paid more for. If nothing comes to mind, that is worth knowing too.</Flag>
+          <Flag type="info">Name one decision, contract, tenant, or price you gave up to keep this value.</Flag>
           {values.map(v => (
             <div key={v.id} style={cardStyle()}>
               <div style={{ fontSize:15.5, fontWeight:600, color:T.navy, marginBottom:4, lineHeight:1.45 }}>{v.text}</div>
@@ -6637,11 +6637,11 @@ else if (isRD) { if (rd.stage<rdTotal) goRD(rd.stage+1); else goLegacy(1); }
     const docs = fa.documents || [];
     const addDocs = (files) => setFA(s => ({ ...s, documents:[...(s.documents||[]), ...Array.from(files).map(file => ({ id:`doc-${Date.now()}-${file.name}`, name:file.name, size:file.size, type:file.type || "Document", status:"Ready for review" }))] }));
     const remove = id => setFA(s => ({ ...s, documents:(s.documents||[]).filter(doc=>doc.id!==id) }));
-    return <div><Head eyebrow="Financial Analysis · Stage 4" title="Upload your documents" sub="Bring the records you already have. We will use them to reduce re-entry, identify missing periods, and make the analysis easier to explain—not silently decide what a number means." /><div style={cardStyle({ borderTop:`4px solid ${T.blue}` })}><div style={cardLblStyle()}>Choose files to review</div><p style={{ color:T.fgM, fontSize:13.5, lineHeight:1.6, marginTop:0 }}>Upload statements, enterprise reports, tax summaries, budgets, or CSV exports. PDF, CSV, XLS, XLSX, and common image files are supported.</p><input type="file" multiple accept=".pdf,.csv,.xls,.xlsx,.png,.jpg,.jpeg" onChange={e=>addDocs(e.target.files)} style={{ width:"100%", padding:16, border:`1px dashed ${T.blue}`, borderRadius:8, background:T.blueL }} /><div style={{ marginTop:10, color:T.fgS, fontSize:12 }}>Documents remain associated with this analysis session until you confirm what should be used.</div></div>{docs.length===0?<div style={cardStyle({ background:T.bgAlt })}><div style={{ color:T.fgM, fontSize:13.5 }}>No documents uploaded yet. You can continue with estimates, or add the records you trust most.</div></div>:<div style={cardStyle()}><div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}><div style={cardLblStyle()}>Documents in this analysis</div><span style={{ fontSize:12, color:T.fgS }}>{docs.length} file{docs.length===1?"":"s"}</span></div>{docs.map(doc=><div key={doc.id} style={{ display:"flex", justifyContent:"space-between", gap:12, alignItems:"center", padding:"11px 0", borderBottom:`1px solid ${T.div}` }}><div><strong style={{ color:T.navy, fontSize:13 }}>{doc.name}</strong><div style={{ color:T.fgS, fontSize:12, marginTop:3 }}>{doc.type} · {Math.max(1,Math.round(doc.size/1024))} KB · {doc.status}</div></div><button type="button" onClick={()=>remove(doc.id)} style={btnStyle("ghost")}>Remove</button></div>)}</div>}<div style={cardStyle({ background:T.blueL, borderColor:"#c8d9e8" })}><strong>Review before using</strong><p style={{ margin:"5px 0 0", color:T.fgM, fontSize:13, lineHeight:1.5 }}>A document can be accurate and still use a different period, allocation method, or accounting basis. The next steps keep source and assumption visible.</p></div></div>;
+    return <div><Head eyebrow="Financial Analysis · Stage 4" title="Upload your documents" sub="Bring the records you trust; we will keep source and assumption visible." /><img src="/financial-analysis-dashboard.png" alt="Financial analysis dashboard connecting documents, cash flow, budgets, and benchmarking" style={{ width:"100%", maxHeight:150, objectFit:"cover", borderRadius:16, marginBottom:22, opacity:.9 }} /><div style={cardStyle({ borderTop:`4px solid ${T.blue}` })}><div style={cardLblStyle()}>Choose files to review</div><p style={{ color:T.fgM, fontSize:13.5, lineHeight:1.6, marginTop:0 }}>Upload statements, enterprise reports, tax summaries, budgets, or CSV exports. PDF, CSV, XLS, XLSX, and common image files are supported.</p><input type="file" multiple accept=".pdf,.csv,.xls,.xlsx,.png,.jpg,.jpeg" onChange={e=>addDocs(e.target.files)} style={{ width:"100%", padding:16, border:`1px dashed ${T.blue}`, borderRadius:8, background:T.blueL }} /><div style={{ marginTop:10, color:T.fgS, fontSize:12 }}>Documents remain associated with this analysis session until you confirm what should be used.</div></div>{docs.length===0?<div style={cardStyle({ background:T.bgAlt })}><div style={{ color:T.fgM, fontSize:13.5 }}>No documents uploaded yet. You can continue with estimates, or add the records you trust most.</div></div>:<div style={cardStyle()}><div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}><div style={cardLblStyle()}>Documents in this analysis</div><span style={{ fontSize:12, color:T.fgS }}>{docs.length} file{docs.length===1?"":"s"}</span></div>{docs.map(doc=><div key={doc.id} style={{ display:"flex", justifyContent:"space-between", gap:12, alignItems:"center", padding:"11px 0", borderBottom:`1px solid ${T.div}` }}><div><strong style={{ color:T.navy, fontSize:13 }}>{doc.name}</strong><div style={{ color:T.fgS, fontSize:12, marginTop:3 }}>{doc.type} · {Math.max(1,Math.round(doc.size/1024))} KB · {doc.status}</div></div><button type="button" onClick={()=>remove(doc.id)} style={btnStyle("ghost")}>Remove</button></div>)}</div>}<div style={cardStyle({ background:T.blueL, borderColor:"#c8d9e8" })}><strong>Review before using</strong><p style={{ margin:"5px 0 0", color:T.fgM, fontSize:13, lineHeight:1.5 }}>A document can be accurate and still use a different period, allocation method, or accounting basis. The next steps keep source and assumption visible.</p></div></div>;
   }
   function FABudget({ fa, setFA }) {
     const b=fa.budget||{}; const set=(key,value)=>setFA(s=>({...s,budget:{...(s.budget||{}),[key]:value}})); const n=k=>Number(b[k])||0; const available=n("cash")+n("line")-n("committed")-n("debt"); const gap=Math.max(0,-available); const fields=[["cash","Cash available today","0"],["line","Available operating line","0"],["committed","Committed bills and inputs","0"],["debt","Debt service due before next receipts","0"],["receipts","Expected receipts before next major payment","0"]];
-    return <div><Head eyebrow="Financial Analysis · Stage 5" title="Budgeting and working capital" sub="A profitable year can still create a cash squeeze. This view separates what the business earns from when cash arrives and when obligations come due." /><div style={cardStyle()}><div style={cardLblStyle()}>Near-term cash position</div><div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(190px,1fr))", gap:12 }}>{fields.map(([key,label,placeholder])=><label key={key} style={labelStyle}>{label}<input type="number" min="0" step="100" placeholder={placeholder} value={b[key]||""} onChange={e=>set(key,e.target.value)} style={inputStyle()} /></label>)}</div></div><div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))", gap:14 }}><div style={cardStyle({ borderTop:`4px solid ${available>=0?T.green:T.red}`, marginBottom:0 })}><div style={cardLblStyle()}>Working capital before receipts</div><div style={{ fontSize:30, fontWeight:800, color:available>=0?T.green:T.red }}>{available<0?"-":""}${Math.abs(available).toLocaleString()}</div><div style={{ color:T.fgM, fontSize:13, marginTop:5 }}>{available>=0?"Positive room after committed obligations.":`Potential shortfall of $${gap.toLocaleString()} before the next receipts.`}</div></div><div style={cardStyle({ borderTop:`4px solid ${T.blue}`, marginBottom:0 })}><div style={cardLblStyle()}>Receipts to plan against</div><div style={{ fontSize:30, fontWeight:800, color:T.blue }}>${n("receipts").toLocaleString()}</div><div style={{ color:T.fgM, fontSize:13, marginTop:5 }}>Use confirmed timing where possible; estimates should be labeled.</div></div></div><div style={cardStyle({ background:T.blueL, borderColor:"#c8d9e8" })}><strong>What this is for</strong><p style={{ margin:"5px 0 0", color:T.fgM, fontSize:13, lineHeight:1.5 }}>This is a planning screen, not a borrowing recommendation. It highlights when to ask your accountant, lender, or advisor to review timing, terms, and contingency options.</p></div></div>;
+    return <div><Head eyebrow="Financial Analysis · Stage 5" title="Budgeting and working capital" sub="Separate profit from timing: what arrives, what is committed, and what remains available." /><img src="/financial-analysis-dashboard.png" alt="Financial analysis dashboard connecting cash flow, budgets, working capital, and benchmarking" style={{ width:"100%", maxHeight:140, objectFit:"cover", borderRadius:16, marginBottom:22, opacity:.85 }} /><div style={cardStyle()}><div style={cardLblStyle()}>Near-term cash position</div><div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(190px,1fr))", gap:12 }}>{fields.map(([key,label,placeholder])=><label key={key} style={labelStyle}>{label}<input type="number" min="0" step="100" placeholder={placeholder} value={b[key]||""} onChange={e=>set(key,e.target.value)} style={inputStyle()} /></label>)}</div></div><div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))", gap:14 }}><div style={cardStyle({ borderTop:`4px solid ${available>=0?T.green:T.red}`, marginBottom:0 })}><div style={cardLblStyle()}>Working capital before receipts</div><div style={{ fontSize:30, fontWeight:800, color:available>=0?T.green:T.red }}>{available<0?"-":""}${Math.abs(available).toLocaleString()}</div><div style={{ color:T.fgM, fontSize:13, marginTop:5 }}>{available>=0?"Positive room after committed obligations.":`Potential shortfall of $${gap.toLocaleString()} before the next receipts.`}</div></div><div style={cardStyle({ borderTop:`4px solid ${T.blue}`, marginBottom:0 })}><div style={cardLblStyle()}>Receipts to plan against</div><div style={{ fontSize:30, fontWeight:800, color:T.blue }}>${n("receipts").toLocaleString()}</div><div style={{ color:T.fgM, fontSize:13, marginTop:5 }}>Use confirmed timing where possible; estimates should be labeled.</div></div></div><div style={cardStyle({ background:T.blueL, borderColor:"#c8d9e8" })}><strong>What this is for</strong><p style={{ margin:"5px 0 0", color:T.fgM, fontSize:13, lineHeight:1.5 }}>This is a planning screen, not a borrowing recommendation. It highlights when to ask your accountant, lender, or advisor to review timing, terms, and contingency options.</p></div></div>;
   }
   const FA_BODY = [
   <FA0 fa={fa} setFA={setFA} />, <FA1Registry fa={fa} setFA={setFA} />, <FA2 fa={fa} setFA={setFA} />, <FA3 fa={fa} setFA={setFA} />,
