@@ -2887,7 +2887,7 @@ function RD5({ rd, setRData }) {
   );
 }
 
-// ────────────────────────────────────────────────────────────────────────��────
+// ────────────────────────────────────────────────────────────────────────���────
 // RD STAGE 6 — Policy & grant enablers
 // ────────────────────────────────────────────────────────────────────────��────
 // Deliberately mirrors Barrier Identification's structure — same per-opportunity card
@@ -5561,10 +5561,12 @@ function VIS1({ vis, setVis, profile, goProfile }) {
   const items = (vis.items || []).filter(i => i.kind === "advantage");
   const carouselRef = useRef(null);
   const [activeAdvantage, setActiveAdvantage] = useState(0);
+  const [draftAdvantage, setDraftAdvantage] = useState("");
   const seeded = !!vis.seeded;
   const seed = () => setVis({ items: visSeedItems(profile).filter(i => i.kind === "advantage"), seeded:true });
   const setItem = (id, patch) => setVis({ items: (vis.items || []).map(i => i.id===id ? {...i,...patch} : i) });
   const add = () => setVis({ items:[...(vis.items || []), { id:"custom-"+Date.now(), kind:"advantage", sourceLabel:"Added here", text:"", tests:{}, verdict:"untested" }], seeded:true });
+  const addDraft = () => { if (!draftAdvantage.trim()) return; setVis({ items:[...(vis.items||[]), { id:"custom-"+Date.now(), kind:"advantage", sourceLabel:"Added here", text:draftAdvantage.trim(), tests:{}, verdict:"untested" }], seeded:true }); setDraftAdvantage(""); };
   const remove = (id) => setVis({ items: items.filter(i => i.id!==id) });
   const hasProfile = ["advantage","values","nearTerm","longTerm"].some(f => (profile||{})[f] && String(profile[f]).trim());
 
@@ -5575,16 +5577,18 @@ function VIS1({ vis, setVis, profile, goProfile }) {
         <div style={cardLblStyle()}>Why this matters</div>
         <p style={{ fontSize:14, color:T.fgM, lineHeight:1.65, margin:0 }}>A competitive advantage is more than working hard or producing quality. It is a capability, relationship, reputation, location, or way of operating that creates value and is difficult for another farm to copy. Naming it clearly helps you protect it, invest in it, and make better decisions about where the business is headed.</p>
       </div>
-      {!hasProfile && (
-        <Flag type="warn">Your Farm Profile does not have competitive advantage, core values, or objectives filled in yet. You can add items here directly, but filling the profile first gives this module something to work with.
+      {!hasProfile && (<>
+        <Flag type="warn">Your Farm Profile does not have competitive advantage, core values, or objectives filled in yet. You can add items here directly, or fill the profile first.
           {goProfile && <div style={{ marginTop:9 }}><button onClick={goProfile} style={{ ...btnStyle("outline"), fontSize:12, padding:"6px 13px" }}>Open Farm Profile</button></div>}
         </Flag>
-      )}
+        <div style={cardStyle({ borderTop:`4px solid ${T.moss}` })}><div style={cardLblStyle()}>What makes this farm hard to copy?</div><p style={{ fontSize:14, color:T.fgM, lineHeight:1.6, marginTop:0 }}>Think about a capability, relationship, reputation, location, or way of operating that creates value for customers, employees, landlords, or partners.</p><textarea value={draftAdvantage} onChange={e=>setDraftAdvantage(e.target.value)} placeholder="In one or two sentences, what is this operation especially good at?" style={inputStyle({ minHeight:100, fontSize:14 })} /><button type="button" onClick={addDraft} disabled={!draftAdvantage.trim()} style={{ ...btnStyle("primary"), marginTop:12, opacity:draftAdvantage.trim()?1:0.5 }}>Save competitive advantage →</button></div>
+      </>)}
       {!seeded && hasProfile && (
         <div style={cardStyle({ borderTop:`4px solid ${T.moss}` })}>
           <div style={cardLblStyle()}>Pull it forward</div>
           <p style={{ fontSize:14, color:T.fgM, marginTop:0, lineHeight:1.6 }}>Your profile already holds competitive advantage, core values, and near and long-term objectives. This breaks them into separate claims so each one can be tested on its own.</p>
           <button onClick={seed} style={btnStyle("primary")}>Bring in what I have written →</button>
+          <div style={{ marginTop:18, paddingTop:18, borderTop:`1px solid ${T.div}` }}><div style={cardLblStyle()}>Or answer this directly</div><p style={{ fontSize:13.5, color:T.fgM, lineHeight:1.6, marginTop:0 }}>What makes this operation especially good at creating value or difficult for another farm to copy?</p><textarea value={draftAdvantage} onChange={e=>setDraftAdvantage(e.target.value)} placeholder="Describe the capability, relationship, reputation, location, or way of operating..." style={inputStyle({ minHeight:100, fontSize:14 })} /><button type="button" onClick={addDraft} disabled={!draftAdvantage.trim()} style={{ ...btnStyle("outline"), marginTop:10, opacity:draftAdvantage.trim()?1:0.5 }}>Save my answer →</button></div>
         </div>
       )}
       {items.length > 0 && (
