@@ -30,27 +30,31 @@ const FontStyles = () => (
     .mfp-body-anim{animation:mfpFade .32s cubic-bezier(0.16,1,0.3,1);}
   .mfp-stage-card{max-width:none;margin:0;width:100%;}
   .mfp-stage-card>*{scroll-margin-top:20px;}
-  .mfp-root.mfp-turbotax-flow{background:#f3f6fb!important;color:#17233d;}
-  .mfp-root.mfp-turbotax-flow .mfp-flow-header{min-height:74px!important;padding:0 34px!important;border-bottom:1px solid #d5e0ea!important;box-shadow:0 1px 10px rgba(14,28,57,.06);background:#fff!important;}
+  .mfp-root.mfp-turbotax-flow{background:#eef2f7!important;color:#17233d;}
+  .mfp-root.mfp-turbotax-flow .mfp-flow-header{min-height:82px!important;padding:0 42px!important;border-bottom:1px solid #e2e5ea!important;box-shadow:0 1px 16px rgba(14,28,57,.05);background:#fff!important;}
   .mfp-root.mfp-turbotax-flow .mfp-flow-header>div:nth-child(2){display:none;}
-  .mfp-root.mfp-turbotax-flow .mfp-flow-header>div:nth-child(1){min-width:260px;}
-  .mfp-root.mfp-turbotax-flow .mfp-flow-header>div:nth-child(3){gap:4px!important;flex:1;justify-content:center;}
-  .mfp-root.mfp-turbotax-flow .mfp-flow-header>div:nth-child(3)>div{padding:8px 13px!important;border-radius:8px!important;}
+  .mfp-root.mfp-turbotax-flow .mfp-flow-header>div:nth-child(1){min-width:280px;}
+  .mfp-root.mfp-turbotax-flow .mfp-flow-header>div:nth-child(3){gap:8px!important;flex:1;justify-content:center;}
+  .mfp-root.mfp-turbotax-flow .mfp-flow-header>div:nth-child(3)>div{padding:10px 16px!important;border-radius:999px!important;}
   .mfp-root.mfp-turbotax-flow .mfp-flow-header>div:nth-child(3)>div:not([style*="rgb"]){background:transparent!important;}
-  .mfp-root.mfp-turbotax-flow .mfp-flow-rail{width:230px!important;background:linear-gradient(180deg,#083d62 0%,#0b5577 48%,#083d62 100%)!important;border-right:1px solid #062f4b;color:#fff!important;}
+  .mfp-root.mfp-turbotax-flow .mfp-flow-rail{width:248px!important;background:linear-gradient(180deg,#0E1C39 0%,#0C4477 58%,#0E1C39 100%)!important;border-right:0;color:#fff!important;}
   .mfp-root.mfp-turbotax-flow .mfp-flow-rail div,.mfp-root.mfp-turbotax-flow .mfp-flow-rail span{color:#fff!important;}
   .mfp-root.mfp-turbotax-flow .mfp-flow-rail nav>div[style*="background: transparent"]{color:#d9edf4!important;}
-  .mfp-root.mfp-turbotax-flow .mfp-flow-rail>div:first-child{padding:28px 22px 18px!important;background:linear-gradient(145deg,#083d62 0%,#0c7390 62%,#20afd2 100%)!important;color:#fff;}
-  .mfp-root.mfp-turbotax-flow .mfp-flow-rail nav{padding:8px 10px;}
-  .mfp-root.mfp-turbotax-flow .mfp-flow-rail nav>div{border-left:0!important;border-radius:8px;padding:11px 12px!important;margin:3px 0;}
-  .mfp-root.mfp-turbotax-flow .mfp-flow-main{background:#f3f6fb;}
-  .mfp-root.mfp-turbotax-flow .mfp-flow-main>div:first-child{height:66px!important;padding:0 42px!important;background:#fff!important;}
-  .mfp-root.mfp-turbotax-flow .mfp-flow-main>div:nth-child(2){height:5px!important;background:#dfe8f0!important;}
-  .mfp-root.mfp-turbotax-flow .mfp-flow-main>div:nth-child(2)>div{background:linear-gradient(90deg,#0c4477,#1ca8c9)!important;}
+  .mfp-root.mfp-turbotax-flow .mfp-flow-rail>div:first-child{padding:34px 24px 22px!important;background:linear-gradient(145deg,#0E1C39 0%,#0C4477 64%,#358733 150%)!important;color:#fff;}
+  .mfp-root.mfp-turbotax-flow .mfp-flow-rail nav{padding:14px 12px;}
+  .mfp-root.mfp-turbotax-flow .mfp-flow-rail nav>div{border-left:0!important;border-radius:12px;padding:13px 14px!important;margin:4px 0;}
+  .mfp-root.mfp-turbotax-flow .mfp-flow-main{background:#fff;}
+  .mfp-root.mfp-turbotax-flow .mfp-flow-main>div:first-child{height:78px!important;padding:0 58px!important;background:#fff!important;}
+  .mfp-root.mfp-turbotax-flow .mfp-flow-main>div:nth-child(2){height:6px!important;background:#eef0f4!important;}
+  .mfp-root.mfp-turbotax-flow .mfp-flow-main>div:nth-child(2)>div{background:linear-gradient(90deg,#0C4477,#358733)!important;}
   .mfp-root.mfp-turbotax-flow .mfp-stage-card{background:transparent;border:0;border-radius:0;padding:0;box-shadow:none;}
-  .mfp-root.mfp-turbotax-flow .mfp-stage-card h1{font-size:32px!important;line-height:1.2!important;letter-spacing:-.02em!important;color:#17233d;}
-  .mfp-root.mfp-turbotax-flow .mfp-stage-card button{border-radius:8px;}
-  .mfp-root.mfp-turbotax-flow .mfp-stage-card button[style*="background"]{box-shadow:0 2px 5px rgba(12,68,119,.14);}
+  .mfp-root.mfp-turbotax-flow .mfp-stage-card h1{font-size:clamp(34px,4vw,54px)!important;line-height:1.08!important;letter-spacing:-.04em!important;color:#0E1C39;max-width:860px;}
+  .mfp-root.mfp-turbotax-flow .mfp-stage-card h2{font-size:clamp(22px,2.5vw,32px)!important;}
+  .mfp-root.mfp-turbotax-flow .mfp-stage-card button{border-radius:999px;}
+  .mfp-root.mfp-turbotax-flow .mfp-stage-card button[style*="background"]{box-shadow:0 4px 12px rgba(12,68,119,.14);}
+  .mfp-root.mfp-turbotax-flow .mfp-stage-card input,.mfp-root.mfp-turbotax-flow .mfp-stage-card select,.mfp-root.mfp-turbotax-flow .mfp-stage-card textarea{border-radius:12px!important;background:#fff;}
+  .mfp-root.mfp-turbotax-flow .mfp-stage-card>div[style*="border"]{border-radius:18px!important;box-shadow:0 8px 24px rgba(14,28,57,.06);}
+  .mfp-root.mfp-turbotax-flow .mfp-stage-card>div[style*="background: rgb(241"]{background:#f7f8fa!important;border-color:#eef0f4!important;box-shadow:none;}
   @media(max-width:760px){.mfp-root.mfp-turbotax-flow .mfp-flow-header{padding:0 16px!important}.mfp-root.mfp-turbotax-flow .mfp-flow-header>div:nth-child(3){display:none}.mfp-root.mfp-turbotax-flow .mfp-flow-rail{display:none}.mfp-root.mfp-turbotax-flow .mfp-flow-main>div:first-child{padding:0 18px!important}.mfp-root.mfp-turbotax-flow .mfp-stage-card{padding:25px 20px;border-radius:10px}}
 
   `}</style>
@@ -6887,7 +6891,7 @@ else if (isRD) { if (rd.stage<rdTotal) goRD(rd.stage+1); else goLegacy(1); }
         {/* Main */}
         <div className="mfp-flow-main" style={{ flex:1, overflowY:"auto", display:"flex", flexDirection:"column" }}>
           <div style={{ background:"#fff", borderBottom:`1px solid ${T.border}`, padding:"0 28px", height:50, display:"flex", alignItems:"center", justifyContent:"space-between", flexShrink:0 }}>
-            <div style={{ fontSize:14, fontWeight:700, letterSpacing:"0.04em", color:T.navy }}>Financial Analysis <span style={{ color:T.fgS, fontWeight:500 }}>· Stage {stage} of {total}</span><span style={{ color:T.fgS, fontWeight:500 }}> / {stageDefs[stage-1].label}</span></div>
+            <div style={{ fontSize:14, fontWeight:700, letterSpacing:"0.04em", color:T.navy }}>{isVis?"Strategic Vision":isFA?"Financial Analysis":isRD?"Revenue Diversification":isRisk?"Farm Risk":"Maximum Farm Potential"} <span style={{ color:T.fgS, fontWeight:500 }}>· Stage {stage} of {total}</span><span style={{ color:T.fgS, fontWeight:500 }}> / {stageDefs[stage-1].label}</span></div>
             <div style={{ display:"flex", gap:6 }}>{chips.map((c,i) => (<span key={i} style={{ fontSize:11, fontWeight:600, padding:"3px 10px", borderRadius:999, background:T.greenL, color:"#2F6E28", whiteSpace:"nowrap" }}>{c.label}</span>))}</div>
           </div>
           <div style={{ height:3, background:T.div, flexShrink:0 }}><div style={{ height:"100%", width:`${pct}%`, background:T.green, transition:"width .4s" }} /></div>
