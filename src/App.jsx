@@ -164,9 +164,9 @@ const Head = ({ eyebrow, title, sub }) => (
   </div>
 );
 
-// ─────────────────────────────────────────────────────���������������������──�����────────────────────
+// ─────────────────────────────────────────────────────�����������������������──�����────────────────────
 // DATA
-// ─────────────────────────────────────────────────────────────────────────��─��─
+// ───────────────────────────────────────────────────────────────────────��─��─��─
 const FA_STAGES = [
   { n:1, label:"Your accounting profile" }, { n:2, label:"Enterprise registry & shared costs" }, { n:3, label:"Goal alignment" },
   { n:4, label:"Upload your documents" }, { n:5, label:"Budgeting & working capital" }, { n:6, label:"Ratio deep dive" }, { n:7, label:"Peer benchmarking" },
@@ -603,7 +603,7 @@ const computeFARatios = (s3) => {
   const dDeferredRev = gv("deferredRevEnd")-gv("deferredRevBegin");
   const revAdj = dAR + dCropInv + dLivestockInv + dFeederInv - dDeferredRev;
 
-  // Expense-side accrual adjustments: Δ(payables + accruals) − Δ(prepaid + growing crops)
+  // Expense-side accrual adjustments: Δ(payables + accruals) ��� Δ(prepaid + growing crops)
   const dAP = gv("apEnd")-gv("apBegin");
   const dAccrInt = gv("accrIntEnd")-gv("accrIntBegin");
   const dOtherAccr = gv("otherAccrEnd")-gv("otherAccrBegin");
@@ -957,7 +957,7 @@ function FA4({ fa, setFA }) {
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// ────────────────────���────────────────────────────────────────────────────────
 // FARM RISK — quiz categories & question bank
 // ────────────────────────────────────────────────────────��─���─����────────────────
 // Adapted from the Nationwide Farm Risk Ready℠ framework (risk identification,
@@ -1049,7 +1049,7 @@ function RiskCategoryStage({ risk, setRisk, catIndex, fa, onStartConvo }) {
 
 // ───────────────────────────────��─────────────────────────────────────────────
 // FARM RISK READY℠ PLAN BUILDER — shared data
-// ─────────────────────────────────────────────────────────────────────────────
+// ─────────────────��───────────────────────────────────────────────────────────
 const THREAT_CATEGORIES = [
   { id:"facility", label:"Facility", desc:"Fires, explosions, structure collapse", color:T.red, colorL:T.redL },
   { id:"natural", label:"Natural", desc:"Storms, floods, or wildfires", color:T.amber, colorL:T.amberL },
@@ -2551,7 +2551,7 @@ const scoredOpps = (rd, faEnterprises, faS3vals) => { const d=rd.data||{}; const
 
 // ��������──��������───────────────────────────────────────────────────────────────────
 // RD STAGE 1 — Baseline & readiness
-// ────────────────────────�����──���─���─���───���─���─────────────────────────���──���������──���────
+// ────────────────────────�����──���─���─���───���─���────────────────────────������──���������──���────
 function RD1({ rd, setRData, fa }) {
   const d = rd.data; const b = d.baseline || {};
   const set = (f,v) => setRData(s => ({ ...s, baseline:{ ...(s.baseline||{}), [f]:v } }));
@@ -2893,7 +2893,7 @@ function RD5({ rd, setRData }) {
 
 // ────────────────────────────────────────────────────────────────────��───����────
 // RD STAGE 6 — Policy & grant enablers
-// ────────────────────────────────────────────────────────────────────────��────
+// ────────────────────────────────────────────────────���───────────────────��────
 // Deliberately mirrors Barrier Identification's structure — same per-opportunity card
 // layout, same checkbox-to-acknowledge pattern — but framed as tailwinds rather than
 // obstacles: policy and grant programs that could actively support a selected path,
@@ -6493,6 +6493,8 @@ const GENERIC_FARM_FINANCIALS = {
   livingWithdrawals:"68000", incomeTaxes:"34000",
 };
 
+const VisionInlineVisual = ({ stageLabel }) => <div style={{ margin:"4px 0 26px", borderRadius:16, overflow:"hidden", border:`1px solid ${T.div}`, background:T.bgAlt }}><img src="/strategic-vision-roadmap.png" alt="Strategic vision roadmap toward a decision-ready farm document" style={{ display:"block", width:"100%", height:150, objectFit:"cover" }} /><div style={{ display:"flex", justifyContent:"space-between", gap:10, padding:"10px 14px", color:T.fgS, fontSize:11.5 }}><span>{stageLabel}</span><span style={{ color:T.green, fontWeight:700 }}>Vision in progress</span></div></div>;
+
 export default function App() {
   const [module, setModule] = useState("vision");
   const [profile, setProfile] = useState({ ...GENERIC_FARM_SWOT, ...GENERIC_FARM_STRATEGY });
@@ -6711,7 +6713,6 @@ else if (isRD) { if (rd.stage<rdTotal) goRD(rd.stage+1); else goLegacy(1); }
           : "Legacy is about people and a workable handoff, not just assets. We will make room for difficult conversations and practical next steps.";
   const flowLabels = isVis ? ["Capabilities","Values","Rules","Statement","Profile","Document"] : isFA ? ["Books","Enterprises","Goals","Records","Cash flow","Benchmarking","Scorecard"] : [];
   const stageVisual = flowLabels.length ? <div aria-label={`${moduleName} progress map`} style={{ display:"flex", alignItems:"center", gap:0, marginBottom:26, padding:"14px 18px", background:T.bgAlt, borderRadius:16, border:`1px solid ${T.div}`, overflowX:"auto" }}>{flowLabels.map((label,i)=>{ const n=Math.min(i+1, total); const active=(isVis ? (stage===n || (i===4&&stage===10) || (i===5&&stage===11)) : stage===n); const done=n<stage; return <Fragment key={label}><div style={{ minWidth:78, display:"flex", flexDirection:"column", alignItems:"center", gap:6, color:active?T.navy:done?T.green:T.fgS }}><div style={{ width:28, height:28, borderRadius:"50%", display:"grid", placeItems:"center", background:active?T.blue:done?T.green:"#fff", color:active||done?"#fff":T.fgS, fontSize:11, fontWeight:800, border:`1px solid ${active?T.blue:done?T.green:T.border}` }}>{done?<IconCheckSm size={12}/>:i+1}</div><span style={{ fontSize:10.5, fontWeight:active?750:550, whiteSpace:"nowrap" }}>{label}</span></div>{i<flowLabels.length-1&&<div style={{ minWidth:18, height:2, background:i+1<stage?T.green:T.border, marginBottom:22 }} />}</Fragment>})}</div> : null;
-  const VisionInlineVisual = ({ stageLabel }) => <div style={{ margin:"4px 0 26px", borderRadius:16, overflow:"hidden", border:`1px solid ${T.div}`, background:T.bgAlt }}><img src="/strategic-vision-roadmap.png" alt="Strategic vision roadmap toward a decision-ready farm document" style={{ display:"block", width:"100%", height:150, objectFit:"cover" }} /><div style={{ display:"flex", justifyContent:"space-between", gap:10, padding:"10px 14px", color:T.fgS, fontSize:11.5 }}><span>{stageLabel}</span><span style={{ color:T.green, fontWeight:700 }}>Vision in progress</span></div></div>;
   const stageCard = (
   <section className="mfp-stage-card" aria-label={`${moduleName} question ${stage} of ${total}`}>
   <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:12, marginBottom:18, color:T.fgS, fontSize:13, fontWeight:650 }}>
