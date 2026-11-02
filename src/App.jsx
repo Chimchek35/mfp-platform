@@ -6003,18 +6003,19 @@ function VIS7({ vis, setVis, profile }) {
 
 
 // ── Vision 8 — Farm profile and SWOT ─────────────────────────────────────
-function VIS_PROFILE({ vis, profile, setProfile, goFA }) {
+function VIS_PROFILE({ vis, profile, setProfile, goFA, fa }) {
   const advantages = (vis.items||[]).filter(i=>i.kind==="advantage" && i.text?.trim()).map(i=>i.text.trim());
   const values = (vis.items||[]).filter(i=>i.kind==="value" && i.text?.trim()).map(i=>i.text.trim());
   const hasVisionInputs = advantages.length > 0 || values.length > 0 || !!vis.seeded;
   const [draft, setDraft] = useState(profile||{});
+  const [profileTab, setProfileTab] = useState("profile");
   const update = key => e => setDraft(s=>({ ...s, [key]:e.target.value }));
   const importJSON = e => { const file=e.target.files?.[0]; e.target.value=""; if(!file) return; const reader=new FileReader(); reader.onload=()=>{ try { const imported=profileFromMFPExport(JSON.parse(reader.result)); if(imported) { setDraft(s=>({ ...s, ...imported })); setProfile(s=>({ ...s, ...imported })); } } catch { /* Invalid files stay out of the working profile. */ } }; reader.readAsText(file); };
   const save = () => setProfile(s=>({ ...s, ...draft, swotStrengths:advantages.join("; ") || draft.swotStrengths || "", swotWeaknesses:draft.swotWeaknesses||"", swotOpportunities:draft.swotOpportunities||draft.nearTerm||"", swotThreats:draft.swotThreats||draft.productionMix||"" }));
   const field = (label,key,placeholder,multi=false) => <label style={{ ...labelStyle, display:"block" }}>{label}{multi?<textarea value={draft[key]||""} onChange={update(key)} placeholder={placeholder} style={inputStyle({ minHeight:70, marginTop:6 })} />:<input value={draft[key]||""} onChange={update(key)} placeholder={placeholder} style={inputStyle({ marginTop:6 })} />}</label>;
   const box = (title, text, color) => <div style={cardStyle({ marginBottom:0, borderTop:`4px solid ${color}` })}><div style={cardLblStyle()}>{title}</div><div style={{ color:text?T.fgM:T.fgS, fontSize:13.5, lineHeight:1.5 }}>{text || "This section will populate after the Strategic Vision intake or a JSON profile import."}</div></div>;
   const swot = { strengths:advantages.join("; "), weaknesses:draft.swotWeaknesses, opportunities:draft.swotOpportunities||draft.nearTerm, threats:draft.swotThreats||draft.productionMix };
-  return <div><Head eyebrow="Strategic Vision · Profile and SWOT" title="Farm profile and SWOT" sub="This section combines the farm profile, JSON import, and vision-derived SWOT. It stays intentionally empty until the first two vision steps or an uploaded profile provide content." /><div style={cardStyle({ borderTop:`4px solid ${T.blue}` })}><div style={cardLblStyle()}>Bring in an existing profile</div><p style={{ color:T.fgM, fontSize:13.5, lineHeight:1.5, marginTop:0 }}>Upload a Maximum Farm Potential JSON export to prefill these fields. The import stays in this working session until you save it.</p><input type="file" accept=".json,application/json" onChange={importJSON} /></div><div style={cardStyle()}><div style={cardLblStyle()}>Farm profile</div>{field("Farm name","name","e.g., Jensen Family Farms")}{field("Location","location","State and county")}{field("Size and production mix","productionMix","Acres, livestock, and primary enterprises",true)}{field("Business ventures beyond production","ventures","Services, shops, leases, or other ventures",true)}{field("Near-term objective","nearTerm","What should improve in the next 1–3 years?",true)}{field("Long-term direction","longTerm","Where is the farm headed?",true)}{field("Core values","values","What will this operation not trade away?",true)}{field("Competitive advantage","advantage","What makes this operation difficult to copy?",true)}</div><div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(250px,1fr))", gap:14 }}>{box("Strengths",hasVisionInputs?swot.strengths:"",T.green)}{box("Weaknesses / trade-offs",hasVisionInputs?swot.weaknesses:"",T.amber)}{box("Opportunities",hasVisionInputs?swot.opportunities:"",T.blue)}{box("Threats / conditions",hasVisionInputs?swot.threats:"",T.red)}</div><div style={cardStyle({ background:T.blueL, borderColor:"#c8d9e8", marginTop:16 })}><strong>Save profile for Eagle Eye and MFP modules</strong><p style={{ margin:"5px 0 13px", color:T.fgM, fontSize:13, lineHeight:1.5 }}>Saving makes the profile available to Eagle Eye Intelligence, Financial Analysis, Revenue Diversification, and Farm Risk.</p><button type="button" onClick={() => { save(); goFA(1); }} style={btnStyle("primary")}>Save profile and continue to Financial Analysis →</button></div></div>;
+  return <div><Head eyebrow="Strategic Vision · Profile and SWOT" title="Farm profile and SWOT" sub="This section combines the farm profile, JSON import, and vision-derived SWOT. It stays intentionally empty until the first two vision steps or an uploaded profile provide content." /><div style={{ display:"flex", gap:24, alignItems:"flex-end", borderBottom:`1px solid ${T.border}`, marginBottom:24 }}><button type="button" onClick={()=>setProfileTab("profile")} style={{ background:"none", border:0, borderBottom:`3px solid ${profileTab==="profile"?T.blue:"transparent"}`, padding:"0 2px 12px", color:profileTab==="profile"?T.blue:T.fgS, fontWeight:700, cursor:"pointer" }}>Farm Profile</button><button type="button" onClick={()=>setProfileTab("swot")} style={{ background:"none", border:0, borderBottom:`3px solid ${profileTab==="swot"?T.blue:"transparent"}`, padding:"0 2px 12px", color:profileTab==="swot"?T.blue:T.fgS, fontWeight:700, cursor:"pointer" }}>Farm SWOT</button><button type="button" onClick={()=>setProfileTab("glance")} style={{ background:"none", border:0, borderBottom:`3px solid ${profileTab==="glance"?T.blue:"transparent"}`, padding:"0 2px 12px", color:profileTab==="glance"?T.blue:T.fgS, fontWeight:700, cursor:"pointer" }}>Business at a glance</button></div><div style={{ display:profileTab==="profile"?"block":"none" }}><div style={cardStyle({ borderTop:`4px solid ${T.blue}` })}><div style={cardLblStyle()}>Bring in an existing profile</div><p style={{ color:T.fgM, fontSize:13.5, lineHeight:1.5, marginTop:0 }}>Upload a Maximum Farm Potential JSON export to prefill these fields. The import stays in this working session until you save it.</p><input type="file" accept=".json,application/json" onChange={importJSON} /></div><div style={cardStyle()}><div style={cardLblStyle()}>Farm profile</div>{field("Farm name","name","e.g., Jensen Family Farms")}{field("Location","location","State and county")}{field("Size and production mix","productionMix","Acres, livestock, and primary enterprises",true)}{field("Business ventures beyond production","ventures","Services, shops, leases, or other ventures",true)}{field("Near-term objective","nearTerm","What should improve in the next 1–3 years?",true)}{field("Long-term direction","longTerm","Where is the farm headed?",true)}{field("Core values","values","What will this operation not trade away?",true)}{field("Competitive advantage","advantage","What makes this operation difficult to copy?",true)}</div></div><div style={{ display:profileTab==="swot"?"block":"none" }}><div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(250px,1fr))", gap:14 }}>{box("Strengths",hasVisionInputs?swot.strengths:"",T.green)}{box("Weaknesses / trade-offs",hasVisionInputs?swot.weaknesses:"",T.amber)}{box("Opportunities",hasVisionInputs?swot.opportunities:"",T.blue)}{box("Threats / conditions",hasVisionInputs?swot.threats:"",T.red)}</div></div><div style={{ display:profileTab==="glance"?"block":"none" }}><div style={cardStyle()}><div style={cardLblStyle()}>Business at a glance</div><div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))", gap:12 }}>{[["Farm name",draft.name],["Location",draft.location],["Production mix",draft.productionMix],["Near-term direction",draft.nearTerm],["Financial basis",fa?.accounting?.basis],["Working capital",fa?.budget ? `$${((Number(fa.budget.cash)||0)+(Number(fa.budget.line)||0)-(Number(fa.budget.committed)||0)-(Number(fa.budget.debt)||0)).toLocaleString()}` : ""]].map(([label,value])=><div key={label} style={{ padding:14, background:value?T.bgAlt:"#f2f4f6", borderRadius:8, color:value?T.navy:T.fgS }}><div style={{ fontSize:11, fontWeight:700, textTransform:"uppercase", letterSpacing:"0.05em", marginBottom:5 }}>{label}</div><div style={{ fontSize:14 }}>{value||"Not updated yet"}</div></div>)}</div><p style={{ color:T.fgS, fontSize:12.5, lineHeight:1.5, marginBottom:0 }}>Financial values update from Financial Analysis as records, budgets, and working capital assumptions are completed.</p></div></div><div style={cardStyle({ background:T.blueL, borderColor:"#c8d9e8", marginTop:16 })}><strong>Save profile for Eagle Eye and MFP modules</strong><p style={{ margin:"5px 0 13px", color:T.fgM, fontSize:13, lineHeight:1.5 }}>Saving makes the profile available to Eagle Eye Intelligence, Financial Analysis, Revenue Diversification, and Farm Risk.</p><button type="button" onClick={() => { save(); goFA(1); }} style={btnStyle("primary")}>Save profile and continue to Financial Analysis →</button></div></div>;
 }
 
 // ── Vision 9 — The document ────────────────────���─────────────────────────────
@@ -6679,13 +6680,13 @@ else if (isRD) { if (rd.stage<rdTotal) goRD(rd.stage+1); else goLegacy(1); }
     : legRole === "compare" ? <LegCompare leg={leg} setLegData={setLegData} setSucc={setSucc} />
     : LEG_BODY[stage-1];
   const VIS_BODY = [
-  <VIS1 vis={vis} setVis={setVis} profile={profile} goProfile={()=>setModule("profile")} />,
+  <VIS1 vis={vis} setVis={setVis} profile={profile} goProfile={()=>goVision(10)} />,
   <VIS2 vis={vis} setVis={setVis} kind="advantage" />,
   <VIS_VALUES vis={vis} setVis={setVis} profile={profile} />,
   <VIS2 vis={vis} setVis={setVis} kind="value" />,
   <VIS3 vis={vis} setVis={setVis} />, <VIS4 vis={vis} setVis={setVis} />, <VIS5 vis={vis} setVis={setVis} goLegacy={()=>{ setModule("legacy"); setLeg(s=>({...s, role:"compare"})); }} />,
     <VIS6 vis={vis} setVis={setVis} />, <VIS7 vis={vis} setVis={setVis} profile={profile} />,
-    <VIS_PROFILE vis={vis} profile={profile} setProfile={setProfile} goFA={goFA} />,
+    <VIS_PROFILE vis={vis} profile={profile} setProfile={setProfile} goFA={goFA} fa={fa} />,
     <VIS8 vis={vis} profile={profile} />,
   ];
   const body = riskConvoActive
@@ -6741,16 +6742,6 @@ else if (isRD) { if (rd.stage<rdTotal) goRD(rd.stage+1); else goLegacy(1); }
           <div onClick={()=>setModule("eagle-eye")} style={{ ...profileTabStyle, background:isEagleEye?T.blueL:"transparent" }}>
             <IconShield />
             <div><div style={{ ...lblOff, color:isEagleEye?T.blue:T.fgM, fontWeight:isEagleEye?700:600 }}>Eagle Eye Intelligence</div><div style={{ fontSize:10.5, color:T.fgS, marginTop:2 }}>Farm signals & source watch</div></div>
-          </div>
-          <div onClick={()=>setModule("profile")} style={profileTabStyle}>
-            <IconProfile />
-            <div>
-              <div style={isProfile?lblOn:lblOff}>Farm Profile</div>
-              <div style={{ display:"flex", alignItems:"center", gap:7, marginTop:3 }}>
-                <div style={{ width:62, height:4, background:T.border, borderRadius:2, overflow:"hidden" }}><div style={{ height:"100%", width:`${profilePct}%`, background:T.green, borderRadius:2 }} /></div>
-                <span style={{ fontSize:11, color:T.fgS, whiteSpace:"nowrap" }}>{profilePct}%</span>
-              </div>
-            </div>
           </div>
           <div onClick={()=>setModule("vision")} style={visTabStyle}>
             <IconProfile />
@@ -6820,7 +6811,7 @@ else if (isRD) { if (rd.stage<rdTotal) goRD(rd.stage+1); else goLegacy(1); }
 
       <div style={{ display:"flex", flex:1, overflow:"hidden" }}>
 
-        {isEagleEye ? <EagleEye profile={profile} vision={vis} onBack={() => setModule("profile")} /> : isProfile ? (
+        {isEagleEye ? <EagleEye profile={profile} vision={vis} onBack={() => goVision(10)} /> : isProfile ? (
           <>
             <aside className="mfp-flow-rail" style={{ width:240, background:"#0b5577", borderRight:`1px solid #062f4b`, display:"flex", flexDirection:"column", flexShrink:0, overflowY:"auto" }}>
               <div style={{ padding:"22px 18px 14px" }}>
