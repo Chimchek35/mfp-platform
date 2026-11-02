@@ -164,9 +164,9 @@ const Head = ({ eyebrow, title, sub }) => (
   </div>
 );
 
-// ────────────────�����────────────────────────────────────�������������������������──�����────────────────────
+// ─���──────────────�����────────────────────────────────────�������������������������──�����────────────────────
 // DATA
-// ────────────────────────────��─��──────────────────────────────────────��─��─��─��─
+// ───────────��────────────────��─��──────────────────────────────────────��─��─��─��─
 const FA_STAGES = [
   { n:1, label:"Your accounting profile" }, { n:2, label:"Enterprise registry & shared costs" }, { n:3, label:"Goal alignment" },
   { n:4, label:"Upload your documents" }, { n:5, label:"Budgeting & working capital" }, { n:6, label:"Ratio deep dive" }, { n:7, label:"Peer benchmarking" },
@@ -2361,7 +2361,7 @@ function LivestockInsuranceCalculator({ risk, setRisk }) {
   );
 }
 
-// ───��������─�����──────────���──────────���──���───────────────────────────────────────���──────
+// ───��������─�����─────���────���──────────���──���───────────────────────────────────────���──────
 // RD helpers
 // ─────────────────────────────────────────────────────────────────────────────
 // Each lever category is now built from specific, measurable items rather than one
@@ -2552,8 +2552,15 @@ const scoredOpps = (rd, faEnterprises, faS3vals) => { const d=rd.data||{}; const
 // ��������──��������───────────────────────────────────────────────────────────────────
 // RD STAGE 1 — Baseline & readiness
 // ────────────────────────�������──���─���─���───���─���────────────────���───────������──���������──���────
-function RD1({ rd, setRData, fa }) {
+function RD1({ rd, setRData, fa, profile }) {
   const d = rd.data; const b = d.baseline || {};
+  const profileFarmType = profile?.farmType || "";
+  const profileRevenueTier = profile?.revTier || "";
+  const profileBusinessStage = profile?.bizStage || profile?.businessStage || "";
+  const financialRevenue = Number(fa?.s3vals?.grossRevenue || fa?.s3vals?.grossFarmRevenue || 0);
+  const financialRevenueTier = financialRevenue >= 5000000 ? "$5M+" : financialRevenue >= 2000000 ? "$2M – $5M" : financialRevenue >= 500000 ? "$500K – $2M" : financialRevenue > 0 ? "< $500K" : "";
+  const profileSwot = [profile?.swotStrengths && `Strengths: ${profile.swotStrengths}`, profile?.swotWeaknesses && `Weaknesses: ${profile.swotWeaknesses}`, profile?.swotOpportunities && `Opportunities: ${profile.swotOpportunities}`, profile?.swotThreats && `Threats: ${profile.swotThreats}`].filter(Boolean).join("\n");
+  useEffect(() => { const patch={}; if(profileFarmType || fa?.enterprises?.length) patch.farmType=profileFarmType || ({ grain:"Row crop (grain)", dairy:"Dairy", beef:"Beef cattle", hogs:"Hogs", broilers:"Broilers", layers:"Layers", mixed:"Mixed" }[fa.enterprises[0]] || ""); if(profileRevenueTier || financialRevenueTier) patch.revTier=profileRevenueTier || financialRevenueTier; if(profileBusinessStage) patch.bizStage=profileBusinessStage; if(profileSwot) patch.swot=profileSwot; const score=faScoreOf(fa); if(Number.isFinite(score)) patch.mfpScore=score; if(Object.keys(patch).length) setRData(s=>({ ...s, data:{ ...(s.data||{}), baseline:{ ...(s.data?.baseline||{}), ...patch } } })); }, [profileFarmType, profileRevenueTier, profileBusinessStage, profileSwot, financialRevenueTier, fa]);
   const set = (f,v) => setRData(s => ({ ...s, baseline:{ ...(s.baseline||{}), [f]:v } }));
   const faEnt = (fa.enterprises||[])[0] || ""; const faEnt2 = { grain:"Row crop (grain)", dairy:"Dairy", beef:"Beef cattle" }[faEnt] || "";
   const sc = faScoreOf(fa); const mfp = parseFloat(b.mfpScore) || sc; const rf = mfp>=3.5?"ready":mfp>=2.5?"caution":"foundation"; const rl = { ready:"Ready to diversify", caution:"Diversify with caution", foundation:"Foundation first" }[rf];
@@ -2570,8 +2577,7 @@ function RD1({ rd, setRData, fa }) {
           <SelField label="Farm type" k="farmType" opts={FARM} val={b.farmType||faEnt2||""} />
           <SelField label="Revenue tier" k="revTier" opts={TIERS} val={b.revTier||""} />
           <SelField label="Business stage" k="bizStage" opts={STAGES} val={b.bizStage||""} />
-          <SelField label="Market orientation" k="market" opts={["Commodity / price-taker","Partially differentiated","Direct market / value-added"]} val={b.market||""} />
-        </div>
+                </div>
       </div>
       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16 }}>
         <div style={cardStyle({ marginBottom:0 })}>
@@ -3207,7 +3213,7 @@ function RD7({ rd, setRData, fa }) {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // RD STAGE 8 — Action plan
-// ───────────────────────────────────────────────────────────���──────��──────────
+// ──────────────────────────────────────���────────────────────���──────��──────────
 function RD8({ rd, fa }) {
   const d = rd.data; const selected = d.selectedOpps || []; const ranked = d.rankedOpps || []; const lev = d.leverItems || {}; const b = d.baseline || {};
   const sel = selected.map(id => OPPS.find(o=>o.id===id)).filter(Boolean).sort((a,c) => { const ra=(ranked.find(r=>r.id===a.id)||{}).rank||99, rb=(ranked.find(r=>r.id===c.id)||{}).rank||99; return ra-rb; });
@@ -3972,7 +3978,7 @@ function LegacyVoiceField({ children }) {
           {listening ? "Stop" : "Speak"}
         </button>
       </div>
-      {listening && <div role="status" style={{ marginTop:5, fontSize:11.5, color:T.blue }}>Listening… pause when you&apos;re finished.</div>}
+      {listening && <div role="status" style={{ marginTop:5, fontSize:11.5, color:T.blue }}>Listening�� pause when you&apos;re finished.</div>}
       {!supported && <div style={{ marginTop:4, fontSize:11, color:T.fgS }}>Voice input is unavailable in this browser.</div>}
     </div>
   );
@@ -5997,7 +6003,7 @@ function VIS7({ vis, setVis, profile }) {
 }
 
 
-// ── Vision 8 — Farm profile and SWOT ─────────────────────────────────────
+// ── Vision 8 — Farm profile and SWOT ────────────────────────────────���────
 function VIS_PROFILE({ vis, profile, setProfile, goFA, fa }) {
   const advantages = (vis.items||[]).filter(i=>i.kind==="advantage" && i.text?.trim()).map(i=>i.text.trim());
   const values = (vis.items||[]).filter(i=>i.kind==="value" && i.text?.trim()).map(i=>i.text.trim());
@@ -6650,7 +6656,7 @@ else if (isRD) { if (rd.stage<rdTotal) goRD(rd.stage+1); else goLegacy(1); }
   <FADocuments fa={fa} setFA={setFA} />, <FABudget fa={fa} setFA={setFA} />, <FA3 fa={fa} setFA={setFA} />, <FA4 fa={fa} setFA={setFA} />,
   ];
   const RD_BODY = [
-    <RD1 rd={rd} setRData={setRData} fa={fa} />, <RD2 rd={rd} setRData={setRData} />, <RD3 rd={rd} setRData={setRData} />,
+    <RD1 rd={rd} setRData={setRData} fa={fa} profile={profile} />, <RD2 rd={rd} setRData={setRData} />, <RD3 rd={rd} setRData={setRData} />,
     <RD4 rd={rd} setRData={setRData} fa={fa} />, <RD5 rd={rd} setRData={setRData} />, <RDPolicyEnablers rd={rd} setRData={setRData} />,
     <RD6 rd={rd} setRData={setRData} profile={profile} />, <RD7 rd={rd} setRData={setRData} fa={fa} />, <RD8 rd={rd} fa={fa} />,
   ];
