@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, useEffect } from "react";
+import { Fragment, useState, useMemo, useRef, useEffect } from "react";
 import { loadSavedWork, syncSavedWork } from "./backend.js";
 import EagleEye from "./EagleEye.jsx";
 import FarmKnowledgeSearch from "./FarmKnowledgeSearch.jsx";
@@ -164,7 +164,7 @@ const Head = ({ eyebrow, title, sub }) => (
   </div>
 );
 
-// ────────────────────────────────────────────────────────����────────────────────
+// ────────────────────────────────────────────────────────�����────────────────────
 // DATA
 // ─────────────────────────────────────────────────────────────────────────────
 const FA_STAGES = [
@@ -907,7 +907,7 @@ function FA3({ fa, setFA }) {
   );
 }
 
-// ────────────���───────────────��──────────────���─────────────────────────────────
+// ────────────���───────────────��──────────────���──────────────────────────────��──
 // FA STAGE 4 — Peer benchmarking
 // ─────────────────────────────────────────────────────────────────────────────
 function FA4({ fa, setFA }) {
@@ -2551,7 +2551,7 @@ const scoredOpps = (rd, faEnterprises, faS3vals) => { const d=rd.data||{}; const
 
 // ��������──��������───────────────────────────────────────────────────────────────────
 // RD STAGE 1 — Baseline & readiness
-// ────────────────────────��───────────────────────────────────────���──���─���──���────
+// ────────────────────────��───────────────────────────────────────���──���������──���────
 function RD1({ rd, setRData, fa }) {
   const d = rd.data; const b = d.baseline || {};
   const set = (f,v) => setRData(s => ({ ...s, baseline:{ ...(s.baseline||{}), [f]:v } }));
@@ -4420,7 +4420,7 @@ function LEG4({ leg, setLegData }) {
   );
 }
 
-// ── Stage 3 — The next chapter ──────���─────���──────────────────────────────────
+// ── Stage 3 — The next chapter ──────���─────���──────────────��───────────────────
 function LEG5({ leg, setLegData }) {
   const d = leg.data || {};
   const v = (k) => d[k] || "";
@@ -4811,7 +4811,7 @@ function LEG11({ leg, setLegData }) {
 }
 
 
-// ── Stage 12 — Parcels and land valuation ────────────────────────────────────
+// ── Stage 12 — Parcels and land valuation ──────────────���─────────────────────
 function LEG12({ leg, setLegData, profile }) {
   const d = leg.data || {};
   const parcels = d.parcels || [];
@@ -5017,7 +5017,7 @@ function LEG12({ leg, setLegData, profile }) {
 
 // ══════���═════════════════════════════════════════════════════════════���════════
 // SUCCESSOR TRACK
-// ═════════════════════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════��══════════════════════════════════
 // Written to the successor, not about them. Their entry point is not "help plan a
 // retirement" but "find out what you would be inheriting and put your version on
 // the table". Nothing in this track is visible to the senior generation until the
@@ -5870,7 +5870,7 @@ function VIS5({ vis, setVis, goLegacy }) {
   );
 }
 
-// ── Vision 6 — Where it binds ──────��────────────────────────��────���───────────
+// ── Vision 6 — Where it binds ──────��────────────────��───────��────���───────────
 function VIS6({ vis, setVis }) {
   const rules = vis.rules || [];
   const toggle = (i, bindId) => {
@@ -6019,7 +6019,7 @@ function VIS_PROFILE({ vis, profile, setProfile, goFA, fa }) {
   return <div><Head eyebrow="Strategic Vision · Profile and SWOT" title="Farm profile and SWOT" sub="This section combines the farm profile, JSON import, and vision-derived SWOT. It stays intentionally empty until the first two vision steps or an uploaded profile provide content." /><div style={{ display:"flex", gap:24, alignItems:"flex-end", borderBottom:`1px solid ${T.border}`, marginBottom:24 }}><button type="button" onClick={()=>setProfileTab("profile")} style={{ background:"none", border:0, borderBottom:`3px solid ${profileTab==="profile"?T.blue:"transparent"}`, padding:"0 2px 12px", color:profileTab==="profile"?T.blue:T.fgS, fontWeight:700, cursor:"pointer" }}>Farm Profile</button><button type="button" onClick={()=>setProfileTab("swot")} style={{ background:"none", border:0, borderBottom:`3px solid ${profileTab==="swot"?T.blue:"transparent"}`, padding:"0 2px 12px", color:profileTab==="swot"?T.blue:T.fgS, fontWeight:700, cursor:"pointer" }}>Farm SWOT</button><button type="button" onClick={()=>setProfileTab("glance")} style={{ background:"none", border:0, borderBottom:`3px solid ${profileTab==="glance"?T.blue:"transparent"}`, padding:"0 2px 12px", color:profileTab==="glance"?T.blue:T.fgS, fontWeight:700, cursor:"pointer" }}>Business at a glance</button></div><div style={{ display:profileTab==="profile"?"block":"none" }}><div style={cardStyle({ borderTop:`4px solid ${T.blue}` })}><div style={cardLblStyle()}>Bring in an existing profile</div><p style={{ color:T.fgM, fontSize:13.5, lineHeight:1.5, marginTop:0 }}>Upload a Maximum Farm Potential JSON export to prefill these fields. The import stays in this working session until you save it.</p><input type="file" accept=".json,application/json" onChange={importJSON} /></div><div style={cardStyle()}><div style={cardLblStyle()}>Farm profile</div>{field("Farm name","name","e.g., Jensen Family Farms")}{field("Location","location","State and county")}{field("Size and production mix","productionMix","Acres, livestock, and primary enterprises",true)}{field("Business ventures beyond production","ventures","Services, shops, leases, or other ventures",true)}{field("Near-term objective","nearTerm","What should improve in the next 1–3 years?",true)}{field("Long-term direction","longTerm","Where is the farm headed?",true)}{field("Core values","values","What will this operation not trade away?",true)}{field("Competitive advantage","advantage","What makes this operation difficult to copy?",true)}</div></div><div style={{ display:profileTab==="swot"?"block":"none" }}><div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(250px,1fr))", gap:14 }}>{box("Strengths",hasVisionInputs?swot.strengths:"",T.green)}{box("Weaknesses / trade-offs",hasVisionInputs?swot.weaknesses:"",T.amber)}{box("Opportunities",hasVisionInputs?swot.opportunities:"",T.blue)}{box("Threats / conditions",hasVisionInputs?swot.threats:"",T.red)}</div></div><div style={{ display:profileTab==="glance"?"block":"none" }}><div style={cardStyle()}><div style={cardLblStyle()}>Business at a glance</div><div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))", gap:12 }}>{[["Farm name",draft.name],["Location",draft.location],["Production mix",draft.productionMix],["Near-term direction",draft.nearTerm],["Financial basis",fa?.accounting?.basis],["Working capital",fa?.budget ? `$${((Number(fa.budget.cash)||0)+(Number(fa.budget.line)||0)-(Number(fa.budget.committed)||0)-(Number(fa.budget.debt)||0)).toLocaleString()}` : ""]].map(([label,value])=><div key={label} style={{ padding:14, background:value?T.bgAlt:"#f2f4f6", borderRadius:8, color:value?T.navy:T.fgS }}><div style={{ fontSize:11, fontWeight:700, textTransform:"uppercase", letterSpacing:"0.05em", marginBottom:5 }}>{label}</div><div style={{ fontSize:14 }}>{value||"Not updated yet"}</div></div>)}</div><p style={{ color:T.fgS, fontSize:12.5, lineHeight:1.5, marginBottom:0 }}>Financial values update from Financial Analysis as records, budgets, and working capital assumptions are completed.</p></div></div><div style={cardStyle({ background:T.blueL, borderColor:"#c8d9e8", marginTop:16 })}><strong>Save profile for Eagle Eye and MFP modules</strong><p style={{ margin:"5px 0 13px", color:T.fgM, fontSize:13, lineHeight:1.5 }}>Saving makes the profile available to Eagle Eye Intelligence, Financial Analysis, Revenue Diversification, and Farm Risk.</p><button type="button" onClick={() => { save(); goFA(1); }} style={btnStyle("primary")}>Save profile and continue to Financial Analysis →</button></div></div>;
 }
 
-// ── Vision 9 — The document ────────��───────────���─────────────────────────────
+// ── Vision 9 — The document ────────��───────────���─��───────────────────────────
 // Renders ONLY approved sections. Everything diagnostic stays in the working
 // record: demoted claims, person-dependent advantages, cost-test answers and the
 // who-holds-this ratings never appear here. Publishing a document that names a
@@ -6703,15 +6703,18 @@ else if (isRD) { if (rd.stage<rdTotal) goRD(rd.stage+1); else goLegacy(1); }
         : isRisk
           ? "Risk is not a failure to eliminate. It is the weather, markets, health, people, and surprises you plan around so one hard season does not decide everything."
           : "Legacy is about people and a workable handoff, not just assets. We will make room for difficult conversations and practical next steps.";
+  const flowLabels = isVis ? ["Capabilities","Values","Rules","Statement","Profile","Document"] : isFA ? ["Books","Enterprises","Goals","Records","Cash flow","Benchmarking","Scorecard"] : [];
+  const stageVisual = flowLabels.length ? <div aria-label={`${moduleName} progress map`} style={{ display:"flex", alignItems:"center", gap:0, marginBottom:26, padding:"14px 18px", background:T.bgAlt, borderRadius:16, border:`1px solid ${T.div}`, overflowX:"auto" }}>{flowLabels.map((label,i)=>{ const n=Math.min(i+1, total); const active=(isVis ? (stage===n || (i===4&&stage===10) || (i===5&&stage===11)) : stage===n); const done=n<stage; return <Fragment key={label}><div style={{ minWidth:78, display:"flex", flexDirection:"column", alignItems:"center", gap:6, color:active?T.navy:done?T.green:T.fgS }}><div style={{ width:28, height:28, borderRadius:"50%", display:"grid", placeItems:"center", background:active?T.blue:done?T.green:"#fff", color:active||done?"#fff":T.fgS, fontSize:11, fontWeight:800, border:`1px solid ${active?T.blue:done?T.green:T.border}` }}>{done?<IconCheckSm size={12}/>:i+1}</div><span style={{ fontSize:10.5, fontWeight:active?750:550, whiteSpace:"nowrap" }}>{label}</span></div>{i<flowLabels.length-1&&<div style={{ minWidth:18, height:2, background:i+1<stage?T.green:T.border, marginBottom:22 }} />}</Fragment>})}</div> : null;
   const stageCard = (
-    <section className="mfp-stage-card" aria-label={`${moduleName} question ${stage} of ${total}`}>
-      <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:12, marginBottom:18, color:T.fgS, fontSize:13, fontWeight:650 }}>
-        <span>{moduleName}</span>
-        <span>Question {stage} of {total}</span>
-      </div>
-      <div style={{ maxWidth:900, marginBottom:26, color:T.fgS, fontSize:14, lineHeight:1.6 }}>{moduleSupport}</div>
-      {body}
-    </section>
+  <section className="mfp-stage-card" aria-label={`${moduleName} question ${stage} of ${total}`}>
+  <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:12, marginBottom:18, color:T.fgS, fontSize:13, fontWeight:650 }}>
+  <span>{moduleName}</span>
+  <span>Question {stage} of {total}</span>
+  </div>
+  {stageVisual}
+  <div style={{ maxWidth:900, marginBottom:26, color:T.fgS, fontSize:14, lineHeight:1.6 }}>{moduleSupport}</div>
+  {body}
+  </section>
   );
 
   const tabBase = { display:"flex", alignItems:"center", gap:11, padding:"8px 14px", borderRadius:8, cursor:"pointer", transition:"all .15s", border:"1.5px solid transparent" };
