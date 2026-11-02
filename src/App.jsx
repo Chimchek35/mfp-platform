@@ -164,7 +164,7 @@ const Head = ({ eyebrow, title, sub }) => (
   </div>
 );
 
-// ─────────────────────────────────────────────────────���──�����────────────────────
+// ─────────────────────────────────────────────────────�����──�����────────────────────
 // DATA
 // ─────────────────────────────────────────────────────────────────────────────
 const FA_STAGES = [
@@ -571,7 +571,7 @@ function FA2({ fa, setFA }) {
   );
 }
 
-// ────────────��───────────────────────────────────────���──���─���─────��─────────────
+// ──────────��─��───────────────────────────────────────���──���─���─────��─────────────
 // FA STAGE 3 — Ratio deep dive
 // ─────────────────────────────────────────────────────────────────────────────
 // Shared ratio engine for Financial Analysis Stage 3. Extracted to a single function so
@@ -4420,7 +4420,7 @@ function LEG4({ leg, setLegData }) {
   );
 }
 
-// ── Stage 3 — The next chapter ──────���─────���───────���──────��───────────────────
+// ── Stage 3 — The next chapter ──────���─────���────���──���──────��───────────────────
 function LEG5({ leg, setLegData }) {
   const d = leg.data || {};
   const v = (k) => d[k] || "";
@@ -5017,7 +5017,7 @@ function LEG12({ leg, setLegData, profile }) {
 
 // ══════���═════════════════════════════════════════════════════════════���════════
 // SUCCESSOR TRACK
-// ════════════════════════════════���═════════��══════════════════════════════════
+// ═════════════════════════���══════���═════════��══════════════════════════════════
 // Written to the successor, not about them. Their entry point is not "help plan a
 // retirement" but "find out what you would be inheriting and put your version on
 // the table". Nothing in this track is visible to the senior generation until the
@@ -5457,7 +5457,7 @@ function LEG13({ leg, profile }) {
 // than the owner cannot invoke it to stop something, it is not institutional yet.
 
 const VIS_STAGES = [
-  { n:1, label:"Core Competencies and Competitive Advantage" }
+  { n:1, label:"Core Competencies and Competitive Advantage" },
   { n:2, label:"Test competitive advantage" },
   { n:3, label:"Core values" },
   { n:4, label:"Test core values" },
