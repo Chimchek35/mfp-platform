@@ -164,9 +164,9 @@ const Head = ({ eyebrow, title, sub }) => (
   </div>
 );
 
-// ────────────────�����────────────────────────────────────�������������������������──�����────────────────────
+// ─���──────────────�����────────────────────────────────────�������������������������──�����────────────────────
 // DATA
-// ────────────────────────────��─��──────────────────────────────────────��─��─��─��─
+// ───────────��────────────────��─��──────────────────────────────────────��─��─��─��─
 const FA_STAGES = [
   { n:1, label:"Your accounting profile" }, { n:2, label:"Enterprise registry & shared costs" }, { n:3, label:"Goal alignment" },
   { n:4, label:"Upload your documents" }, { n:5, label:"Budgeting & working capital" }, { n:6, label:"Ratio deep dive" }, { n:7, label:"Peer benchmarking" },
@@ -524,7 +524,7 @@ function FA1Registry({ fa, setFA }) {
 
 // ─────────────────────────�����──────��───────────────────────────────────────────
 // FA STAGE 2 — Goal alignment
-// ─────────────────────────────────────────────────────────────────────────────
+// ──────────────────────────���──────────────────────────────────────────────────
 function FA2({ fa, setFA }) {
   const g = fa.goals;
   const set = (f,v) => setFA(s => ({ ...s, goals:{ ...s.goals, [f]:v } }));
@@ -2361,9 +2361,22 @@ function LivestockInsuranceCalculator({ risk, setRisk }) {
   );
 }
 
-// ───��������─�����──────────���──────────���──���───────────────────────────────────────���──────
+// ───��������─�����─────���────���──────────���──���───────────────────────────────────────���──────
 // RD helpers
 // ─────────────────────────────────────────────────────────────────────────────
+const entKind = (kind) => ({ grain:{ rdKind:"grain" }, forage:{ rdKind:"grain" }, specialty:{ rdKind:"produce" }, perennial:{ rdKind:"perennials" }, beef:{ rdKind:"beef" }, dairy:{ rdKind:"dairy" }, swine:{ rdKind:"hogs" }, poultry:{ rdKind:"poultry" }, other:{ rdKind:"other" } }[kind] || { rdKind:kind });
+const faEnterpriseKinds = (fa) => { const list = ((fa||{}).ent||{}).list || []; const derived = list.map(e => entKind(e.kind).rdKind).filter(Boolean); return derived.length ? [...new Set(derived)] : ((fa||{}).enterprises || []); };
+const HC_MOVES = [
+  { id:"heir", label:"Bring an heir or family member in properly", raises:{ management:20, succession:35, laborCap:10 }, cost:"Below-market wages for a period, and real decision authority handed over.", unlocks:"Lifts management capacity durably.", needs:"Someone willing, and a senior generation willing to hand over actual decisions.", link:"legacy" },
+  { id:"counterseason", label:"Add a counter-seasonal venture so roles become year-round", raises:{ laborCap:30, expertise:10 }, cost:"The new venture has to be real work in the off months.", unlocks:"Creates a stronger recruiting proposition.", needs:"An enterprise whose peak sits opposite your current one." },
+  { id:"trade", label:"Trade labour and equipment with a neighbouring operation", raises:{ laborCap:20, network:15 }, cost:"The cost is reciprocity, and the risk is conflicting peaks.", unlocks:"Adds peak capacity without payroll.", needs:"A neighbour whose peak does not coincide with yours." },
+  { id:"outsource", label:"Outsource field or custom work", raises:{ laborCap:25 }, cost:"Converts a fixed cost to a variable one at a higher per-unit rate.", unlocks:"Frees owner and crew time.", needs:"A reliable custom operator." },
+  { id:"automate", label:"Automate the back office", raises:{ management:15, laborCap:10 }, cost:"Low; time cards, payroll, bookkeeping and scheduling are usual candidates.", unlocks:"Frees the operator specifically.", needs:"Willingness to change a routine." },
+  { id:"slack", label:"Overhire and build slack", raises:{ laborCap:25 }, cost:"You are paying for capacity you will not use every day.", unlocks:"Adds resilience when people do not show up.", needs:"Margin to absorb it and a pool to draw from." },
+  { id:"specialize", label:"Hire for a skill you do not have", raises:{ expertise:30, management:10 }, cost:"The most expensive move on this list.", unlocks:"Opens opportunities gated on expertise.", needs:"Enough scale to keep that person busy." },
+];
+const applyHCMoves = (levers, selected) => { const out={...(levers?.trust||{})}; (selected||[]).forEach(id => { const mv=HC_MOVES.find(m=>m.id===id); if (!mv) return; Object.entries(mv.raises).forEach(([k,v]) => { out[k]=Math.min(100,(parseFloat(out[k])||HUMAN_ITEMS.find(h=>h.id===k)?.default||0)+v); }); }); return out; };
+const operatorIsSPOF = (levers) => { const t=levers?.trust||{}; return (parseFloat(t.laborCap)||0)<=30 && (parseFloat(t.succession)||0)<=30; };
 // Each lever category is now built from specific, measurable items rather than one
 // blanket rating. Every item is framed so a HIGHER value (0–100) always means MORE
 // opportunity — i.e. "idle capacity" or "strength," not raw utilization — so scoring
@@ -2551,7 +2564,7 @@ const scoredOpps = (rd, faEnterprises, faS3vals) => { const d=rd.data||{}; const
 
 // ─────────────────────────────────────────────────────────────────────────────
 // RD STAGE 1 — Baseline & readiness
-// ─────────────────────────────────────────────────────────────────────────────
+// ───────────��─────────────────────────────────────────────────────────────────
 function RD1({ rd, setRData, fa }) {
   const d = rd.data; const b = d.baseline || {};
   const set = (f,v) => setRData(s => ({ ...s, baseline:{ ...(s.baseline||{}), [f]:v } }));
@@ -2628,7 +2641,7 @@ function PeerIncomeBenchmark({ revTier }) {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // RD STAGE 2 — Goal alignment
-// ─────────────────────────────────────────────────────────────────────────────
+// ────────────────────────────────────���────────────────────────────────────────
 function RD2({ rd, setRData }) {
   const g = rd.data.goals2 || {};
   const set = (f,v) => setRData(s => ({ ...s, goals2:{ ...(s.goals2||{}), [f]:v } }));
@@ -3462,7 +3475,7 @@ const FindingBlock = ({ kind, tag, heading, source, children }) => {
 
 // ═════════════════════════════════════════════════════════════════════════════
 // ACTION PLAN — twelve business areas, ranked into three priorities
-// ═════════════════════════════════════════════════════════════════════════════
+// ════════════════════════════════════════��════════════════════════════════════
 // Areas map to one of the four MFP categories, and some map to a guided module.
 // Ranking is weight-aware: a constraint area gates everything downstream, a value
 // area produces the largest near-term lift, so neither is ranked on raw score alone.
@@ -6480,6 +6493,343 @@ const GENERIC_FARM_FINANCIALS = {
   beginAssets:"2850000", beginLiab:"1240000", endAssets:"2960000", endLiab:"1195000",
   livingWithdrawals:"68000", incomeTaxes:"34000",
 };
+
+function LEG12({ leg, setLegData, profile }) {
+  const d = leg.data || {};
+  const parcels = d.parcels || [];
+  const tierKey = legacyTier(leg);
+  const ready = tierKey === "structural" || tierKey === "execution";
+  const [open, setOpen] = useState(null);
+
+  const setP = (i, field, val) => setLegData({ parcels: parcels.map((x,k)=>k===i?{...x,[field]:val}:x) });
+  const add = () => { setLegData({ parcels:[...parcels, { label:"", state:(profile?.location||"").slice(-2).toUpperCase(), county:"", landClass:"dryland", deededAcres:"", tillableAcres:"", nccpi:"", irrigated:"", waterRight:"", useValue:"", boundary:"acreage" }] }); setOpen(parcels.length); };
+  const remove = (i) => setLegData({ parcels: parcels.filter((_,k)=>k!==i) });
+
+  const results = parcels.map(valueParcel);
+  const totalMid = results.reduce((s,r,i) => s + (parseFloat(parcels[i].overrideValue) || r.mid || 0), 0);
+  const needAppraisal = results.filter(r => r.requiresAppraisal).length;
+  const noBoundary = parcels.filter(p => !p.nccpi).length;
+
+  const confPill = (c) => c==="High" ? "strong" : c==="Medium" ? "watch" : c==="Refer" ? "info" : "vuln";
+
+  return (
+    <div>
+      <Head eyebrow="Legacy · Stage 13" title="Parcels and land valuation" sub="A value for every parcel the family owns. That number flows into estate size, buy-sell funding, insurance sizing, and the equalisation maths between heirs, so if it is wrong everything downstream is wrong." />
+
+      {!ready && (
+        <Flag type="warn">The readiness stages put this family at {READINESS_TIERS[tierKey].label.toLowerCase()}. You can value parcels here, but the numbers will sit in front of decisions that have not been made yet. {READINESS_TIERS[tierKey].rec}</Flag>
+      )}
+
+      <Flag type="danger">These are planning estimates, not qualified appraisals. Estate and gift tax filings require a qualified appraisal. No use-value or assessed figure appears anywhere in this module as an asset value, because those are tax figures and routinely sit thirty to eighty percent below market.</Flag>
+
+      <div style={cardStyle({ borderTop:`4px solid ${T.amber}` })}>
+        <div style={cardLblStyle()}>Before you trust these numbers</div>
+        <p style={{ fontSize:13.5, color:T.fgM, margin:"0 0 10px", lineHeight:1.6 }}>The benchmark values behind this engine are <b>placeholders</b>, not USDA figures. Live SSURGO soil queries and the NASS land value and cash rent series belong in a scheduled ingestion job writing to our own table, which needs a backend this app does not have yet.</p>
+        <p style={{ fontSize:13.5, color:T.fgM, margin:0, lineHeight:1.6 }}>Every benchmark, cash rent, and cap rate below is editable per parcel. Provenance records whether each figure came from the placeholder table or from you, so a placeholder can never be mistaken for a survey figure.</p>
+      </div>
+
+      <div style={cardStyle()}>
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", gap:12, flexWrap:"wrap", marginBottom:12 }}>
+          <div style={cardLblStyle({ marginBottom:0 })}>Parcels</div>
+          <button onClick={add} style={{ ...btnStyle("outline"), fontSize:12, padding:"6px 13px" }}>+ Add a parcel</button>
+        </div>
+        {parcels.length === 0 && <p style={{ fontSize:13.5, color:T.fgS, fontStyle:"italic", margin:0 }}>No parcels yet. Add the ground the family owns, one parcel per deed where you can.</p>}
+
+        {parcels.map((p,i) => {
+          const r = results[i];
+          const isOpen = open === i;
+          const override = parseFloat(p.overrideValue) || null;
+          return (
+            <div key={i} style={{ border:`1px solid ${r.requiresAppraisal?T.amber:T.border}`, borderRadius:9, marginBottom:11, overflow:"hidden" }}>
+              <div onClick={()=>setOpen(isOpen?null:i)} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", gap:12, padding:"12px 15px", cursor:"pointer", background:isOpen?T.bgAlt:"#fff", flexWrap:"wrap" }}>
+                <div>
+                  <div style={{ fontSize:14.5, fontWeight:600, color:T.navy }}>{p.label || `Parcel ${i+1}`}</div>
+                  <div style={{ fontSize:12, color:T.fgS }}>{r.cls.label}{p.deededAcres?` · ${p.deededAcres} acres`:""}{p.state?` · ${p.state}`:""}</div>
+                </div>
+                <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+                  <span style={pillStyle(confPill(r.confidence))}>{r.confidence}</span>
+                  <span style={{ fontSize:16, fontWeight:600, color:override?T.blue:T.navy }}>
+                    {override ? fmt$(override) : r.mid ? fmt$(r.mid) : "—"}
+                  </span>
+                </div>
+              </div>
+
+              {isOpen && (
+                <div style={{ padding:"14px 15px", borderTop:`1px solid ${T.border}` }}>
+                  <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:12, marginBottom:12 }}>
+                    <div><label style={labelStyle}>Label</label><input style={inputStyle()} value={p.label} onChange={e=>setP(i,"label",e.target.value)} placeholder="Home place, north 80" /></div>
+                    <div><label style={labelStyle}>State</label>
+                      <select style={inputStyle()} value={p.state} onChange={e=>setP(i,"state",e.target.value)}>
+                        <option value="">Select</option>
+                        {BENCH_STATES.map(s=><option key={s} value={s}>{s}</option>)}
+                      </select></div>
+                    <div><label style={labelStyle}>County</label><input style={inputStyle()} value={p.county} onChange={e=>setP(i,"county",e.target.value)} /></div>
+                  </div>
+
+                  <div style={{ marginBottom:12 }}>
+                    <label style={labelStyle}>Land class</label>
+                    <select style={inputStyle()} value={p.landClass} onChange={e=>setP(i,"landClass",e.target.value)}>
+                      {LAND_CLASSES.map(c=><option key={c.id} value={c.id}>{c.label}</option>)}
+                    </select>
+                    <div style={{ fontSize:11.5, color:T.fgS, marginTop:5, fontStyle:"italic" }}>{r.cls.note}</div>
+                  </div>
+
+                  <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:12, marginBottom:12 }}>
+                    <div><label style={labelStyle}>Deeded acres</label><input type="number" style={inputStyle()} value={p.deededAcres} onChange={e=>setP(i,"deededAcres",e.target.value)} /></div>
+                    <div><label style={labelStyle}>Tillable acres</label><input type="number" style={inputStyle()} value={p.tillableAcres} onChange={e=>setP(i,"tillableAcres",e.target.value)} /></div>
+                    <div><label style={labelStyle}>Productivity index</label><input type="number" step="0.01" min="0" max="1" style={inputStyle()} value={p.nccpi} onChange={e=>setP(i,"nccpi",e.target.value)} placeholder="state mean" />
+                      <div style={{ fontSize:11, color:T.fgS, marginTop:4 }}>NCCPI 0 to 1. Blank uses the state mean.</div></div>
+                  </div>
+
+                  <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:12, marginBottom:12 }}>
+                    <div><label style={labelStyle}>Irrigated</label>
+                      <select style={inputStyle()} value={p.irrigated} onChange={e=>setP(i,"irrigated",e.target.value)}>
+                        <option value="">Unknown</option><option value="yes">Yes</option><option value="no">No</option></select></div>
+                    <div><label style={labelStyle}>Water right</label>
+                      <select style={inputStyle()} value={p.waterRight} onChange={e=>setP(i,"waterRight",e.target.value)}>
+                        <option value="">Unknown</option><option value="conveyed">Conveys with the land</option>
+                        <option value="separate">Separately held</option><option value="na">Not applicable</option></select></div>
+                    <div><label style={labelStyle}>Use-value enrolled</label>
+                      <select style={inputStyle()} value={p.useValue} onChange={e=>setP(i,"useValue",e.target.value)}>
+                        <option value="">Unknown</option><option value="yes">Yes</option><option value="no">No</option></select></div>
+                  </div>
+
+                  {p.landClass === "crp" && (
+                    <div style={{ marginBottom:12 }}><label style={labelStyle}>CRP contract payment per acre</label>
+                      <input type="number" style={inputStyle()} value={p.crpPayment||""} onChange={e=>setP(i,"crpPayment",e.target.value)} placeholder="$ per acre per year" /></div>
+                  )}
+
+                  <details style={{ marginBottom:12 }}>
+                    <summary style={{ fontSize:12.5, color:T.blue, cursor:"pointer", marginBottom:8 }}>Override the benchmark figures for this parcel</summary>
+                    <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:12, marginTop:8 }}>
+                      <div><label style={labelStyle}>Value per acre</label><input type="number" style={inputStyle()} value={p.benchOverride||""} onChange={e=>setP(i,"benchOverride",e.target.value)} placeholder={r.provenance.benchmark ? String(Math.round(r.provenance.benchmark)) : ""} /></div>
+                      <div><label style={labelStyle}>Cash rent per acre</label><input type="number" style={inputStyle()} value={p.rentOverride||""} onChange={e=>setP(i,"rentOverride",e.target.value)} placeholder={r.provenance.cashRent ? String(Math.round(r.provenance.cashRent)) : ""} /></div>
+                      <div><label style={labelStyle}>Cap rate %</label><input type="number" step="0.1" style={inputStyle()} value={p.capOverride||""} onChange={e=>setP(i,"capOverride",e.target.value)} placeholder={r.provenance.capRate ? (r.provenance.capRate*100).toFixed(2) : ""} /></div>
+                    </div>
+                  </details>
+
+                  {/* the two methods and their divergence */}
+                  {r.requiresAppraisal && r.why && !r.methodA ? (
+                    <Flag type="warn">{r.why}</Flag>
+                  ) : (
+                    <div style={{ background:T.bgAlt, borderRadius:8, padding:"13px 15px", marginBottom:12 }}>
+                      <div style={{ fontSize:10.5, letterSpacing:"0.13em", textTransform:"uppercase", color:T.fgS, marginBottom:10 }}>Two methods, compared</div>
+                      <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:12 }}>
+                        {[["Market comparison", r.methodA, "Benchmark per acre, indexed by soil productivity"],
+                          ["Income capitalisation", r.methodB, "County cash rent divided by the cap rate"],
+                          ["Divergence", r.divergence!=null ? Math.round(r.divergence*100)+"%" : null, "How far apart the two methods land"]].map(([lab,val,sub],k)=>(
+                          <div key={k}>
+                            <div style={{ fontSize:11, color:T.fgS, marginBottom:3 }}>{lab}</div>
+                            <div style={{ fontSize:17, fontWeight:600, color:k===2?(r.divergence>0.35?T.red:r.divergence>0.15?T.amberT:T.dgreen):T.navy }}>
+                              {k===2 ? (val||"—") : (val ? fmt$(val) : "not run")}
+                            </div>
+                            <div style={{ fontSize:10.5, color:T.fgS, marginTop:3, lineHeight:1.4 }}>{sub}</div>
+                          </div>
+                        ))}
+                      </div>
+                      {r.mid && (
+                        <div style={{ marginTop:12, paddingTop:11, borderTop:`1px solid ${T.border}` }}>
+                          <div style={{ fontSize:11, color:T.fgS, marginBottom:3 }}>Working range</div>
+                          <div style={{ fontSize:15, color:T.fg }}>{fmt$(r.low)} to {fmt$(r.high)}, midpoint <b>{fmt$(r.mid)}</b></div>
+                        </div>
+                      )}
+                      {r.why && <div style={{ marginTop:11 }}><Flag type="warn">{r.why}</Flag></div>}
+                      {r.divergence === 0 && r.methodB && (
+                        <div style={{ marginTop:9, fontSize:11.5, color:T.fgS, fontStyle:"italic" }}>
+                          Zero divergence here is a limitation, not a result. At state-average productivity with a derived cap rate, the two methods reduce to the same expression. The check only does real work once soil differs from the state mean or a benchmark is overridden.
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {p.waterRight === "separate" && (
+                    <Flag type="warn">The water right on this parcel is held separately from the land. A family dividing ground among heirs can strand the water on the wrong parcel. This module flags it and does not value it. Take it to counsel.</Flag>
+                  )}
+                  {p.useValue === "yes" && (
+                    <Flag type="info">This parcel is enrolled in current-use assessment. Transfer can trigger rollback or recoupment, which varies by state and routinely blindsides families. The tax bill's figure is not the estate's figure.</Flag>
+                  )}
+
+                  <div style={{ display:"grid", gridTemplateColumns:"1fr 2fr", gap:12, marginBottom:10 }}>
+                    <div><label style={labelStyle}>Override the value</label><input type="number" style={inputStyle()} value={p.overrideValue||""} onChange={e=>setP(i,"overrideValue",e.target.value)} placeholder="$ total" /></div>
+                    <div><label style={labelStyle}>Reason for the override</label><input style={inputStyle()} value={p.overrideReason||""} onChange={e=>setP(i,"overrideReason",e.target.value)} placeholder="Required. An appraisal, a recent offer, a known sale next door." /></div>
+                  </div>
+
+                  <details>
+                    <summary style={{ fontSize:12.5, color:T.blue, cursor:"pointer" }}>Provenance, every input and where it came from</summary>
+                    <div style={{ marginTop:9, background:"#fff", border:`1px solid ${T.border}`, borderRadius:6, padding:"11px 13px" }}>
+                      {Object.entries(r.provenance).filter(([,v])=>v!==null&&v!==undefined).map(([k,v])=>(
+                        <div key={k} style={{ display:"flex", gap:10, fontSize:11.5, padding:"3px 0", borderBottom:`1px dashed ${T.div}` }}>
+                          <span style={{ width:170, color:T.fgS, flexShrink:0 }}>{k}</span>
+                          <span style={{ color:T.fg }}>{typeof v === "number" ? (v<1 && v>0 ? v.toFixed(4) : Math.round(v).toLocaleString()) : String(v)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </details>
+
+                  <button onClick={()=>remove(i)} style={{ ...btnStyle("ghost"), marginTop:11, fontSize:11.5 }}>Remove this parcel</button>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {parcels.length > 0 && (
+        <div style={cardStyle({ borderTop:`4px solid ${T.navy}` })}>
+          <div style={cardLblStyle()}>Portfolio</div>
+          <div style={{ display:"flex", gap:26, flexWrap:"wrap", marginBottom:14 }}>
+            {[["Parcels", parcels.length],
+              ["Total acres", parcels.reduce((s,p)=>s+(parseFloat(p.deededAcres)||0),0).toLocaleString()],
+              ["Working value", fmt$(totalMid)],
+              ["Need an appraisal", needAppraisal]].map(([lab,val],k)=>(
+              <div key={k}>
+                <div style={{ fontSize:11, color:T.fgS, marginBottom:3 }}>{lab}</div>
+                <div style={{ fontSize:21, fontWeight:600, color:k===3&&needAppraisal>0?T.amberT:T.navy }}>{val}</div>
+              </div>
+            ))}
+          </div>
+          {needAppraisal > 0 && <Flag type="warn">{needAppraisal === 1 ? "One parcel needs" : `${needAppraisal} parcels need`} professional appraisal before the number is usable in a plan. That is the engine working, not failing.</Flag>}
+          {noBoundary > 0 && <Flag type="info">{noBoundary === 1 ? "One parcel is" : `${noBoundary} parcels are`} using the state mean productivity index because no soil index was entered. Adding a real index is the single biggest improvement available to these estimates.</Flag>}
+        </div>
+      )}
+    </div>
+  );
+}
+
+
+// ══════���══════════════════════════════════════════════════════���═══���══������═════���═
+// SUCCESSOR TRACK
+// ════════════════════���════���══════���═════════��══════════════════════════════════
+// Written to the successor, not about them. Their entry point is not "help plan a
+// retirement" but "find out what you would be inheriting and put your version on
+// the table". Nothing in this track is visible to the senior generation until the
+// compare view unlocks, and the successor controls that consent themselves.
+
+
+function LEG13({ leg, profile }) {
+  const d = leg.data || {};
+  const tierKey = legacyTier(leg);
+  const tier = READINESS_TIERS[tierKey];
+  const t = d.transfers || {};
+  const gaps = SUCCESSOR_EXPOSURE.filter(s => !(d.exposure||{})[s.id]);
+  const notMet = (d.landlords||[]).filter(x => x.name && x.met === "no");
+  const unvoiced = KNOWS_WHAT.filter(p => ((d.knows||{})[p.id] === 0 || (d.knows||{})[p.id] === 1));
+  const ready = tierKey === "structural" || tierKey === "execution";
+
+  const H = ({children}) => <div style={{ fontSize:11, letterSpacing:"0.13em", textTransform:"uppercase", color:T.fgS, margin:"24px 0 11px", paddingBottom:6, borderBottom:`1px solid ${T.border}` }}>{children}</div>;
+
+  return (
+    <div>
+      <Head eyebrow="Legacy · Stage 14" title="Where this leaves you" sub="Not a plan. A readiness profile, and a sequenced list of what to actually do next." />
+
+      <div style={cardStyle({ borderTop:`4px solid ${tierKey==="execution"?T.moss:tierKey==="conversation"?T.red:T.amber}` })}>
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", gap:12, flexWrap:"wrap", marginBottom:10 }}>
+          <div style={{ fontSize:22, fontWeight:600, color:T.navy }}>{tier.label}</div>
+          <span style={pillStyle(tier.pill)}>{tierKey}</span>
+        </div>
+        <p style={{ fontSize:14, color:T.fgM, margin:"0 0 12px", lineHeight:1.6 }}>{tier.signal}</p>
+        <div style={{ borderLeft:`2px solid ${T.blue}`, background:T.blueL, borderRadius:"0 5px 5px 0", padding:"12px 15px" }}>
+          <div style={{ fontSize:10, letterSpacing:"0.12em", fontWeight:600, color:T.blue, marginBottom:5 }}>WHAT TO DO NEXT</div>
+          <p style={{ fontSize:13.5, color:T.navy, margin:0, lineHeight:1.6 }}>{tier.rec}</p>
+        </div>
+        <p style={{ fontSize:12, color:T.fgS, marginTop:12, marginBottom:0, fontStyle:"italic" }}>This describes where the process is, not the people in it.</p>
+      </div>
+
+      <div style={cardStyle()}>
+        <H>The three transfers, today</H>
+        {TRANSFERS.map((tr,k) => {
+          const now = Number((t[tr.id]||{}).now || 0), y10 = Number((t[tr.id]||{}).y10 || 0);
+          return (
+            <div key={tr.id} style={{ display:"flex", alignItems:"center", gap:12, padding:"8px 0", borderBottom:`1px dashed ${T.border}` }}>
+              <span style={{ width:110, fontSize:13.5, fontWeight:600, color:T.fg, flexShrink:0 }}>{tr.label}</span>
+              <div style={{ flex:1, height:8, background:"#dde1e8", borderRadius:4, overflow:"hidden", position:"relative" }}>
+                <div style={{ width:`${now}%`, height:"100%", background:[T.moss,T.blue,T.navy][k], borderRadius:4 }} />
+              </div>
+              <span style={{ width:150, textAlign:"right", fontSize:12.5, color:T.fgM, flexShrink:0 }}>{now}% now, {y10}% at ten years</span>
+            </div>
+          );
+        })}
+
+        {gaps.length > 0 && (<>
+          <H>Management to hand over</H>
+          <ol style={{ margin:0, paddingLeft:20, fontSize:14, color:T.fgM, lineHeight:1.8 }}>
+            {gaps.slice(0,3).map(g => <li key={g.id}>{g.label}</li>)}
+          </ol>
+          {gaps.length > 3 && <p style={{ fontSize:12.5, color:T.fgS, marginTop:8, marginBottom:0 }}>Plus {gaps.length-3} more. Two per year is a realistic pace.</p>}
+        </>)}
+
+        {unvoiced.length > 0 && (<>
+          <H>Conversations not yet had</H>
+          <ul style={{ margin:0, paddingLeft:20, fontSize:14, color:T.fgM, lineHeight:1.8 }}>
+            {unvoiced.map(p => <li key={p.id}>{p.label}</li>)}
+          </ul>
+        </>)}
+
+        {d.nextChapterRole && (<>
+          <H>The senior generation's ongoing role</H>
+          <div style={{ borderLeft:`2px solid ${T.moss}`, background:T.greenL, borderRadius:"0 5px 5px 0", padding:"12px 15px", fontSize:13.5, color:T.fg, lineHeight:1.6 }}>{d.nextChapterRole}</div>
+        </>)}
+
+        {(d.fairParagraph||"").trim() && (<>
+          <H>Why unequal is fair, in their words</H>
+          <div style={{ borderLeft:`2px solid ${T.navy}`, background:T.bgAlt, borderRadius:"0 5px 5px 0", padding:"12px 15px", fontSize:13.5, color:T.fg, lineHeight:1.7 }}>{d.fairParagraph}</div>
+          {!d.fairSaid && <p style={{ fontSize:12.5, color:T.amberT, marginTop:8, marginBottom:0 }}>Written but not yet said out loud.</p>}
+        </>)}
+
+        {notMet.length > 0 && (<>
+          <H>Landlords to introduce</H>
+          <ul style={{ margin:0, paddingLeft:20, fontSize:14, color:T.fgM, lineHeight:1.8 }}>
+            {notMet.map((x,i) => <li key={i}>{x.name}{x.acres?` · ${x.acres} acres`:""}</li>)}
+          </ul>
+        </>)}
+      </div>
+
+      <div style={cardStyle({ borderTop:`4px solid ${T.blue}` })}>
+        <div style={cardLblStyle()}>People and business: where plans stall</div>
+        <p style={{ fontSize:14, color:T.fgM, lineHeight:1.6, marginTop:0 }}>In a typical transition conversation, most of the work is about people. The business side is largely arithmetic; the people side is where plans stall.</p>
+        <div style={{ display:"flex", height:18, borderRadius:5, overflow:"hidden", margin:"14px 0 7px" }}><div style={{ width:"80%", background:T.blue }} /><div style={{ width:"20%", background:T.moss }} /></div>
+        <div style={{ display:"flex", justifyContent:"space-between", color:T.fgS, fontSize:11.5 }}><span>8 of 10 questions: people</span><span>2 of 10: business</span></div>
+      </div>
+
+      <div style={cardStyle({ borderTop:`4px solid ${ready?T.moss:T.silver}` })}>
+        <div style={cardLblStyle()}>Asset inventory and valuation</div>
+        {ready ? (
+          <>
+            <p style={{ fontSize:14, color:T.fgM, marginTop:0, lineHeight:1.6 }}>The operating question has been tested far enough that the ownership question can be answered intelligently. Legacy Acres picks up here, and it opens with context rather than a blank form: which ground is operationally central, which is exposed to the fair-versus-equal problem, and which is rented out versus farmed.</p>
+            <a href="https://legacyacres.co/" target="_blank" rel="noopener noreferrer" style={{ ...btnStyle("primary"), display:"inline-block", textDecoration:"none" }}>Continue in Legacy Acres →</a>
+          </>
+        ) : (
+          <>
+            <Flag type="warn">Not yet. Filling out an asset inventory from here would produce a tidy document that changes nothing, and it is the most common way succession software gets opened once and abandoned.</Flag>
+            <p style={{ fontSize:14, color:T.fgM, marginBottom:0, lineHeight:1.6 }}>Work the recommendation above first. Come back to this page afterwards and the handoff will open on its own.</p>
+          </>
+        )}
+      </div>
+
+      <div style={cardStyle()}>
+        <div style={cardLblStyle()}>What this module does not do</div>
+        <ul style={{ margin:0, paddingLeft:20, fontSize:13.5, color:T.fgM, lineHeight:1.9 }}>
+          <li>No legal documents. No operating agreements, buy-sells, or wills.</li>
+          <li>No tax advice. Sequencing questions go to your accountant before assets move.</li>
+          <li>No scoring of your family. The tier above describes the process, never the people.</li>
+        </ul>
+      </div>
+    </div>
+  );
+}
+
+
+// ═════════════════════════════════════════════════════════════════════════════
+// STRATEGIC VISION
+// ═════════════════════════════════════════════════════════════════════════════
+// Takes what the farmer already wrote in the Farm Profile and makes it harder,
+// then converts what survives into rules an employee could actually follow and,
+// more importantly, could cite back at the owner.
+//
+// The test that governs the whole module: a vision one person holds is a
+// preference. A vision the organization holds is a constraint. If someone other
+// than the owner cannot invoke it to stop something, it is not institutional yet.
+
 
 export default function App() {
   const [module, setModule] = useState("vision");
