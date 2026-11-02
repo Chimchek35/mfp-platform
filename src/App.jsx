@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, useEffect } from "react";
+import { Fragment, useState, useMemo, useRef, useEffect } from "react";
 import { loadSavedWork, syncSavedWork } from "./backend.js";
 import EagleEye from "./EagleEye.jsx";
 import FarmKnowledgeSearch from "./FarmKnowledgeSearch.jsx";
@@ -30,27 +30,31 @@ const FontStyles = () => (
     .mfp-body-anim{animation:mfpFade .32s cubic-bezier(0.16,1,0.3,1);}
   .mfp-stage-card{max-width:none;margin:0;width:100%;}
   .mfp-stage-card>*{scroll-margin-top:20px;}
-  .mfp-root.mfp-turbotax-flow{background:#f3f6fb!important;color:#17233d;}
-  .mfp-root.mfp-turbotax-flow .mfp-flow-header{min-height:74px!important;padding:0 34px!important;border-bottom:1px solid #d5e0ea!important;box-shadow:0 1px 10px rgba(14,28,57,.06);background:#fff!important;}
+  .mfp-root.mfp-turbotax-flow{background:#eef2f7!important;color:#17233d;}
+  .mfp-root.mfp-turbotax-flow .mfp-flow-header{min-height:82px!important;padding:0 42px!important;border-bottom:1px solid #e2e5ea!important;box-shadow:0 1px 16px rgba(14,28,57,.05);background:#fff!important;}
   .mfp-root.mfp-turbotax-flow .mfp-flow-header>div:nth-child(2){display:none;}
-  .mfp-root.mfp-turbotax-flow .mfp-flow-header>div:nth-child(1){min-width:260px;}
-  .mfp-root.mfp-turbotax-flow .mfp-flow-header>div:nth-child(3){gap:4px!important;flex:1;justify-content:center;}
-  .mfp-root.mfp-turbotax-flow .mfp-flow-header>div:nth-child(3)>div{padding:8px 13px!important;border-radius:8px!important;}
+  .mfp-root.mfp-turbotax-flow .mfp-flow-header>div:nth-child(1){min-width:280px;}
+  .mfp-root.mfp-turbotax-flow .mfp-flow-header>div:nth-child(3){gap:8px!important;flex:1;justify-content:center;}
+  .mfp-root.mfp-turbotax-flow .mfp-flow-header>div:nth-child(3)>div{padding:10px 16px!important;border-radius:999px!important;}
   .mfp-root.mfp-turbotax-flow .mfp-flow-header>div:nth-child(3)>div:not([style*="rgb"]){background:transparent!important;}
-  .mfp-root.mfp-turbotax-flow .mfp-flow-rail{width:230px!important;background:linear-gradient(180deg,#083d62 0%,#0b5577 48%,#083d62 100%)!important;border-right:1px solid #062f4b;color:#fff!important;}
+  .mfp-root.mfp-turbotax-flow .mfp-flow-rail{width:248px!important;background:linear-gradient(180deg,#083d62 0%,#0b5577 48%,#083d62 100%)!important;border-right:1px solid #062f4b;color:#fff!important;}
   .mfp-root.mfp-turbotax-flow .mfp-flow-rail div,.mfp-root.mfp-turbotax-flow .mfp-flow-rail span{color:#fff!important;}
   .mfp-root.mfp-turbotax-flow .mfp-flow-rail nav>div[style*="background: transparent"]{color:#d9edf4!important;}
-  .mfp-root.mfp-turbotax-flow .mfp-flow-rail>div:first-child{padding:28px 22px 18px!important;background:linear-gradient(145deg,#083d62 0%,#0c7390 62%,#20afd2 100%)!important;color:#fff;}
-  .mfp-root.mfp-turbotax-flow .mfp-flow-rail nav{padding:8px 10px;}
-  .mfp-root.mfp-turbotax-flow .mfp-flow-rail nav>div{border-left:0!important;border-radius:8px;padding:11px 12px!important;margin:3px 0;}
-  .mfp-root.mfp-turbotax-flow .mfp-flow-main{background:#f3f6fb;}
-  .mfp-root.mfp-turbotax-flow .mfp-flow-main>div:first-child{height:66px!important;padding:0 42px!important;background:#fff!important;}
-  .mfp-root.mfp-turbotax-flow .mfp-flow-main>div:nth-child(2){height:5px!important;background:#dfe8f0!important;}
-  .mfp-root.mfp-turbotax-flow .mfp-flow-main>div:nth-child(2)>div{background:linear-gradient(90deg,#0c4477,#1ca8c9)!important;}
+  .mfp-root.mfp-turbotax-flow .mfp-flow-rail>div:first-child{padding:34px 24px 22px!important;background:linear-gradient(145deg,#083d62 0%,#0c7390 62%,#20afd2 100%)!important;color:#fff;}
+  .mfp-root.mfp-turbotax-flow .mfp-flow-rail nav{padding:14px 12px;}
+  .mfp-root.mfp-turbotax-flow .mfp-flow-rail nav>div{border-left:0!important;border-radius:12px;padding:13px 14px!important;margin:4px 0;}
+  .mfp-root.mfp-turbotax-flow .mfp-flow-main{background:#fff;}
+  .mfp-root.mfp-turbotax-flow .mfp-flow-main>div:first-child{height:78px!important;padding:0 58px!important;background:#fff!important;}
+  .mfp-root.mfp-turbotax-flow .mfp-flow-main>div:nth-child(2){height:6px!important;background:#eef0f4!important;}
+  .mfp-root.mfp-turbotax-flow .mfp-flow-main>div:nth-child(2)>div{background:linear-gradient(90deg,#0C4477,#358733)!important;}
   .mfp-root.mfp-turbotax-flow .mfp-stage-card{background:transparent;border:0;border-radius:0;padding:0;box-shadow:none;}
-  .mfp-root.mfp-turbotax-flow .mfp-stage-card h1{font-size:32px!important;line-height:1.2!important;letter-spacing:-.02em!important;color:#17233d;}
-  .mfp-root.mfp-turbotax-flow .mfp-stage-card button{border-radius:8px;}
-  .mfp-root.mfp-turbotax-flow .mfp-stage-card button[style*="background"]{box-shadow:0 2px 5px rgba(12,68,119,.14);}
+  .mfp-root.mfp-turbotax-flow .mfp-stage-card h1{font-size:clamp(34px,4vw,54px)!important;line-height:1.08!important;letter-spacing:-.04em!important;color:#0E1C39;max-width:860px;}
+  .mfp-root.mfp-turbotax-flow .mfp-stage-card h2{font-size:clamp(22px,2.5vw,32px)!important;}
+  .mfp-root.mfp-turbotax-flow .mfp-stage-card button{border-radius:999px;}
+  .mfp-root.mfp-turbotax-flow .mfp-stage-card button[style*="background"]{box-shadow:0 4px 12px rgba(12,68,119,.14);}
+  .mfp-root.mfp-turbotax-flow .mfp-stage-card input,.mfp-root.mfp-turbotax-flow .mfp-stage-card select,.mfp-root.mfp-turbotax-flow .mfp-stage-card textarea{border-radius:12px!important;background:#fff;}
+  .mfp-root.mfp-turbotax-flow .mfp-stage-card>div[style*="border"]{border-radius:18px!important;box-shadow:0 8px 24px rgba(14,28,57,.06);}
+  .mfp-root.mfp-turbotax-flow .mfp-stage-card>div[style*="background: rgb(241"]{background:#f7f8fa!important;border-color:#eef0f4!important;box-shadow:none;}
   @media(max-width:760px){.mfp-root.mfp-turbotax-flow .mfp-flow-header{padding:0 16px!important}.mfp-root.mfp-turbotax-flow .mfp-flow-header>div:nth-child(3){display:none}.mfp-root.mfp-turbotax-flow .mfp-flow-rail{display:none}.mfp-root.mfp-turbotax-flow .mfp-flow-main>div:first-child{padding:0 18px!important}.mfp-root.mfp-turbotax-flow .mfp-stage-card{padding:25px 20px;border-radius:10px}}
 
   `}</style>
@@ -160,9 +164,9 @@ const Head = ({ eyebrow, title, sub }) => (
   </div>
 );
 
-// ─────────────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────�����������������������──�����────────────────────
 // DATA
-// ─────────────────────────────────────────────────────────────────────────────
+// ───────────────────────────────────────────────────────────────────────��─��─��─
 const FA_STAGES = [
   { n:1, label:"Your accounting profile" }, { n:2, label:"Enterprise registry & shared costs" }, { n:3, label:"Goal alignment" },
   { n:4, label:"Upload your documents" }, { n:5, label:"Budgeting & working capital" }, { n:6, label:"Ratio deep dive" }, { n:7, label:"Peer benchmarking" },
@@ -219,7 +223,7 @@ function FA0({ fa, setFA }) {
   const setQ = value => setFA(s => ({ ...s, accountingQuestion: Math.max(0, Math.min(5, value)) }));
   const Option = ({ group, value, children }) => <button type="button" onClick={() => set(group, value)} style={{ display:"block", width:"100%", padding:"13px 15px", marginBottom:8, textAlign:"left", borderRadius:8, border:p[group]===value?`2px solid ${T.blue}`:`1px solid ${T.border}`, background:p[group]===value?T.blueL:"#fff", color:p[group]===value?T.blue:T.navy, cursor:"pointer", fontSize:14, fontWeight:600 }}>{children}</button>;
   return <div>
-    <Head eyebrow="Financial Analysis · Stage 1" title="Start with how you keep the books" sub="Every farm tracks costs differently. We will first establish what your numbers mean, so the analysis does not compare apples to oranges or mistake tax timing for business performance." />
+    <Head eyebrow="Financial Analysis · Stage 1" title="Start with how you keep the books" sub="First, define what your records can tell us." /><img src="/financial-analysis-dashboard.png" alt="Financial analysis dashboard connecting documents, cash flow, budgets, and benchmarking" style={{ width:"100%", maxHeight:170, objectFit:"cover", borderRadius:16, marginBottom:22 }} />
     <div style={{ ...cardStyle(), display:q===0?"block":"none" }}><div style={cardLblStyle()}>What accounting basis do you use?</div>
       <Option group="basis" value="cash">Cash basis — I mostly track money when it moves</Option>
       <Option group="basis" value="accrual">Accrual basis — revenue and expenses are matched to the year earned</Option>
@@ -234,7 +238,7 @@ function FA0({ fa, setFA }) {
       {(fa.csvTransactions||[]).length>0 && <div style={{ marginTop:16 }}><div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:8 }}><strong>{fa.csvTransactions.length} transactions ready for review</strong><span style={{ fontSize:12, color:T.fgS }}>Suggestions are not final</span></div><div style={{ overflowX:"auto", border:`1px solid ${T.border}`, borderRadius:8 }}><table style={{ width:"100%", borderCollapse:"collapse", fontSize:12 }}><thead><tr>{["Description","Amount","Suggested category","Allocation","Why / action"].map(h=><th key={h} style={{ textAlign:"left", padding:"9px 10px", background:T.bgAlt, color:T.fgM, whiteSpace:"nowrap" }}>{h}</th>)}</tr></thead><tbody>{fa.csvTransactions.slice(0,50).map((row,i)=>{ const desc=row.Description||row.description||row.Memo||row.memo||Object.values(row)[0]||"Transaction"; const amount=row.Amount||row.amount||row.Debit||row.debit||"—"; return <tr key={row.id||i}><td style={{ padding:"8px 10px", borderTop:`1px solid ${T.div}` }}>{desc}</td><td style={{ padding:"8px 10px", borderTop:`1px solid ${T.div}`, whiteSpace:"nowrap" }}>{amount}</td><td style={{ padding:"8px 10px", borderTop:`1px solid ${T.div}` }}><select value={row.category} onChange={e=>setFA(s=>({...s,csvTransactions:s.csvTransactions.map((r,j)=>j===i?{...r,category:e.target.value,confidence:"Reviewed"}:r)}))} style={{ ...inputStyle(), minHeight:34, padding:"4px 8px", fontSize:12 }}>{FINANCIAL_CATEGORIES.map(c=><option key={c}>{c}</option>)}</select></td><td style={{ padding:"8px 10px", borderTop:`1px solid ${T.div}`, minWidth:130 }}><input type="range" min="0" max="100" step="25" value={row.allocation??100} onChange={e=>setFA(s=>({...s,csvTransactions:s.csvTransactions.map((r,j)=>j===i?{...r,allocation:Number(e.target.value),category:Number(e.target.value)<100?"Shared / allocate":r.category,confidence:"Reviewed"}:r)}))} /><div style={{ fontSize:11, color:T.fgM }}>{row.allocation??100}% to selected enterprise</div></td><td style={{ padding:"8px 10px", borderTop:`1px solid ${T.div}`, color:row.confidence==="Needs review"||row.confidence==="Review"?T.amberT:T.dgreen }}>{row.confidence==="Review"?"Shared expense — allocate across enterprises":row.confidence}</td></tr>})}</tbody></table></div>{fa.csvTransactions.length>50&&<div style={{ fontSize:12, color:T.fgS, marginTop:6 }}>Showing the first 50 rows. All imported rows remain available for the analysis.</div>}</div>}
     </div>
     <div style={{ ...cardStyle({ background:T.blueL, borderColor:"#c8d9e8" }), display:q>=3?"block":"none" }}><div style={{ display:"flex", gap:10, alignItems:"flex-start" }}><IconChart color={T.blue} size={20} /><div><div style={{ fontWeight:700, color:T.navy }}>Why this comes first</div><div style={{ color:T.fgM, fontSize:13, lineHeight:1.5, marginTop:3 }}>Tax records can be perfectly correct and still be the wrong starting point for enterprise profitability. Your answers determine which ratios can be compared confidently and where we should ask for a balance-sheet adjustment.</div></div></div></div>
-    <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:16, margin:"24px 0 18px", paddingTop:18, borderTop:`1px solid ${T.div}` }}><button type="button" onClick={()=>setQ(q-1)} disabled={q===0} style={{ ...btnStyle("ghost"), opacity:q===0?0.45:1 }}>← Previous</button><div style={{ display:"flex", alignItems:"center", gap:7 }}>{["Accounting basis","Preparer","Records","Transactions","Tax timing","Conversion"].map((label,i)=><button key={label} type="button" aria-label={label} onClick={()=>setQ(i)} style={{ width:7, height:7, minWidth:7, border:0, borderRadius:"50%", padding:0, background:i===q?T.blue:T.border, cursor:"pointer" }} />)}</div><button type="button" onClick={()=>setQ(q+1)} disabled={q===5} style={{ ...btnStyle("primary"), opacity:q===5?0.55:1 }}>{q>=3?"Continue to enterprise profile →":"Next question →"}</button></div>
+    <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:16, margin:"24px 0 18px", paddingTop:18, borderTop:`1px solid ${T.div}` }}><button type="button" onClick={()=>setQ(q-1)} disabled={q===0} style={{ ...btnStyle("ghost"), opacity:q===0?0.45:1 }}>← Previous</button><div style={{ display:"flex", alignItems:"center", gap:7 }}>{["Accounting basis","Preparer","Records","Transactions","Tax timing","Conversion"].map((label,i)=><button key={label} type="button" aria-label={label} onClick={()=>setQ(i)} style={{ width:7, height:7, minWidth:7, maxWidth:7, minHeight:7, maxHeight:7, flex:"0 0 7px", display:"block", lineHeight:0, border:0, borderRadius:"50%", padding:0, background:i===q?T.blue:T.border, cursor:"pointer" }} />)}</div><button type="button" onClick={()=>setQ(q+1)} disabled={q===5} style={{ ...btnStyle("primary"), opacity:q===5?0.55:1 }}>{q>=3?"Continue to enterprise profile →":"Next question →"}</button></div>
   </div>;
 }
 const RD_STAGES = [
@@ -331,7 +335,7 @@ const OPPS = [
   { id:"envServices", label:"Environmental & ecosystem services", category:"Financial capital", cluster:"Environmental & Energy", growthTier:1, sizeFit:["mid","large"], desc:"Water-quality credits, habitat leasing, or biodiversity programs layered on top of existing conservation practices.", time:"9–18 months", capital:"$0–$8K", fit:{asset:35,trust:35,risk:90}, reg:4, seasonal:1 , effort:2, liquidity:2, policyPrograms:[{name:"EQIP / CSP (Environmental Quality Incentives Program / Conservation Stewardship Program)",agency:"USDA NRCS",note:"Cost-share and stewardship payments for conservation practices that can also qualify land for private water-quality or habitat credit markets. Check with your local NRCS office for current sign-up windows."}] },
   { id:"inputRetail", label:"Input sales & agronomy retail", category:"Human capital", cluster:"Custom Field Services", growthTier:3, sizeFit:["small","mid"], desc:"Sell seed, fertilizer, or crop inputs to neighboring farms, leveraging existing supplier relationships and expertise.", time:"3–9 months", capital:"$5K–$15K", fit:{asset:25,trust:75,risk:50}, reg:2, seasonal:3 , effort:3, liquidity:3 },
   { id:"eventRental", label:"Facility rental & hosted events", category:"Human capital", cluster:"Space, Storage & Experience", growthTier:3, sizeFit:["small","mid"], desc:"Rent barns, fields, or converted buildings for weddings, retreats, or community markets during the off-season.", time:"6–12 months", capital:"$5K–$30K", fit:{asset:60,trust:75,risk:35}, reg:3, seasonal:3 , effort:4, liquidity:2 },
-  // ── Financial capital deployment — opportunity-cost alternatives to physical/sweat-equity
+  // ─��� Financial capital deployment — opportunity-cost alternatives to physical/sweat-equity
   // ventures. These convert capital directly into future income or risk protection with
   // minimal ongoing physical effort. Not financial advice — for comparison only; a licensed
   // financial advisor or Farm Credit advisor should be consulted before committing capital.
@@ -518,7 +522,7 @@ function FA1Registry({ fa, setFA }) {
   </div>;
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// ─────────────────────────�����──────��───────────────────────────────────────────
 // FA STAGE 2 — Goal alignment
 // ─────────────────────────────────────────────────────────────────────────────
 function FA2({ fa, setFA }) {
@@ -567,7 +571,7 @@ function FA2({ fa, setFA }) {
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// ──────��─��─��─��───────────────────────────────────────���──���─���─────��─────────────
 // FA STAGE 3 — Ratio deep dive
 // ─────────────────────────────────────────────────────────────────────────────
 // Shared ratio engine for Financial Analysis Stage 3. Extracted to a single function so
@@ -599,7 +603,7 @@ const computeFARatios = (s3) => {
   const dDeferredRev = gv("deferredRevEnd")-gv("deferredRevBegin");
   const revAdj = dAR + dCropInv + dLivestockInv + dFeederInv - dDeferredRev;
 
-  // Expense-side accrual adjustments: Δ(payables + accruals) − Δ(prepaid + growing crops)
+  // Expense-side accrual adjustments: Δ(payables + accruals) ��� Δ(prepaid + growing crops)
   const dAP = gv("apEnd")-gv("apBegin");
   const dAccrInt = gv("accrIntEnd")-gv("accrIntBegin");
   const dOtherAccr = gv("otherAccrEnd")-gv("otherAccrBegin");
@@ -796,6 +800,7 @@ function FA3({ fa, setFA }) {
   const v = id => s3[id]||""; const sv = (id,val) => setFA(s=>({...s,s3vals:{...s.s3vals,[id]:val}}));
   const { hasData, hasAccrualData, nfi, nfifo, oer, dscr, assetTurnover, sgr, ratios: RATIOS } = computeFARatios(s3);
   const [showAccrual, setShowAccrual] = useState(hasAccrualData);
+  const [ratioTab, setRatioTab] = useState("balance");
   const INPUTS = [{id:"gross",label:"Gross farm income",sub:"Total farm revenue for the year",pre:"$"},{id:"opex",label:"Total operating expenses",sub:"Cash operating costs, before depreciation and interest",pre:"$"},{id:"inputs",label:"Input costs (seed, fert, chem, fuel)",sub:"Estimate if not tracked separately",pre:"$"},{id:"rent",label:"Land rent paid",sub:"Cash rent paid to landlords",pre:"$"},{id:"depr",label:"Depreciation",sub:"From your tax return or accountant",pre:"$"},{id:"interest",label:"Interest paid",sub:"From loan statements",pre:"$"},{id:"acres",label:"Total acres farmed",sub:"Owned + rented",suf:"ac"},{id:"principal",label:"Annual principal payments",sub:"From loan statements",pre:"$"}];
   const BS_INPUTS = [{id:"currentAssets",label:"Current farm assets",sub:"Cash, receivables, inventory, prepaid, anything convertible within 12 months",pre:"$"},{id:"currentLiab",label:"Current farm liabilities",sub:"Operating line, payables, accrued interest, principal due within 12 months",pre:"$"},{id:"beginAssets",label:"Beginning-of-year total farm assets",sub:"From your lender's balance sheet or net worth statement",pre:"$"},{id:"beginLiab",label:"Beginning-of-year total farm liabilities",sub:"Loan balances as of January 1",pre:"$"},{id:"endAssets",label:"End-of-year total farm assets",sub:"From your lender's balance sheet or net worth statement",pre:"$"},{id:"endLiab",label:"End-of-year total farm liabilities",sub:"Loan balances as of December 31",pre:"$"},{id:"livingWithdrawals",label:"Family living withdrawals",sub:"Cash taken out for household expenses",pre:"$"},{id:"incomeTaxes",label:"Income taxes paid",sub:"From your tax return or accountant",pre:"$"}];
   const ACCRUAL_ITEMS = [
@@ -812,9 +817,8 @@ function FA3({ fa, setFA }) {
   ];
   return (
     <div>
-      <Head eyebrow="Financial Analysis · Stage 6" title="Ratio deep dive" sub="Enter your financial data — from your MFP Financial Data Worksheet, your own records, or your best estimate. Ratios calculate automatically as you type." />
-      <DocumentScanUpload fa={fa} setFA={setFA} />
-      <div style={cardStyle()}>
+      <Head eyebrow="Financial Analysis · Stage 6" title="Ratio deep dive" sub="Enter your financial data — from your MFP Financial Data Worksheet, your own records, or your best estimate. Ratios calculate automatically as you type." /><div style={{ display:"flex", gap:8, flexWrap:"wrap", borderBottom:`1px solid ${T.border}`, marginBottom:20 }}><button type="button" onClick={()=>setRatioTab("balance")} style={{ ...btnStyle(ratioTab==="balance"?"primary":"outline"), borderRadius:8, marginBottom:8 }}>Balance sheet snapshot</button><button type="button" onClick={()=>setRatioTab("scorecard")} style={{ ...btnStyle(ratioTab==="scorecard"?"primary":"outline"), borderRadius:8, marginBottom:8 }}>Ratio scorecard</button><button type="button" onClick={()=>setRatioTab("inputs")} style={{ ...btnStyle(ratioTab==="inputs"?"primary":"outline"), borderRadius:8, marginBottom:8 }}>Financial inputs & accrual</button></div>
+          <div style={{ display:ratioTab==="inputs"?"block":"none" }}>{/* financial inputs and accrual adjustments */}<div style={cardStyle()}>
         <div style={cardLblStyle()}>Financial data</div>
         <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16 }}>
           {INPUTS.map(f => (
@@ -830,7 +834,7 @@ function FA3({ fa, setFA }) {
           ))}
         </div>
       </div>
-      <div style={cardStyle()}>
+      </div><div style={{ ...cardStyle(), display:ratioTab==="balance"?"block":"none" }}>
         <div style={cardLblStyle()}>Balance sheet snapshot</div>
         <div style={{ fontSize:12, color:T.fgM, marginBottom:14, lineHeight:1.5 }}>Not on Schedule F — these come from a beginning- and end-of-year net worth statement, typically already on file with your lender. They unlock two additional ratios: sustainable growth rate and asset turnover.</div>
         <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16 }}>
@@ -878,7 +882,7 @@ function FA3({ fa, setFA }) {
         )}
       </div>
       {hasData && (
-        <div style={cardStyle({ borderTop:`4px solid ${T.green}` })}>
+        <div style={{ ...cardStyle({ borderTop:`4px solid ${T.green}` }), display:ratioTab==="scorecard"?"block":"none" }}>
           <div style={cardLblStyle()}>Ratio scorecard{hasAccrualData && <span style={{ ...pillStyle("info"), marginLeft:10, fontSize:10 }}>Accrual-adjusted</span>}</div>
           <div style={{ display:"grid", gridTemplateColumns:"1fr 100px 160px", gap:8, background:T.bgAlt, borderRadius:6, padding:"8px 12px", marginBottom:4 }}>
             {["Ratio","Your value","Benchmark"].map((hh,i)=>(<div key={i} style={{ fontSize:11, fontWeight:700, color:T.fgS, textTransform:"uppercase", letterSpacing:"0.05em", textAlign:i===1?"right":"left" }}>{hh}</div>))}
@@ -903,7 +907,7 @@ function FA3({ fa, setFA }) {
   );
 }
 
-// ────────────���───────────────��──────────────���─────────────────────────────────
+// ────────────���───────────────��──────────────���──────────────────────────────��──
 // FA STAGE 4 — Peer benchmarking
 // ─────────────────────────────────────────────────────────────────────────────
 function FA4({ fa, setFA }) {
@@ -917,7 +921,7 @@ function FA4({ fa, setFA }) {
   const unitSuf = bb => bb.unit==="%"?"%":bb.unit==="x"?"x":"";
   return (
     <div>
-      <Head eyebrow="Financial Analysis · Stage 7" title="Peer benchmarking" sub="Compeer Financial and IFBA 2023–24 data. Mid-size row crop, $500K–$5M revenue, Midwest region." />
+      <Head eyebrow="Financial Analysis · Stage 7" title="Peer benchmarking" sub="Compeer Financial and IFBA 2023–24 data. Mid-size row crop, $500K��$5M revenue, Midwest region." />
       <div style={cardStyle()}>
         <div style={cardLblStyle()}>Enter your values</div>
         <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:14 }}>
@@ -953,7 +957,7 @@ function FA4({ fa, setFA }) {
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// ────────────────────���────────────────────────────────────────────────────────
 // FARM RISK — quiz categories & question bank
 // ────────────────────────────────────────────────────────��─���─����────────────────
 // Adapted from the Nationwide Farm Risk Ready℠ framework (risk identification,
@@ -1045,7 +1049,7 @@ function RiskCategoryStage({ risk, setRisk, catIndex, fa, onStartConvo }) {
 
 // ───────────────────────────────��─────────────────────────────────────────────
 // FARM RISK READY℠ PLAN BUILDER — shared data
-// ─────────────────────────────────────────────────────────────────────────────
+// ─────────────────��───────────────────────────────────────────────────────────
 const THREAT_CATEGORIES = [
   { id:"facility", label:"Facility", desc:"Fires, explosions, structure collapse", color:T.red, colorL:T.redL },
   { id:"natural", label:"Natural", desc:"Storms, floods, or wildfires", color:T.amber, colorL:T.amberL },
@@ -2182,7 +2186,7 @@ function CropInsuranceCalculator({ risk, setRisk, fa, profile }) {
           <div style={{ fontSize:12.5, color:"#0A6E8C", lineHeight:1.5 }}>
             <b>Financial Analysis carried over</b> — {faIpa>0 ? `your grain input cost of $${Math.round(faIpa)}/ac from Stage 1 is available.` : `whole-farm figures from Stage 3 suggest roughly $${Math.round(derivedVariable||0)}/ac in variable costs.`} These are whole-farm or blended-grain figures — if you separate corn and soybean costs, treat this as a starting point to confirm, not a precise per-crop number.
           </div>
-          <button onClick={useFAData} style={{ ...btnStyle("outline"), fontSize:11.5, padding:"6px 14px", whiteSpace:"nowrap", flexShrink:0 }}>Use my Financial Analysis numbers →</button>
+          <button onClick={useFAData} style={{ ...btnStyle("outline"), fontSize:11.5, padding:"6px 14px", whiteSpace:"nowrap", flexShrink:0 }}>Use my Financial Analysis numbers ���</button>
         </div>
       )}
 
@@ -2547,7 +2551,7 @@ const scoredOpps = (rd, faEnterprises, faS3vals) => { const d=rd.data||{}; const
 
 // ��������──��������───────────────────────────────────────────────────────────────────
 // RD STAGE 1 — Baseline & readiness
-// ────────────────────────��───────────────────────────────────────���──���─���──���────
+// ────────────────────────�����──���─���─���───���─���────────────────────────������──���������──���────
 function RD1({ rd, setRData, fa }) {
   const d = rd.data; const b = d.baseline || {};
   const set = (f,v) => setRData(s => ({ ...s, baseline:{ ...(s.baseline||{}), [f]:v } }));
@@ -2631,7 +2635,7 @@ function RD2({ rd, setRData }) {
   const Qs = [
     { key:"trigger", title:"What is prompting you to think about diversification?", opts:[["income","Add a new income stream","Grow total revenue beyond the primary commodity"],["risk","Reduce commodity price dependence","One bad year in grain or milk prices is too much exposure"],["assets","Put underutilized assets to work","Land, equipment or facilities that could generate more"],["succession","Build something to pass on","Diversification as part of a legacy and transition plan"],["curiosity","Understand my options first","No specific trigger — want to see what's possible"]] },
     { key:"horizon", title:"What time horizon are you planning for?", opts:[["1yr","First revenue within 12 months","Need results quickly"],["3yr","Building toward a 3-year plan","Willing to invest in groundwork now"],["5yr","Long-term structural change","A fundamental shift in how the farm generates income"]] },
-    { key:"capitalAppetite", title:"How much capital are you willing to invest?", opts:[["zero","$0 �� no-capital paths only","Revenue from existing assets only"],["low","Under $10K","Small pilot investment"],["medium","$10K–$50K","Moderate investment if the return case is clear"],["high","$50K+","Meaningful investment for the right opportunity"]] },
+    { key:"capitalAppetite", title:"How much capital are you willing to invest?", opts:[["zero","$0 ����� no-capital paths only","Revenue from existing assets only"],["low","Under $10K","Small pilot investment"],["medium","$10K–$50K","Moderate investment if the return case is clear"],["high","$50K+","Meaningful investment for the right opportunity"]] },
     { key:"timeAppetite", title:"How much personal time can you commit?", opts:[["minimal","Less than 5 hours/week","Largely passive or handled by existing labor"],["moderate","5–15 hours/week","Can add a side activity without sacrificing core operations"],["significant","15+ hours/week","Willing to restructure around a new primary activity"]] },
   ];
   const Radio = ({ on }) => <div style={{ width:18, height:18, borderRadius:"50%", border:`2px solid ${on?T.blue:T.border}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>{on && <div style={{ width:8, height:8, borderRadius:"50%", background:T.blue }} />}</div>;
@@ -2849,7 +2853,7 @@ function RD5({ rd, setRData }) {
       </div>
       {maxReg>=3 && (
         <div style={cardStyle({ borderTop:`4px solid ${T.amber}` })}>
-          <div style={cardLblStyle()}><Apex color={T.amber} />Regulatory & compliance review — before you commit capital</div>
+          <div style={cardLblStyle()}><Apex color={T.amber} />Regulatory & compliance review ��� before you commit capital</div>
           <div style={{ fontSize:12.5, color:T.fgM, marginBottom:12, lineHeight:1.5 }}>At least one selected path carries meaningful regulatory load. Review these before signing contracts, leases, or making capital purchases.</div>
           {Object.entries(COMPLIANCE_ITEMS).map(([key,text]) => {
             const on = complianceAcked[key];
@@ -2889,7 +2893,7 @@ function RD5({ rd, setRData }) {
 
 // ────────────────────────────────────────────────────────────────────��───����────
 // RD STAGE 6 — Policy & grant enablers
-// ────────────────────────────────────────────────────────────────────────��────
+// ────────────────────────────────────────────────────���───────────────────��────
 // Deliberately mirrors Barrier Identification's structure — same per-opportunity card
 // layout, same checkbox-to-acknowledge pattern — but framed as tailwinds rather than
 // obstacles: policy and grant programs that could actively support a selected path,
@@ -3293,7 +3297,7 @@ function EfficiencyValueImpact({ sel, lev }) {
   );
 }
 
-// ══════���═════════════════════════════════════════════��═══════��═════��══════��═══
+// ══════���════════════════════════════════════════��════��═══════����═════��══════��═══
 // FARM PROFILE — a single 360° farm view that fills in as the farmer completes
 // onboarding and assessments, and feeds relevant fields back into FA, RD, and Risk
 // so nothing has to be entered twice.
@@ -4285,7 +4289,7 @@ function LEG2({ leg, setLegData }) {
   return <div><Head eyebrow="Legacy · Stage 3" title="The successor question" sub="There may be a clear successor, several possibilities, or no successor at all. Naming the reality is the useful first step." /><div style={cardStyle()}><div style={cardLblStyle()}>The successor question</div>{legRow("Is there an identified successor?", <select style={inputStyle()} value={v("successorStatus")} onChange={set("successorStatus")}><option value="">Select</option><option value="working">Yes, and they are already working in the business</option><option value="identified">Yes, identified but not yet involved day to day</option><option value="maybe">Maybe, more than one candidate or nobody has said it out loud</option><option value="none">No, there is no successor</option></select>)}{d.successorStatus === "none" && <><Flag type="info">No successor is a legitimate path, not a failure. It deserves the same rigour as a family transition.</Flag>{legRow("Which direction makes most sense to explore?", <select style={inputStyle()} value={v("noSuccessorPath")} onChange={set("noSuccessorPath")}><option value="">Select</option><option value="sale">Orderly sale of the operation</option><option value="lease">Lease the ground to a neighbouring operation</option><option value="employee">Transition to a non-family employee</option><option value="winddown">Planned wind-down over a set number of years</option><option value="unsure">Genuinely unsure, that is the question</option></select>)}</>}{d.successorStatus === "maybe" && <Flag type="warn">More than one candidate, or nobody having said it out loud, is a common starting point. Naming it is the work of the next few stages.</Flag>}</div></div>;
 }
 
-// ── Stage 3 — What exists on paper ───────────────────────────────────────────
+// ── Stage 3 — What exists on paper ────────────────────���──────────────────────
 function LEG3({ leg, setLegData }) {
   const d = leg.data || {};
   const v = (k) => d[k] || "";
@@ -4416,7 +4420,7 @@ function LEG4({ leg, setLegData }) {
   );
 }
 
-// ── Stage 3 — The next chapter ──────���─────���──────────────────────────────────
+// ── Stage 3 — The next chapter ──────���─────���─���──���──�����──────��───────────────────
 function LEG5({ leg, setLegData }) {
   const d = leg.data || {};
   const v = (k) => d[k] || "";
@@ -4701,7 +4705,7 @@ function LEG9({ leg, setLegData }) {
   );
 }
 
-// ── Stage 8 — Triggers & contingencies ───────────────────────────────────────
+// ── Stage 8 — Triggers & contingencies ──────���─────────���────���────────��────────
 function LEG10({ leg, setLegData }) {
   const d = leg.data || {};
   const c = d.contingency || {};
@@ -4807,7 +4811,7 @@ function LEG11({ leg, setLegData }) {
 }
 
 
-// ── Stage 12 — Parcels and land valuation ────────────────────────────────────
+// ── Stage 12 — Parcels and land valuation ─────���────────���─────────────────────
 function LEG12({ leg, setLegData, profile }) {
   const d = leg.data || {};
   const parcels = d.parcels || [];
@@ -5011,9 +5015,9 @@ function LEG12({ leg, setLegData, profile }) {
 }
 
 
-// ════════════════════════════════════════════════════════════════════���════════
+// ══════���══════════════════════════════════════════════════════���═══���══������═════���═
 // SUCCESSOR TRACK
-// ═════════════════════════════════════════════════════════════════════════════
+// ════════════════════���════���══════���═════════��══════════════════════════════════
 // Written to the successor, not about them. Their entry point is not "help plan a
 // retirement" but "find out what you would be inheriting and put your version on
 // the table". Nothing in this track is visible to the senior generation until the
@@ -5453,7 +5457,7 @@ function LEG13({ leg, profile }) {
 // than the owner cannot invoke it to stop something, it is not institutional yet.
 
 const VIS_STAGES = [
-  { n:1, label:"Competitive advantage" },
+  { n:1, label:"Core Competencies and Competitive Advantage" },
   { n:2, label:"Test competitive advantage" },
   { n:3, label:"Core values" },
   { n:4, label:"Test core values" },
@@ -5572,11 +5576,8 @@ function VIS1({ vis, setVis, profile, goProfile }) {
 
   return (
     <div>
-      <Head eyebrow="Strategic vision · Stage 1" title="Competitive advantage" sub="Start with the reason customers, employees, landlords, or partners choose this operation over another." />
-      <div style={cardStyle({ borderTop:`4px solid ${T.moss}` })}>
-        <div style={cardLblStyle()}>Why this matters</div>
-        <p style={{ fontSize:14, color:T.fgM, lineHeight:1.65, margin:0 }}>A competitive advantage is more than working hard or producing quality. It is a capability, relationship, reputation, location, or way of operating that creates value and is difficult for another farm to copy. Naming it clearly helps you protect it, invest in it, and make better decisions about where the business is headed.</p>
-      </div>
+      <Head eyebrow="Strategic vision · Stage 1" title="Core Competencies and Competitive Advantage" sub="Start with the reason customers, employees, landlords, or partners choose this operation over another." /><VisionInlineVisual stageLabel="Core capability → defensible advantage" />
+      <div style={{ display:"grid", gridTemplateColumns:"minmax(0,1fr) minmax(280px,420px)", gap:24, alignItems:"center", marginBottom:24, padding:"22px 0", borderBottom:`1px solid ${T.div}` }}><div><div style={cardLblStyle()}>The capability behind the farm</div><p style={{ fontSize:15, color:T.fgM, lineHeight:1.55, margin:0, maxWidth:560 }}>What can this operation do exceptionally well—and what would be difficult for another farm to copy?</p></div><img src="/vision-competitive-advantage.png" alt="Infographic connecting farm enterprises, family ownership, cash flow, customers, and long-term growth" style={{ width:"100%", height:180, objectFit:"cover", borderRadius:16 }} /></div>
       {!hasProfile && (<>
         <Flag type="warn">Your Farm Profile does not have competitive advantage, core values, or objectives filled in yet. You can add items here directly, or fill the profile first.
           {goProfile && <div style={{ marginTop:9 }}><button onClick={goProfile} style={{ ...btnStyle("outline"), fontSize:12, padding:"6px 13px" }}>Open Farm Profile</button></div>}
@@ -5646,7 +5647,7 @@ function VIS1({ vis, setVis, profile, goProfile }) {
   </div>;
   }
 
-// ── Vision 3 — Test it ───────────────────────────────────────────────────────
+// ── Vision 3 — Test it ────────────�����──────��────────────���─────���───���─���─────────
   function VIS2({ vis, setVis, kind="advantage" }) {
   const isValuesTest = kind === "value";
   const items = (vis.items||[]).filter(i => i.kind === kind && i.text && i.text.trim());
@@ -5655,13 +5656,13 @@ function VIS1({ vis, setVis, profile, goProfile }) {
 
   const title = isValuesTest ? "Test core values" : "Test competitive advantage";
   const eyebrow = isValuesTest ? "Strategic vision · Stage 4" : "Strategic vision · Stage 2";
-  const sub = isValuesTest ? "A value is useful when it changes a real decision. Test whether each principle is specific, observable, and strong enough to guide the operation." : "Most operations answer the competitive advantage question with hard work and quality. Neither one is an advantage. These questions find out which of your claims actually are.";
+  const sub = isValuesTest ? "Test whether each value changes a real decision." : "Test which advantages are real, specific, and defensible.";
   if (!items.length) return <div><Head eyebrow={eyebrow} title={title} sub="" /><Flag type="warn">Nothing to test yet. Go back a stage and bring in what you have written.</Flag></div>;
   
   return (
   <div>
   <Head eyebrow={eyebrow} title={title} sub={sub} />
-      <Flag type="info">Expect several of these to get demoted. That is the module working. An honest short list is worth more than a long one nobody believes.</Flag>
+      <Flag type="info">A shorter, honest list is more useful than a long one.</Flag>
 
       {items.map(it => {
         const t = it.tests || {};
@@ -5725,12 +5726,12 @@ function VIS3({ vis, setVis }) {
   const answered = values.filter(v => ((v.tests||{}).cost||"").trim().length > 10).length;
   return (
     <div>
-      <Head eyebrow="Strategic vision · Stage 5" title="What it has cost you" sub="A value that has never cost anything is not governing behaviour, it is decoration. This is the question most operators have a real answer to and have never been asked." />
+      <Head eyebrow="Strategic vision · Stage 5" title="What it has cost you" sub="A value becomes real when it changes a decision." />
       {values.length === 0 ? (
         <Flag type="warn">No core values recorded yet. Go back to stage 1 and mark at least one claim as a core value.</Flag>
       ) : (
         <>
-          <Flag type="info">A good answer names a specific thing you turned down, lost, or paid more for. If nothing comes to mind, that is worth knowing too.</Flag>
+          <Flag type="info">Name one decision, contract, tenant, or price you gave up to keep this value.</Flag>
           {values.map(v => (
             <div key={v.id} style={cardStyle()}>
               <div style={{ fontSize:15.5, fontWeight:600, color:T.navy, marginBottom:4, lineHeight:1.45 }}>{v.text}</div>
@@ -5816,7 +5817,7 @@ function VIS4({ vis, setVis }) {
   );
 }
 
-// ── Vision 5 — Who holds this ────────���────────────��──────────────────────────
+// ── Vision 5 — Who holds this ────────���────────────��────────────���─────────────
 function VIS5({ vis, setVis, goLegacy }) {
   const h = vis.holders || {};
   const setH = (id,val) => setVis({ holders:{ ...h, [id]:val } });
@@ -5869,7 +5870,7 @@ function VIS5({ vis, setVis, goLegacy }) {
   );
 }
 
-// ── Vision 6 — Where it binds ───────────────────────────────��────���───────────
+// ── Vision 6 — Where it binds ────���─��────�����───────────��───────��────���───────────
 function VIS6({ vis, setVis }) {
   const rules = vis.rules || [];
   const toggle = (i, bindId) => {
@@ -5917,7 +5918,7 @@ function VIS6({ vis, setVis }) {
   );
 }
 
-// ── Vision 7 — The statement ───────────────────────────���──────────��──────────
+// ── Vision 7 — The statement ───────────────────────────���───────���──��──────────
 function VIS7({ vis, setVis, profile }) {
   const s = visStats(vis);
   const pub = vis.published || {};
@@ -5948,7 +5949,7 @@ function VIS7({ vis, setVis, profile }) {
 
   return (
     <div>
-      <Head eyebrow="Strategic vision · Stage 9" title="The statement" sub="Assembled from your own words rather than rewritten. A farm team can tell instantly when a document was not written by the person who runs the place." />
+      <Head eyebrow="Strategic vision · Stage 9" title="The statement" sub="Assembled from your own words rather than rewritten. A farm team can tell instantly when a document was not written by the person who runs the place." /><VisionInlineVisual stageLabel="Tested insight → shared operating statement" />
 
       {!vis.assembled && (
         <div style={cardStyle({ borderTop:`4px solid ${T.moss}` })}>
@@ -6015,10 +6016,10 @@ function VIS_PROFILE({ vis, profile, setProfile, goFA, fa }) {
   const field = (label,key,placeholder,multi=false) => <label style={{ ...labelStyle, display:"block" }}>{label}{multi?<textarea value={draft[key]||""} onChange={update(key)} placeholder={placeholder} style={inputStyle({ minHeight:70, marginTop:6 })} />:<input value={draft[key]||""} onChange={update(key)} placeholder={placeholder} style={inputStyle({ marginTop:6 })} />}</label>;
   const box = (title, text, color) => <div style={cardStyle({ marginBottom:0, borderTop:`4px solid ${color}` })}><div style={cardLblStyle()}>{title}</div><div style={{ color:text?T.fgM:T.fgS, fontSize:13.5, lineHeight:1.5 }}>{text || "This section will populate after the Strategic Vision intake or a JSON profile import."}</div></div>;
   const swot = { strengths:advantages.join("; "), weaknesses:draft.swotWeaknesses, opportunities:draft.swotOpportunities||draft.nearTerm, threats:draft.swotThreats||draft.productionMix };
-  return <div><Head eyebrow="Strategic Vision · Profile and SWOT" title="Farm profile and SWOT" sub="This section combines the farm profile, JSON import, and vision-derived SWOT. It stays intentionally empty until the first two vision steps or an uploaded profile provide content." /><div style={{ display:"flex", gap:24, alignItems:"flex-end", borderBottom:`1px solid ${T.border}`, marginBottom:24 }}><button type="button" onClick={()=>setProfileTab("profile")} style={{ background:"none", border:0, borderBottom:`3px solid ${profileTab==="profile"?T.blue:"transparent"}`, padding:"0 2px 12px", color:profileTab==="profile"?T.blue:T.fgS, fontWeight:700, cursor:"pointer" }}>Farm Profile</button><button type="button" onClick={()=>setProfileTab("swot")} style={{ background:"none", border:0, borderBottom:`3px solid ${profileTab==="swot"?T.blue:"transparent"}`, padding:"0 2px 12px", color:profileTab==="swot"?T.blue:T.fgS, fontWeight:700, cursor:"pointer" }}>Farm SWOT</button><button type="button" onClick={()=>setProfileTab("glance")} style={{ background:"none", border:0, borderBottom:`3px solid ${profileTab==="glance"?T.blue:"transparent"}`, padding:"0 2px 12px", color:profileTab==="glance"?T.blue:T.fgS, fontWeight:700, cursor:"pointer" }}>Business at a glance</button></div><div style={{ display:profileTab==="profile"?"block":"none" }}><div style={cardStyle({ borderTop:`4px solid ${T.blue}` })}><div style={cardLblStyle()}>Bring in an existing profile</div><p style={{ color:T.fgM, fontSize:13.5, lineHeight:1.5, marginTop:0 }}>Upload a Maximum Farm Potential JSON export to prefill these fields. The import stays in this working session until you save it.</p><input type="file" accept=".json,application/json" onChange={importJSON} /></div><div style={cardStyle()}><div style={cardLblStyle()}>Farm profile</div>{field("Farm name","name","e.g., Jensen Family Farms")}{field("Location","location","State and county")}{field("Size and production mix","productionMix","Acres, livestock, and primary enterprises",true)}{field("Business ventures beyond production","ventures","Services, shops, leases, or other ventures",true)}{field("Near-term objective","nearTerm","What should improve in the next 1–3 years?",true)}{field("Long-term direction","longTerm","Where is the farm headed?",true)}{field("Core values","values","What will this operation not trade away?",true)}{field("Competitive advantage","advantage","What makes this operation difficult to copy?",true)}</div></div><div style={{ display:profileTab==="swot"?"block":"none" }}><div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(250px,1fr))", gap:14 }}>{box("Strengths",hasVisionInputs?swot.strengths:"",T.green)}{box("Weaknesses / trade-offs",hasVisionInputs?swot.weaknesses:"",T.amber)}{box("Opportunities",hasVisionInputs?swot.opportunities:"",T.blue)}{box("Threats / conditions",hasVisionInputs?swot.threats:"",T.red)}</div></div><div style={{ display:profileTab==="glance"?"block":"none" }}><div style={cardStyle()}><div style={cardLblStyle()}>Business at a glance</div><div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))", gap:12 }}>{[["Farm name",draft.name],["Location",draft.location],["Production mix",draft.productionMix],["Near-term direction",draft.nearTerm],["Financial basis",fa?.accounting?.basis],["Working capital",fa?.budget ? `$${((Number(fa.budget.cash)||0)+(Number(fa.budget.line)||0)-(Number(fa.budget.committed)||0)-(Number(fa.budget.debt)||0)).toLocaleString()}` : ""]].map(([label,value])=><div key={label} style={{ padding:14, background:value?T.bgAlt:"#f2f4f6", borderRadius:8, color:value?T.navy:T.fgS }}><div style={{ fontSize:11, fontWeight:700, textTransform:"uppercase", letterSpacing:"0.05em", marginBottom:5 }}>{label}</div><div style={{ fontSize:14 }}>{value||"Not updated yet"}</div></div>)}</div><p style={{ color:T.fgS, fontSize:12.5, lineHeight:1.5, marginBottom:0 }}>Financial values update from Financial Analysis as records, budgets, and working capital assumptions are completed.</p></div></div><div style={cardStyle({ background:T.blueL, borderColor:"#c8d9e8", marginTop:16 })}><strong>Save profile for Eagle Eye and MFP modules</strong><p style={{ margin:"5px 0 13px", color:T.fgM, fontSize:13, lineHeight:1.5 }}>Saving makes the profile available to Eagle Eye Intelligence, Financial Analysis, Revenue Diversification, and Farm Risk.</p><button type="button" onClick={() => { save(); goFA(1); }} style={btnStyle("primary")}>Save profile and continue to Financial Analysis →</button></div></div>;
+  return <div><Head eyebrow="Strategic Vision · Profile and SWOT" title="Farm profile and SWOT" sub="This section combines the farm profile, JSON import, and vision-derived SWOT. It stays intentionally empty until the first two vision steps or an uploaded profile provide content." /><VisionInlineVisual stageLabel="Farm profile → SWOT decision context" /><div style={{ display:"flex", gap:24, alignItems:"flex-end", borderBottom:`1px solid ${T.border}`, marginBottom:24 }}><button type="button" onClick={()=>setProfileTab("profile")} style={{ background:"none", border:0, borderBottom:`3px solid ${profileTab==="profile"?T.blue:"transparent"}`, padding:"0 2px 12px", color:profileTab==="profile"?T.blue:T.fgS, fontWeight:700, cursor:"pointer" }}>Farm Profile</button><button type="button" onClick={()=>setProfileTab("swot")} style={{ background:"none", border:0, borderBottom:`3px solid ${profileTab==="swot"?T.blue:"transparent"}`, padding:"0 2px 12px", color:profileTab==="swot"?T.blue:T.fgS, fontWeight:700, cursor:"pointer" }}>Farm SWOT</button><button type="button" onClick={()=>setProfileTab("glance")} style={{ background:"none", border:0, borderBottom:`3px solid ${profileTab==="glance"?T.blue:"transparent"}`, padding:"0 2px 12px", color:profileTab==="glance"?T.blue:T.fgS, fontWeight:700, cursor:"pointer" }}>Business at a glance</button></div><div style={{ display:profileTab==="profile"?"block":"none" }}><div style={cardStyle({ borderTop:`4px solid ${T.blue}` })}><div style={cardLblStyle()}>Bring in an existing profile</div><p style={{ color:T.fgM, fontSize:13.5, lineHeight:1.5, marginTop:0 }}>Upload a Maximum Farm Potential JSON export to prefill these fields. The import stays in this working session until you save it.</p><input type="file" accept=".json,application/json" onChange={importJSON} /></div><div style={cardStyle()}><div style={cardLblStyle()}>Farm profile</div>{field("Farm name","name","e.g., Jensen Family Farms")}{field("Location","location","State and county")}{field("Size and production mix","productionMix","Acres, livestock, and primary enterprises",true)}{field("Business ventures beyond production","ventures","Services, shops, leases, or other ventures",true)}{field("Near-term objective","nearTerm","What should improve in the next 1–3 years?",true)}{field("Long-term direction","longTerm","Where is the farm headed?",true)}{field("Core values","values","What will this operation not trade away?",true)}{field("Competitive advantage","advantage","What makes this operation difficult to copy?",true)}</div></div><div style={{ display:profileTab==="swot"?"block":"none" }}><div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(250px,1fr))", gap:14 }}>{box("Strengths",hasVisionInputs?swot.strengths:"",T.green)}{box("Weaknesses / trade-offs",hasVisionInputs?swot.weaknesses:"",T.amber)}{box("Opportunities",hasVisionInputs?swot.opportunities:"",T.blue)}{box("Threats / conditions",hasVisionInputs?swot.threats:"",T.red)}</div></div><div style={{ display:profileTab==="glance"?"block":"none" }}><div style={cardStyle()}><div style={cardLblStyle()}>Business at a glance</div><div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))", gap:12 }}>{[["Farm name",draft.name],["Location",draft.location],["Production mix",draft.productionMix],["Near-term direction",draft.nearTerm],["Financial basis",fa?.accounting?.basis],["Working capital",fa?.budget ? `$${((Number(fa.budget.cash)||0)+(Number(fa.budget.line)||0)-(Number(fa.budget.committed)||0)-(Number(fa.budget.debt)||0)).toLocaleString()}` : ""]].map(([label,value])=><div key={label} style={{ padding:14, background:value?T.bgAlt:"#f2f4f6", borderRadius:8, color:value?T.navy:T.fgS }}><div style={{ fontSize:11, fontWeight:700, textTransform:"uppercase", letterSpacing:"0.05em", marginBottom:5 }}>{label}</div><div style={{ fontSize:14 }}>{value||"Not updated yet"}</div></div>)}</div><p style={{ color:T.fgS, fontSize:12.5, lineHeight:1.5, marginBottom:0 }}>Financial values update from Financial Analysis as records, budgets, and working capital assumptions are completed.</p></div></div><div style={cardStyle({ background:T.blueL, borderColor:"#c8d9e8", marginTop:16 })}><strong>Save profile for Eagle Eye and MFP modules</strong><p style={{ margin:"5px 0 13px", color:T.fgM, fontSize:13, lineHeight:1.5 }}>Saving makes the profile available to Eagle Eye Intelligence, Financial Analysis, Revenue Diversification, and Farm Risk.</p><button type="button" onClick={() => { save(); goFA(1); }} style={btnStyle("primary")}>Save profile and continue to Financial Analysis ���</button></div></div>;
 }
 
-// ── Vision 9 — The document ────────────────────���─────────────────────────────
+// ── Vision 9 — The document ────────�����─���────────���─��───────────────────────────
 // Renders ONLY approved sections. Everything diagnostic stays in the working
 // record: demoted claims, person-dependent advantages, cost-test answers and the
 // who-holds-this ratings never appear here. Publishing a document that names a
@@ -6049,7 +6050,7 @@ function VIS8({ vis, profile }) {
   if (!live.length) {
     return (
       <div>
-        <Head eyebrow="Strategic vision · Stage 8" title="The document" sub="Nothing is approved for publishing yet." />
+        <Head eyebrow="Strategic vision · Stage 8" title="The document" sub="Nothing is approved for publishing yet." /><VisionInlineVisual stageLabel="Approved sections → decision-ready document" />
         <Flag type="warn">Go back to stage 7 and tick "Approved to publish" on the sections you are willing to stand behind in front of your team. Nothing appears here until you do, which is deliberate.</Flag>
         {held.length > 0 && (
           <div style={cardStyle()}>
@@ -6065,7 +6066,7 @@ function VIS8({ vis, profile }) {
 
   return (
     <div>
-      <Head eyebrow="Strategic vision · Stage 8" title="The document" sub="What actually gets handed to the team. Only approved sections appear. Everything diagnostic stays in your working record." />
+      <Head eyebrow="Strategic vision · Stage 8" title="The document" sub="What actually gets handed to the team. Only approved sections appear. Everything diagnostic stays in your working record." /><VisionInlineVisual stageLabel="Approved sections → decision-ready document" />
 
       <div style={{ display:"flex", gap:8, alignItems:"center", borderBottom:`1px solid ${T.border}`, marginBottom:18, flexWrap:"wrap" }}>
         {[["full","The one-pager"],["short","Short form"],["rollout","Rollout guide"]].map(([k,lab]) => {
@@ -6186,9 +6187,9 @@ function VIS8({ vis, profile }) {
 }
 
 
-// ══════════════════════════════════════════════���══════════════════════════════
+// ══════════════════════════════════════════════����══════════════════════════════
 // LOCAL PERSISTENCE — the farm record stays on the farmer's own machine
-// ═════════════════════════�����═══════════════════════════════════════════════════
+// ═════════════════════════�����═══════════════════════════════════════════════���═══
 // Everything a farmer enters saves to their browser automatically and reloads
 // next time. Nothing is transmitted. For this data in particular — succession
 // tensions, sweat equity figures, who the operator thinks is not ready — that is
@@ -6492,6 +6493,8 @@ const GENERIC_FARM_FINANCIALS = {
   livingWithdrawals:"68000", incomeTaxes:"34000",
 };
 
+const VisionInlineVisual = ({ stageLabel }) => <div style={{ margin:"4px 0 26px", borderRadius:16, overflow:"hidden", border:`1px solid ${T.div}`, background:T.bgAlt }}><img src="/strategic-vision-roadmap.png" alt="Strategic vision roadmap toward a decision-ready farm document" style={{ display:"block", width:"100%", height:150, objectFit:"cover" }} /><div style={{ display:"flex", justifyContent:"space-between", gap:10, padding:"10px 14px", color:T.fgS, fontSize:11.5 }}><span>{stageLabel}</span><span style={{ color:T.green, fontWeight:700 }}>Vision in progress</span></div></div>;
+
 export default function App() {
   const [module, setModule] = useState("vision");
   const [profile, setProfile] = useState({ ...GENERIC_FARM_SWOT, ...GENERIC_FARM_STRATEGY });
@@ -6634,16 +6637,22 @@ else if (isRD) { if (rd.stage<rdTotal) goRD(rd.stage+1); else goLegacy(1); }
 
   function FADocuments({ fa, setFA }) {
     const docs = fa.documents || [];
-    const addDocs = (files) => setFA(s => ({ ...s, documents:[...(s.documents||[]), ...Array.from(files).map(file => ({ id:`doc-${Date.now()}-${file.name}`, name:file.name, size:file.size, type:file.type || "Document", status:"Ready for review" }))] }));
+    const [uploading, setUploading] = useState(false);
+    const addDocs = async (files) => { const selected=Array.from(files||[]); if(!selected.length) return; setUploading(true); try { const uploaded=await Promise.all(selected.map(async file => { const bytes=new Uint8Array(await file.arrayBuffer()); let binary=""; for(let i=0;i<bytes.length;i+=0x8000) binary+=String.fromCharCode(...bytes.subarray(i,i+0x8000)); const response=await fetch("/api/upload-documents",{ method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ name:file.name, size:file.size, type:file.type, data:btoa(binary) }) }); if(!response.ok) throw new Error("Upload failed"); const stored=await response.json(); return { id:`doc-${Date.now()}-${file.name}`, ...stored, status:"Stored and ready for review" }; })); setFA(s=>({ ...s, documents:[...(s.documents||[]), ...uploaded] })); } catch(error) { console.error("[mfp] document upload failed",error); window.alert("The document could not be stored. Please try again."); } finally { setUploading(false); } };
     const remove = id => setFA(s => ({ ...s, documents:(s.documents||[]).filter(doc=>doc.id!==id) }));
-    return <div><Head eyebrow="Financial Analysis · Stage 4" title="Upload your documents" sub="Bring the records you already have. We will use them to reduce re-entry, identify missing periods, and make the analysis easier to explain—not silently decide what a number means." /><div style={cardStyle({ borderTop:`4px solid ${T.blue}` })}><div style={cardLblStyle()}>Choose files to review</div><p style={{ color:T.fgM, fontSize:13.5, lineHeight:1.6, marginTop:0 }}>Upload statements, enterprise reports, tax summaries, budgets, or CSV exports. PDF, CSV, XLS, XLSX, and common image files are supported.</p><input type="file" multiple accept=".pdf,.csv,.xls,.xlsx,.png,.jpg,.jpeg" onChange={e=>addDocs(e.target.files)} style={{ width:"100%", padding:16, border:`1px dashed ${T.blue}`, borderRadius:8, background:T.blueL }} /><div style={{ marginTop:10, color:T.fgS, fontSize:12 }}>Documents remain associated with this analysis session until you confirm what should be used.</div></div>{docs.length===0?<div style={cardStyle({ background:T.bgAlt })}><div style={{ color:T.fgM, fontSize:13.5 }}>No documents uploaded yet. You can continue with estimates, or add the records you trust most.</div></div>:<div style={cardStyle()}><div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}><div style={cardLblStyle()}>Documents in this analysis</div><span style={{ fontSize:12, color:T.fgS }}>{docs.length} file{docs.length===1?"":"s"}</span></div>{docs.map(doc=><div key={doc.id} style={{ display:"flex", justifyContent:"space-between", gap:12, alignItems:"center", padding:"11px 0", borderBottom:`1px solid ${T.div}` }}><div><strong style={{ color:T.navy, fontSize:13 }}>{doc.name}</strong><div style={{ color:T.fgS, fontSize:12, marginTop:3 }}>{doc.type} · {Math.max(1,Math.round(doc.size/1024))} KB · {doc.status}</div></div><button type="button" onClick={()=>remove(doc.id)} style={btnStyle("ghost")}>Remove</button></div>)}</div>}<div style={cardStyle({ background:T.blueL, borderColor:"#c8d9e8" })}><strong>Review before using</strong><p style={{ margin:"5px 0 0", color:T.fgM, fontSize:13, lineHeight:1.5 }}>A document can be accurate and still use a different period, allocation method, or accounting basis. The next steps keep source and assumption visible.</p></div></div>;
+    return <div><Head eyebrow="Financial Analysis · Stage 4" title="Upload your documents" sub="Bring the records you trust; we will keep source and assumption visible." /><img src="/financial-analysis-dashboard.png" alt="Financial analysis dashboard connecting documents, cash flow, budgets, and benchmarking" style={{ width:"100%", maxHeight:150, objectFit:"cover", borderRadius:16, marginBottom:22, opacity:.9 }} /><div style={cardStyle({ borderTop:`4px solid ${T.blue}` })}><div style={cardLblStyle()}>Choose files to review</div><p style={{ color:T.fgM, fontSize:13.5, lineHeight:1.6, marginTop:0 }}>Upload statements, enterprise reports, tax summaries, budgets, or CSV exports. PDF, CSV, XLS, XLSX, and common image files are supported.</p><input type="file" multiple accept=".pdf,.csv,.xls,.xlsx,.png,.jpg,.jpeg" onChange={e=>addDocs(e.target.files)} disabled={uploading} style={{ width:"100%", padding:16, border:`1px dashed ${T.blue}`, borderRadius:8, background:T.blueL }} /><div style={{ marginTop:10, color:T.fgS, fontSize:12 }}>{uploading?"Storing documents securely…":"Documents are stored privately and remain associated with this analysis."}</div></div>{docs.length===0?<div style={cardStyle({ background:T.bgAlt })}><div style={{ color:T.fgM, fontSize:13.5 }}>No documents uploaded yet. You can continue with estimates, or add the records you trust most.</div></div>:<div style={cardStyle()}><div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}><div style={cardLblStyle()}>Documents in this analysis</div><span style={{ fontSize:12, color:T.fgS }}>{docs.length} file{docs.length===1?"":"s"}</span></div>{docs.map(doc=><div key={doc.id} style={{ display:"flex", justifyContent:"space-between", gap:12, alignItems:"center", padding:"11px 0", borderBottom:`1px solid ${T.div}` }}><div><strong style={{ color:T.navy, fontSize:13 }}>{doc.name}</strong><div style={{ color:T.fgS, fontSize:12, marginTop:3 }}>{doc.type} · {Math.max(1,Math.round(doc.size/1024))} KB · {doc.status}</div></div><button type="button" onClick={()=>remove(doc.id)} style={btnStyle("ghost")}>Remove</button></div>)}</div>}<div style={cardStyle({ background:T.blueL, borderColor:"#c8d9e8" })}><strong>Review before using</strong><p style={{ margin:"5px 0 0", color:T.fgM, fontSize:13, lineHeight:1.5 }}>A document can be accurate and still use a different period, allocation method, or accounting basis. The next steps keep source and assumption visible.</p></div></div>;
   }
   function FABudget({ fa, setFA }) {
-    const b=fa.budget||{}; const set=(key,value)=>setFA(s=>({...s,budget:{...(s.budget||{}),[key]:value}})); const n=k=>Number(b[k])||0; const available=n("cash")+n("line")-n("committed")-n("debt"); const gap=Math.max(0,-available); const fields=[["cash","Cash available today","0"],["line","Available operating line","0"],["committed","Committed bills and inputs","0"],["debt","Debt service due before next receipts","0"],["receipts","Expected receipts before next major payment","0"]];
-    return <div><Head eyebrow="Financial Analysis · Stage 5" title="Budgeting and working capital" sub="A profitable year can still create a cash squeeze. This view separates what the business earns from when cash arrives and when obligations come due." /><div style={cardStyle()}><div style={cardLblStyle()}>Near-term cash position</div><div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(190px,1fr))", gap:12 }}>{fields.map(([key,label,placeholder])=><label key={key} style={labelStyle}>{label}<input type="number" min="0" step="100" placeholder={placeholder} value={b[key]||""} onChange={e=>set(key,e.target.value)} style={inputStyle()} /></label>)}</div></div><div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))", gap:14 }}><div style={cardStyle({ borderTop:`4px solid ${available>=0?T.green:T.red}`, marginBottom:0 })}><div style={cardLblStyle()}>Working capital before receipts</div><div style={{ fontSize:30, fontWeight:800, color:available>=0?T.green:T.red }}>{available<0?"-":""}${Math.abs(available).toLocaleString()}</div><div style={{ color:T.fgM, fontSize:13, marginTop:5 }}>{available>=0?"Positive room after committed obligations.":`Potential shortfall of $${gap.toLocaleString()} before the next receipts.`}</div></div><div style={cardStyle({ borderTop:`4px solid ${T.blue}`, marginBottom:0 })}><div style={cardLblStyle()}>Receipts to plan against</div><div style={{ fontSize:30, fontWeight:800, color:T.blue }}>${n("receipts").toLocaleString()}</div><div style={{ color:T.fgM, fontSize:13, marginTop:5 }}>Use confirmed timing where possible; estimates should be labeled.</div></div></div><div style={cardStyle({ background:T.blueL, borderColor:"#c8d9e8" })}><strong>What this is for</strong><p style={{ margin:"5px 0 0", color:T.fgM, fontSize:13, lineHeight:1.5 }}>This is a planning screen, not a borrowing recommendation. It highlights when to ask your accountant, lender, or advisor to review timing, terms, and contingency options.</p></div></div>;
+    const [budgetTab, setBudgetTab] = useState("annual");
+    const [annualBasis, setAnnualBasis] = useState("cash");
+    const b=fa.budget||{}; const set=(key,value)=>setFA(s=>({...s,budget:{...(s.budget||{}),[key]:value}})); const n=k=>Number(b[k])||0; const importCSV=e=>{ const file=e.target.files?.[0]; e.target.value=""; if(!file) return; const reader=new FileReader(); reader.onload=()=>{ const lines=String(reader.result||"").split(/\\r?\\n/).filter(Boolean); const rows=lines.map(line=>line.split(",").map(cell=>cell.trim().replace(/^\"|\"$/g,""))); setFA(s=>({...s,transactions:{name:file.name,headers:rows[0]||[],rows:rows.slice(1),importedAt:new Date().toISOString()}})); }; reader.readAsText(file); }; const available=n("cash")+n("line")-n("committed")-n("debt"); const gap=Math.max(0,-available); const fields=[["cash","Cash available today","0"],["line","Available operating line","0"],["committed","Committed bills and inputs","0"],["debt","Debt service due before next receipts","0"],["receipts","Expected receipts before next major payment","0"]];
+    const annualRows = [["Revenue", Number(b.receipts)||0], ["Operating expenses", (Number(b.committed)||0)+(Number(b.debt)||0)], ["Net operating cash", (Number(b.receipts)||0)-(Number(b.committed)||0)-(Number(b.debt)||0)]];
+    const accrualRows = [["Revenue earned", Number(b.receipts)||0], ["Expenses incurred", (Number(b.committed)||0)+(Number(b.debt)||0)], ["Net farm income", (Number(b.receipts)||0)-(Number(b.committed)||0)-(Number(b.debt)||0)]];
+    return <div><Head eyebrow="Financial Analysis · Stage 5" title="Budgeting and working capital" sub="Separate profit from timing: what arrives, what is committed, and what remains available." /><div style={{ display:"flex", gap:8, flexWrap:"wrap", borderBottom:`1px solid ${T.border}`, marginBottom:20 }}><button type="button" onClick={()=>setBudgetTab("annual")} style={{ ...btnStyle(budgetTab==="annual"?"primary":"outline"), borderRadius:8, marginBottom:8 }}>Annual operating budget</button><button type="button" onClick={()=>setBudgetTab("working")} style={{ ...btnStyle(budgetTab==="working"?"primary":"outline"), borderRadius:8, marginBottom:8 }}>Working capital</button></div><div style={{ display:budgetTab==="annual"?"block":"none" }}><div style={cardStyle({ borderTop:`4px solid ${T.blue}` })}><div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", gap:12, flexWrap:"wrap" }}><div><div style={cardLblStyle()}>Annual operating budget</div><p style={{ margin:"4px 0 0", color:T.fgM, fontSize:13, lineHeight:1.5 }}>Plan the year in the same cash and accrual views used by Legacy Acres.</p></div><div style={{ display:"flex", gap:6 }}><button type="button" onClick={()=>setAnnualBasis("cash")} style={btnStyle(annualBasis==="cash"?"primary":"outline")}>Cash view</button><button type="button" onClick={()=>setAnnualBasis("accrual")} style={btnStyle(annualBasis==="accrual"?"primary":"outline")}>Accrual view</button></div></div><div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(210px,1fr))", gap:12, marginTop:18 }}>{(annualBasis==="cash"?annualRows:accrualRows).map(([label,value],i)=><div key={label} style={{ padding:16, borderRadius:10, background:i===2?T.greenL:T.bgAlt, border:`1px solid ${i===2?T.green:T.border}` }}><div style={{ fontSize:11, color:T.fgS, textTransform:"uppercase", letterSpacing:".06em", fontWeight:700 }}>{label}</div><div style={{ marginTop:8, fontSize:25, color:i===2?T.green:T.navy, fontWeight:800 }}>${value.toLocaleString()}</div><div style={{ marginTop:5, fontSize:12, color:T.fgS }}>{annualBasis==="cash"?"Timing based on money received and paid":"Economic activity earned or incurred during the year"}</div></div>)}</div><div style={{ marginTop:18, padding:14, background:T.blueL, borderRadius:10, color:T.fgM, fontSize:13, lineHeight:1.55 }}><strong>{annualBasis==="cash"?"Cash view:" : "Accrual view:"}</strong> {annualBasis==="cash"?"Shows liquidity and when receipts and payments move through the operation.":"Shows the operating result after matching revenue and expenses to the period they belong to, regardless of payment timing."}</div></div></div><div style={{ display:budgetTab==="working"?"block":"none" }}><img src="/financial-analysis-dashboard.png" alt="Financial analysis dashboard connecting cash flow, budgets, working capital, and benchmarking" style={{ width:"100%", maxHeight:140, objectFit:"cover", borderRadius:16, marginBottom:22, opacity:.85 }} /><div style={cardStyle({ borderTop:`4px solid ${T.green}` })}><div style={cardLblStyle()}>Import ongoing transactions</div><p style={{ color:T.fgM, fontSize:13, lineHeight:1.5, marginTop:0 }}>Bring in a bank or accounting CSV to support the budget and working-capital view. The imported rows stay available in this analysis session.</p><input type="file" accept=".csv,text/csv" onChange={importCSV} style={{ width:"100%", padding:14, border:`1px dashed ${T.green}`, borderRadius:8, background:T.greenL }} />{fa.transactions?.rows?.length ? <div style={{ marginTop:10, color:T.green, fontSize:12 }}>{fa.transactions.name} · {fa.transactions.rows.length} rows imported</div> : <div style={{ marginTop:10, color:T.fgS, fontSize:12 }}>No CSV imported yet.</div>}</div><div style={cardStyle()}><div style={cardLblStyle()}>Near-term cash position</div><div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(190px,1fr))", gap:12 }}>{fields.map(([key,label,placeholder])=><label key={key} style={labelStyle}>{label}<input type="number" min="0" step="100" placeholder={placeholder} value={b[key]||""} onChange={e=>set(key,e.target.value)} style={inputStyle()} /></label>)}</div></div><div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))", gap:14 }}><div style={cardStyle({ borderTop:`4px solid ${available>=0?T.green:T.red}`, marginBottom:0 })}><div style={cardLblStyle()}>Working capital before receipts</div><div style={{ fontSize:30, fontWeight:800, color:available>=0?T.green:T.red }}>{available<0?"-":""}${Math.abs(available).toLocaleString()}</div><div style={{ color:T.fgM, fontSize:13, marginTop:5 }}>{available>=0?"Positive room after committed obligations.":`Potential shortfall of $${gap.toLocaleString()} before the next receipts.`}</div></div><div style={cardStyle({ borderTop:`4px solid ${T.blue}`, marginBottom:0 })}><div style={cardLblStyle()}>Receipts to plan against</div><div style={{ fontSize:30, fontWeight:800, color:T.blue }}>${n("receipts").toLocaleString()}</div><div style={{ color:T.fgM, fontSize:13, marginTop:5 }}>Use confirmed timing where possible; estimates should be labeled.</div></div></div><div style={cardStyle({ background:T.blueL, borderColor:"#c8d9e8" })}><strong>What this is for</strong><p style={{ margin:"5px 0 0", color:T.fgM, fontSize:13, lineHeight:1.5 }}>This is a planning screen, not a borrowing recommendation. It highlights when to ask your accountant, lender, or advisor to review timing, terms, and contingency options.</p></div></div>
+</div>
   }
   const FA_BODY = [
-  <FA0 fa={fa} setFA={setFA} />, <FA1Registry fa={fa} setFA={setFA} />, <FA2 fa={fa} setFA={setFA} />, <FA3 fa={fa} setFA={setFA} />,
+  <FA0 fa={fa} setFA={setFA} />, <FA1Registry fa={fa} setFA={setFA} />, <FA2 fa={fa} setFA={setFA} />,
   <FADocuments fa={fa} setFA={setFA} />, <FABudget fa={fa} setFA={setFA} />, <FA3 fa={fa} setFA={setFA} />, <FA4 fa={fa} setFA={setFA} />,
   ];
   const RD_BODY = [
@@ -6702,15 +6711,19 @@ else if (isRD) { if (rd.stage<rdTotal) goRD(rd.stage+1); else goLegacy(1); }
         : isRisk
           ? "Risk is not a failure to eliminate. It is the weather, markets, health, people, and surprises you plan around so one hard season does not decide everything."
           : "Legacy is about people and a workable handoff, not just assets. We will make room for difficult conversations and practical next steps.";
+  const flowLabels = isVis ? ["Capabilities","Values","Rules","Statement","Profile","Document"] : isFA ? ["Books","Enterprises","Goals","Records","Cash flow","Benchmarking","Scorecard"] : [];
+  const stageVisual = flowLabels.length ? <div aria-label={`${moduleName} progress map`} style={{ display:"flex", alignItems:"center", gap:0, marginBottom:26, padding:"14px 18px", background:T.bgAlt, borderRadius:16, border:`1px solid ${T.div}`, overflowX:"auto" }}>{flowLabels.map((label,i)=>{ const n=Math.min(i+1, total); const active=(isVis ? (stage===n || (i===4&&stage===10) || (i===5&&stage===11)) : stage===n); const done=n<stage; return <Fragment key={label}><div style={{ minWidth:78, display:"flex", flexDirection:"column", alignItems:"center", gap:6, color:active?T.navy:done?T.green:T.fgS }}><div style={{ width:28, height:28, borderRadius:"50%", display:"grid", placeItems:"center", background:active?T.blue:done?T.green:"#fff", color:active||done?"#fff":T.fgS, fontSize:11, fontWeight:800, border:`1px solid ${active?T.blue:done?T.green:T.border}` }}>{done?<IconCheckSm size={12}/>:i+1}</div><span style={{ fontSize:10.5, fontWeight:active?750:550, whiteSpace:"nowrap" }}>{label}</span></div>{i<flowLabels.length-1&&<div style={{ minWidth:18, height:2, background:i+1<stage?T.green:T.border, marginBottom:22 }} />}</Fragment>})}</div> : null;
   const stageCard = (
-    <section className="mfp-stage-card" aria-label={`${moduleName} question ${stage} of ${total}`}>
-      <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:12, marginBottom:18, color:T.fgS, fontSize:13, fontWeight:650 }}>
-        <span>{moduleName}</span>
-        <span>Question {stage} of {total}</span>
-      </div>
-      <div style={{ maxWidth:900, marginBottom:26, color:T.fgS, fontSize:14, lineHeight:1.6 }}>{moduleSupport}</div>
-      {body}
-    </section>
+  <section className="mfp-stage-card" aria-label={`${moduleName} question ${stage} of ${total}`}>
+  <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:12, marginBottom:18, color:T.fgS, fontSize:13, fontWeight:650 }}>
+  <span>{moduleName}</span>
+  <span>Question {stage} of {total}</span>
+  </div>
+  {!isVis && stageVisual}
+  {false && <div style={{ marginBottom:26, borderRadius:16, overflow:"hidden", border:`1px solid ${T.div}`, background:T.bgAlt }}><img src="/strategic-vision-roadmap.png" alt="Strategic vision roadmap from capabilities and values to a statement, profile, and final document" style={{ display:"block", width:"100%", height:150, objectFit:"cover" }} /><div style={{ display:"flex", justifyContent:"space-between", gap:10, padding:"10px 14px", color:T.fgS, fontSize:11.5 }}><span>Build the next decision-ready layer</span><span style={{ color:T.green, fontWeight:700 }}>Stage {stage} of {total}</span></div></div>}
+  <div style={{ maxWidth:900, marginBottom:26, color:T.fgS, fontSize:14, lineHeight:1.6 }}>{moduleSupport}</div>
+  {body}
+  </section>
   );
 
   const tabBase = { display:"flex", alignItems:"center", gap:11, padding:"8px 14px", borderRadius:8, cursor:"pointer", transition:"all .15s", border:"1.5px solid transparent" };
@@ -6887,7 +6900,7 @@ else if (isRD) { if (rd.stage<rdTotal) goRD(rd.stage+1); else goLegacy(1); }
         {/* Main */}
         <div className="mfp-flow-main" style={{ flex:1, overflowY:"auto", display:"flex", flexDirection:"column" }}>
           <div style={{ background:"#fff", borderBottom:`1px solid ${T.border}`, padding:"0 28px", height:50, display:"flex", alignItems:"center", justifyContent:"space-between", flexShrink:0 }}>
-            <div style={{ fontSize:14, fontWeight:700, letterSpacing:"0.04em", color:T.navy }}>Financial Analysis <span style={{ color:T.fgS, fontWeight:500 }}>· Stage {stage} of {total}</span><span style={{ color:T.fgS, fontWeight:500 }}> / {stageDefs[stage-1].label}</span></div>
+            <div style={{ fontSize:14, fontWeight:700, letterSpacing:"0.04em", color:T.navy }}>{isVis?"Strategic Vision":isFA?"Financial Analysis":isRD?"Revenue Diversification":isRisk?"Farm Risk":"Maximum Farm Potential"} <span style={{ color:T.fgS, fontWeight:500 }}>· Stage {stage} of {total}</span><span style={{ color:T.fgS, fontWeight:500 }}> / {stageDefs[stage-1].label}</span></div>
             <div style={{ display:"flex", gap:6 }}>{chips.map((c,i) => (<span key={i} style={{ fontSize:11, fontWeight:600, padding:"3px 10px", borderRadius:999, background:T.greenL, color:"#2F6E28", whiteSpace:"nowrap" }}>{c.label}</span>))}</div>
           </div>
           <div style={{ height:3, background:T.div, flexShrink:0 }}><div style={{ height:"100%", width:`${pct}%`, background:T.green, transition:"width .4s" }} /></div>

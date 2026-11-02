@@ -10,6 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@vercel/blob": "^2.8.2",
     "better-auth": "^1.7.12",
     "drizzle-orm": "^0.45.4",
     "geist": "^1.8.2",
