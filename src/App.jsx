@@ -911,7 +911,7 @@ function FA3({ fa, setFA }) {
   );
 }
 
-// ────────────���───────────────��────────────�����─���──────────────────────────────��──
+// ────────────���───────────────��────────────�������─���──────────────────────────────��──
 // FA STAGE 4 — Peer benchmarking
 // ──────────────���─────────────────���───────────────────────���──────────────────���─
 function FA4({ fa, setFA }) {
@@ -3311,7 +3311,7 @@ function EfficiencyValueImpact({ sel, lev }) {
   );
 }
 
-// ══════���══════════════════════════════════════���═����════��═══════����═════��══════��═══
+// ══════���════════════════════════════════════���═���═����════��═══════����═════��══════��═══
 // FARM PROFILE — a single 360° farm view that fills in as the farmer completes
 // onboarding and assessments, and feeds relevant fields back into FA, RD, and Risk
 // so nothing has to be entered twice.
@@ -4548,7 +4548,7 @@ function LEG6({ leg, setLegData, fa }) {
   );
 }
 
-// ── Stage 5 — Successor readiness ──────────────��───��──────�����──────────────────
+// ── Stage 5 — Successor readiness ──────────��───��───��──────�����──────────────────
 function LEG7({ leg, setLegData }) {
   const d = leg.data || {};
   const ex = d.exposure || {};
@@ -5669,7 +5669,7 @@ function VIS1({ vis, setVis, profile, goProfile }) {
   
   return (
   <div>
-  <Head eyebrow={eyebrow} title={title} sub={sub} /><VisionInlineVisual stageLabel={isValuesTest ? "Core values → tested decisions" : "Competitive advantage → proof"} />
+  <Head eyebrow={eyebrow} title={title} sub={sub} />
       <Flag type="info">A shorter, honest list is more useful than a long one.</Flag>
 
       {items.map(it => {
