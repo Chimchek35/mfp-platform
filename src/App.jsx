@@ -159,7 +159,7 @@ const Flag = ({ type, children }) => {
 const Head = ({ eyebrow, title, sub, showFinancialVisual = true }) => {
   const isFinancial = eyebrow?.startsWith("Financial Analysis");
   return <div>
-  {isFinancial && showFinancialVisual && <img src="/financial-analysis-dashboard.png" alt="Financial analysis dashboard connecting documents, cash flow, budgets, and benchmarking" style={{ display:"block", width:"100%", height:"auto", maxHeight:"none", objectFit:"contain", borderRadius:16, marginBottom:22 }} />}
+  {isFinancial && showFinancialVisual && <img src="/financial-analysis-dashboard.png" alt="Financial analysis dashboard connecting documents, cash flow, budgets, and benchmarking" style={{ display:"block", width:"100%", height:"auto", aspectRatio:"7 / 1", maxHeight:"none", objectFit:"cover", objectPosition:"center", borderRadius:16, marginBottom:22 }} />}
   {!isFinancial && <div style={eyebrowStyle}>{eyebrow}</div>}
   <h1 style={h1Style}>{title}</h1>
   <p style={subStyle}>{sub}</p>
@@ -524,7 +524,7 @@ function FA1Registry({ fa, setFA }) {
   </div>;
 }
 
-// ─────────────────────────�����──────��───────────────────────────────────────────
+// ─────────────────────────�����────���─��───────────────────────────────────────────
 // FA STAGE 2 — Goal alignment
 // ─────────────────────────────────────────────────────────────────────────────
 function FA2({ fa, setFA }) {
@@ -911,7 +911,7 @@ function FA3({ fa, setFA }) {
 
 // ────────────���───────────────��──────────────���──────────────────────────────��──
 // FA STAGE 4 — Peer benchmarking
-// ────────────────────────────────��───────────────────────���──────────────────���─
+// ────────────────────────────────���───────────────────────���──────────────────���─
 function FA4({ fa, setFA }) {
   const b = fa.s4bench;
   const v = id => b[id]||""; const sv = (id,val) => setFA(s=>({...s,s4bench:{...s.s4bench,[id]:val}})); const gv = id => parseFloat(b[id]);
@@ -3148,7 +3148,7 @@ function RD7({ rd, setRData, fa }) {
             </div>
             <div style={{ height:8, background:T.div, borderRadius:4, overflow:"hidden", marginBottom:8 }}><div style={{ height:"100%", width:`${fundedPct}%`, background:fundedPct>=100?T.dgreen:fundedPct>=60?T.amber:T.red, borderRadius:4, transition:"width .3s" }} /></div>
             {gap>0 && <Flag type="warn">At your current contribution rate, you're ${Math.round(gap).toLocaleString()}/year short of fully funding this reserve by the time the equipment needs replacing.</Flag>}
-            {reserveFunded && <Flag type="ok">Your reserve is on pace — consider whether the next dollar is better spent on income diversification or a longer-horizon investment.</Flag>}
+            {reserveFunded && <Flag type="ok">Your reserve is on pace �� consider whether the next dollar is better spent on income diversification or a longer-horizon investment.</Flag>}
           </>
         )}
         <div style={{ marginTop:14 }}>
@@ -4142,7 +4142,7 @@ const valueParcel = (p) => {
 
 // ══════════════════════════════════════════════════════════════��══════════════
 // BLIND COMPARE — the same questions, answered independently
-// ��════��══════════════════════════════════════════════════════════════���════════
+// ��════��═════════════════════════════════════════════════════════════������════════
 // One array drives both sides and the comparison, so the two generations are
 // provably answering the same question rather than two similar ones.
 //
@@ -6499,7 +6499,7 @@ const GENERIC_FARM_FINANCIALS = {
   livingWithdrawals:"68000", incomeTaxes:"34000",
 };
 
-const VisionInlineVisual = ({ stageLabel }) => <div style={{ margin:"4px 0 26px", borderRadius:16, overflow:"hidden", border:`1px solid ${T.div}`, background:T.bgAlt }}><img src="/strategic-vision-roadmap.png" alt="Strategic vision roadmap toward a decision-ready farm document" style={{ display:"block", width:"100%", height:"auto", aspectRatio:"16 / 7", objectFit:"contain" }} /><div style={{ display:"flex", justifyContent:"space-between", gap:10, padding:"10px 14px", color:T.fgS, fontSize:11.5 }}><span>{stageLabel}</span><span style={{ color:T.green, fontWeight:700 }}>Vision in progress</span></div></div>;
+const VisionInlineVisual = ({ stageLabel }) => <div style={{ margin:"4px 0 26px", borderRadius:16, overflow:"hidden", border:`1px solid ${T.div}`, background:T.bgAlt }}><img src="/strategic-vision-roadmap.png" alt="Strategic vision roadmap toward a decision-ready farm document" style={{ display:"block", width:"100%", height:"auto", aspectRatio:"7 / 1", objectFit:"cover", objectPosition:"center" }} /><div style={{ display:"flex", justifyContent:"space-between", gap:10, padding:"10px 14px", color:T.fgS, fontSize:11.5 }}><span>{stageLabel}</span><span style={{ color:T.green, fontWeight:700 }}>Vision in progress</span></div></div>;
 
 export default function App() {
   const [module, setModule] = useState("vision");
