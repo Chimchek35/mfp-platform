@@ -159,8 +159,8 @@ const Flag = ({ type, children }) => {
 const Head = ({ eyebrow, title, sub, showFinancialVisual = true }) => {
   const isFinancial = eyebrow?.startsWith("Financial Analysis");
   return <div>
-  {isFinancial && showFinancialVisual && <img src="/financial-analysis-dashboard.png" alt="Financial analysis dashboard connecting documents, cash flow, budgets, and benchmarking" style={{ display:"block", width:"100%", height:"auto", maxHeight:"none", objectFit:"contain", borderRadius:16, marginBottom:22 }} />}
-  {!isFinancial && <div style={eyebrowStyle}>{eyebrow}</div>}
+  {isFinancial && showFinancialVisual && <img src="/financial-analysis-dashboard.png" alt="Financial analysis dashboard connecting documents, cash flow, budgets, and benchmarking" style={{ display:"block", width:"100%", height:"auto", aspectRatio:"5 / 1", maxHeight:"none", objectFit:"contain", borderRadius:16, marginBottom:22 }} />}
+  {!isFinancial && !eyebrow?.startsWith("Strategic vision") && <div style={eyebrowStyle}>{eyebrow}</div>}
   <h1 style={h1Style}>{title}</h1>
   <p style={subStyle}>{sub}</p>
   </div>;
@@ -911,7 +911,7 @@ function FA3({ fa, setFA }) {
 
 // ────────────���───────────────��──────────────���──────────────────────────────��──
 // FA STAGE 4 — Peer benchmarking
-// ────────────────────────────────��───────────────────────���──────────────────���─
+// ────────────────────────────────���───────────────────────���──────────────────���─
 function FA4({ fa, setFA }) {
   const b = fa.s4bench;
   const v = id => b[id]||""; const sv = (id,val) => setFA(s=>({...s,s4bench:{...s.s4bench,[id]:val}})); const gv = id => parseFloat(b[id]);
@@ -951,7 +951,7 @@ function FA4({ fa, setFA }) {
       </div>
       {gaps.length>0 && (
         <div style={cardStyle({ borderTop:`4px solid ${T.green}` })}>
-          <div style={cardLblStyle()}>Gap analysis — annual value of reaching top quartile</div>
+          <div style={cardLblStyle()}>Gap analysis ��� annual value of reaching top quartile</div>
           {gaps.map((g,i) => (<div key={i} style={{ padding:"10px 0", borderBottom:i<gaps.length-1?`1px solid ${T.div}`:"none" }}><div style={{ fontSize:13, fontWeight:600, marginBottom:2 }}>{g.label}</div><div style={{ fontSize:12.5, color:T.dgreen, fontWeight:600 }}>Recover {fmt$(g.toTop)} annually vs. top quartile</div></div>))}
         </div>
       )}
@@ -3148,7 +3148,7 @@ function RD7({ rd, setRData, fa }) {
             </div>
             <div style={{ height:8, background:T.div, borderRadius:4, overflow:"hidden", marginBottom:8 }}><div style={{ height:"100%", width:`${fundedPct}%`, background:fundedPct>=100?T.dgreen:fundedPct>=60?T.amber:T.red, borderRadius:4, transition:"width .3s" }} /></div>
             {gap>0 && <Flag type="warn">At your current contribution rate, you're ${Math.round(gap).toLocaleString()}/year short of fully funding this reserve by the time the equipment needs replacing.</Flag>}
-            {reserveFunded && <Flag type="ok">Your reserve is on pace — consider whether the next dollar is better spent on income diversification or a longer-horizon investment.</Flag>}
+            {reserveFunded && <Flag type="ok">Your reserve is on pace �� consider whether the next dollar is better spent on income diversification or a longer-horizon investment.</Flag>}
           </>
         )}
         <div style={{ marginTop:14 }}>
@@ -4142,7 +4142,7 @@ const valueParcel = (p) => {
 
 // ══════════════════════════════════════════════════════════════��══════════════
 // BLIND COMPARE — the same questions, answered independently
-// ��════��══════════════════════════════════════════════════════════════���════════
+// ��════��═════════════════════════════════════════════════════════════������════════
 // One array drives both sides and the comparison, so the two generations are
 // provably answering the same question rather than two similar ones.
 //
@@ -6499,7 +6499,7 @@ const GENERIC_FARM_FINANCIALS = {
   livingWithdrawals:"68000", incomeTaxes:"34000",
 };
 
-const VisionInlineVisual = ({ stageLabel }) => <div style={{ margin:"4px 0 26px", borderRadius:16, overflow:"hidden", border:`1px solid ${T.div}`, background:T.bgAlt }}><img src="/strategic-vision-roadmap.png" alt="Strategic vision roadmap toward a decision-ready farm document" style={{ display:"block", width:"100%", height:"auto", aspectRatio:"16 / 7", objectFit:"contain" }} /><div style={{ display:"flex", justifyContent:"space-between", gap:10, padding:"10px 14px", color:T.fgS, fontSize:11.5 }}><span>{stageLabel}</span><span style={{ color:T.green, fontWeight:700 }}>Vision in progress</span></div></div>;
+const VisionInlineVisual = ({ stageLabel }) => <div style={{ margin:"4px 0 26px", borderRadius:16, overflow:"hidden", border:`1px solid ${T.div}`, background:T.bgAlt }}><img src="/strategic-vision-roadmap.png" alt="Strategic vision roadmap toward a decision-ready farm document" style={{ display:"block", width:"100%", height:"auto", aspectRatio:"5 / 1", objectFit:"contain" }} /><div style={{ display:"flex", justifyContent:"space-between", gap:10, padding:"10px 14px", color:T.fgS, fontSize:11.5 }}><span>{stageLabel}</span><span style={{ color:T.green, fontWeight:700 }}>Vision in progress</span></div></div>;
 
 export default function App() {
   const [module, setModule] = useState("vision");
@@ -6724,6 +6724,7 @@ else if (isRD) { if (rd.stage<rdTotal) goRD(rd.stage+1); else goLegacy(1); }
   const stageCard = (
   <section className="mfp-stage-card" aria-label={`${moduleName} question ${stage} of ${total}`}>
   {!isVis && stageVisual}
+  {(isVis || isFA) && <div style={{ ...eyebrowStyle, marginBottom:12 }}>{moduleName.toUpperCase()} · STAGE {stage}</div>}
   {false && <div style={{ marginBottom:26, borderRadius:16, overflow:"hidden", border:`1px solid ${T.div}`, background:T.bgAlt }}><img src="/strategic-vision-roadmap.png" alt="Strategic vision roadmap from capabilities and values to a statement, profile, and final document" style={{ display:"block", width:"100%", height:150, objectFit:"cover" }} /><div style={{ display:"flex", justifyContent:"space-between", gap:10, padding:"10px 14px", color:T.fgS, fontSize:11.5 }}><span>Build the next decision-ready layer</span><span style={{ color:T.green, fontWeight:700 }}>Stage {stage} of {total}</span></div></div>}
   <div style={{ maxWidth:900, marginBottom:26, color:T.fgS, fontSize:14, lineHeight:1.6 }}>{moduleSupport}</div>
   {isVis && <VisionInlineVisual stageLabel="Core capability → defensible advantage" />}
