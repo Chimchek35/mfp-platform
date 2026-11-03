@@ -2788,7 +2788,7 @@ function RD3({ rd, setRData }) {
 
 // ───────────────────────────────────���─────���───���────���──────────────────────────
 // RD STAGE 4 — Opportunity mapping
-// ────���────────────────────────────────────────────────────────────────────────
+// ────���──────────────────────────────────────────���─────────────────────────────
 const GROWTH_TIER_LABEL = { 1:"Tier 1 · Fastest structural growth", 2:"Tier 2 · Strong growth", 3:"Tier 3 · Steady & selective" };
 const GROWTH_TIER_COLOR = { 1:T.dgreen, 2:T.blue, 3:T.tan };
 
@@ -6067,7 +6067,7 @@ function VIS7({ vis, setVis, profile }) {
 }
 
 
-// ── Vision 8 — Farm profile and SWOT ────────────────────────────────���────
+// ── Vision 8 — Farm profile and SWOT ─────────��──────────────────────���────
 function VIS_PROFILE({ vis, profile, setProfile, goFA, fa }) {
   const advantages = (vis.items||[]).filter(i=>i.kind==="advantage" && i.text?.trim()).map(i=>i.text.trim());
   const values = (vis.items||[]).filter(i=>i.kind==="value" && i.text?.trim()).map(i=>i.text.trim());
@@ -6659,9 +6659,10 @@ export default function App() {
     if (isFA) { if (fa.stage===1) { const a=fa.accounting||{}; return !!(a.basis&&a.preparer&&a.system); } if (fa.stage===2) return (fa.ent?.list||[]).length>0; if (fa.stage===3) { const g=fa.goals; return !!(g.trigger&&g.concern&&g.outcome); } return true; }
     if (isRD) { const d = rd.data, g = d.goals2||{}, leverItems = d.leverItems||{}, b = d.baseline||{}, sel = d.selectedOpps||[];
       if (!rdUnlocked) return false;
-      if (rd.stage===1) return !!((b.farmTypes||[]).length&&b.revTier); if (rd.stage===2) return !!(g.trigger&&g.horizon&&g.capitalAppetite&&g.timeAppetite); if (rd.stage===3) return Object.keys(leverItems).length>0; if (rd.stage===4) return sel.length>0; return true; }
+      if (!b.revTier) return false;
+      return true; }
     return true;
-  }, [isFA, isRD, fa, rd]);
+  }, [isFA, isRD, fa, rd, rdUnlocked]);
 
   const faScore = faScoreOf(fa);
   const faTier = faTierOf(fa);
