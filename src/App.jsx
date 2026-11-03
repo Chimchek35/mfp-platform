@@ -524,7 +524,7 @@ const REV_RAMP = { energy:[0,0,0,0,0,0,0,0,0,0,0,0], specialty:[0,0,0,0,0,0,0,2,
 
 // ─────────────────────────────────��───────────────────────────────────────────
 // FA STAGE 1 — Enterprise dashboard
-// ──────────────────────────────────────────────────�����──────────────────────────
+// ──────────────────────────────────────────────────�������──────────────────────────
 function FA1({ fa, setFA }) {
   const active = fa.enterprises;
   const toggle = (k) => setFA(s => ({ ...s, enterprises: s.enterprises.includes(k) ? s.enterprises.filter(x=>x!==k) : [...s.enterprises, k] }));
@@ -2892,7 +2892,7 @@ function RD3({ rd, setRData }) {
   );
 }
 
-// ───────────────────────────────────���─────���───���────���────────���────���────────────
+// ───────────────────────────────────���─────���───���────���────────������───���────────────
 // RD STAGE 4 — Opportunity mapping
 // ────���──────────���──���─────────────────────────��──�����─────────────────────────────
 const GROWTH_TIER_LABEL = { 1:"Tier 1 · Fastest structural growth", 2:"Tier 2 · Strong growth", 3:"Tier 3 · Steady & selective" };
@@ -3454,7 +3454,7 @@ function EfficiencyValueImpact({ sel, lev }) {
         </div>
         <div style={{ background:T.bgAlt, borderRadius:8, padding:"12px 14px" }}>
           <div style={{ fontSize:10.5, fontWeight:700, color:T.fgS, textTransform:"uppercase", letterSpacing:"0.05em", marginBottom:6 }}>Portfolio breadth</div>
-          <div style={{ fontSize:12.5, color:T.navy, lineHeight:1.5 }}>{leverCount>=2 ? `Your selections draw on ${leverCount} of the 3 diversification levers — a genuinely diversified plan rather than one concentrated bet.` : "Your selections lean on a single lever — consider whether one more path from a different lever would strengthen the plan."}</div>
+          <div style={{ fontSize:12.5, color:T.navy, lineHeight:1.5 }}>{leverCount>=2 ? `Your selections draw on ${leverCount} of the 3 diversification levers — a genuinely diversified plan rather than one concentrated bet.` : "Your selections lean on a single lever ��� consider whether one more path from a different lever would strengthen the plan."}</div>
         </div>
       </div>
       <Flag type={calendarFit.tone}>{calendarFit.label}: {calendarFit.text}</Flag>
@@ -4456,7 +4456,7 @@ function LEG2({ leg, setLegData }) {
   return <div><Head eyebrow="Legacy · Stage 3" title="The successor question" sub="There may be a clear successor, several possibilities, or no successor at all. Naming the reality is the useful first step." /><div style={cardStyle()}><div style={cardLblStyle()}>The successor question</div>{legRow("Is there an identified successor?", <select style={inputStyle()} value={v("successorStatus")} onChange={set("successorStatus")}><option value="">Select</option><option value="working">Yes, and they are already working in the business</option><option value="identified">Yes, identified but not yet involved day to day</option><option value="maybe">Maybe, more than one candidate or nobody has said it out loud</option><option value="none">No, there is no successor</option></select>)}{d.successorStatus === "none" && <><Flag type="info">No successor is a legitimate path, not a failure. It deserves the same rigour as a family transition.</Flag>{legRow("Which direction makes most sense to explore?", <select style={inputStyle()} value={v("noSuccessorPath")} onChange={set("noSuccessorPath")}><option value="">Select</option><option value="sale">Orderly sale of the operation</option><option value="lease">Lease the ground to a neighbouring operation</option><option value="employee">Transition to a non-family employee</option><option value="winddown">Planned wind-down over a set number of years</option><option value="unsure">Genuinely unsure, that is the question</option></select>)}</>}{d.successorStatus === "maybe" && <Flag type="warn">More than one candidate, or nobody having said it out loud, is a common starting point. Naming it is the work of the next few stages.</Flag>}</div></div>;
 }
 
-// ── Stage 3 — What exists on paper ────────────────────���───────��──────────────
+// ── Stage 3 — What exists on paper ────────────────────���──────����──────────────
 function LEG3({ leg, setLegData }) {
   const d = leg.data || {};
   const v = (k) => d[k] || "";
@@ -5498,7 +5498,7 @@ function LegCompare({ leg, setLegData, setSucc }) {
   );
 }
 
-// ── Stage 13 — Where this leaves you ─────────────────��──��────────────────────
+// ── Stage 13 — Where this leaves you ───────────────��─��──��────────────────────
 function LEG13({ leg, profile }) {
   const d = leg.data || {};
   const tierKey = legacyTier(leg);
@@ -6417,6 +6417,45 @@ const loadRecord = () => {
 
 const clearRecord = () => { try { window.localStorage.removeItem(MFP_STORE_KEY); } catch(e){} };
 
+const FA_DEFAULT = { stage:1, accounting:{}, enterprises:[], goals:{}, wholeFarm:{}, ratioVals:{}, s3vals:{}, s4bench:{}, s5:{}, actionChecked:{} };
+const RD_DEFAULT = { stage:1, data:{} };
+const RISK_DEFAULT = { stage:1, answers:{} };
+const LEG_DEFAULT = { stage:1, data:{}, succ:{}, role:"senior" };
+const VIS_DEFAULT = { stage:1, items:[], rules:[], holders:{}, published:{}, approved:{} };
+
+// Records saved before a module's stage list changed can point past the last
+// stage (FA went from 7 stages to 6), which would leave the page with nothing
+// to render. Clamp every stage and fill in any fields older records lack.
+const clampStage = (n, total) => {
+  const v = Math.round(Number(n));
+  return Number.isFinite(v) ? Math.min(Math.max(v, 1), total) : 1;
+};
+const mergeModule = (saved, defaults, total) => {
+  const base = saved && typeof saved === "object" ? saved : {};
+  const merged = { ...defaults, ...base };
+  for (const k of Object.keys(defaults)) {
+    if (Array.isArray(defaults[k]) && !Array.isArray(merged[k])) merged[k] = defaults[k];
+    else if (defaults[k] && typeof defaults[k] === "object" && !Array.isArray(defaults[k]) && (typeof merged[k] !== "object" || merged[k] === null || Array.isArray(merged[k]))) merged[k] = defaults[k];
+  }
+  merged.stage = clampStage(merged.stage, total);
+  return merged;
+};
+const KNOWN_MODULES = ["profile", "vision", "eagle-eye", "fa", "rd", "legacy", "risk"];
+const normalizeRecord = (rec) => {
+  const r = rec && typeof rec === "object" ? rec : {};
+  const legRole = r.leg?.role === "successor" ? "successor" : "senior";
+  return {
+    ...r,
+    profile: r.profile && typeof r.profile === "object" ? r.profile : {},
+    fa: mergeModule(r.fa, FA_DEFAULT, FA_STAGES.length),
+    rd: mergeModule(r.rd, RD_DEFAULT, RD_STAGES.length),
+    risk: mergeModule(r.risk, RISK_DEFAULT, RISK_STAGES.length),
+    leg: mergeModule(r.leg, LEG_DEFAULT, (legRole === "successor" ? SUCC_STAGES : LEG_STAGES).length),
+    vis: mergeModule(r.vis, VIS_DEFAULT, VIS_STAGES.length),
+    module: KNOWN_MODULES.includes(r.module) ? r.module : undefined,
+  };
+};
+
 // Validates an imported file before it is allowed to replace anything.
 const validateRecord = (p) => {
   if (!p || typeof p !== "object") return "That file is not a readable farm record.";
@@ -6633,7 +6672,7 @@ function DataControls({ state, savedAt, storageOk, onImport, onImportProfile, on
 
 // ═══════════════════��═══════���════════════════════════════════════════════════��
 // ROOT APP
-// ═════════════════════════════════════════════���═══════════════════════════════
+// ═════════════════════════════════════════════���═════════════════════════════���═
 // Generic farm SWOT, pre-populated so the quadrants open with a real starting point
 // rather than four empty boxes. Every line is editable and meant to be replaced with
 // the operation's own read once the conversation gets specific.
@@ -6693,13 +6732,7 @@ export default function App() {
     const rec = loadRecord();
     if (rec) {
       if (rec._schemaMismatch) setSchemaWarn(true);
-      if (rec.profile) setProfile(rec.profile);
-      if (rec.fa) setFA(rec.fa);
-      if (rec.rd) setRD(rec.rd);
-      if (rec.risk) setRisk(rec.risk);
-      if (rec.leg) setLeg(rec.leg);
-      if (rec.vis) setVisState(rec.vis);
-      if (rec.module) setModule(rec.module);
+      applyRecord(rec);
       if (rec.savedAt) setSavedAt(rec.savedAt);
     }
     setRestored(true);
@@ -6720,13 +6753,14 @@ export default function App() {
     return () => clearTimeout(t);
   }, [restored, storageOk, module, profile, fa, rd, risk, leg, vis]);
 
-  const applyRecord = (rec) => {
-    setProfile(rec.profile || {});
-    setFA(rec.fa || { stage:1, accounting:{}, enterprises:[], goals:{}, wholeFarm:{}, ratioVals:{}, s3vals:{}, s4bench:{}, s5:{}, actionChecked:{} });
-    setRD(rec.rd || { stage:1, data:{} });
-    setRisk(rec.risk || { stage:1, answers:{} });
-    setLeg(rec.leg || { stage:1, data:{}, succ:{}, role:"senior" });
-    setVisState(rec.vis || { stage:1, items:[], rules:[], holders:{}, published:{}, approved:{} });
+  const applyRecord = (raw) => {
+    const rec = normalizeRecord(raw);
+    setProfile(rec.profile);
+    setFA(rec.fa);
+    setRD(rec.rd);
+    setRisk(rec.risk);
+    setLeg(rec.leg);
+    setVisState(rec.vis);
     if (rec.module) setModule(rec.module);
   };
 
@@ -7078,7 +7112,7 @@ else if (isRD) { if (rd.stage<rdTotal) goRD(rd.stage+1); else goLegacy(1); }
         {/* Main */}
         <div className="mfp-flow-main" style={{ flex:1, overflowY:"auto", display:"flex", flexDirection:"column" }}>
           <div style={{ background:"#fff", borderBottom:`1px solid ${T.border}`, padding:"0 28px", height:50, display:isVis?"none":"flex", alignItems:"center", justifyContent:"space-between", flexShrink:0 }}>
-            <div style={{ fontSize:14, fontWeight:700, letterSpacing:"0.04em", color:T.navy }}>{!isVis && <>{isFA?"Financial Analysis":isRD?"Revenue Diversification":isRisk?"Risk Ready":"Maximum Farm Potential"} <span style={{ color:T.fgS, fontWeight:500 }}>· Stage {stage} of {total}</span><span style={{ color:T.fgS, fontWeight:500 }}> / {stageDefs[stage-1].label}</span></>}</div>
+            <div style={{ fontSize:14, fontWeight:700, letterSpacing:"0.04em", color:T.navy }}>{!isVis && <>{isFA?"Financial Analysis":isRD?"Revenue Diversification":isRisk?"Risk Ready":"Maximum Farm Potential"} <span style={{ color:T.fgS, fontWeight:500 }}>· Stage {stage} of {total}</span><span style={{ color:T.fgS, fontWeight:500 }}> / {stageDefs[stage-1]?.label}</span></>}</div>
             <div style={{ display:"flex", gap:6 }}>{chips.map((c,i) => (<span key={i} style={{ fontSize:11, fontWeight:600, padding:"3px 10px", borderRadius:999, background:T.greenL, color:"#2F6E28", whiteSpace:"nowrap" }}>{c.label}</span>))}</div>
           </div>
           <div style={{ height:3, background:T.div, flexShrink:0 }}><div style={{ height:"100%", width:`${pct}%`, background:T.green, transition:"width .4s" }} /></div>
