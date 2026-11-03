@@ -37,7 +37,7 @@ const FontStyles = () => (
   .mfp-root.mfp-turbotax-flow .mfp-flow-header>div:nth-child(3){gap:8px!important;flex:1;justify-content:center;}
   .mfp-root.mfp-turbotax-flow .mfp-flow-header>div:nth-child(3)>div{padding:10px 16px!important;border-radius:999px!important;}
   .mfp-root.mfp-turbotax-flow .mfp-flow-header>div:nth-child(3)>div:not([style*="rgb"]){background:transparent!important;}
-  .mfp-root.mfp-turbotax-flow .mfp-flow-rail{width:248px!important;background:linear-gradient(180deg,#083d62 0%,#0b5577 48%,#083d62 100%)!important;border-right:1px solid #062f4b;color:#fff!important;}
+  .mfp-root.mfp-turbotax-flow .mfp-flow-rail{width:220px!important;background:linear-gradient(180deg,#083d62 0%,#0b5577 48%,#083d62 100%)!important;border-right:1px solid #062f4b;color:#fff!important;}
   .mfp-root.mfp-turbotax-flow .mfp-flow-rail div,.mfp-root.mfp-turbotax-flow .mfp-flow-rail span{color:#fff!important;}
   .mfp-root.mfp-turbotax-flow .mfp-flow-rail nav>div[style*="background: transparent"]{color:#d9edf4!important;}
   .mfp-root.mfp-turbotax-flow .mfp-flow-rail>div:first-child{padding:34px 24px 22px!important;background:linear-gradient(145deg,#083d62 0%,#0c7390 62%,#20afd2 100%)!important;color:#fff;}
@@ -164,9 +164,9 @@ const Head = ({ eyebrow, title, sub }) => (
   </div>
 );
 
-// ─�����──────────────�����────────────────────────────────────�������������������������──�����────────────────────
+// ─�������──────────────�����────────────────────────────────────�������������������������──�����────────────────────
 // DATA
-// ───────────��────────────────��─��──────────────────────────────────────��─��─��─��─
+// ───────��───��────────────────��─��──────────────────────────────────────��─��─��─��─
 const FA_STAGES = [
   { n:1, label:"Your accounting profile" }, { n:2, label:"Enterprise registry & shared costs" }, { n:3, label:"Goal alignment" },
   { n:4, label:"Upload your documents" }, { n:5, label:"Budgeting & working capital" }, { n:6, label:"Ratio deep dive" }, { n:7, label:"Peer benchmarking" },
@@ -2361,7 +2361,7 @@ function LivestockInsuranceCalculator({ risk, setRisk }) {
   );
 }
 
-// ───��������─�����──���──���────���──────────���──���───────────────────────────────────────���──────
+// ───��������─��������─���──���────���──────────���──���───────────────────────────────────────���──────
 // RD helpers
 // ─────────────────────────────────────────────────────────────────────────────
 // Each lever category is now built from specific, measurable items rather than one
@@ -6911,7 +6911,7 @@ else if (isRD) { if (rd.stage<rdTotal) goRD(rd.stage+1); else goLegacy(1); }
           </div>
           <div style={{ height:3, background:T.div, flexShrink:0 }}><div style={{ height:"100%", width:`${pct}%`, background:T.green, transition:"width .4s" }} /></div>
 
-          <div style={{ flex:1, padding:"30px 34px", maxWidth:960, width:"100%", margin:"0 auto", boxSizing:"border-box" }}>
+          <div style={{ flex:1, padding:"30px 24px", maxWidth:1180, width:"100%", margin:"0 auto", boxSizing:"border-box" }}>
             {isLeg && (
               <div style={{ display:"flex", gap:8, alignItems:"center", borderBottom:`1px solid ${T.border}`, marginBottom:20, flexWrap:"wrap" }}>
                 {[["senior","Senior generation"],["successor","Successor"],["compare","Blind compare"]].map(([k,lab]) => {
