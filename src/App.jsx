@@ -283,7 +283,7 @@ function FA0({ fa, setFA }) {
       {(fa.csvTransactions||[]).length>0 && <div style={{ marginTop:16 }}><div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:8 }}><strong>{fa.csvTransactions.length} transactions ready for review</strong><span style={{ fontSize:12, color:T.fgS }}>Suggestions are not final</span></div><div style={{ overflowX:"auto", border:`1px solid ${T.border}`, borderRadius:8 }}><table style={{ width:"100%", borderCollapse:"collapse", fontSize:12 }}><thead><tr>{["Description","Amount","Suggested category","Allocation","Why / action"].map(h=><th key={h} style={{ textAlign:"left", padding:"9px 10px", background:T.bgAlt, color:T.fgM, whiteSpace:"nowrap" }}>{h}</th>)}</tr></thead><tbody>{fa.csvTransactions.slice(0,50).map((row,i)=>{ const desc=row.Description||row.description||row.Memo||row.memo||Object.values(row)[0]||"Transaction"; const amount=row.Amount||row.amount||row.Debit||row.debit||"—"; return <tr key={row.id||i}><td style={{ padding:"8px 10px", borderTop:`1px solid ${T.div}` }}>{desc}</td><td style={{ padding:"8px 10px", borderTop:`1px solid ${T.div}`, whiteSpace:"nowrap" }}>{amount}</td><td style={{ padding:"8px 10px", borderTop:`1px solid ${T.div}` }}><select value={row.category} onChange={e=>setFA(s=>({...s,csvTransactions:s.csvTransactions.map((r,j)=>j===i?{...r,category:e.target.value,confidence:"Reviewed"}:r)}))} style={{ ...inputStyle(), minHeight:34, padding:"4px 8px", fontSize:12 }}>{FINANCIAL_CATEGORIES.map(c=><option key={c}>{c}</option>)}</select></td><td style={{ padding:"8px 10px", borderTop:`1px solid ${T.div}`, minWidth:130 }}><input type="range" min="0" max="100" step="25" value={row.allocation??100} onChange={e=>setFA(s=>({...s,csvTransactions:s.csvTransactions.map((r,j)=>j===i?{...r,allocation:Number(e.target.value),category:Number(e.target.value)<100?"Shared / allocate":r.category,confidence:"Reviewed"}:r)}))} /><div style={{ fontSize:11, color:T.fgM }}>{row.allocation??100}% to selected enterprise</div></td><td style={{ padding:"8px 10px", borderTop:`1px solid ${T.div}`, color:row.confidence==="Needs review"||row.confidence==="Review"?T.amberT:T.dgreen }}>{row.confidence==="Review"?"Shared expense — allocate across enterprises":row.confidence}</td></tr>})}</tbody></table></div>{fa.csvTransactions.length>50&&<div style={{ fontSize:12, color:T.fgS, marginTop:6 }}>Showing the first 50 rows. All imported rows remain available for the analysis.</div>}</div>}
     </div>
     <div style={{ ...cardStyle({ background:T.blueL, borderColor:"#c8d9e8" }), display:q>=3?"block":"none" }}><div style={{ display:"flex", gap:10, alignItems:"flex-start" }}><IconChart color={T.blue} size={20} /><div><div style={{ fontWeight:700, color:T.navy }}>Why this comes first</div><div style={{ color:T.fgM, fontSize:13, lineHeight:1.5, marginTop:3 }}>Tax records can be perfectly correct and still be the wrong starting point for enterprise profitability. Your answers determine which ratios can be compared confidently and where we should ask for a balance-sheet adjustment.</div></div></div></div>
-    <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:16, margin:"24px 0 18px", paddingTop:18, borderTop:`1px solid ${T.div}` }}><button type="button" onClick={()=>setQ(q-1)} disabled={q===0} style={{ ...btnStyle("ghost"), opacity:q===0?0.45:1 }}>← Previous</button><div style={{ display:"flex", alignItems:"center", gap:7 }}>{["Accounting basis","Preparer","Records","Transactions","Tax timing","Conversion"].map((label,i)=><button key={label} type="button" aria-label={label} onClick={()=>setQ(i)} style={{ width:7, height:7, minWidth:7, maxWidth:7, minHeight:7, maxHeight:7, flex:"0 0 7px", display:"block", lineHeight:0, border:0, borderRadius:"50%", padding:0, background:i===q?T.blue:T.border, cursor:"pointer" }} />)}</div><button type="button" onClick={()=>{ if (q<3) { setQ(q+1); return; } const missing = !p.basis ? 0 : !p.preparer ? 1 : !p.system ? 2 : -1; if (missing>=0) { setQ(missing); return; } setFA(s=>({ ...s, stage:3 })); if (typeof window!=="undefined") window.scrollTo({ top:0, behavior:"smooth" }); }} style={btnStyle("primary")}>{q>=3?"Continue to document upload →":"Next question →"}</button></div>
+    <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:16, margin:"24px 0 18px", paddingTop:18, borderTop:`1px solid ${T.div}` }}><button type="button" onClick={()=>setQ(q-1)} disabled={q===0} style={{ ...btnStyle("ghost"), opacity:q===0?0.45:1 }}>← Previous</button><div style={{ display:"flex", alignItems:"center", gap:7 }}>{["Accounting basis","Preparer","Records","Transactions","Tax timing","Conversion"].map((label,i)=><button key={label} type="button" aria-label={label} onClick={()=>setQ(i)} style={{ width:7, height:7, minWidth:7, maxWidth:7, minHeight:7, maxHeight:7, flex:"0 0 7px", display:"block", lineHeight:0, border:0, borderRadius:"50%", padding:0, background:i===q?T.blue:T.border, cursor:"pointer" }} />)}</div><button type="button" onClick={()=>{ if (q<3) { setQ(q+1); return; } setFA(s=>({ ...s, stage:3 })); if (typeof window!=="undefined") window.scrollTo({ top:0, behavior:"smooth" }); }} style={btnStyle("primary")}>{q>=3?"Continue to document upload →":"Next question →"}</button></div>
   </div>;
 }
 const RD_STAGES = [
@@ -2642,7 +2642,7 @@ const scoredOpps = (rd, faEnterprises, faS3vals) => { const d=rd.data||{}; const
 
 // ��������──��������───────────────────────────────────────────────────────────────────
 // RD STAGE 1 — Baseline & readiness
-// ────────────────────────�������──���─���─�����───���─���────────────────���───────������──���������──���────
+// ────────────────────────�������──���─���─�������───���─���────────────────���───────������──���������──���────
 function RD1({ rd, setRData, fa, profile }) {
   const d = rd.data; const b = d.baseline || {};
   const profileFarmTypes = [...new Set((Array.isArray(profile?.farmTypes) ? profile.farmTypes : String(profile?.productionMix||"").split(/,|;|\n/).map(v=>v.trim()).filter(Boolean)))];
@@ -2766,7 +2766,7 @@ function RD2({ rd, setRData }) {
 
 // ──────────────���──────────────────────────────────────────────────────────────
 // RD STAGE 3 — Human capital, assets & financial capital
-// ───────────────────────────────────────────────────────────────���─���───────────
+// ──────────────────────────────────────────────────────────────������─���───────────
 function CrewSkillsCard({ rd, setRData }) {
   const crew = rd.data.crewSkills || [];
   const toggleSkill = (id) => setRData(s => { const cur = s.crewSkills || []; return { ...s, crewSkills: cur.includes(id) ? cur.filter(x => x !== id) : [...cur, id] }; });
@@ -2894,7 +2894,7 @@ function RD3({ rd, setRData }) {
 
 // ───────────────────────────────────���─────���───���────���──────────────────────────
 // RD STAGE 4 — Opportunity mapping
-// ────���─────────────���────────────────────────────�����─────────────────────────────
+// ────���──────────���──���────────────────────────────�����─────────────────────────────
 const GROWTH_TIER_LABEL = { 1:"Tier 1 · Fastest structural growth", 2:"Tier 2 · Strong growth", 3:"Tier 3 · Steady & selective" };
 const GROWTH_TIER_COLOR = { 1:T.dgreen, 2:T.blue, 3:T.tan };
 
@@ -6768,7 +6768,7 @@ export default function App() {
   const rdUnlocked = vis.stage >= visTotal && fa.stage >= faTotal;
 
   const canAdvance = useMemo(() => {
-    if (isFA) { if (fa.stage===1) { const a=fa.accounting||{}; return !!(a.basis&&a.preparer&&a.system); } if (fa.stage===2) return (fa.ent?.list||[]).length>0; return true; }
+    if (isFA) return true;
     if (isRD) { const d = rd.data, g = d.goals2||{}, leverItems = d.leverItems||{}, b = d.baseline||{}, sel = d.selectedOpps||[];
       if (!rdUnlocked) return false;
       if (!b.revTier) return false;
