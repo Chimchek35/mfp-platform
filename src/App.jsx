@@ -4548,7 +4548,7 @@ function LEG6({ leg, setLegData, fa }) {
   );
 }
 
-// ── Stage 5 — Successor readiness ────────────────────────────────────────────
+// ── Stage 5 — Successor readiness ─────────────────────────���──────────────────
 function LEG7({ leg, setLegData }) {
   const d = leg.data || {};
   const ex = d.exposure || {};
@@ -6729,7 +6729,7 @@ else if (isRD) { if (rd.stage<rdTotal) goRD(rd.stage+1); else goLegacy(1); }
   {isVis && <div style={eyebrowStyle}>Strategic Vision · Stage {stage}</div>}
   {false && <div style={{ marginBottom:26, borderRadius:16, overflow:"hidden", border:`1px solid ${T.div}`, background:T.bgAlt }}><img src="/strategic-vision-roadmap.png" alt="Strategic vision roadmap from capabilities and values to a statement, profile, and final document" style={{ display:"block", width:"100%", height:150, objectFit:"cover" }} /><div style={{ display:"flex", justifyContent:"space-between", gap:10, padding:"10px 14px", color:T.fgS, fontSize:11.5 }}><span>Build the next decision-ready layer</span><span style={{ color:T.green, fontWeight:700 }}>Stage {stage} of {total}</span></div></div>}
   <div style={{ maxWidth:900, marginBottom:26, color:T.fgS, fontSize:14, lineHeight:1.6 }}>{moduleSupport}</div>
-  {isVis && <VisionInlineVisual stageLabel="Core capability → defensible advantage" />}
+  {isVis && stage < 10 && <VisionInlineVisual stageLabel="Core capability → defensible advantage" />}
   {body}
   </section>
   );
