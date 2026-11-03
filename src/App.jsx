@@ -819,7 +819,7 @@ function FA3({ fa, setFA }) {
   ];
   return (
     <div>
-      <Head eyebrow="Financial Analysis · Stage 6" title="Ratio deep dive" sub="Enter your financial data — from your MFP Financial Data Worksheet, your own records, or your best estimate. Ratios calculate automatically as you type." /><div style={{ display:"flex", gap:8, flexWrap:"wrap", borderBottom:`1px solid ${T.border}`, marginBottom:20 }}><button type="button" onClick={()=>setRatioTab("balance")} style={{ ...btnStyle(ratioTab==="balance"?"primary":"outline"), borderRadius:8, marginBottom:8 }}>Balance sheet snapshot</button><button type="button" onClick={()=>setRatioTab("scorecard")} style={{ ...btnStyle(ratioTab==="scorecard"?"primary":"outline"), borderRadius:8, marginBottom:8 }}>Ratio scorecard</button><button type="button" onClick={()=>setRatioTab("inputs")} style={{ ...btnStyle(ratioTab==="inputs"?"primary":"outline"), borderRadius:8, marginBottom:8 }}>Financial inputs & accrual</button></div>
+      <Head eyebrow="Financial Analysis · Stage 6" title="Ratio deep dive" sub="Enter your financial data — from your MFP Financial Data Worksheet, your own records, or your best estimate. Ratios calculate automatically as you type." showFinancialVisual={false} /><div style={{ display:"flex", gap:8, flexWrap:"wrap", borderBottom:`1px solid ${T.border}`, marginBottom:20 }}><button type="button" onClick={()=>setRatioTab("balance")} style={{ ...btnStyle(ratioTab==="balance"?"primary":"outline"), borderRadius:8, marginBottom:8 }}>Balance sheet snapshot</button><button type="button" onClick={()=>setRatioTab("scorecard")} style={{ ...btnStyle(ratioTab==="scorecard"?"primary":"outline"), borderRadius:8, marginBottom:8 }}>Ratio scorecard</button><button type="button" onClick={()=>setRatioTab("inputs")} style={{ ...btnStyle(ratioTab==="inputs"?"primary":"outline"), borderRadius:8, marginBottom:8 }}>Financial inputs & accrual</button></div>
           <div style={{ display:ratioTab==="inputs"?"block":"none" }}>{/* financial inputs and accrual adjustments */}<div style={cardStyle()}>
         <div style={cardLblStyle()}>Financial data</div>
         <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16 }}>
@@ -911,7 +911,7 @@ function FA3({ fa, setFA }) {
 
 // ────────────���───────────────��──────────────���──────────────────────────────��──
 // FA STAGE 4 — Peer benchmarking
-// ───────────────────────────────────────────────────────────────────────────���─
+// ────────────────────────────────────────────────────────���──────────────────���─
 function FA4({ fa, setFA }) {
   const b = fa.s4bench;
   const v = id => b[id]||""; const sv = (id,val) => setFA(s=>({...s,s4bench:{...s.s4bench,[id]:val}})); const gv = id => parseFloat(b[id]);
@@ -2271,7 +2271,7 @@ function CropInsuranceCalculator({ risk, setRisk, fa, profile }) {
   );
 }
 
-// ────────────────────────────────────���────────────────────────────────────────
+// ───────────────���────────────────────���────────────────────────────────────────
 // FARM RISK �� Stage 11: Livestock insurance calculator
 // ─────────────────────────────────────────────────────────────────────────────
 // Models Livestock Risk Protection (LRP) mechanics: a price floor set at coverage
