@@ -161,7 +161,7 @@ const Head = ({ eyebrow, title, sub, showFinancialVisual = true }) => {
   const isRevenue = eyebrow?.startsWith("Revenue Diversification");
   const isVision = eyebrow?.toLowerCase().startsWith("strategic vision");
   return <div>
-  {(isFinancial || isRevenue) && showFinancialVisual && <img src="/financial-analysis-dashboard.png" alt="Financial analysis dashboard connecting documents, cash flow, budgets, and benchmarking" style={{ display:"block", width:"100%", height:"auto", aspectRatio:"7 / 1", maxHeight:"none", objectFit:"cover", objectPosition:"center", borderRadius:16, marginBottom:22 }} />}
+  {(isFinancial || isRevenue) && showFinancialVisual && <img src="/financial-analysis-dashboard.png" alt="Farm headquarters office overlooking grain bins, machinery shed, and farmland, run like a family office" style={{ display:"block", width:"100%", height:"auto", aspectRatio:"5 / 1", maxHeight:"none", objectFit:"cover", objectPosition:"center 58%", borderRadius:16, marginBottom:22 }} />}
   {!isFinancial && !isVision && <div style={eyebrowStyle}>{eyebrow}</div>}
   <h1 style={h1Style}>{title}</h1>
   <p style={subStyle}>{sub}</p>
@@ -4548,7 +4548,7 @@ function LEG6({ leg, setLegData, fa }) {
   );
 }
 
-// ── Stage 5 — Successor readiness ─────────────────────────���──────────────────
+// ── Stage 5 — Successor readiness ─────────────────────────�����──────────────────
 function LEG7({ leg, setLegData }) {
   const d = leg.data || {};
   const ex = d.exposure || {};
