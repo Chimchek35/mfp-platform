@@ -524,7 +524,7 @@ const REV_RAMP = { energy:[0,0,0,0,0,0,0,0,0,0,0,0], specialty:[0,0,0,0,0,0,0,2,
 
 // ─────────────────────────────────��───────────────────────────────────────────
 // FA STAGE 1 — Enterprise dashboard
-// ─────────────────────────────────────────────────────────────────────────────
+// ──────────────────────────────────────────────────�����──────────────────────────
 function FA1({ fa, setFA }) {
   const active = fa.enterprises;
   const toggle = (k) => setFA(s => ({ ...s, enterprises: s.enterprises.includes(k) ? s.enterprises.filter(x=>x!==k) : [...s.enterprises, k] }));
@@ -1091,7 +1091,7 @@ function RiskCategoryStage({ risk, setRisk, catIndex, fa, onStartConvo }) {
   const catSL = riskScoreLabel(catScore, cat.maxScore);
   return (
     <div>
-      <Head eyebrow={`Farm Risk · Section ${catIndex+1} of 4`} title={cat.label} sub="Adapted directly from Nationwide's Farm Risk Ready℠ assessment quiz." />
+      <Head eyebrow={`Risk Ready · Section ${catIndex+1} of 4`} title={cat.label} sub="Adapted directly from Nationwide's Farm Risk Ready℠ assessment quiz." />
       {catIndex===0 && <FinancialHealthStrip fa={fa} />}
       {catIndex===0 && onStartConvo && (
         <div style={{ background:T.greenL, border:"1px solid #dde7cd", borderRadius:9, padding:"14px 18px", display:"flex", justifyContent:"space-between", alignItems:"center", gap:16, flexWrap:"wrap", marginBottom:18 }}>
@@ -1186,7 +1186,7 @@ function RiskResultsStage({ risk }) {
   const overallLabel = totalMax>0 && totalScore/totalMax>=0.75 ? "Farm Risk Ready" : totalMax>0 && totalScore/totalMax>=0.5 ? "In progress" : "Needs attention";
   return (
     <div>
-      <Head eyebrow="Farm Risk · Stage 5" title="Results" sub="Your score across the four Farm Risk Ready℠ sections. This is a snapshot of risk-management awareness and habits, not a substitute for the specific plan you'll build next." />
+      <Head eyebrow="Risk Ready · Stage 5" title="Results" sub="Your score across the four Farm Risk Ready℠ sections. This is a snapshot of risk-management awareness and habits, not a substitute for the specific plan you'll build next." />
       <div style={{ background:T.navy, borderRadius:10, padding:"20px 24px", marginBottom:16, display:"grid", gridTemplateColumns:"1fr 2fr", gap:20, alignItems:"center" }}>
         <div>
           <div style={{ fontSize:11, fontWeight:700, letterSpacing:"0.1em", textTransform:"uppercase", color:T.green, marginBottom:6 }}>Overall score</div>
@@ -1488,7 +1488,7 @@ function RiskPlanDocument({ risk, profile, goCalc }) {
 
   return (
     <div>
-      <Head eyebrow="Farm Risk · Your plan" title="Farm risk plan" sub="Everything captured in the conversation, written up as one document. Print it, or read it out to whoever else needs to know what to do." />
+      <Head eyebrow="Risk Ready · Your plan" title="Farm risk plan" sub="Everything captured in the conversation, written up as one document. Print it, or read it out to whoever else needs to know what to do." />
 
       <div style={cardStyle()}>
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"baseline", gap:14, flexWrap:"wrap", borderBottom:`2px solid ${T.navy}`, paddingBottom:12, marginBottom:4 }}>
@@ -1683,7 +1683,7 @@ function ConversationalRisk({ risk, setRisk, onExit, profile }) {
 
   return (
     <div>
-      <Head eyebrow="Farm Risk · Guided conversation" title="Talk it through, I will do the writing" sub="Type your answer below. Nothing is scored without showing you the proposed result and letting you change it first." />
+      <Head eyebrow="Risk Ready · Guided conversation" title="Talk it through, I will do the writing" sub="Type your answer below. Nothing is scored without showing you the proposed result and letting you change it first." />
 
       <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:18 }}>
         <div style={{ flex:1, height:6, background:T.div, borderRadius:3, overflow:"hidden" }}>
@@ -1907,7 +1907,7 @@ function RiskPlanRevenueOps({ risk, setRisk }) {
   const removeContact = (i) => setPlan({ contacts: contacts.filter((_,idx)=>idx!==i) });
   return (
     <div>
-      <Head eyebrow="Farm Risk ������ Plan Builder · Stage 1" title="Revenue operations & key contacts" sub="Document each primary revenue operation and the assets, suppliers, employees, and customers it depends on — then record backup contacts for your key suppliers, vendors, and customers." />
+      <Head eyebrow="Risk Ready · Plan Builder · Stage 1" title="Revenue operations & key contacts" sub="Document each primary revenue operation and the assets, suppliers, employees, and customers it depends on — then record backup contacts for your key suppliers, vendors, and customers." />
       <div style={cardStyle()}>
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:14 }}>
           <div style={cardLblStyle({ marginBottom:0 })}>Primary revenue operations</div>
@@ -1976,7 +1976,7 @@ function RiskPlanThreats({ risk, setRisk, goStrategy }) {
   const sorted = [...threats].sort((a,b)=>threatScore(b)-threatScore(a));
   return (
     <div>
-      <Head eyebrow="Farm Risk · Plan Builder · Stage 2" title="Threat identification & ranking" sub="List potential threats across all eight categories, then score each on probability and severity. Threats scoring 10–25 are your most immediate concern — you'll build strategies and contingency plans for these next." />
+      <Head eyebrow="Risk Ready · Plan Builder · Stage 2" title="Threat identification & ranking" sub="List potential threats across all eight categories, then score each on probability and severity. Threats scoring 10–25 are your most immediate concern — you'll build strategies and contingency plans for these next." />
       {goStrategy && (threats||[]).length > 0 && (
         <div style={{ background:T.greenL, border:"1px solid #dde7cd", borderRadius:9, padding:"13px 17px", display:"flex", justifyContent:"space-between", alignItems:"center", gap:16, flexWrap:"wrap", marginBottom:16 }}>
           <div>
@@ -2051,7 +2051,7 @@ function RiskPlanStrategy({ risk, setRisk }) {
 
   return (
     <div>
-      <Head eyebrow="Farm Risk · Plan Builder · Stage 3" title="Strategy & contingency plans" sub="For each of your highest-ranked threats, choose a management strategy and build your Plan A for responding if it happens." />
+      <Head eyebrow="Risk Ready · Plan Builder · Stage 3" title="Strategy & contingency plans" sub="For each of your highest-ranked threats, choose a management strategy and build your Plan A for responding if it happens." />
       {top.length===0 && <Flag type="warn">No ranked threats yet. Go back to the previous stage and add at least one.</Flag>}
       {seededCount > 0 && (
         <Flag type="info">Everything below is carried forward from your threat ranking and prefilled as a first draft, including the people and contacts you named earlier. {seededCount === 1 ? "One threat is" : `${seededCount} threats are`} showing a suggested strategy based on category and score. Change anything that does not fit, it is a starting point rather than a recommendation.</Flag>
@@ -2113,7 +2113,7 @@ function RiskPlanReview({ risk, setRisk }) {
   const top = topRankedThreats(threats);
   return (
     <div>
-      <Head eyebrow="Farm Risk · Plan Builder · Stage 4" title="Communicate, train & review" sub="Make sure everyone who needs to know your plan actually knows it — then set a cadence to review, update, and test it." />
+      <Head eyebrow="Risk Ready · Plan Builder · Stage 4" title="Communicate, train & review" sub="Make sure everyone who needs to know your plan actually knows it — then set a cadence to review, update, and test it." />
       {top.length===0 && <Flag type="warn">No ranked threats yet. Go back and add threats in Stage 12.</Flag>}
       {top.map(t => {
         const cat = THREAT_CATEGORIES.find(c=>c.id===t.category); const cm = communication[t.id]||{};
@@ -2259,7 +2259,7 @@ function CropInsuranceCalculator({ risk, setRisk, fa, profile }) {
 
   return (
     <div>
-      <Head eyebrow="Farm Risk · Stage 11" title="Crop insurance calculator" sub="See how your Revenue Protection guarantee compares to your actual cost of production — and why insurance is a floor to keep the farm solvent, not a guarantee of profit." />
+      <Head eyebrow="Risk Ready · Stage 11" title="Crop insurance calculator" sub="See how your Revenue Protection guarantee compares to your actual cost of production — and why insurance is a floor to keep the farm solvent, not a guarantee of profit." />
       <TransferContext risk={risk} kinds={["price","yield","natural"]} />
 
       <div style={{ display:"flex", gap:6, marginBottom:16 }}>
@@ -2384,7 +2384,7 @@ function LivestockInsuranceCalculator({ risk, setRisk }) {
 
   return (
     <div>
-      <Head eyebrow="Farm Risk · Stage 12" title="Livestock insurance calculator" sub="See how a Livestock Risk Protection (LRP) price floor compares to your cost of production — and how that relationship can look very different from crop insurance depending on the market." />
+      <Head eyebrow="Risk Ready · Stage 12" title="Livestock insurance calculator" sub="See how a Livestock Risk Protection (LRP) price floor compares to your cost of production — and how that relationship can look very different from crop insurance depending on the market." />
       <TransferContext risk={risk} kinds={["price","yield","operational"]} />
 
       <div style={{ display:"flex", gap:6, marginBottom:16 }}>
@@ -2892,7 +2892,7 @@ function RD3({ rd, setRData }) {
   );
 }
 
-// ───────────────────────────────────���─────���───���────���──────────────────────────
+// ───────────────────────────────────���─────���───���────���────────���────���────────────
 // RD STAGE 4 — Opportunity mapping
 // ────���──────────���──���─────────────────────────��──�����─────────────────────────────
 const GROWTH_TIER_LABEL = { 1:"Tier 1 · Fastest structural growth", 2:"Tier 2 · Strong growth", 3:"Tier 3 · Steady & selective" };
@@ -3060,7 +3060,7 @@ function RD5({ rd, setRData }) {
 
 // ────────────────────────────────���───────────────────────────────────��───����────
 // RD STAGE 6 — Policy & grant enablers
-// ────────────────────────────────────────────────────���───────────────────��────
+// ────────────────────────────────────────────���───────���───────────────────��────
 // Deliberately mirrors Barrier Identification's structure — same per-opportunity card
 // layout, same checkbox-to-acknowledge pattern — but framed as tailwinds rather than
 // obstacles: policy and grant programs that could actively support a selected path,
@@ -3625,7 +3625,7 @@ const AP_FALLBACK = {
   tools:[], toolcount:"No partner tools in this area yet",
 };
 
-const AP_MODULE_LABEL = { fa:"Financial Analysis", rd:"Revenue Diversification", risk:"Farm Risk", legacy:"Legacy" };
+const AP_MODULE_LABEL = { fa:"Financial Analysis", rd:"Revenue Diversification", risk:"Risk Ready", legacy:"Legacy" };
 
 // Compact carry-forward of the four financial health categories, shown inside the
 // modules so the numbers travel with the farmer rather than living only on one page.
@@ -3984,7 +3984,7 @@ function FarmProfilePage({ profile, setProfile, fa, rd, goFA, goRD, goRisk, goLe
 
 // ══════════════════════���══════════════════════════════════════════════════════
 // LEGACY — Transition readiness
-// ═════════════════════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════���═════════════════════════
 // Deliberately does NOT open with assets. Operational transition is about who runs
 // the business; succession is about who owns it. This module tests the operating
 // question so the ownership question can be answered honestly, and hands off to
@@ -4456,7 +4456,7 @@ function LEG2({ leg, setLegData }) {
   return <div><Head eyebrow="Legacy · Stage 3" title="The successor question" sub="There may be a clear successor, several possibilities, or no successor at all. Naming the reality is the useful first step." /><div style={cardStyle()}><div style={cardLblStyle()}>The successor question</div>{legRow("Is there an identified successor?", <select style={inputStyle()} value={v("successorStatus")} onChange={set("successorStatus")}><option value="">Select</option><option value="working">Yes, and they are already working in the business</option><option value="identified">Yes, identified but not yet involved day to day</option><option value="maybe">Maybe, more than one candidate or nobody has said it out loud</option><option value="none">No, there is no successor</option></select>)}{d.successorStatus === "none" && <><Flag type="info">No successor is a legitimate path, not a failure. It deserves the same rigour as a family transition.</Flag>{legRow("Which direction makes most sense to explore?", <select style={inputStyle()} value={v("noSuccessorPath")} onChange={set("noSuccessorPath")}><option value="">Select</option><option value="sale">Orderly sale of the operation</option><option value="lease">Lease the ground to a neighbouring operation</option><option value="employee">Transition to a non-family employee</option><option value="winddown">Planned wind-down over a set number of years</option><option value="unsure">Genuinely unsure, that is the question</option></select>)}</>}{d.successorStatus === "maybe" && <Flag type="warn">More than one candidate, or nobody having said it out loud, is a common starting point. Naming it is the work of the next few stages.</Flag>}</div></div>;
 }
 
-// ── Stage 3 — What exists on paper ────────────────────���──────────────────────
+// ── Stage 3 — What exists on paper ────────────────────���───────��──────────────
 function LEG3({ leg, setLegData }) {
   const d = leg.data || {};
   const v = (k) => d[k] || "";
@@ -5498,7 +5498,7 @@ function LegCompare({ leg, setLegData, setSucc }) {
   );
 }
 
-// ── Stage 13 — Where this leaves you ────────────────────��────────────────────
+// ── Stage 13 — Where this leaves you ─────────────────��──��────────────────────
 function LEG13({ leg, profile }) {
   const d = leg.data || {};
   const tierKey = legacyTier(leg);
@@ -6811,7 +6811,7 @@ else if (isRD) { if (rd.stage<rdTotal) goRD(rd.stage+1); else goLegacy(1); }
   if (isVis && vis.stage===visTotal) nextLabel = "Financial Analysis →";
   if (isFA && fa.stage===faTotal) nextLabel = "Revenue Diversification →";
   if (isRD && rd.stage===rdTotal) nextLabel = "Legacy →";
-  if (isLeg && leg.stage===legTotal) nextLabel = "Farm Risk →";
+  if (isLeg && leg.stage===legTotal) nextLabel = "Risk Ready →";
   if (isRisk && risk.stage===riskTotal) nextLabel = "Start over ↺";
 
   function FADocuments({ fa, setFA }) {
@@ -6880,7 +6880,7 @@ else if (isRD) { if (rd.stage<rdTotal) goRD(rd.stage+1); else goLegacy(1); }
   const body = riskConvoActive
     ? <ConversationalRisk risk={risk} setRisk={setRisk} profile={profile} onExit={(stage)=>{ setRiskConvo(false); setRisk(s=>({ ...s, stage: stage || 5 })); }} />
     : isFA ? FA_BODY[stage-1] : isRD ? (rdUnlocked ? RD_BODY[stage-1] : <div style={cardStyle({ borderTop:`4px solid ${T.blue}` })}><div style={cardLblStyle()}>Complete the foundation modules first</div><p style={{ color:T.fgM, lineHeight:1.6, marginTop:0 }}>Revenue Diversification uses your Strategic Vision and Financial Analysis results. Complete both modules before starting this flow so multiple farm types, revenue tier, financial health, and SWOT signals are grounded in your farm&apos;s work.</p><div style={{ display:"flex", gap:10, flexWrap:"wrap" }}><button type="button" onClick={()=>setModule("vision")} style={btnStyle("outline")}>Go to Strategic Vision</button><button type="button" onClick={()=>setModule("fa")} style={btnStyle("primary")}>Go to Financial Analysis</button></div></div>) : isLeg ? <div>{legBodyForRole}</div> : isVis ? VIS_BODY[stage-1] : RISK_BODY[stage-1];
-  const moduleName = isVis ? "Strategic Vision" : isFA ? "Financial Analysis" : isLeg ? "Legacy" : isRD ? "Revenue Diversification" : "Farm Risk";
+  const moduleName = isVis ? "Strategic Vision" : isFA ? "Financial Analysis" : isLeg ? "Legacy" : isRD ? "Revenue Diversification" : "Risk Ready";
   const moduleSupport = isVis
     ? "Start with what you want this farm to make possible. We will work from your reality, not a textbook answer."
     : isFA
@@ -6955,7 +6955,7 @@ else if (isRD) { if (rd.stage<rdTotal) goRD(rd.stage+1); else goLegacy(1); }
             </div>
           </div>
           <div onClick={()=>setModule("legacy")} style={legTabStyle}>
-            <IconProfile />
+            <img src="/legacy-acres-logo.png" alt="Legacy Acres" style={{ width:34, height:28, objectFit:"contain", flexShrink:0 }} />
             <div>
               <div style={isLeg?lblOn:lblOff}>Legacy</div>
               <div style={{ display:"flex", alignItems:"center", gap:7, marginTop:3 }}>
@@ -6975,9 +6975,9 @@ else if (isRD) { if (rd.stage<rdTotal) goRD(rd.stage+1); else goLegacy(1); }
             </div>
           </div>
           <div onClick={()=>setModule("risk")} style={riskTabStyle}>
-            <IconShield />
+            <img src="/nationwide-logo.svg" alt="Nationwide" style={{ width:26, height:28, objectFit:"contain", flexShrink:0 }} />
             <div>
-              <div style={isRisk?lblOn:lblOff}>Farm Risk</div>
+              <div style={isRisk?lblOn:lblOff}>Risk Ready</div>
               <div style={{ display:"flex", alignItems:"center", gap:7, marginTop:3 }}>
                 <div style={{ width:62, height:4, background:T.border, borderRadius:2, overflow:"hidden" }}><div style={{ height:"100%", width:`${riskPct}%`, background:T.green, borderRadius:2 }} /></div>
                 <span style={{ fontSize:11, color:T.fgS, whiteSpace:"nowrap" }}>{riskPct}%</span>
@@ -7044,7 +7044,7 @@ else if (isRD) { if (rd.stage<rdTotal) goRD(rd.stage+1); else goLegacy(1); }
         {/* Rail */}
         <aside className="mfp-flow-rail" style={{ width:240, background:"#0b5577", borderRight:`1px solid #062f4b`, display:"flex", flexDirection:"column", flexShrink:0, overflowY:"auto" }}>
           <div style={{ padding:"22px 18px 14px" }}>
-<div style={{ fontWeight:700, fontSize:11, letterSpacing:"0.16em", textTransform:"uppercase", color:T.blue, display:"flex", alignItems:"center", gap:7, marginBottom:4 }}>{isVis?"Strategic Vision":isFA?"Financial Analysis":isLeg?"Legacy":isRD?"Revenue Diversification":"Farm Risk Assessment"}</div>
+<div style={{ fontWeight:700, fontSize:11, letterSpacing:"0.16em", textTransform:"uppercase", color:T.blue, display:"flex", alignItems:"center", gap:7, marginBottom:4 }}>{isVis?"Strategic Vision":isFA?"Financial Analysis":isLeg?"Legacy":isRD?"Revenue Diversification":"Risk Ready"}</div>
   <div style={{ fontSize:12, color:T.fgM }}>{isVis?`${visTotal}-stage planning`:isFA?"7-stage analysis":isLeg?`${legTotal}-stage transition plan`:isRD?"9-stage planning":"12-stage risk review"}</div>
           </div>
           <div style={{ height:1, background:"rgba(255,255,255,0.09)", margin:"0 0 8px" }} />
@@ -7070,7 +7070,7 @@ else if (isRD) { if (rd.stage<rdTotal) goRD(rd.stage+1); else goLegacy(1); }
             </div>
           )}
           <div style={{ padding:"14px 18px 20px" }}>
-            <div style={{ display:"flex", justifyContent:"space-between", fontSize:10, color:"rgba(255,255,255,0.4)", marginBottom:5 }}><span>{isVis?"Strategic Vision":isFA?"Financial Analysis":isLeg?"Legacy":isRD?"Revenue Diversification":"Farm Risk"} progress</span><span>{pct}%</span></div>
+            <div style={{ display:"flex", justifyContent:"space-between", fontSize:10, color:"rgba(255,255,255,0.4)", marginBottom:5 }}><span>{isVis?"Strategic Vision":isFA?"Financial Analysis":isLeg?"Legacy":isRD?"Revenue Diversification":"Risk Ready"} progress</span><span>{pct}%</span></div>
             <div style={{ height:4, background:"rgba(255,255,255,0.12)", borderRadius:2, overflow:"hidden" }}><div style={{ height:"100%", width:`${pct}%`, background:T.green, borderRadius:2, transition:"width .4s" }} /></div>
           </div>
         </aside>
@@ -7078,7 +7078,7 @@ else if (isRD) { if (rd.stage<rdTotal) goRD(rd.stage+1); else goLegacy(1); }
         {/* Main */}
         <div className="mfp-flow-main" style={{ flex:1, overflowY:"auto", display:"flex", flexDirection:"column" }}>
           <div style={{ background:"#fff", borderBottom:`1px solid ${T.border}`, padding:"0 28px", height:50, display:isVis?"none":"flex", alignItems:"center", justifyContent:"space-between", flexShrink:0 }}>
-            <div style={{ fontSize:14, fontWeight:700, letterSpacing:"0.04em", color:T.navy }}>{!isVis && <>{isFA?"Financial Analysis":isRD?"Revenue Diversification":isRisk?"Farm Risk":"Maximum Farm Potential"} <span style={{ color:T.fgS, fontWeight:500 }}>· Stage {stage} of {total}</span><span style={{ color:T.fgS, fontWeight:500 }}> / {stageDefs[stage-1].label}</span></>}</div>
+            <div style={{ fontSize:14, fontWeight:700, letterSpacing:"0.04em", color:T.navy }}>{!isVis && <>{isFA?"Financial Analysis":isRD?"Revenue Diversification":isRisk?"Risk Ready":"Maximum Farm Potential"} <span style={{ color:T.fgS, fontWeight:500 }}>· Stage {stage} of {total}</span><span style={{ color:T.fgS, fontWeight:500 }}> / {stageDefs[stage-1].label}</span></>}</div>
             <div style={{ display:"flex", gap:6 }}>{chips.map((c,i) => (<span key={i} style={{ fontSize:11, fontWeight:600, padding:"3px 10px", borderRadius:999, background:T.greenL, color:"#2F6E28", whiteSpace:"nowrap" }}>{c.label}</span>))}</div>
           </div>
           <div style={{ height:3, background:T.div, flexShrink:0 }}><div style={{ height:"100%", width:`${pct}%`, background:T.green, transition:"width .4s" }} /></div>
