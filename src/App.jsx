@@ -1,4 +1,4 @@
-import { Fragment, useState, useMemo, useRef, useEffect } from "react";
+import { Children, Fragment, isValidElement, useState, useMemo, useRef, useEffect } from "react";
 import { loadSavedWork, syncSavedWork } from "./backend.js";
 import EagleEye from "./EagleEye.jsx";
 import FarmKnowledgeSearch from "./FarmKnowledgeSearch.jsx";
@@ -154,6 +154,47 @@ const classify = (r, val) => { if (val===""||val===null||val===undefined||isNaN(
 const Flag = ({ type, children }) => {
   const m = { ok:{bg:T.greenL,c:T.dgreen,b:T.moss}, warn:{bg:T.amberL,c:T.amberT,b:T.amber}, danger:{bg:T.redL,c:T.redD,b:T.red}, info:{bg:T.blueL,c:T.blue,b:T.blue} }[type];
   return <div style={{ background:m.bg, color:m.c, borderLeft:`2px solid ${m.b}`, borderRadius:"0 5px 5px 0", padding:"9px 13px", fontSize:12.5, marginBottom:10, lineHeight:1.55 }}>{children}</div>;
+};
+
+const flattenSectionChildren = (children) => Children.toArray(children).flatMap(c => isValidElement(c) && c.type === Fragment ? flattenSectionChildren(c.props.children) : [c]);
+
+// Flags and elements marked data-section-lead are hints, so they travel with the section that follows them.
+const SectionSteps = ({ children }) => {
+  const groups = [];
+  let leads = [];
+  flattenSectionChildren(children).forEach(c => {
+    const isLead = isValidElement(c) && (c.type === Flag || c.props?.["data-section-lead"]);
+    if (isLead) leads.push(c);
+    else { groups.push([...leads, c]); leads = []; }
+  });
+  if (leads.length) { if (groups.length) groups[groups.length - 1].push(...leads); else groups.push(leads); }
+  const [current, setCurrent] = useState(0);
+  const ref = useRef(null);
+  const index = Math.min(current, Math.max(0, groups.length - 1));
+  if (groups.length <= 1) return <>{groups[0]}</>;
+  const isLast = index === groups.length - 1;
+  const go = (next) => {
+    setCurrent(next);
+    const top = ref.current?.getBoundingClientRect().top;
+    if (top !== undefined && top < 0) ref.current.scrollIntoView({ behavior:"smooth", block:"start" });
+  };
+  return (
+    <div ref={ref} style={{ scrollMarginTop:16 }}>
+      <div style={{ display:"flex", alignItems:"center", gap:14, marginBottom:16 }}>
+        <span style={{ fontSize:11, fontWeight:700, letterSpacing:"0.1em", textTransform:"uppercase", color:T.fgS, whiteSpace:"nowrap" }} aria-live="polite">Section {index + 1} of {groups.length}</span>
+        <div style={{ display:"flex", gap:4, flex:1 }} aria-hidden="true">
+          {groups.map((_, k) => <div key={k} style={{ flex:1, height:4, borderRadius:2, background:k < index ? T.green : k === index ? T.blue : T.border }} />)}
+        </div>
+      </div>
+      <div key={index}>{groups[index]}</div>
+      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", gap:12, marginTop:6, flexWrap:"wrap" }}>
+        {index > 0 ? <button type="button" onClick={() => go(index - 1)} style={{ ...btnStyle("ghost"), fontSize:13 }}>← Previous section</button> : <span />}
+        {isLast
+          ? <span style={{ fontSize:12.5, color:T.fgS }}>Last section on this page</span>
+          : <button type="button" onClick={() => go(index + 1)} style={btnStyle("primary")}>Next section →</button>}
+      </div>
+    </div>
+  );
 };
 
 const Head = ({ eyebrow, title, sub, showFinancialVisual = true }) => {
@@ -911,7 +952,7 @@ function FA3({ fa, setFA }) {
   );
 }
 
-// ────────────���───────────────��────────────���������─���──────────────────────────────��──
+// ────────────���───────────────��────────────�����������─���──────────────────────────────��──
 // FA STAGE 4 — Peer benchmarking
 // ──────────────���─────────────────���───────────────────────���──────────────────���─
 function FA4({ fa, setFA }) {
@@ -2535,7 +2576,7 @@ const scoredOpps = (rd, faEnterprises, faS3vals) => { const d=rd.data||{}; const
     const timeOk = g.timeAppetite!=="minimal" || PASSIVE_TIME_OPPS.includes(o.id);
     const sizeMatch = !sizeBucket || !o.sizeFit ? true : o.sizeFit.includes(sizeBucket);
     const entMatch = !o.entSpecific || o.entSpecific===faEnt;
-    // entExclude: for "add a new enterprise you don't already run" opportunities — suppress
+    // entExclude: for "add a new enterprise you don't already run" opportunities ��� suppress
     // if the farmer already operates any of the excluded enterprises. entRelevant: modest
     // boost if the farmer runs an enterprise this opportunity is a natural complement to.
     const isExcluded = o.entExclude && o.entExclude.some(e => enterprises.includes(e));
@@ -3311,7 +3352,7 @@ function EfficiencyValueImpact({ sel, lev }) {
   );
 }
 
-// ══════���══════════════════════════════════���═���═���═����════��═══════����═════��══════��═══
+// ══════���═══════════════════════════════���══���═���═���═����════��═══════����═════��══════��═══
 // FARM PROFILE — a single 360° farm view that fills in as the farmer completes
 // onboarding and assessments, and feeds relevant fields back into FA, RD, and Risk
 // so nothing has to be entered twice.
@@ -4548,7 +4589,7 @@ function LEG6({ leg, setLegData, fa }) {
   );
 }
 
-// ── Stage 5 — Successor readiness ──────��───��───��───��──────�����──────────────────
+// ── Stage 5 — Successor readiness ─��────��───��───��───��──────�����──────────────────
 function LEG7({ leg, setLegData }) {
   const d = leg.data || {};
   const ex = d.exposure || {};
@@ -5591,8 +5632,8 @@ function VIS1({ vis, setVis, profile, goProfile }) {
 
   return (
     <div>
-      <Head eyebrow="Strategic vision · Stage 1" title="Core Competencies and Competitive Advantage" sub="Start with the reason customers, employees, landlords, or partners choose this operation over another." /><div style={cardStyle({ borderTop:`4px solid ${T.blue}`, marginBottom:18 })}><div style={cardLblStyle()}>Bring existing profile</div><p style={{ color:T.fgM, fontSize:13.5, lineHeight:1.5, marginTop:0 }}>Upload a Maximum Farm Potential JSON export to update the profile fields used across the Strategic Vision categories.</p><input type="file" accept=".json,application/json" onChange={importProfile} /></div>
-      <div style={{ marginBottom:24, padding:"22px 0", borderBottom:`1px solid ${T.div}` }}><div style={cardLblStyle()}>The capability behind the farm</div><p style={{ fontSize:15, color:T.fgM, lineHeight:1.55, margin:0, maxWidth:560 }}>What can this operation do exceptionally well—and what would be difficult for another farm to copy?</p></div>
+      <Head eyebrow="Strategic vision · Stage 1" title="Core Competencies and Competitive Advantage" sub="Start with the reason customers, employees, landlords, or partners choose this operation over another." /><SectionSteps><div style={cardStyle({ borderTop:`4px solid ${T.blue}`, marginBottom:18 })}><div style={cardLblStyle()}>Bring existing profile</div><p style={{ color:T.fgM, fontSize:13.5, lineHeight:1.5, marginTop:0 }}>Upload a Maximum Farm Potential JSON export to update the profile fields used across the Strategic Vision categories.</p><input type="file" accept=".json,application/json" onChange={importProfile} /></div>
+      <div data-section-lead="true" style={{ marginBottom:24, padding:"22px 0", borderBottom:`1px solid ${T.div}` }}><div style={cardLblStyle()}>The capability behind the farm</div><p style={{ fontSize:15, color:T.fgM, lineHeight:1.55, margin:0, maxWidth:560 }}>What can this operation do exceptionally well—and what would be difficult for another farm to copy?</p></div>
       {!hasProfile && (<>
         <Flag type="warn">Your Farm Profile does not have competitive advantage, core values, or objectives filled in yet. You can add items here directly, or fill the profile first.
           {goProfile && <div style={{ marginTop:9 }}><button onClick={goProfile} style={{ ...btnStyle("outline"), fontSize:12, padding:"6px 13px" }}>Open Farm Profile</button></div>}
@@ -5634,6 +5675,7 @@ function VIS1({ vis, setVis, profile, goProfile }) {
             "The most valuable answer in this module is usually the one that was never in the profile.")}
         </div>
       )}
+      </SectionSteps>
     </div>
   );
 }
@@ -5646,12 +5688,14 @@ function VIS1({ vis, setVis, profile, goProfile }) {
   const seed = () => setVis({ items:[...(vis.items || []), ...(profile.values && !values.length ? [{ id:"profile-value-"+Date.now(), kind:"value", sourceLabel:"Farm Profile", text:profile.values, tests:{}, verdict:"untested" }] : [])], valuesSeeded:true });
   return <div>
     <Head eyebrow="Strategic vision · Stage 2" title="Core values" sub="Identify the principles that should guide choices when the easiest or most profitable option is not automatically the right one." />
+    <SectionSteps>
     <div style={cardStyle({ borderTop:`4px solid ${T.blue}` })}>
       <div style={cardLblStyle()}>Why this matters</div>
       <p style={{ fontSize:14, color:T.fgM, lineHeight:1.65, margin:0 }}>Core values turn a farm&apos;s identity into a decision filter. They help the household decide what work to accept, how to treat land and people, and what trade-offs are worth making. A value becomes useful when it can change a decision ��� not when it is only a good-sounding word.</p>
     </div>
     {!values.length && profile.values && !vis.valuesSeeded && <div style={cardStyle()}><div style={cardLblStyle()}>Bring forward what you already wrote</div><p style={{ fontSize:13, color:T.fgM }}>Your Farm Profile already has a values statement. Start there, then make it more specific if needed.</p><button onClick={seed} style={btnStyle("primary")}>Bring in core values →</button></div>}
     <div style={cardStyle()}><div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12 }}><div style={cardLblStyle({ marginBottom:0 })}>Your core values</div><button onClick={add} style={{ ...btnStyle("outline"), fontSize:12, padding:"6px 13px" }}>+ Add one</button></div>{values.length ? values.map(v=><div key={v.id} style={{ marginBottom:12 }}><LegacyVoiceField><textarea style={inputStyle({ minHeight:64, fontSize:14 })} value={v.text} onChange={e=>setValue(v.id,e.target.value)} placeholder="Name the principle and what it means in practice" /></LegacyVoiceField></div>) : <div style={{ color:T.fgS, fontSize:13 }}>Add the principles you want this operation to be known for.</div>}</div>
+    </SectionSteps>
   </div>;
   }
 
@@ -5670,6 +5714,7 @@ function VIS1({ vis, setVis, profile, goProfile }) {
   return (
   <div>
   <Head eyebrow={eyebrow} title={title} sub={sub} />
+      <SectionSteps key={kind}>
       <Flag type="info">A shorter, honest list is more useful than a long one.</Flag>
 
       {items.map(it => {
@@ -5723,6 +5768,7 @@ function VIS1({ vis, setVis, profile, goProfile }) {
           {s.real === 0 && s.tested >= 2 && <div style={{ marginTop:11 }}><Flag type="info">Nothing has survived intact yet. That is common and it is not a verdict on the operation. It usually means the real advantage has not been named yet rather than that there is not one.</Flag></div>}
         </div>
       )}
+      </SectionSteps>
     </div>
   );
 }
@@ -5735,6 +5781,7 @@ function VIS3({ vis, setVis }) {
   return (
     <div>
       <Head eyebrow="Strategic vision · Stage 5" title="What it has cost you" sub="A value becomes real when it changes a decision." />
+      <SectionSteps>
       {values.length === 0 ? (
         <Flag type="warn">No core values recorded yet. Go back to stage 1 and mark at least one claim as a core value.</Flag>
       ) : (
@@ -5755,6 +5802,7 @@ function VIS3({ vis, setVis }) {
           )}
         </>
       )}
+      </SectionSteps>
     </div>
   );
 }
@@ -5770,6 +5818,7 @@ function VIS4({ vis, setVis }) {
   return (
     <div>
       <Head eyebrow="Strategic vision · Stage 6" title="Turn it into rules" sub="This is where a personal vision becomes an organizational one. A value cannot be followed by an employee. A rule can, and more importantly a rule can be cited back at you." />
+      <SectionSteps>
       <div style={cardStyle({ borderTop:`4px solid ${T.blue}` })}>
         <div style={cardLblStyle()}>What the conversion looks like</div>
         {[["We value stewardship","We do not rent ground we cannot farm to our own standard, even when the rent is good"],
@@ -5821,6 +5870,7 @@ function VIS4({ vis, setVis }) {
           </div>
         ))}
       </div>
+      </SectionSteps>
     </div>
   );
 }
@@ -5835,6 +5885,7 @@ function VIS5({ vis, setVis, goLegacy }) {
   return (
     <div>
       <Head eyebrow="Strategic vision · Stage 7" title="Who holds this" sub="A vision one person holds is a preference. A vision the organization holds is a constraint. The difference is whether anyone else could state it, and whether they could use it to stop something." />
+      <SectionSteps>
       <div style={cardStyle()}>
         <div style={cardLblStyle()}>Where each person actually stands</div>
         {VIS_HOLDERS.map(p => (
@@ -5874,6 +5925,7 @@ function VIS5({ vis, setVis, goLegacy }) {
 
       {canState.length >= 2 && <Flag type="ok">{canState.length} people could state this themselves. That is the threshold where it starts behaving like an organizational vision rather than the owner's view.</Flag>}
       {unspoken.length === VIS_HOLDERS.length && <Flag type="warn">Nobody has discussed this yet. The statement in stage 7 is worth producing anyway, because it gives you something concrete to discuss rather than starting from a blank page.</Flag>}
+      </SectionSteps>
     </div>
   );
 }
@@ -5890,6 +5942,7 @@ function VIS6({ vis, setVis }) {
   return (
     <div>
       <Head eyebrow="Strategic vision · Stage 8" title="Where it binds" sub="A vision that does not show up where decisions get made is wall decoration. Mark which decisions each rule actually governs." />
+      <SectionSteps>
       {rules.length === 0 ? (
         <Flag type="warn">No rules yet. Go back to stage 4 and write at least one.</Flag>
       ) : (
@@ -5922,6 +5975,7 @@ function VIS6({ vis, setVis }) {
           )}
         </>
       )}
+      </SectionSteps>
     </div>
   );
 }
@@ -5959,6 +6013,7 @@ function VIS7({ vis, setVis, profile }) {
     <div>
       <Head eyebrow="Strategic vision · Stage 9" title="The statement" sub="Assembled from your own words rather than rewritten. A farm team can tell instantly when a document was not written by the person who runs the place." />
 
+      <SectionSteps>
       {!vis.assembled && (
         <div style={cardStyle({ borderTop:`4px solid ${T.moss}` })}>
           <div style={cardLblStyle()}>Build the draft</div>
@@ -6006,6 +6061,7 @@ function VIS7({ vis, setVis, profile }) {
           </div>
         </>
       )}
+      </SectionSteps>
     </div>
   );
 }
