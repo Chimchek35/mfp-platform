@@ -213,8 +213,8 @@ const Head = ({ eyebrow, title, sub, showFinancialVisual = true }) => {
 // DATA
 // ─��─��───��───��────────────────��─��──────────────────────────────────────��─��─��─���─
 const FA_STAGES = [
-  { n:1, label:"Your accounting profile" }, { n:2, label:"Enterprise registry & shared costs" }, { n:3, label:"Goal alignment" },
-  { n:4, label:"Upload your documents" }, { n:5, label:"Budgeting & working capital" }, { n:6, label:"Ratio deep dive" }, { n:7, label:"Peer benchmarking" },
+  { n:1, label:"Your accounting profile" }, { n:2, label:"Enterprise registry & shared costs" },
+  { n:3, label:"Upload your documents" }, { n:4, label:"Budgeting & working capital" }, { n:5, label:"Ratio deep dive" }, { n:6, label:"Peer benchmarking" },
   ];
 
 const BOOK_PREPARER = [
@@ -283,7 +283,7 @@ function FA0({ fa, setFA }) {
       {(fa.csvTransactions||[]).length>0 && <div style={{ marginTop:16 }}><div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:8 }}><strong>{fa.csvTransactions.length} transactions ready for review</strong><span style={{ fontSize:12, color:T.fgS }}>Suggestions are not final</span></div><div style={{ overflowX:"auto", border:`1px solid ${T.border}`, borderRadius:8 }}><table style={{ width:"100%", borderCollapse:"collapse", fontSize:12 }}><thead><tr>{["Description","Amount","Suggested category","Allocation","Why / action"].map(h=><th key={h} style={{ textAlign:"left", padding:"9px 10px", background:T.bgAlt, color:T.fgM, whiteSpace:"nowrap" }}>{h}</th>)}</tr></thead><tbody>{fa.csvTransactions.slice(0,50).map((row,i)=>{ const desc=row.Description||row.description||row.Memo||row.memo||Object.values(row)[0]||"Transaction"; const amount=row.Amount||row.amount||row.Debit||row.debit||"—"; return <tr key={row.id||i}><td style={{ padding:"8px 10px", borderTop:`1px solid ${T.div}` }}>{desc}</td><td style={{ padding:"8px 10px", borderTop:`1px solid ${T.div}`, whiteSpace:"nowrap" }}>{amount}</td><td style={{ padding:"8px 10px", borderTop:`1px solid ${T.div}` }}><select value={row.category} onChange={e=>setFA(s=>({...s,csvTransactions:s.csvTransactions.map((r,j)=>j===i?{...r,category:e.target.value,confidence:"Reviewed"}:r)}))} style={{ ...inputStyle(), minHeight:34, padding:"4px 8px", fontSize:12 }}>{FINANCIAL_CATEGORIES.map(c=><option key={c}>{c}</option>)}</select></td><td style={{ padding:"8px 10px", borderTop:`1px solid ${T.div}`, minWidth:130 }}><input type="range" min="0" max="100" step="25" value={row.allocation??100} onChange={e=>setFA(s=>({...s,csvTransactions:s.csvTransactions.map((r,j)=>j===i?{...r,allocation:Number(e.target.value),category:Number(e.target.value)<100?"Shared / allocate":r.category,confidence:"Reviewed"}:r)}))} /><div style={{ fontSize:11, color:T.fgM }}>{row.allocation??100}% to selected enterprise</div></td><td style={{ padding:"8px 10px", borderTop:`1px solid ${T.div}`, color:row.confidence==="Needs review"||row.confidence==="Review"?T.amberT:T.dgreen }}>{row.confidence==="Review"?"Shared expense — allocate across enterprises":row.confidence}</td></tr>})}</tbody></table></div>{fa.csvTransactions.length>50&&<div style={{ fontSize:12, color:T.fgS, marginTop:6 }}>Showing the first 50 rows. All imported rows remain available for the analysis.</div>}</div>}
     </div>
     <div style={{ ...cardStyle({ background:T.blueL, borderColor:"#c8d9e8" }), display:q>=3?"block":"none" }}><div style={{ display:"flex", gap:10, alignItems:"flex-start" }}><IconChart color={T.blue} size={20} /><div><div style={{ fontWeight:700, color:T.navy }}>Why this comes first</div><div style={{ color:T.fgM, fontSize:13, lineHeight:1.5, marginTop:3 }}>Tax records can be perfectly correct and still be the wrong starting point for enterprise profitability. Your answers determine which ratios can be compared confidently and where we should ask for a balance-sheet adjustment.</div></div></div></div>
-    <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:16, margin:"24px 0 18px", paddingTop:18, borderTop:`1px solid ${T.div}` }}><button type="button" onClick={()=>setQ(q-1)} disabled={q===0} style={{ ...btnStyle("ghost"), opacity:q===0?0.45:1 }}>← Previous</button><div style={{ display:"flex", alignItems:"center", gap:7 }}>{["Accounting basis","Preparer","Records","Transactions","Tax timing","Conversion"].map((label,i)=><button key={label} type="button" aria-label={label} onClick={()=>setQ(i)} style={{ width:7, height:7, minWidth:7, maxWidth:7, minHeight:7, maxHeight:7, flex:"0 0 7px", display:"block", lineHeight:0, border:0, borderRadius:"50%", padding:0, background:i===q?T.blue:T.border, cursor:"pointer" }} />)}</div><button type="button" onClick={()=>setQ(q+1)} disabled={q===5} style={{ ...btnStyle("primary"), opacity:q===5?0.55:1 }}>{q>=3?"Continue to enterprise profile →":"Next question →"}</button></div>
+    <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:16, margin:"24px 0 18px", paddingTop:18, borderTop:`1px solid ${T.div}` }}><button type="button" onClick={()=>setQ(q-1)} disabled={q===0} style={{ ...btnStyle("ghost"), opacity:q===0?0.45:1 }}>← Previous</button><div style={{ display:"flex", alignItems:"center", gap:7 }}>{["Accounting basis","Preparer","Records","Transactions","Tax timing","Conversion"].map((label,i)=><button key={label} type="button" aria-label={label} onClick={()=>setQ(i)} style={{ width:7, height:7, minWidth:7, maxWidth:7, minHeight:7, maxHeight:7, flex:"0 0 7px", display:"block", lineHeight:0, border:0, borderRadius:"50%", padding:0, background:i===q?T.blue:T.border, cursor:"pointer" }} />)}</div><button type="button" onClick={()=>{ if (q<3) { setQ(q+1); return; } setFA(s=>({ ...s, stage:3 })); if (typeof window!=="undefined") window.scrollTo({ top:0, behavior:"smooth" }); }} style={btnStyle("primary")}>{q>=3?"Continue to document upload →":"Next question →"}</button></div>
   </div>;
 }
 const RD_STAGES = [
@@ -365,7 +365,7 @@ const OPPS = [
   { id:"processing", label:"Value-added processing", category:"Assets", cluster:"Value-Added Processing & Brands", growthTier:2, sizeFit:["mid","large"], desc:"Process or package a portion of production for direct sale — flour, cheese, meat cuts, spirits.", time:"12–24 months", capital:"$20K–$150K", fit:{asset:70,trust:70,risk:50}, reg:5, seasonal:2 , effort:4, liquidity:2, policyPrograms:[{name:"USDA Value-Added Producer Grant (VAPG)",agency:"USDA Rural Development",note:"Up to $200K working capital or $50K planning, 1:1 match required. Funds processing and marketing activity only — not land, buildings, or production equipment. Opens on an annual cycle (FY2026 applications closed April 2026); check grants.gov for the next window."}] },
   { id:"consulting", label:"Agricultural consulting", category:"Human capital", cluster:"Data & Knowledge Services", growthTier:1, sizeFit:["small","mid","large"], desc:"Sell management expertise to other farmers.", time:"1–3 months", capital:"$500–$2K", fit:{asset:10,trust:95,risk:60}, reg:2, seasonal:2 , effort:3, liquidity:4 },
   { id:"storage", label:"Grain storage as a service", category:"Assets", cluster:"Space, Storage & Experience", growthTier:2, sizeFit:["mid","large"], desc:"Rent existing grain storage to neighboring farms during off-peak periods.", time:"1–3 months", capital:"$0", fit:{asset:85,trust:50,risk:70}, reg:2, seasonal:2 , effort:2, liquidity:3 },
-  { id:"trucking", label:"Grain & bulk trucking", category:"Assets", cluster:"Trucking & Heavy Equipment", growthTier:2, sizeFit:["mid","large"], desc:"Haul grain, feed, fertilizer, or bulk freight for local elevators and plants using your own trucks and authority.", time:"6–12 months", capital:"$10K–$40K", fit:{asset:80,trust:40,risk:50}, reg:4, seasonal:2 , effort:4, liquidity:2 },
+  { id:"trucking", label:"Grain & bulk trucking", category:"Assets", cluster:"Trucking & Heavy Equipment", growthTier:2, sizeFit:["mid","large"], desc:"Haul grain, feed, fertilizer, or bulk freight for local elevators and plants using your own trucks and authority.", time:"6–12 months", capital:"$10K–$40K", fit:{asset:80,trust:40,risk:50}, reg:4, seasonal:2 , effort:4, liquidity:2, watch:"Rates are tightening because carriers are exiting, not because demand is growing, so this isn't a structural gap to count on." },
   { id:"demolition", label:"Demolition & excavation", category:"Assets", cluster:"Trucking & Heavy Equipment", growthTier:2, sizeFit:["mid","large"], desc:"Structure teardown, concrete removal, and site clearing using existing excavators, loaders, and trucks.", time:"6–12 months", capital:"$15K–$60K", fit:{asset:75,trust:35,risk:45}, reg:5, seasonal:1 , effort:5, liquidity:2 },
   { id:"beefOnDairy", label:"Beef-on-dairy breeding program", category:"Financial capital", cluster:"Livestock-Specific Ventures", growthTier:2, sizeFit:["mid","large"], desc:"Breed a share of the dairy herd to beef genetics — crossbred calves sell at a significant premium over straight dairy calves.", time:"9–15 months", capital:"$5K–$15K (semen + sorting)", fit:{asset:50,trust:30,risk:75}, reg:1, seasonal:2, entSpecific:"dairy" , effort:3, liquidity:3 },
   { id:"breeding", label:"Breeding stock sales", category:"Human capital", cluster:"Livestock-Specific Ventures", growthTier:3, sizeFit:["small","mid"], desc:"Market high-quality breeding animals to other farmers, building on recognized genetics or bloodlines.", time:"12–24 months", capital:"$5K–$20K", fit:{asset:55,trust:70,risk:40}, reg:2, seasonal:2 , effort:3, liquidity:2 },
@@ -380,6 +380,17 @@ const OPPS = [
   { id:"envServices", label:"Environmental & ecosystem services", category:"Financial capital", cluster:"Environmental & Energy", growthTier:1, sizeFit:["mid","large"], desc:"Water-quality credits, habitat leasing, or biodiversity programs layered on top of existing conservation practices.", time:"9–18 months", capital:"$0–$8K", fit:{asset:35,trust:35,risk:90}, reg:4, seasonal:1 , effort:2, liquidity:2, policyPrograms:[{name:"EQIP / CSP (Environmental Quality Incentives Program / Conservation Stewardship Program)",agency:"USDA NRCS",note:"Cost-share and stewardship payments for conservation practices that can also qualify land for private water-quality or habitat credit markets. Check with your local NRCS office for current sign-up windows."}] },
   { id:"inputRetail", label:"Input sales & agronomy retail", category:"Human capital", cluster:"Custom Field Services", growthTier:3, sizeFit:["small","mid"], desc:"Sell seed, fertilizer, or crop inputs to neighboring farms, leveraging existing supplier relationships and expertise.", time:"3–9 months", capital:"$5K–$15K", fit:{asset:25,trust:75,risk:50}, reg:2, seasonal:3 , effort:3, liquidity:3 },
   { id:"eventRental", label:"Facility rental & hosted events", category:"Human capital", cluster:"Space, Storage & Experience", growthTier:3, sizeFit:["small","mid"], desc:"Rent barns, fields, or converted buildings for weddings, retreats, or community markets during the off-season.", time:"6–12 months", capital:"$5K–$30K", fit:{asset:60,trust:75,risk:35}, reg:3, seasonal:3 , effort:4, liquidity:2 },
+  // Skilled Trades & Industrial Services — draft cluster from the MFP reference sheet.
+  // Each path sells the crew's existing mechanical skills to industries short on small
+  // contractors, is something a trained employee can lead (the farmer's own time is the
+  // binding constraint), and ideally peaks when field work is idle. Figures are working
+  // estimates pending validation, so each carries draft:true.
+  { id:"equipRepair", label:"Independent equipment repair & diagnostics", category:"Human capital", cluster:"Skilled Trades & Industrial Services", growthTier:1, sizeFit:["mid","large"], desc:"Turn the farm shop and mechanic into an independent repair business. The July 2026 FTC–Deere settlement gives independent shops dealer-level diagnostic software and tools for 10 years, and dealers were already short on technicians.", demand:"Dealers short on technicians; repair access now opening", time:"3–9 months", capital:"$15K–$60K", fit:{asset:60,trust:90,risk:45}, reg:3, seasonal:1, effort:4, liquidity:3, employeeLed:true, offSeason:true, draft:true },
+  { id:"millwright", label:"Contract industrial maintenance & millwright services", category:"Human capital", cluster:"Skilled Trades & Industrial Services", growthTier:1, sizeFit:["mid","large"], desc:"Sell the crew's grain-handling, dryer, and conveyor experience to elevators, feed mills, ethanol plants, and food processors. Big capital projects pull specialized trades away from the recurring maintenance that keeps existing plants running.", demand:"Megaprojects pull trades away from plant upkeep", time:"6–12 months", capital:"$10K–$40K", fit:{asset:35,trust:90,risk:40}, reg:3, seasonal:2, effort:4, liquidity:3, employeeLed:true, offSeason:true, draft:true },
+  { id:"fabShop", label:"Fabrication & welding job shop", category:"Human capital", cluster:"Skilled Trades & Industrial Services", growthTier:2, sizeFit:["small","mid"], desc:"Put skilled farm welders to work on customer drawings: structural, repair, and production fabrication out of existing shop space.", demand:"Machine shop count falling about 1% a year", time:"3–9 months", capital:"$10K–$50K", fit:{asset:55,trust:85,risk:45}, reg:3, seasonal:2, effort:4, liquidity:3, employeeLed:true, offSeason:true, draft:true },
+  { id:"fiberCrew", label:"Trenching, boring & fiber make-ready", category:"Human capital", cluster:"Skilled Trades & Industrial Services", growthTier:1, sizeFit:["mid","large"], desc:"Use tile drainage and excavation equipment and operators for rural broadband (BEAD) and utility site work. The U.S. is short about 58,000 skilled workers for rural broadband, and scattered rural builds favor local crews.", demand:"Scattered rural builds favor local crews", time:"6–12 months", capital:"$10K–$150K", fit:{asset:80,trust:70,risk:50}, reg:4, seasonal:5, effort:5, liquidity:2, employeeLed:true, offSeason:false, draft:true },
+  { id:"vegMgmt", label:"Solar & right-of-way vegetation management", category:"Human capital", cluster:"Skilled Trades & Industrial Services", growthTier:2, sizeFit:["small","mid","large"], desc:"Graze sheep or mow solar sites and utility corridors using existing livestock, fencing, and mowing skills. Most solar grazers also sell mowing, weeding, and fencing.", demand:"Grazing ran about 60% of mowing cost in one Virginia case", time:"6–18 months", capital:"$5K–$30K", fit:{asset:55,trust:60,risk:40}, reg:3, seasonal:4, effort:3, liquidity:3, employeeLed:true, offSeason:false, draft:true },
+  { id:"shopAcquisition", label:"Acquire a retiring machine or fab shop", category:"Human capital", cluster:"Skilled Trades & Industrial Services", growthTier:2, sizeFit:["large"], desc:"Buy an existing shop from an owner without a successor and move farm welders and mechanics into it. Buying avoids the certification and qualification barriers that make starting a shop from scratch hard.", demand:"Machine shop count falling about 1% a year", time:"Immediate at close", capital:"$150K–$1M+", fit:{asset:40,trust:80,risk:85}, reg:3, seasonal:1, effort:5, liquidity:1, employeeLed:true, offSeason:true, draft:true },
   // ─��� Financial capital deployment — opportunity-cost alternatives to physical/sweat-equity
   // ventures. These convert capital directly into future income or risk protection with
   // minimal ongoing physical effort. Not financial advice — for comparison only; a licensed
@@ -403,6 +414,23 @@ const CLUSTERS = [
   { id:"Custom Field Services", note:"Tier 2–3 growth — monetizes machinery, labor, and supplier relationships" },
   { id:"Financial Capital Deployment", note:"Capital-only alternatives — minimal physical effort, compare against sweat-equity ventures on an opportunity-cost basis" },
   { id:"On-Farm Production Diversification", note:"Adding or changing what you actually grow or raise — a new enterprise, not an off-farm venture. Region and soil dependent; confirm suitability with your local extension office." },
+  { id:"Skilled Trades & Industrial Services", note:"Draft cluster — sells the crew's mechanical and equipment skills to industries short on small contractors. Work an employee can lead, often busiest when fields are quiet." },
+];
+
+// Skill-transfer map: which farm roles train into which industrial roles, the main
+// training gap, and the opportunities each skill unlocks in the ranking.
+const CREW_SKILLS = [
+  { id:"mechanic", role:"Farm mechanic / shop lead", trains:"Independent heavy-equipment diagnostic tech", gap:"OEM diagnostic software, electrical troubleshooting", opps:["equipRepair"] },
+  { id:"millwright", role:"Grain-system millwright", trains:"Industrial millwright / maintenance tech", gap:"Laser alignment, rigging, lockout/tagout, OSHA 30", opps:["millwright"] },
+  { id:"welder", role:"Farm welder / fabricator", trains:"Structural or production fabricator", gap:"Certified welding procedures, blueprint reading; CNC for machining", opps:["fabShop","shopAcquisition"] },
+  { id:"operator", role:"Equipment operator, tile crew", trains:"Directional boring / fiber make-ready crew", gap:"Utility locate rules, boring rig operation, traffic control", opps:["fiberCrew","demolition"] },
+  { id:"grazing", role:"Livestock and fencing hand", trains:"Solar grazing / vegetation contractor", gap:"Working safely around electrical equipment, utility site rules", opps:["vegMgmt"] },
+  { id:"butcher", role:"Livestock handler", trains:"Meat cutter / processing tech", gap:"Butchery training, food-safety (HACCP) basics", opps:["processing"] },
+];
+const CREW_STATS = [
+  { value:"58,000", label:"skilled workers short for rural broadband builds", color:T.moss },
+  { value:"10 years", label:"of dealer-level repair access for independent shops", color:"#9CC3E6" },
+  { value:"~5%", label:"of U.S. beef processing capacity is in small plants", color:T.moss },
 ];
 
 // Maps a Stage-1 revenue tier answer to the small/mid/large bucket used for sizeFit matching
@@ -414,6 +442,12 @@ const sizeBucketFromTier = (tier) => {
 };
 
 const BARRIERS = {
+  equipRepair:["The FTC order still needs final court approval, and how tool access works in practice is unproven","OEM diagnostic software and electrical troubleshooting are a real training gap, even for a strong farm mechanic","Shop liability and garage-keepers insurance are needed once customer equipment is on site"],
+  millwright:["Plants expect laser alignment, rigging, lockout/tagout, and OSHA 30 credentials before letting a crew on site","Contractor safety prequalification (insurance limits, safety records) can take months","Plant shutdown work is scheduled by the customer, so a key employee may be pulled away at short notice"],
+  fabShop:["Customers often require certified welding procedures and blueprint reading, not just good welds","Job-shop revenue is quote-driven and lumpy until repeat customers are built","CNC machining requires equipment and training most farm shops don't have yet"],
+  fiberCrew:["Construction season overlaps planting and harvest, so this needs a dedicated crew the farm can spare","Utility locate rules, traffic control, and subcontractor insurance add real regulatory load","Directional boring rigs are a major capital purchase if tile equipment can't be adapted"],
+  vegMgmt:["Summer workload collides with hay season","Crews must be trained to work safely around energized electrical equipment","Local solar siting rules and utility vegetation contracts vary widely"],
+  shopAcquisition:["Acquisition capital ($150K–$1M+) needs lender appetite and a real valuation","Customer relationships and certifications may not transfer cleanly with a retiring owner","Running a second business with its own staff stretches management time, which is already the binding constraint"],
   energy:["Existing loan covenants may restrict land encumbrances","Long-term lock-in on transition-likely acres (succession risk)","Developer terms can be complex — legal review essential"],
   specialty:["Market access is the #1 barrier — buyer relationship required before committing acres","Less safety-net coverage: crop insurance and traditional risk tools often don't extend to non-standard rotations or intercropping","Equipment contamination risk for non-GMO programs","Premium not guaranteed year-to-year"],
   custom:["Equipment failure risk increases when serving clients — insurance required","Labor availability during peak season may limit capacity — custom work often clashes with the timing of your own operation","Client relationship management is a new business skill; a late or missed job can damage reputation","Rates can be squeezed by local competition, especially in a soft farm economy"],
@@ -446,6 +480,12 @@ const BARRIERS = {
 };
 
 const RD_ACTIONS = {
+  equipRepair:[{t:"r",title:"Confirm the employee who will lead the shop",d:"Name the mechanic and budget OEM diagnostic and electrical troubleshooting training before taking outside work."},{t:"a",title:"Track the FTC–Deere order and price diagnostic tool access",d:"Confirm final court approval and what dealer-equivalent software and tools actually cost an independent shop."},{t:"g",title:"Book the winter rebuild season first",d:"Start with neighbors' off-season rebuilds so the shop is busiest when field work is idle."}],
+  millwright:[{t:"r",title:"Close the credential gap",d:"Budget laser alignment, rigging, lockout/tagout, and OSHA 30 training for the employee who will lead plant work."},{t:"a",title:"Approach 2–3 ag-adjacent plants within driving distance",d:"Grain elevators, feed mills, ethanol plants, and food processors run conveyors, gearboxes, and dryers your crew already maintains."},{t:"g",title:"Start with scheduled off-season shutdown work",d:"Planned maintenance windows let a seasonal hire become a year-round job without pulling the crew at harvest."}],
+  fabShop:[{t:"r",title:"Certify the welders",d:"Get certified welding procedures and blueprint-reading training in place before quoting customer drawings."},{t:"a",title:"Line up repeat customers",d:"Local manufacturers, contractors, and equipment dealers are the most likely sources of steady job-shop work."},{t:"g",title:"Watch for a retiring shop owner",d:"A job shop can grow into acquiring an existing machine or fab shop with an established customer base."}],
+  fiberCrew:[{t:"r",title:"Decide which crew can be spared in season",d:"Construction runs spring through fall. Confirm who stays on the farm before committing to a broadband contractor."},{t:"a",title:"Contact regional BEAD subgrantees and rural broadband providers",d:"Ask about subcontracting trenching, boring, and make-ready work near your farm."},{t:"g",title:"Train for locate rules and traffic control",d:"These are the main gaps between a tile crew and a fiber make-ready crew."}],
+  vegMgmt:[{t:"r",title:"Check the hay-season conflict",d:"Map summer grazing or mowing contracts against your own hay calendar before bidding."},{t:"a",title:"Contact solar developers and utility vegetation managers",d:"Ask whether they contract grazing, mowing, weeding, or fencing on nearby sites."},{t:"g",title:"Train crew on electrical site safety",d:"Working safely around energized equipment is the main skill gap for livestock and fencing hands."}],
+  shopAcquisition:[{t:"r",title:"Get a lender's read on acquisition financing",d:"Talk to your Farm Credit or SBA lender about appetite and down-payment needs before approaching a seller."},{t:"a",title:"Identify nearby shop owners without a successor",d:"Industry associations, equipment dealers, and business brokers often know which owners are ready to retire."},{t:"g",title:"Plan who runs the shop day to day",d:"The farmer's time is the binding constraint, so name the employee or partner who will lead the shop before closing."}],
   energy:[{t:"r",title:"Loan covenant review before any developer contact",d:"Confirm no existing loan covenants restrict long-term land encumbrances. Request a covenant review from your Farm Credit advisor."},{t:"a",title:"Contact 2–3 solar/wind developers for a no-obligation site assessment",d:"Regional cooperatives are a good starting point. Site assessments are free and non-binding."},{t:"g",title:"Resolve succession plan before signing any 15–25 year lease",d:"Consult an ag attorney before developer terms are accepted."}],
   specialty:[{t:"r",title:"Records consolidation — prerequisite for all IP grain programs",d:"Identity-preserved programs require documentation of field management, input sourcing, and handling protocols."},{t:"a",title:"Identify a premium buyer or cooperative",d:"Your Farm Credit advisor may have buyer-network introductions. Land-grant extension offices maintain regional specialty grain buyer databases."},{t:"g",title:"Pilot 50–100 acres in Year 1",d:"Do not commit your full rotation until you have one season of buyer relationship and logistics experience."}],
   custom:[{t:"r",title:"Equipment utilization audit",d:"Log actual hours per machine over the past 3 years. Machines below 60% utilization are candidates for custom work."},{t:"a",title:"Liability insurance review",d:"Custom farming adds client exposure. Verify your current farm liability policy covers third-party operations."},{t:"g",title:"Start with 2–3 trusted neighbors before advertising",d:"Custom farming reputation is earned through performance."}],
@@ -810,7 +850,7 @@ function DocumentScanUpload({ fa, setFA }) {
             {uploadSlot("beginBS","Balance sheet — Jan 1","PDF or photo, optional")}
             {uploadSlot("endBS","Balance sheet — Dec 31","PDF or photo, optional")}
           </div>
-          <button onClick={runMockScan} disabled={!canScan||scanning} style={{ ...btnStyle("primary"), opacity:(!canScan||scanning)?0.5:1, pointerEvents:(!canScan||scanning)?"none":"auto" }}>{scanning?"Scanning�����":"Scan documents →"}</button>
+          <button onClick={runMockScan} disabled={!canScan||scanning} style={{ ...btnStyle("primary"), opacity:(!canScan||scanning)?0.5:1, pointerEvents:(!canScan||scanning)?"none":"auto" }}>{scanning?"Scanning�����":"Scan documents ��"}</button>
         </>
       ) : (
         <>
@@ -2550,7 +2590,7 @@ const faTierOf = (fa) => {
   if (!g || g.status === "blank") return "Optimize";
   return g.status === "vuln" ? "Stabilize" : g.status === "strong" ? "Advance" : "Optimize";
 };
-const HIGH_CAP_OPPS = ["processing","demolition","manure","eventRental"];
+const HIGH_CAP_OPPS = ["processing","demolition","manure","eventRental","shopAcquisition","fiberCrew"];
 const PASSIVE_TIME_OPPS = ["energy","carbon","envServices","storage"];
 
 // Embeds Financial Analysis directly into the Revenue Diversification optimization
@@ -2585,6 +2625,12 @@ const scoredOpps = (rd, faEnterprises, faS3vals) => { const d=rd.data||{}; const
     if (o.entSpecific && !entMatch) leverMatch = leverMatch * 0.15; // heavily suppress enterprise-specific paths that don't apply
     if (isRelevant) leverMatch = leverMatch * 1.2; // boost — this complements an enterprise the farm already runs
     if (isExcluded) leverMatch = leverMatch * 0.2; // heavily suppress ��� this isn't diversification if you already run it
+    const crew = d.crewSkills || [];
+    const skillMatch = CREW_SKILLS.some(c => crew.includes(c.id) && c.opps.includes(o.id));
+    if (skillMatch) leverMatch = leverMatch * 1.35;
+    if (d.ownerTimeBound && o.employeeLed) leverMatch = leverMatch * 1.15;
+    if (d.yearRoundGoal && o.offSeason) leverMatch = leverMatch * 1.15;
+    if (d.yearRoundGoal && o.seasonal >= 4) leverMatch = leverMatch * 0.9;
 
     // Financial-health adjustment, embedded directly from FA Stage 3's ratios
     let faAdj = 1;
@@ -2592,11 +2638,11 @@ const scoredOpps = (rd, faEnterprises, faS3vals) => { const d=rd.data||{}; const
     if (faDistress) faAdj = lowFriction ? 1.25 : (HIGH_CAP_OPPS.includes(o.id) ? 0.4 : 0.85);
     else if (faStrong) faAdj = (HIGH_CAP_OPPS.includes(o.id) || o.growthTier===2) ? 1.15 : 1;
 
-    return { ...o, leverMatch:Math.round(Math.min(100,leverMatch)), capOk, timeOk, sizeMatch, entMatch, isRelevant, isExcluded, faAdj, score:leverMatch*(capOk?1:0.3)*(timeOk?1:0.7)*(entMatch?1:0.1)*faAdj }; }).sort((a,b)=>b.score-a.score); };
+    return { ...o, leverMatch:Math.round(Math.min(100,leverMatch)), capOk, timeOk, sizeMatch, entMatch, isRelevant, isExcluded, skillMatch, faAdj, score:leverMatch*(capOk?1:0.3)*(timeOk?1:0.7)*(entMatch?1:0.1)*faAdj }; }).sort((a,b)=>b.score-a.score); };
 
 // ��������──��������───────────────────────────────────────────────────────────────────
 // RD STAGE 1 — Baseline & readiness
-// ────────────────────────�������──���─���─���───���─���────────────────���───────������──���������──���────
+// ────────────────────────�������──���─���─�������───���─���────────────────���───────������──���������──���────
 function RD1({ rd, setRData, fa, profile }) {
   const d = rd.data; const b = d.baseline || {};
   const profileFarmTypes = [...new Set((Array.isArray(profile?.farmTypes) ? profile.farmTypes : String(profile?.productionMix||"").split(/,|;|\n/).map(v=>v.trim()).filter(Boolean)))];
@@ -2720,7 +2766,66 @@ function RD2({ rd, setRData }) {
 
 // ──────────────���──────────────────────────────────────────────────────────────
 // RD STAGE 3 — Human capital, assets & financial capital
-// ─────────────────────────────────────────────────────────────────���───────────
+// ──────────────────────────────────────────────────────────────������─���───────────
+function CrewSkillsCard({ rd, setRData }) {
+  const crew = rd.data.crewSkills || [];
+  const toggleSkill = (id) => setRData(s => { const cur = s.crewSkills || []; return { ...s, crewSkills: cur.includes(id) ? cur.filter(x => x !== id) : [...cur, id] }; });
+  const setFlag = (k) => setRData(s => ({ ...s, [k]: !s[k] }));
+  const unlocked = OPPS.filter(o => CREW_SKILLS.some(c => crew.includes(c.id) && c.opps.includes(o.id)));
+  const th = { padding:"9px 12px", fontSize:12, fontWeight:700, color:"#fff", background:T.blue, textAlign:"left" };
+  const td = { padding:"10px 12px", fontSize:12.5, color:T.fg, lineHeight:1.45, borderTop:`1px solid ${T.border}`, verticalAlign:"top" };
+  const Toggle = ({ k, title, sub }) => {
+    const on = !!rd.data[k];
+    return (
+      <button type="button" role="switch" aria-checked={on} onClick={() => setFlag(k)} style={{ display:"flex", alignItems:"flex-start", gap:10, textAlign:"left", padding:"12px 14px", border:`1.5px solid ${on ? T.blue : T.border}`, borderRadius:8, background:on ? T.blueL : "#fff", cursor:"pointer", flex:"1 1 260px" }}>
+        <span aria-hidden="true" style={{ width:30, height:17, borderRadius:999, background:on ? T.blue : T.border, position:"relative", flexShrink:0, marginTop:2, transition:"background .15s" }}><span style={{ position:"absolute", top:2, left:on ? 15 : 2, width:13, height:13, borderRadius:"50%", background:"#fff", transition:"left .15s" }} /></span>
+        <span><span style={{ display:"block", fontSize:13, fontWeight:700, color:T.navy }}>{title}</span><span style={{ display:"block", fontSize:12, color:T.fgM, lineHeight:1.45, marginTop:2 }}>{sub}</span></span>
+      </button>
+    );
+  };
+  return (
+    <div style={cardStyle({ borderTop:`4px solid ${T.moss}` })}>
+      <div style={{ fontSize:11, fontWeight:700, color:T.green, textTransform:"uppercase", letterSpacing:"0.12em", marginBottom:4 }}>Optimizing for employees</div>
+      <div style={{ fontSize:20, fontWeight:800, color:T.navy, lineHeight:1.2, marginBottom:4 }}>The crew&apos;s skills are a second product</div>
+      <p style={{ fontSize:13, color:T.fgM, lineHeight:1.55, marginTop:0, marginBottom:16 }}>Industries short on small contractors need work that farm crews can be trained into. Check the skills your crew already has. Matching paths move up in Opportunity mapping.</p>
+      <div style={{ display:"grid", gridTemplateColumns:"minmax(200px,240px) 1fr", gap:16, alignItems:"stretch" }}>
+        <div style={{ background:T.navy, borderRadius:10, padding:"18px 20px", display:"flex", flexDirection:"column", gap:14 }}>
+          {CREW_STATS.map((s, i) => (
+            <div key={s.value} style={{ paddingTop:i ? 14 : 0, borderTop:i ? "1px solid rgba(255,255,255,0.15)" : "none" }}>
+              <div style={{ fontSize:30, fontWeight:800, color:s.color, lineHeight:1.05 }}>{s.value}</div>
+              <div style={{ fontSize:12.5, color:"rgba(255,255,255,0.85)", lineHeight:1.45, marginTop:4 }}>{s.label}</div>
+            </div>
+          ))}
+        </div>
+        <div style={{ border:`1px solid ${T.border}`, borderRadius:10, overflow:"hidden", alignSelf:"start" }}>
+          <table style={{ width:"100%", borderCollapse:"collapse" }}>
+            <thead><tr><th style={{ ...th, width:44 }}><span className="sr-only">Crew has this skill</span></th><th style={th}>Farm skill</th><th style={th}>Trains into</th><th style={th}>Main training gap</th></tr></thead>
+            <tbody>
+              {CREW_SKILLS.map((c, i) => {
+                const on = crew.includes(c.id);
+                return (
+                  <tr key={c.id} onClick={() => toggleSkill(c.id)} style={{ cursor:"pointer", background:on ? T.greenL : i % 2 ? T.bgAlt : "#fff" }}>
+                    <td style={{ ...td, textAlign:"center" }}><input type="checkbox" checked={on} onChange={() => toggleSkill(c.id)} onClick={e => e.stopPropagation()} aria-label={`Crew has ${c.role}`} /></td>
+                    <td style={{ ...td, fontWeight:on ? 700 : 500, color:T.navy }}>{c.role}</td>
+                    <td style={td}>{c.trains}</td>
+                    <td style={{ ...td, color:T.fgM }}>{c.gap}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div style={{ display:"flex", gap:10, flexWrap:"wrap", marginTop:16 }}>
+        <Toggle k="ownerTimeBound" title="My own time is the binding constraint" sub="Favor work a trained employee can lead. 10 of 12 farmers interviewed struggle to find and keep skilled labor." />
+        <Toggle k="yearRoundGoal" title="Turn seasonal hires into year-round jobs" sub="Favor work that is busiest when fields are quiet and pull back on paths that compete with planting and harvest." />
+      </div>
+      {unlocked.length > 0 && <div style={{ marginTop:14 }}><Flag type="ok">Your crew&apos;s skills point to: {unlocked.map(o => o.label).join(", ")}.</Flag></div>}
+      <p style={{ fontSize:12, color:T.fgM, lineHeight:1.55, margin:"14px 0 0" }}><b style={{ color:T.navy }}>Protecting your workforce:</b> data center jobs pay about 32% more than other construction work, which pulls skilled people off farms. Offering a path into skilled-trades work in the off-season diversifies the farm and helps keep your crew. Drone spraying is commoditizing (custom rates fell from $22–$25 to about $13 an acre), so it isn&apos;t listed here.</p>
+    </div>
+  );
+}
+
 function RD3({ rd, setRData }) {
   const items = rd.data.leverItems || {};
   const setItem = (id,v) => setRData(s => ({ ...s, leverItems:{ ...(s.leverItems||{}), [id]:v } }));
@@ -2764,6 +2869,7 @@ function RD3({ rd, setRData }) {
         {legRow("What strengths, experience, and competencies could this household leverage?", <textarea style={inputStyle({ minHeight:62 })} value={rd.data.humanStrengths||""} onChange={e=>setRData(s=>({ ...s, humanStrengths:e.target.value }))} placeholder="Record keeping, livestock, sales, mechanics, relationships, teaching, technology, etc." />)}
         {legRow("Who is best suited to lead the work, and what personality or working style matters?", <textarea style={inputStyle({ minHeight:62 })} value={rd.data.humanFit||""} onChange={e=>setRData(s=>({ ...s, humanFit:e.target.value }))} placeholder="Who likes uncertainty, selling, managing people, or building something new?" />)}
       </div>
+      <CrewSkillsCard rd={rd} setRData={setRData} />
       {allWeak && touched && <Flag type="danger">All three levers score below 34% — only zero-capital, passive paths are appropriate until at least one lever is strengthened.</Flag>}
       {!allWeak && touched && (
         <div style={cardStyle({ borderTop:`4px solid ${T.green}` })}>
@@ -2788,7 +2894,7 @@ function RD3({ rd, setRData }) {
 
 // ───────────────────────────────────���─────���───���────���──────────────────────────
 // RD STAGE 4 — Opportunity mapping
-// ────���────────────────────────────────────────────────────────────────────────
+// ────���──────────���──���────────────────────────────�����─────────────────────────────
 const GROWTH_TIER_LABEL = { 1:"Tier 1 · Fastest structural growth", 2:"Tier 2 · Strong growth", 3:"Tier 3 · Steady & selective" };
 const GROWTH_TIER_COLOR = { 1:T.dgreen, 2:T.blue, 3:T.tan };
 
@@ -2847,8 +2953,14 @@ function RD4({ rd, setRData, fa }) {
                 {o.isExcluded && <span style={{ fontSize:10, fontWeight:700, color:T.red }}>· You already run this enterprise</span>}
                 {o.isRelevant && <span style={{ fontSize:10, fontWeight:700, color:T.dgreen }}>· Complements your current enterprise</span>}
                 {o.policyPrograms && <span style={{ fontSize:10, fontWeight:700, color:"#4338CA" }}>· Policy/grant program available</span>}
+                {o.skillMatch && <span style={{ fontSize:10, fontWeight:700, color:T.dgreen }}>· Uses your crew&apos;s skills</span>}
+                {o.employeeLed && <span style={{ fontSize:10, fontWeight:700, color:T.blue }}>· An employee can lead</span>}
+                {o.offSeason && <span style={{ fontSize:10, fontWeight:700, color:T.blue }}>· Busiest when fields are quiet</span>}
+                {o.draft && <span style={{ fontSize:10, fontWeight:700, color:T.amberT }}>· Draft figures</span>}
               </div>
-              <div style={{ fontSize:12.5, color:T.fgM, lineHeight:1.5, marginBottom:12 }}>{o.desc}</div>
+              <div style={{ fontSize:12.5, color:T.fgM, lineHeight:1.5, marginBottom:o.demand||o.watch?8:12 }}>{o.desc}</div>
+              {o.demand && <div style={{ fontSize:11.5, color:T.navy, lineHeight:1.45, marginBottom:12 }}><span style={{ fontWeight:700 }}>Why demand is open: </span>{o.demand}</div>}
+              {o.watch && <div style={{ fontSize:11.5, color:T.amberT, lineHeight:1.45, marginBottom:12 }}><span style={{ fontWeight:700 }}>Watch: </span>{o.watch}</div>}
               <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginBottom:10 }}><div style={{ fontSize:11.5, color:T.fgM }}><span style={{ fontWeight:600 }}>Time to revenue: </span>{o.time}</div><div style={{ fontSize:11.5, color:T.fgM }}><span style={{ fontWeight:600 }}>Capital: </span>{o.capital}</div></div>
               <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginBottom:12 }}>
                 <div style={{ fontSize:11.5, color:T.fgM, display:"flex", alignItems:"center", gap:5 }}><span style={{ fontWeight:600 }}>Regulatory load:</span>{[1,2,3,4,5].map(n=>(<span key={n} style={{ width:6, height:6, borderRadius:"50%", background:n<=o.reg?T.red:T.div, display:"inline-block" }}/>))}</div>
@@ -2946,7 +3058,7 @@ function RD5({ rd, setRData }) {
   );
 }
 
-// ────────────────────────────────────────────────────────────────────��───����────
+// ────────────────────────────────���───────────────────────────────────��───����────
 // RD STAGE 6 — Policy & grant enablers
 // ────────────────────────────────────────────────────���───────────────────��────
 // Deliberately mirrors Barrier Identification's structure — same per-opportunity card
@@ -5807,7 +5919,7 @@ function VIS3({ vis, setVis }) {
   );
 }
 
-// ── Vision 4 — Turn it into rules ──────────────────��─────────────────────────
+// ── Vision 4 — Turn it into rules ��─────────────────��─────────────────────────
 function VIS4({ vis, setVis }) {
   const items = (vis.items||[]).filter(i => i.text && visVerdictOf(i) !== "table stakes");
   const rules = vis.rules || [];
@@ -5875,7 +5987,7 @@ function VIS4({ vis, setVis }) {
   );
 }
 
-// ── Vision 5 — Who holds this ────────���────────────��────────────���─────────────
+// ─��� Vision 5 — Who holds this ────────���────────────��────────────���─────────────
 function VIS5({ vis, setVis, goLegacy }) {
   const h = vis.holders || {};
   const setH = (id,val) => setVis({ holders:{ ...h, [id]:val } });
@@ -6067,7 +6179,7 @@ function VIS7({ vis, setVis, profile }) {
 }
 
 
-// ── Vision 8 — Farm profile and SWOT ────────────────────────────────���────
+// ── Vision 8 — Farm profile and SWOT ───────��─��─���────────────────────���────
 function VIS_PROFILE({ vis, profile, setProfile, goFA, fa }) {
   const advantages = (vis.items||[]).filter(i=>i.kind==="advantage" && i.text?.trim()).map(i=>i.text.trim());
   const values = (vis.items||[]).filter(i=>i.kind==="value" && i.text?.trim()).map(i=>i.text.trim());
@@ -6656,12 +6768,13 @@ export default function App() {
   const rdUnlocked = vis.stage >= visTotal && fa.stage >= faTotal;
 
   const canAdvance = useMemo(() => {
-    if (isFA) { if (fa.stage===1) { const a=fa.accounting||{}; return !!(a.basis&&a.preparer&&a.system); } if (fa.stage===2) return (fa.ent?.list||[]).length>0; if (fa.stage===3) { const g=fa.goals; return !!(g.trigger&&g.concern&&g.outcome); } return true; }
+    if (isFA) return true;
     if (isRD) { const d = rd.data, g = d.goals2||{}, leverItems = d.leverItems||{}, b = d.baseline||{}, sel = d.selectedOpps||[];
       if (!rdUnlocked) return false;
-      if (rd.stage===1) return !!((b.farmTypes||[]).length&&b.revTier); if (rd.stage===2) return !!(g.trigger&&g.horizon&&g.capitalAppetite&&g.timeAppetite); if (rd.stage===3) return Object.keys(leverItems).length>0; if (rd.stage===4) return sel.length>0; return true; }
+      if (!b.revTier) return false;
+      return true; }
     return true;
-  }, [isFA, isRD, fa, rd]);
+  }, [isFA, isRD, fa, rd, rdUnlocked]);
 
   const faScore = faScoreOf(fa);
   const faTier = faTierOf(fa);
@@ -6718,7 +6831,7 @@ else if (isRD) { if (rd.stage<rdTotal) goRD(rd.stage+1); else goLegacy(1); }
 </div>
   }
   const FA_BODY = [
-  <FA0 fa={fa} setFA={setFA} />, <FA1Registry fa={fa} setFA={setFA} />, <FA2 fa={fa} setFA={setFA} />,
+  <FA0 fa={fa} setFA={setFA} />, <FA1Registry fa={fa} setFA={setFA} />,
   <FADocuments fa={fa} setFA={setFA} />, <FABudget fa={fa} setFA={setFA} />, <FA3 fa={fa} setFA={setFA} />, <FA4 fa={fa} setFA={setFA} />,
   ];
   const RD_BODY = [
@@ -6941,7 +7054,7 @@ else if (isRD) { if (rd.stage<rdTotal) goRD(rd.stage+1); else goLegacy(1); }
           </div>
           <nav style={{ flex:1, paddingTop:4 }}>
             {isFA ? <>
-              {[{ label:"Financial profile", sub:"Accounting, enterprises & goals", start:1, end:3 }, { label:"Document upload", sub:"Source records for review", start:4, end:4 }, { label:"Budget & working capital", sub:"Cash flow and accrual planning", start:5, end:5 }, { label:"Peer benchmarking & ratio scorecard", sub:"Performance context", start:6, end:7 }].map((item,i) => { const active=stage>=item.start&&stage<=item.end; const done=stage>item.end; return <div key={item.label} onClick={()=>goFA(item.start)} style={{ display:"flex", alignItems:"flex-start", gap:11, padding:"13px 16px", cursor:"pointer", background:active?"rgba(123,191,50,0.14)":"transparent", borderLeft:active?`3px solid ${T.green}`:"3px solid transparent" }}><div style={{ width:23, height:23, borderRadius:"50%", flexShrink:0, display:"flex", alignItems:"center", justifyContent:"center", fontSize:11, fontWeight:700, background:done?T.green:active?T.blue:"rgba(255,255,255,0.12)", color:done||active?"#fff":"rgba(255,255,255,0.58)" }}>{done?<IconCheckSm size={11}/>:i+1}</div><div><div style={{ fontSize:12.5, fontWeight:active?700:600, color:active?"#fff":done?T.green:"rgba(255,255,255,0.72)", lineHeight:1.35 }}>{item.label}</div><div style={{ fontSize:10.5, color:"rgba(255,255,255,0.45)", lineHeight:1.35, marginTop:3 }}>{item.sub}</div></div></div>; })}
+              {[{ label:"Financial profile", sub:"Accounting, enterprises & goals", start:1, end:2 }, { label:"Document upload", sub:"Source records for review", start:3, end:3 }, { label:"Budget & working capital", sub:"Cash flow and accrual planning", start:4, end:4 }, { label:"Peer benchmarking & ratio scorecard", sub:"Performance context", start:5, end:6 }].map((item,i) => { const active=stage>=item.start&&stage<=item.end; const done=stage>item.end; return <div key={item.label} onClick={()=>goFA(item.start)} style={{ display:"flex", alignItems:"flex-start", gap:11, padding:"13px 16px", cursor:"pointer", background:active?"rgba(123,191,50,0.14)":"transparent", borderLeft:active?`3px solid ${T.green}`:"3px solid transparent" }}><div style={{ width:23, height:23, borderRadius:"50%", flexShrink:0, display:"flex", alignItems:"center", justifyContent:"center", fontSize:11, fontWeight:700, background:done?T.green:active?T.blue:"rgba(255,255,255,0.12)", color:done||active?"#fff":"rgba(255,255,255,0.58)" }}>{done?<IconCheckSm size={11}/>:i+1}</div><div><div style={{ fontSize:12.5, fontWeight:active?700:600, color:active?"#fff":done?T.green:"rgba(255,255,255,0.72)", lineHeight:1.35 }}>{item.label}</div><div style={{ fontSize:10.5, color:"rgba(255,255,255,0.45)", lineHeight:1.35, marginTop:3 }}>{item.sub}</div></div></div>; })}
             </> : isVis ? <>
               {[{ label:"Core competencies and values", sub:"What your farm is built on", start:1, end:8 }, { label:"The statement", sub:"Your shared strategic direction", start:9, end:9 }, { label:"Profile and SWOT", sub:"The intelligence-ready farm profile", start:10, end:10 }, { label:"The document", sub:"Approved vision outputs", start:11, end:11 }].map((item,i) => { const active=stage>=item.start&&stage<=item.end; const done=stage>item.end; return <div key={item.label} onClick={()=>goVision(item.start)} style={{ display:"flex", alignItems:"flex-start", gap:11, padding:"13px 16px", cursor:"pointer", background:active?"rgba(123,191,50,0.14)":"transparent", borderLeft:active?`3px solid ${T.green}`:"3px solid transparent" }}><div style={{ width:23, height:23, borderRadius:"50%", flexShrink:0, display:"flex", alignItems:"center", justifyContent:"center", fontSize:11, fontWeight:700, background:done?T.green:active?T.blue:"rgba(255,255,255,0.12)", color:done||active?"#fff":"rgba(255,255,255,0.58)" }}>{done?<IconCheckSm size={11}/>:i+1}</div><div><div style={{ fontSize:12.5, fontWeight:active?700:600, color:active?"#fff":done?T.green:"rgba(255,255,255,0.72)", lineHeight:1.35 }}>{item.label}</div><div style={{ fontSize:10.5, color:"rgba(255,255,255,0.45)", lineHeight:1.35, marginTop:3 }}>{item.sub}</div></div></div>; })}
             </> : stageDefs.map(s => {
