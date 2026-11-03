@@ -158,8 +158,9 @@ const Flag = ({ type, children }) => {
 
 const Head = ({ eyebrow, title, sub, showFinancialVisual = true }) => {
   const isFinancial = eyebrow?.startsWith("Financial Analysis");
+  const isRevenue = eyebrow?.startsWith("Revenue Diversification");
   return <div>
-  {isFinancial && showFinancialVisual && <img src="/financial-analysis-dashboard.png" alt="Financial analysis dashboard connecting documents, cash flow, budgets, and benchmarking" style={{ display:"block", width:"100%", height:"auto", aspectRatio:"7 / 1", maxHeight:"none", objectFit:"cover", objectPosition:"center", borderRadius:16, marginBottom:22 }} />}
+  {(isFinancial || isRevenue) && showFinancialVisual && <img src="/financial-analysis-dashboard.png" alt="Financial analysis dashboard connecting documents, cash flow, budgets, and benchmarking" style={{ display:"block", width:"100%", height:"auto", aspectRatio:"7 / 1", maxHeight:"none", objectFit:"cover", objectPosition:"center", borderRadius:16, marginBottom:22 }} />}
   {!isFinancial && <div style={eyebrowStyle}>{eyebrow}</div>}
   <h1 style={h1Style}>{title}</h1>
   <p style={subStyle}>{sub}</p>
@@ -168,7 +169,7 @@ const Head = ({ eyebrow, title, sub, showFinancialVisual = true }) => {
 
 // ─���������������──────────────�����────────────────────────────────────�������������������������──�����────────────────────
 // DATA
-// ─��─��───��───��────────────────��─��──────────────────────────────────────��─��─��─��─
+// ─��─��───��───��────────────────��─��──────────────────────────────────────��─��─��─���─
 const FA_STAGES = [
   { n:1, label:"Your accounting profile" }, { n:2, label:"Enterprise registry & shared costs" }, { n:3, label:"Goal alignment" },
   { n:4, label:"Upload your documents" }, { n:5, label:"Budgeting & working capital" }, { n:6, label:"Ratio deep dive" }, { n:7, label:"Peer benchmarking" },
@@ -532,7 +533,7 @@ function FA2({ fa, setFA }) {
   const set = (f,v) => setFA(s => ({ ...s, goals:{ ...s.goals, [f]:v } }));
   const Qs = [
     { key:"trigger", title:"What triggered this review?", opts:[["lender","Lender / Farm Credit meeting coming up","Loan review, line renewal, or annual meeting"],["year","Difficult year — margins compressed","Input cost spike, price collapse, or tough crop year"],["growth","Planning growth or major investment","Evaluating land purchase or expansion"],["succession","Succession or transition planning","Getting the financial picture clear before a generational transfer"],["habit","Building a monitoring habit","Want to track financials consistently"]] },
-    { key:"concern", title:"Which area concerns you most?", opts:[["cashflow","Cash flow — can I cover obligations?","Operating line pulling tighter"],["profitability","Profitability — am I making money per enterprise?","Unsure which enterprises cover full costs"],["debt","Debt load — is my balance sheet sustainable?","D/A ratio or equity position"],["efficiency","Efficiency — where are costs too high?","OER or cost per unit vs. peers"],["benchmarks","Benchmarking — how do I compare?","Want to see where I stand vs. similar operations"]] },
+    { key:"concern", title:"Which area concerns you most?", opts:[["cashflow","Cash flow — can I cover obligations?","Operating line pulling tighter"],["profitability","Profitability — am I making money per enterprise?","Unsure which enterprises cover full costs"],["debt","Debt load �� is my balance sheet sustainable?","D/A ratio or equity position"],["efficiency","Efficiency — where are costs too high?","OER or cost per unit vs. peers"],["benchmarks","Benchmarking — how do I compare?","Want to see where I stand vs. similar operations"]] },
     { key:"outcome", title:"What does success look like?", opts:[["understand","Understand what my numbers mean","Translate ratios into plain language"],["improve","Action plan for my weakest ratios","2–3 highest-leverage actions"],["lenderready","Be lender-ready","Ratios and narrative ready for my Farm Credit advisor"],["monitor","Annual monitoring system","Repeatable process I can run every year"]] },
   ];
   const tracking = g.tracking || [];
@@ -911,7 +912,7 @@ function FA3({ fa, setFA }) {
 
 // ────────────���───────────────��──────────────���──────────────────────────────��──
 // FA STAGE 4 — Peer benchmarking
-// ──────────────��─────────────────���───────────────────────���──────────────────���─
+// ──────────────���─────────────────���───────────────────────���──────────────────���─
 function FA4({ fa, setFA }) {
   const b = fa.s4bench;
   const v = id => b[id]||""; const sv = (id,val) => setFA(s=>({...s,s4bench:{...s.s4bench,[id]:val}})); const gv = id => parseFloat(b[id]);
@@ -4142,7 +4143,7 @@ const valueParcel = (p) => {
 
 // ══════════════════════════════════════════════════════════════��══════════════
 // BLIND COMPARE — the same questions, answered independently
-// ��════��══════════════════════════════════════════��══════════════════������════════
+// ��════��═════════════════════════════════════════����══════════════════������════════
 // One array drives both sides and the comparison, so the two generations are
 // provably answering the same question rather than two similar ones.
 //
@@ -5757,7 +5758,7 @@ function VIS3({ vis, setVis }) {
   );
 }
 
-// ── Vision 4 — Turn it into rules ────────────────────────────────────────────
+// ── Vision 4 — Turn it into rules ──────────────────��─────────────────────────
 function VIS4({ vis, setVis }) {
   const items = (vis.items||[]).filter(i => i.text && visVerdictOf(i) !== "table stakes");
   const rules = vis.rules || [];
