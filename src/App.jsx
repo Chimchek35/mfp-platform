@@ -911,7 +911,7 @@ function FA3({ fa, setFA }) {
   );
 }
 
-// ────────────���───────────────��────────────���─���──────────────────────────────��──
+// ────────────���───────────────��────────────�����─���──────────────────────────────��──
 // FA STAGE 4 — Peer benchmarking
 // ──────────────���─────────────────���───────────────────────���──────────────────���─
 function FA4({ fa, setFA }) {
@@ -3311,7 +3311,7 @@ function EfficiencyValueImpact({ sel, lev }) {
   );
 }
 
-// ══════���════════════════════════════════════════����════��═══════����═════��══════��═══
+// ══════���══════════════════════════════════════���═����════��═══════����═════��══════��═══
 // FARM PROFILE — a single 360° farm view that fills in as the farmer completes
 // onboarding and assessments, and feeds relevant fields back into FA, RD, and Risk
 // so nothing has to be entered twice.
@@ -4548,7 +4548,7 @@ function LEG6({ leg, setLegData, fa }) {
   );
 }
 
-// ── Stage 5 — Successor readiness ──────────────────��──────�����──────────────────
+// ── Stage 5 — Successor readiness ──────────────��───��──────�����──────────────────
 function LEG7({ leg, setLegData }) {
   const d = leg.data || {};
   const ex = d.exposure || {};
@@ -6501,7 +6501,7 @@ const GENERIC_FARM_FINANCIALS = {
   livingWithdrawals:"68000", incomeTaxes:"34000",
 };
 
-const VisionInlineVisual = ({ stageLabel }) => <div style={{ margin:"4px 0 26px", borderRadius:16, overflow:"hidden", border:`1px solid ${T.div}`, background:T.bgAlt }}><img src="/strategic-vision-roadmap.png" alt="Strategic vision roadmap toward a decision-ready farm document" style={{ display:"block", width:"100%", height:"auto", aspectRatio:"7 / 1", objectFit:"contain", objectPosition:"center" }} /><div style={{ display:"flex", justifyContent:"space-between", gap:10, padding:"10px 14px", color:T.fgS, fontSize:11.5 }}><span>{stageLabel}</span><span style={{ color:T.green, fontWeight:700 }}>Vision in progress</span></div></div>;
+const VisionInlineVisual = ({ stageLabel }) => <div style={{ margin:"4px 0 26px", borderRadius:16, overflow:"hidden", border:`1px solid ${T.div}`, background:T.bgAlt }}><img src="/strategic-vision-roadmap.png" alt="View from a family office window over a diversified farm enterprise with crops, livestock, trucking, a farm store, and construction yard" style={{ display:"block", width:"100%", height:"auto", aspectRatio:"5 / 1", objectFit:"cover", objectPosition:"center 58%" }} /><div style={{ display:"flex", justifyContent:"space-between", gap:10, padding:"10px 14px", color:T.fgS, fontSize:11.5 }}><span>{stageLabel}</span><span style={{ color:T.green, fontWeight:700 }}>Vision in progress</span></div></div>;
 
 export default function App() {
   const [module, setModule] = useState("vision");
