@@ -158,9 +158,11 @@ const Flag = ({ type, children }) => {
 
 const Head = ({ eyebrow, title, sub, showFinancialVisual = true }) => {
   const isFinancial = eyebrow?.startsWith("Financial Analysis");
+  const isRevenue = eyebrow?.startsWith("Revenue Diversification");
+  const isVision = eyebrow?.toLowerCase().startsWith("strategic vision");
   return <div>
-  {isFinancial && showFinancialVisual && <img src="/financial-analysis-dashboard.png" alt="Financial analysis dashboard connecting documents, cash flow, budgets, and benchmarking" style={{ display:"block", width:"100%", height:"auto", maxHeight:"none", objectFit:"contain", borderRadius:16, marginBottom:22 }} />}
-  {!isFinancial && <div style={eyebrowStyle}>{eyebrow}</div>}
+  {(isFinancial || isRevenue) && showFinancialVisual && <img src="/financial-analysis-dashboard.png" alt="Farm headquarters office overlooking grain bins, machinery shed, and farmland, run like a family office" style={{ display:"block", width:"100%", height:"auto", aspectRatio:"5 / 1", maxHeight:"none", objectFit:"cover", objectPosition:"center 58%", borderRadius:16, marginBottom:22 }} />}
+  {!isFinancial && !isVision && <div style={eyebrowStyle}>{eyebrow}</div>}
   <h1 style={h1Style}>{title}</h1>
   <p style={subStyle}>{sub}</p>
   </div>;
@@ -168,7 +170,7 @@ const Head = ({ eyebrow, title, sub, showFinancialVisual = true }) => {
 
 // ─���������������──────────────�����────────────────────────────────────�������������������������──�����────────────────────
 // DATA
-// ─��─��───��───��────────────────��─��──────────────────────────────────────��─��─��─��─
+// ─��─��───��───��────────────────��─��──────────────────────────────────────��─��─��─���─
 const FA_STAGES = [
   { n:1, label:"Your accounting profile" }, { n:2, label:"Enterprise registry & shared costs" }, { n:3, label:"Goal alignment" },
   { n:4, label:"Upload your documents" }, { n:5, label:"Budgeting & working capital" }, { n:6, label:"Ratio deep dive" }, { n:7, label:"Peer benchmarking" },
@@ -524,7 +526,7 @@ function FA1Registry({ fa, setFA }) {
   </div>;
 }
 
-// ─────────────────────────�����──────��───────────────────────────────────────────
+// ─────────────────────────�����────���─��───────────────────────────────────────────
 // FA STAGE 2 — Goal alignment
 // ─────────────────────────────────────────────────────────────────────────────
 function FA2({ fa, setFA }) {
@@ -532,7 +534,7 @@ function FA2({ fa, setFA }) {
   const set = (f,v) => setFA(s => ({ ...s, goals:{ ...s.goals, [f]:v } }));
   const Qs = [
     { key:"trigger", title:"What triggered this review?", opts:[["lender","Lender / Farm Credit meeting coming up","Loan review, line renewal, or annual meeting"],["year","Difficult year — margins compressed","Input cost spike, price collapse, or tough crop year"],["growth","Planning growth or major investment","Evaluating land purchase or expansion"],["succession","Succession or transition planning","Getting the financial picture clear before a generational transfer"],["habit","Building a monitoring habit","Want to track financials consistently"]] },
-    { key:"concern", title:"Which area concerns you most?", opts:[["cashflow","Cash flow — can I cover obligations?","Operating line pulling tighter"],["profitability","Profitability — am I making money per enterprise?","Unsure which enterprises cover full costs"],["debt","Debt load — is my balance sheet sustainable?","D/A ratio or equity position"],["efficiency","Efficiency — where are costs too high?","OER or cost per unit vs. peers"],["benchmarks","Benchmarking — how do I compare?","Want to see where I stand vs. similar operations"]] },
+    { key:"concern", title:"Which area concerns you most?", opts:[["cashflow","Cash flow — can I cover obligations?","Operating line pulling tighter"],["profitability","Profitability — am I making money per enterprise?","Unsure which enterprises cover full costs"],["debt","Debt load �� is my balance sheet sustainable?","D/A ratio or equity position"],["efficiency","Efficiency — where are costs too high?","OER or cost per unit vs. peers"],["benchmarks","Benchmarking — how do I compare?","Want to see where I stand vs. similar operations"]] },
     { key:"outcome", title:"What does success look like?", opts:[["understand","Understand what my numbers mean","Translate ratios into plain language"],["improve","Action plan for my weakest ratios","2–3 highest-leverage actions"],["lenderready","Be lender-ready","Ratios and narrative ready for my Farm Credit advisor"],["monitor","Annual monitoring system","Repeatable process I can run every year"]] },
   ];
   const tracking = g.tracking || [];
@@ -909,9 +911,9 @@ function FA3({ fa, setFA }) {
   );
 }
 
-// ────────────���───────────────��──────────────���──────────────────────────────��──
+// ────────────���───────────────��────────────�����─���──────────────────────────────��──
 // FA STAGE 4 — Peer benchmarking
-// ────────────────────────────────��───────────────────────���──────────────────���─
+// ──────────────���─────────────────���───────────────────────���──────────────────���─
 function FA4({ fa, setFA }) {
   const b = fa.s4bench;
   const v = id => b[id]||""; const sv = (id,val) => setFA(s=>({...s,s4bench:{...s.s4bench,[id]:val}})); const gv = id => parseFloat(b[id]);
@@ -3148,7 +3150,7 @@ function RD7({ rd, setRData, fa }) {
             </div>
             <div style={{ height:8, background:T.div, borderRadius:4, overflow:"hidden", marginBottom:8 }}><div style={{ height:"100%", width:`${fundedPct}%`, background:fundedPct>=100?T.dgreen:fundedPct>=60?T.amber:T.red, borderRadius:4, transition:"width .3s" }} /></div>
             {gap>0 && <Flag type="warn">At your current contribution rate, you're ${Math.round(gap).toLocaleString()}/year short of fully funding this reserve by the time the equipment needs replacing.</Flag>}
-            {reserveFunded && <Flag type="ok">Your reserve is on pace — consider whether the next dollar is better spent on income diversification or a longer-horizon investment.</Flag>}
+            {reserveFunded && <Flag type="ok">Your reserve is on pace �� consider whether the next dollar is better spent on income diversification or a longer-horizon investment.</Flag>}
           </>
         )}
         <div style={{ marginTop:14 }}>
@@ -3309,7 +3311,7 @@ function EfficiencyValueImpact({ sel, lev }) {
   );
 }
 
-// ══════���════════════════════════════════════════��════��═══════����═════��══════��═══
+// ══════���══════════════════════════════════════���═����════��═══════����═════��══════��═══
 // FARM PROFILE — a single 360° farm view that fills in as the farmer completes
 // onboarding and assessments, and feeds relevant fields back into FA, RD, and Risk
 // so nothing has to be entered twice.
@@ -4142,7 +4144,7 @@ const valueParcel = (p) => {
 
 // ══════════════════════════════════════════════════════════════��══════════════
 // BLIND COMPARE — the same questions, answered independently
-// ��════��══════════════════════════════════════════════════════════════���════════
+// ��════��═════════════════════════════════════════����══════════════════������════════
 // One array drives both sides and the comparison, so the two generations are
 // provably answering the same question rather than two similar ones.
 //
@@ -4546,7 +4548,7 @@ function LEG6({ leg, setLegData, fa }) {
   );
 }
 
-// ── Stage 5 — Successor readiness ────────────────────────────────────────────
+// ── Stage 5 — Successor readiness ──────────────��───��──────�����──────────────────
 function LEG7({ leg, setLegData }) {
   const d = leg.data || {};
   const ex = d.exposure || {};
@@ -5590,7 +5592,7 @@ function VIS1({ vis, setVis, profile, goProfile }) {
   return (
     <div>
       <Head eyebrow="Strategic vision · Stage 1" title="Core Competencies and Competitive Advantage" sub="Start with the reason customers, employees, landlords, or partners choose this operation over another." /><div style={cardStyle({ borderTop:`4px solid ${T.blue}`, marginBottom:18 })}><div style={cardLblStyle()}>Bring existing profile</div><p style={{ color:T.fgM, fontSize:13.5, lineHeight:1.5, marginTop:0 }}>Upload a Maximum Farm Potential JSON export to update the profile fields used across the Strategic Vision categories.</p><input type="file" accept=".json,application/json" onChange={importProfile} /></div>
-      <div style={{ display:"grid", gridTemplateColumns:"minmax(0,1fr) minmax(280px,420px)", gap:24, alignItems:"center", marginBottom:24, padding:"22px 0", borderBottom:`1px solid ${T.div}` }}><div><div style={cardLblStyle()}>The capability behind the farm</div><p style={{ fontSize:15, color:T.fgM, lineHeight:1.55, margin:0, maxWidth:560 }}>What can this operation do exceptionally well—and what would be difficult for another farm to copy?</p></div><img src="/vision-competitive-advantage.png" alt="Infographic connecting farm enterprises, family ownership, cash flow, customers, and long-term growth" style={{ width:"100%", height:180, objectFit:"cover", borderRadius:16 }} /></div>
+      <div style={{ marginBottom:24, padding:"22px 0", borderBottom:`1px solid ${T.div}` }}><div style={cardLblStyle()}>The capability behind the farm</div><p style={{ fontSize:15, color:T.fgM, lineHeight:1.55, margin:0, maxWidth:560 }}>What can this operation do exceptionally well—and what would be difficult for another farm to copy?</p></div>
       {!hasProfile && (<>
         <Flag type="warn">Your Farm Profile does not have competitive advantage, core values, or objectives filled in yet. You can add items here directly, or fill the profile first.
           {goProfile && <div style={{ marginTop:9 }}><button onClick={goProfile} style={{ ...btnStyle("outline"), fontSize:12, padding:"6px 13px" }}>Open Farm Profile</button></div>}
@@ -5643,7 +5645,7 @@ function VIS1({ vis, setVis, profile, goProfile }) {
   const add = () => setVis({ items:[...(vis.items || []), { id:"value-"+Date.now(), kind:"value", sourceLabel:"Added here", text:"", tests:{}, verdict:"untested" }] });
   const seed = () => setVis({ items:[...(vis.items || []), ...(profile.values && !values.length ? [{ id:"profile-value-"+Date.now(), kind:"value", sourceLabel:"Farm Profile", text:profile.values, tests:{}, verdict:"untested" }] : [])], valuesSeeded:true });
   return <div>
-    <Head eyebrow="Strategic vision · Stage 2" title="Core values" sub="Identify the principles that should guide choices when the easiest or most profitable option is not automatically the right one." /><VisionInlineVisual stageLabel="Core values → consistent decisions" />
+    <Head eyebrow="Strategic vision · Stage 2" title="Core values" sub="Identify the principles that should guide choices when the easiest or most profitable option is not automatically the right one." />
     <div style={cardStyle({ borderTop:`4px solid ${T.blue}` })}>
       <div style={cardLblStyle()}>Why this matters</div>
       <p style={{ fontSize:14, color:T.fgM, lineHeight:1.65, margin:0 }}>Core values turn a farm&apos;s identity into a decision filter. They help the household decide what work to accept, how to treat land and people, and what trade-offs are worth making. A value becomes useful when it can change a decision ��� not when it is only a good-sounding word.</p>
@@ -5732,7 +5734,7 @@ function VIS3({ vis, setVis }) {
   const answered = values.filter(v => ((v.tests||{}).cost||"").trim().length > 10).length;
   return (
     <div>
-      <Head eyebrow="Strategic vision · Stage 5" title="What it has cost you" sub="A value becomes real when it changes a decision." /><VisionInlineVisual stageLabel="Trade-offs → tested principles" />
+      <Head eyebrow="Strategic vision · Stage 5" title="What it has cost you" sub="A value becomes real when it changes a decision." />
       {values.length === 0 ? (
         <Flag type="warn">No core values recorded yet. Go back to stage 1 and mark at least one claim as a core value.</Flag>
       ) : (
@@ -5757,7 +5759,7 @@ function VIS3({ vis, setVis }) {
   );
 }
 
-// ── Vision 4 — Turn it into rules ────────────────────────────────────────────
+// ── Vision 4 — Turn it into rules ──────────────────��─────────────────────────
 function VIS4({ vis, setVis }) {
   const items = (vis.items||[]).filter(i => i.text && visVerdictOf(i) !== "table stakes");
   const rules = vis.rules || [];
@@ -5767,7 +5769,7 @@ function VIS4({ vis, setVis }) {
 
   return (
     <div>
-      <Head eyebrow="Strategic vision · Stage 6" title="Turn it into rules" sub="This is where a personal vision becomes an organizational one. A value cannot be followed by an employee. A rule can, and more importantly a rule can be cited back at you." /><VisionInlineVisual stageLabel="Values → operating rules" />
+      <Head eyebrow="Strategic vision · Stage 6" title="Turn it into rules" sub="This is where a personal vision becomes an organizational one. A value cannot be followed by an employee. A rule can, and more importantly a rule can be cited back at you." />
       <div style={cardStyle({ borderTop:`4px solid ${T.blue}` })}>
         <div style={cardLblStyle()}>What the conversion looks like</div>
         {[["We value stewardship","We do not rent ground we cannot farm to our own standard, even when the rent is good"],
@@ -5832,7 +5834,7 @@ function VIS5({ vis, setVis, goLegacy }) {
   const canState = VIS_HOLDERS.filter(p => h[p.id] === 3);
   return (
     <div>
-      <Head eyebrow="Strategic vision · Stage 7" title="Who holds this" sub="A vision one person holds is a preference. A vision the organization holds is a constraint. The difference is whether anyone else could state it, and whether they could use it to stop something." /><VisionInlineVisual stageLabel="Shared ownership → organizational constraint" />
+      <Head eyebrow="Strategic vision · Stage 7" title="Who holds this" sub="A vision one person holds is a preference. A vision the organization holds is a constraint. The difference is whether anyone else could state it, and whether they could use it to stop something." />
       <div style={cardStyle()}>
         <div style={cardLblStyle()}>Where each person actually stands</div>
         {VIS_HOLDERS.map(p => (
@@ -5887,7 +5889,7 @@ function VIS6({ vis, setVis }) {
   const unbound = rules.filter(r => r.statement && (r.binds||[]).length === 0);
   return (
     <div>
-      <Head eyebrow="Strategic vision · Stage 8" title="Where it binds" sub="A vision that does not show up where decisions get made is wall decoration. Mark which decisions each rule actually governs." /><VisionInlineVisual stageLabel="Rules → decisions and actions" />
+      <Head eyebrow="Strategic vision · Stage 8" title="Where it binds" sub="A vision that does not show up where decisions get made is wall decoration. Mark which decisions each rule actually governs." />
       {rules.length === 0 ? (
         <Flag type="warn">No rules yet. Go back to stage 4 and write at least one.</Flag>
       ) : (
@@ -6499,7 +6501,7 @@ const GENERIC_FARM_FINANCIALS = {
   livingWithdrawals:"68000", incomeTaxes:"34000",
 };
 
-const VisionInlineVisual = ({ stageLabel }) => <div style={{ margin:"4px 0 26px", borderRadius:16, overflow:"hidden", border:`1px solid ${T.div}`, background:T.bgAlt }}><img src="/strategic-vision-roadmap.png" alt="Strategic vision roadmap toward a decision-ready farm document" style={{ display:"block", width:"100%", height:"auto", aspectRatio:"16 / 7", objectFit:"contain" }} /><div style={{ display:"flex", justifyContent:"space-between", gap:10, padding:"10px 14px", color:T.fgS, fontSize:11.5 }}><span>{stageLabel}</span><span style={{ color:T.green, fontWeight:700 }}>Vision in progress</span></div></div>;
+const VisionInlineVisual = ({ stageLabel }) => <div style={{ margin:"4px 0 26px", borderRadius:16, overflow:"hidden", border:`1px solid ${T.div}`, background:T.bgAlt }}><img src="/strategic-vision-roadmap.png" alt="View from a family office window over a diversified farm enterprise with crops, livestock, trucking, a farm store, and construction yard" style={{ display:"block", width:"100%", height:"auto", aspectRatio:"5 / 1", objectFit:"cover", objectPosition:"center 58%" }} /><div style={{ display:"flex", justifyContent:"space-between", gap:10, padding:"10px 14px", color:T.fgS, fontSize:11.5 }}><span>{stageLabel}</span><span style={{ color:T.green, fontWeight:700 }}>Vision in progress</span></div></div>;
 
 export default function App() {
   const [module, setModule] = useState("vision");
@@ -6720,13 +6722,15 @@ else if (isRD) { if (rd.stage<rdTotal) goRD(rd.stage+1); else goLegacy(1); }
           ? "Risk is not a failure to eliminate. It is the weather, markets, health, people, and surprises you plan around so one hard season does not decide everything."
           : "Legacy is about people and a workable handoff, not just assets. We will make room for difficult conversations and practical next steps.";
   const flowLabels = isVis ? ["Capabilities","Values","Rules","Statement","Profile","Document"] : isFA ? ["Books","Enterprises","Goals","Records","Cash flow","Benchmarking","Scorecard"] : [];
-  const stageVisual = flowLabels.length ? <div aria-label={`${moduleName} progress map`} style={{ display:"flex", alignItems:"center", gap:0, marginBottom:26, padding:"14px 18px", background:T.bgAlt, borderRadius:16, border:`1px solid ${T.div}`, overflowX:"auto" }}>{flowLabels.map((label,i)=>{ const n=Math.min(i+1, total); const active=(isVis ? (stage===n || (i===4&&stage===10) || (i===5&&stage===11)) : stage===n); const done=n<stage; return <Fragment key={label}><div style={{ minWidth:78, display:"flex", flexDirection:"column", alignItems:"center", gap:6, color:active?T.navy:done?T.green:T.fgS }}><div style={{ width:28, height:28, borderRadius:"50%", display:"grid", placeItems:"center", background:active?T.blue:done?T.green:"#fff", color:active||done?"#fff":T.fgS, fontSize:11, fontWeight:800, border:`1px solid ${active?T.blue:done?T.green:T.border}` }}>{done?<IconCheckSm size={12}/>:i+1}</div><span style={{ fontSize:10.5, fontWeight:active?750:550, whiteSpace:"nowrap" }}>{label}</span></div>{i<flowLabels.length-1&&<div style={{ minWidth:18, height:2, background:i+1<stage?T.green:T.border, marginBottom:22 }} />}</Fragment>})}</div> : null;
+  const visStepRanges = [[1,2],[3,4],[5,8],[9,9],[10,10],[11,11]];
+  const stageVisual = flowLabels.length ? <div aria-label={`${moduleName} progress map`} style={{ display:"flex", alignItems:"center", gap:0, marginBottom:26, padding:"14px 18px", background:T.bgAlt, borderRadius:16, border:`1px solid ${T.div}`, overflowX:"auto" }}>{flowLabels.map((label,i)=>{ const n=Math.min(i+1, total); const [from,to]=isVis ? visStepRanges[i] : [n,n]; const active=stage>=from && stage<=to; const done=stage>to; return <Fragment key={label}><div style={{ minWidth:78, display:"flex", flexDirection:"column", alignItems:"center", gap:6, color:active?T.navy:done?T.green:T.fgS }}><div style={{ width:28, height:28, borderRadius:"50%", display:"grid", placeItems:"center", background:active?T.blue:done?T.green:"#fff", color:active||done?"#fff":T.fgS, fontSize:11, fontWeight:800, border:`1px solid ${active?T.blue:done?T.green:T.border}` }}>{done?<IconCheckSm size={12}/>:i+1}</div><span style={{ fontSize:10.5, fontWeight:active?750:550, whiteSpace:"nowrap" }}>{label}</span></div>{i<flowLabels.length-1&&<div style={{ minWidth:18, height:2, background:i+1<stage?T.green:T.border, marginBottom:22 }} />}</Fragment>})}</div> : null;
   const stageCard = (
   <section className="mfp-stage-card" aria-label={`${moduleName} question ${stage} of ${total}`}>
-  {!isVis && stageVisual}
+  {isVis && <div style={eyebrowStyle}>Strategic Vision · Stage {stage}</div>}
+  {stageVisual}
   {false && <div style={{ marginBottom:26, borderRadius:16, overflow:"hidden", border:`1px solid ${T.div}`, background:T.bgAlt }}><img src="/strategic-vision-roadmap.png" alt="Strategic vision roadmap from capabilities and values to a statement, profile, and final document" style={{ display:"block", width:"100%", height:150, objectFit:"cover" }} /><div style={{ display:"flex", justifyContent:"space-between", gap:10, padding:"10px 14px", color:T.fgS, fontSize:11.5 }}><span>Build the next decision-ready layer</span><span style={{ color:T.green, fontWeight:700 }}>Stage {stage} of {total}</span></div></div>}
   <div style={{ maxWidth:900, marginBottom:26, color:T.fgS, fontSize:14, lineHeight:1.6 }}>{moduleSupport}</div>
-  {isVis && <VisionInlineVisual stageLabel="Core capability → defensible advantage" />}
+  {isVis && stage < 10 && <VisionInlineVisual stageLabel="Core capability → defensible advantage" />}
   {body}
   </section>
   );
