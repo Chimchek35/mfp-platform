@@ -156,17 +156,19 @@ const Flag = ({ type, children }) => {
   return <div style={{ background:m.bg, color:m.c, borderLeft:`2px solid ${m.b}`, borderRadius:"0 5px 5px 0", padding:"9px 13px", fontSize:12.5, marginBottom:10, lineHeight:1.55 }}>{children}</div>;
 };
 
-const Head = ({ eyebrow, title, sub }) => (
-  <div>
-    <div style={eyebrowStyle}>{eyebrow}</div>
-    <h1 style={h1Style}>{title}</h1>
-    <p style={subStyle}>{sub}</p>
-  </div>
-);
+const Head = ({ eyebrow, title, sub }) => {
+  const isFinancial = eyebrow?.startsWith("Financial Analysis");
+  return <div>
+  {isFinancial && <img src="/financial-analysis-dashboard.png" alt="Financial analysis dashboard connecting documents, cash flow, budgets, and benchmarking" style={{ width:"100%", maxHeight:170, objectFit:"cover", borderRadius:16, marginBottom:22 }} />}
+  {!isFinancial && <div style={eyebrowStyle}>{eyebrow}</div>}
+  <h1 style={h1Style}>{title}</h1>
+  <p style={subStyle}>{sub}</p>
+  </div>;
+};
 
-// ─�����������──────────────�����────────────────────────────────────�������������������������──�����────────────────────
+// ─�������������──────────────�����────────────────────────────────────�������������������������──�����────────────────────
 // DATA
-// ───��───��───��────────────────��─��──────────────────────────────────────��─��─��─��─
+// ─��─��───��───��────────────────��─��──────────────────────────────────────��─��─��─��─
 const FA_STAGES = [
   { n:1, label:"Your accounting profile" }, { n:2, label:"Enterprise registry & shared costs" }, { n:3, label:"Goal alignment" },
   { n:4, label:"Upload your documents" }, { n:5, label:"Budgeting & working capital" }, { n:6, label:"Ratio deep dive" }, { n:7, label:"Peer benchmarking" },
@@ -223,7 +225,7 @@ function FA0({ fa, setFA }) {
   const setQ = value => setFA(s => ({ ...s, accountingQuestion: Math.max(0, Math.min(5, value)) }));
   const Option = ({ group, value, children }) => <button type="button" onClick={() => set(group, value)} style={{ display:"block", width:"100%", padding:"13px 15px", marginBottom:8, textAlign:"left", borderRadius:8, border:p[group]===value?`2px solid ${T.blue}`:`1px solid ${T.border}`, background:p[group]===value?T.blueL:"#fff", color:p[group]===value?T.blue:T.navy, cursor:"pointer", fontSize:14, fontWeight:600 }}>{children}</button>;
   return <div>
-    <Head eyebrow="Financial Analysis · Stage 1" title="Start with how you keep the books" sub="First, define what your records can tell us." /><img src="/financial-analysis-dashboard.png" alt="Financial analysis dashboard connecting documents, cash flow, budgets, and benchmarking" style={{ width:"100%", maxHeight:170, objectFit:"cover", borderRadius:16, marginBottom:22 }} />
+    <Head eyebrow="Financial Analysis · Stage 1" title="Start with how you keep the books" sub="First, define what your records can tell us." />
     <div style={{ ...cardStyle(), display:q===0?"block":"none" }}><div style={cardLblStyle()}>What accounting basis do you use?</div>
       <Option group="basis" value="cash">Cash basis — I mostly track money when it moves</Option>
       <Option group="basis" value="accrual">Accrual basis — revenue and expenses are matched to the year earned</Option>
@@ -429,7 +431,7 @@ const RD_ACTIONS = {
   selfInsurance:[{t:"r",title:"Consult an insurance and tax specialist about captive or self-insurance structures",d:"This is one of the more complex tools on this list — specialized advice is essential before proceeding."},{t:"a",title:"Quantify your current premium spend and loss history first",d:"Compare what you're paying now in premiums against the cost of building an equivalent reserve to see if this is worth pursuing."},{t:"g",title:"Fund the reserve systematically over multiple years",d:"Self-insurance only works if the reserve is large enough to absorb a real loss — underfunding defeats the purpose."}],
   retirementPlan:[{t:"r",title:"Confirm current-year contribution limits with your tax advisor",d:"SEP-IRA and defined benefit limits change annually and depend on your business structure and income — this needs a current-year check, not a rule of thumb."},{t:"a",title:"Model the tax savings against this specific year's income",d:"The benefit is largest in high-income years — a tax advisor can confirm the real dollar impact for your situation."},{t:"g",title:"Set up systematic annual contributions rather than one-time decisions",d:"Consistent funding across multiple years builds meaningfully more retirement income than sporadic contributions."}],
   sellerFinancing:[{t:"r",title:"Have an attorney draft and properly secure the note",d:"Proper collateral documentation protects you if the buyer defaults — do not handshake this."},{t:"a",title:"Underwrite the buyer's ability to pay as carefully as a bank would",d:"You're taking on real credit risk — don't skip due diligence just because it's a neighbor or relative."},{t:"g",title:"Price the interest rate to reflect the real risk you're taking",d:"Compare against current ag lending rates — below-market seller financing is effectively a gift, not an investment."}],
-  agReit:[{t:"r",title:"Compare 2–3 platforms on fee structure, minimum investment, and historical distributions",d:"Not financial advice — fee drag varies significantly between platforms and materially affects net return."},{t:"a",title:"Confirm the liquidity terms before committing capital",d:"Understand exactly when and how you could exit — some platforms only offer liquidity windows annually or at fund maturity."},{t:"g",title:"Treat this as a longer-horizon layer, not a near-term reserve",d:"This fits the third step of the sequencing framework — fund your equipment reserve and diversify income first."}],
+  agReit:[{t:"r",title:"Compare 2–3 platforms on fee structure, minimum investment, and historical distributions",d:"Not financial advice — fee drag varies significantly between platforms and materially affects net return."},{t:"a",title:"Confirm the liquidity terms before committing capital",d:"Understand exactly when and how you could exit �� some platforms only offer liquidity windows annually or at fund maturity."},{t:"g",title:"Treat this as a longer-horizon layer, not a near-term reserve",d:"This fits the third step of the sequencing framework — fund your equipment reserve and diversify income first."}],
 };
 
 const REV_RAMP = { energy:[0,0,0,0,0,0,0,0,0,0,0,0], specialty:[0,0,0,0,0,0,0,2,5,7,8,8], custom:[0,0,3,5,5,5,5,5,5,5,3,0], carbon:[0,0,0,0,0,0,2,3,3,3,3,3], education:[0,0,2,4,5,6,6,5,4,4,2,0], processing:[0,0,0,0,0,0,0,0,1,2,4,6], consulting:[0,2,3,4,4,4,4,4,4,4,3,2], storage:[0,0,0,0,0,0,0,8,8,8,4,4],
@@ -705,7 +707,7 @@ const MOCK_EXTRACTED_DATA = {
   endAssets:{val:"2960000",src:"Balance sheet — Dec 31"}, endLiab:{val:"1195000",src:"Balance sheet — Dec 31"},
   livingWithdrawals:{val:"68000",src:"Estimated from records"}, incomeTaxes:{val:"34000",src:"Tax return"},
   arBegin:{val:"18000",src:"Balance sheet — Jan 1"}, arEnd:{val:"27000",src:"Balance sheet — Dec 31"},
-  cropInvBegin:{val:"145000",src:"Balance sheet — Jan 1"}, cropInvEnd:{val:"189000",src:"Balance sheet — Dec 31"},
+  cropInvBegin:{val:"145000",src:"Balance sheet ��� Jan 1"}, cropInvEnd:{val:"189000",src:"Balance sheet — Dec 31"},
   livestockInvBegin:{val:"0",src:"Balance sheet — Jan 1"}, livestockInvEnd:{val:"0",src:"Balance sheet — Dec 31"},
   feederInvBegin:{val:"0",src:"Balance sheet — Jan 1"}, feederInvEnd:{val:"0",src:"Balance sheet — Dec 31"},
   deferredRevBegin:{val:"12000",src:"Balance sheet — Jan 1"}, deferredRevEnd:{val:"8000",src:"Balance sheet — Dec 31"},
@@ -2361,7 +2363,7 @@ function LivestockInsuranceCalculator({ risk, setRisk }) {
   );
 }
 
-// ───���������������������─���──���────���──────────���──���───────────────────────────────────────���──────
+// ───�����������������������─���──���────���──────────���──���───────────────────────────────────────���──────
 // RD helpers
 // ─────────────────────────────────────────────────────────────────────────────
 // Each lever category is now built from specific, measurable items rather than one
@@ -6646,7 +6648,7 @@ else if (isRD) { if (rd.stage<rdTotal) goRD(rd.stage+1); else goLegacy(1); }
     const [uploading, setUploading] = useState(false);
     const addDocs = async (files) => { const selected=Array.from(files||[]); if(!selected.length) return; setUploading(true); try { const uploaded=await Promise.all(selected.map(async file => { const bytes=new Uint8Array(await file.arrayBuffer()); let binary=""; for(let i=0;i<bytes.length;i+=0x8000) binary+=String.fromCharCode(...bytes.subarray(i,i+0x8000)); const response=await fetch("/api/upload-documents",{ method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ name:file.name, size:file.size, type:file.type, data:btoa(binary) }) }); if(!response.ok) throw new Error("Upload failed"); const stored=await response.json(); return { id:`doc-${Date.now()}-${file.name}`, ...stored, status:"Stored and ready for review" }; })); setFA(s=>({ ...s, documents:[...(s.documents||[]), ...uploaded] })); } catch(error) { console.error("[mfp] document upload failed",error); window.alert("The document could not be stored. Please try again."); } finally { setUploading(false); } };
     const remove = id => setFA(s => ({ ...s, documents:(s.documents||[]).filter(doc=>doc.id!==id) }));
-    return <div><Head eyebrow="Financial Analysis · Stage 4" title="Upload your documents" sub="Bring the records you trust; we will keep source and assumption visible." /><img src="/financial-analysis-dashboard.png" alt="Financial analysis dashboard connecting documents, cash flow, budgets, and benchmarking" style={{ width:"100%", maxHeight:150, objectFit:"cover", borderRadius:16, marginBottom:22, opacity:.9 }} /><div style={cardStyle({ borderTop:`4px solid ${T.blue}` })}><div style={cardLblStyle()}>Choose files to review</div><p style={{ color:T.fgM, fontSize:13.5, lineHeight:1.6, marginTop:0 }}>Upload statements, enterprise reports, tax summaries, budgets, or CSV exports. PDF, CSV, XLS, XLSX, and common image files are supported.</p><input type="file" multiple accept=".pdf,.csv,.xls,.xlsx,.png,.jpg,.jpeg" onChange={e=>addDocs(e.target.files)} disabled={uploading} style={{ width:"100%", padding:16, border:`1px dashed ${T.blue}`, borderRadius:8, background:T.blueL }} /><div style={{ marginTop:10, color:T.fgS, fontSize:12 }}>{uploading?"Storing documents securely…":"Documents are stored privately and remain associated with this analysis."}</div></div>{docs.length===0?<div style={cardStyle({ background:T.bgAlt })}><div style={{ color:T.fgM, fontSize:13.5 }}>No documents uploaded yet. You can continue with estimates, or add the records you trust most.</div></div>:<div style={cardStyle()}><div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}><div style={cardLblStyle()}>Documents in this analysis</div><span style={{ fontSize:12, color:T.fgS }}>{docs.length} file{docs.length===1?"":"s"}</span></div>{docs.map(doc=><div key={doc.id} style={{ display:"flex", justifyContent:"space-between", gap:12, alignItems:"center", padding:"11px 0", borderBottom:`1px solid ${T.div}` }}><div><strong style={{ color:T.navy, fontSize:13 }}>{doc.name}</strong><div style={{ color:T.fgS, fontSize:12, marginTop:3 }}>{doc.type} · {Math.max(1,Math.round(doc.size/1024))} KB · {doc.status}</div></div><button type="button" onClick={()=>remove(doc.id)} style={btnStyle("ghost")}>Remove</button></div>)}</div>}<div style={cardStyle({ background:T.blueL, borderColor:"#c8d9e8" })}><strong>Review before using</strong><p style={{ margin:"5px 0 0", color:T.fgM, fontSize:13, lineHeight:1.5 }}>A document can be accurate and still use a different period, allocation method, or accounting basis. The next steps keep source and assumption visible.</p></div></div>;
+    return <div><Head eyebrow="Financial Analysis · Stage 4" title="Upload your documents" sub="Bring the records you trust; we will keep source and assumption visible." /><div style={cardStyle({ borderTop:`4px solid ${T.blue}` })}><div style={cardLblStyle()}>Choose files to review</div><p style={{ color:T.fgM, fontSize:13.5, lineHeight:1.6, marginTop:0 }}>Upload statements, enterprise reports, tax summaries, budgets, or CSV exports. PDF, CSV, XLS, XLSX, and common image files are supported.</p><input type="file" multiple accept=".pdf,.csv,.xls,.xlsx,.png,.jpg,.jpeg" onChange={e=>addDocs(e.target.files)} disabled={uploading} style={{ width:"100%", padding:16, border:`1px dashed ${T.blue}`, borderRadius:8, background:T.blueL }} /><div style={{ marginTop:10, color:T.fgS, fontSize:12 }}>{uploading?"Storing documents securely…":"Documents are stored privately and remain associated with this analysis."}</div></div>{docs.length===0?<div style={cardStyle({ background:T.bgAlt })}><div style={{ color:T.fgM, fontSize:13.5 }}>No documents uploaded yet. You can continue with estimates, or add the records you trust most.</div></div>:<div style={cardStyle()}><div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}><div style={cardLblStyle()}>Documents in this analysis</div><span style={{ fontSize:12, color:T.fgS }}>{docs.length} file{docs.length===1?"":"s"}</span></div>{docs.map(doc=><div key={doc.id} style={{ display:"flex", justifyContent:"space-between", gap:12, alignItems:"center", padding:"11px 0", borderBottom:`1px solid ${T.div}` }}><div><strong style={{ color:T.navy, fontSize:13 }}>{doc.name}</strong><div style={{ color:T.fgS, fontSize:12, marginTop:3 }}>{doc.type} · {Math.max(1,Math.round(doc.size/1024))} KB · {doc.status}</div></div><button type="button" onClick={()=>remove(doc.id)} style={btnStyle("ghost")}>Remove</button></div>)}</div>}<div style={cardStyle({ background:T.blueL, borderColor:"#c8d9e8" })}><strong>Review before using</strong><p style={{ margin:"5px 0 0", color:T.fgM, fontSize:13, lineHeight:1.5 }}>A document can be accurate and still use a different period, allocation method, or accounting basis. The next steps keep source and assumption visible.</p></div></div>;
   }
   function FABudget({ fa, setFA }) {
     const [budgetTab, setBudgetTab] = useState("annual");
