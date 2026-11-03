@@ -202,7 +202,7 @@ const Head = ({ eyebrow, title, sub, showFinancialVisual = true }) => {
   const isRevenue = eyebrow?.startsWith("Revenue Diversification");
   const isVision = eyebrow?.toLowerCase().startsWith("strategic vision");
   return <div>
-  {(isFinancial || isRevenue) && showFinancialVisual && <img src="/financial-analysis-dashboard.png" alt="Farm headquarters office overlooking grain bins, machinery shed, and farmland, run like a family office" style={{ display:"block", width:"100%", height:"auto", aspectRatio:"5 / 1", maxHeight:"none", objectFit:"cover", objectPosition:"center 58%", borderRadius:16, marginBottom:22 }} />}
+  {(isFinancial || isRevenue) && showFinancialVisual && <img src={isRevenue ? "/revenue-diversification-operations.png" : "/financial-analysis-dashboard.png"} alt={isRevenue ? "Diversified farm business campus with crops, grain bins, cattle, an equipment repair shop, a farm store, trucking, a tile and excavation crew, and solar" : "Farm headquarters office overlooking grain bins, machinery shed, and farmland, run like a family office"} style={{ display:"block", width:"100%", height:"auto", aspectRatio:"5 / 1", maxHeight:"none", objectFit:"cover", objectPosition:"center 58%", borderRadius:16, marginBottom:22 }} />}
   {!isFinancial && !isVision && <div style={eyebrowStyle}>{eyebrow}</div>}
   <h1 style={h1Style}>{title}</h1>
   <p style={subStyle}>{sub}</p>
@@ -2642,7 +2642,7 @@ const scoredOpps = (rd, faEnterprises, faS3vals) => { const d=rd.data||{}; const
 
 // ��������──��������───────────────────────────────────────────────────────────────────
 // RD STAGE 1 — Baseline & readiness
-// ────────────────────────�������──���─���─�������───���─���────────────────���───────������──���������──���────
+// ────────────────────────�������──���─���─�������───���─���────────────────���──��────������──���������──���────
 function RD1({ rd, setRData, fa, profile }) {
   const d = rd.data; const b = d.baseline || {};
   const profileFarmTypes = [...new Set((Array.isArray(profile?.farmTypes) ? profile.farmTypes : String(profile?.productionMix||"").split(/,|;|\n/).map(v=>v.trim()).filter(Boolean)))];
@@ -2894,7 +2894,7 @@ function RD3({ rd, setRData }) {
 
 // ───────────────────────────────────���─────���───���────���──────────────────────────
 // RD STAGE 4 — Opportunity mapping
-// ────���──────────���──���────────────────────────────�����─────────────────────────────
+// ────���──────────���──���─────────────────────────��──�����─────────────────────────────
 const GROWTH_TIER_LABEL = { 1:"Tier 1 · Fastest structural growth", 2:"Tier 2 · Strong growth", 3:"Tier 3 · Steady & selective" };
 const GROWTH_TIER_COLOR = { 1:T.dgreen, 2:T.blue, 3:T.tan };
 
