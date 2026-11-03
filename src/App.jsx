@@ -213,8 +213,8 @@ const Head = ({ eyebrow, title, sub, showFinancialVisual = true }) => {
 // DATA
 // ─��─��───��───��────────────────��─��──────────────────────────────────────��─��─��─���─
 const FA_STAGES = [
-  { n:1, label:"Your accounting profile" }, { n:2, label:"Enterprise registry & shared costs" },
-  { n:3, label:"Upload your documents" }, { n:4, label:"Budgeting & working capital" }, { n:5, label:"Ratio deep dive" }, { n:6, label:"Peer benchmarking" },
+  { n:1, label:"Your accounting profile" }, { n:2, label:"Enterprise registry & shared costs" }, { n:3, label:"Goal alignment" },
+  { n:4, label:"Upload your documents" }, { n:5, label:"Budgeting & working capital" }, { n:6, label:"Ratio deep dive" }, { n:7, label:"Peer benchmarking" },
   ];
 
 const BOOK_PREPARER = [
@@ -2788,7 +2788,7 @@ function RD3({ rd, setRData }) {
 
 // ───────────────────────────────────���─────���───���────���──────────────────────────
 // RD STAGE 4 — Opportunity mapping
-// ────���──────────────────────────────────────────�����─────────────────────────────
+// ────���──────────────────────────────────────────���─────────────────────────────
 const GROWTH_TIER_LABEL = { 1:"Tier 1 · Fastest structural growth", 2:"Tier 2 · Strong growth", 3:"Tier 3 · Steady & selective" };
 const GROWTH_TIER_COLOR = { 1:T.dgreen, 2:T.blue, 3:T.tan };
 
@@ -2946,7 +2946,7 @@ function RD5({ rd, setRData }) {
   );
 }
 
-// ────────────────────────────────���───────────────────────────────────��───����────
+// ────────────────────────────────────────────────────────────────────��───����────
 // RD STAGE 6 — Policy & grant enablers
 // ────────────────────────────────────────────────────���───────────────────��────
 // Deliberately mirrors Barrier Identification's structure — same per-opportunity card
@@ -6067,7 +6067,7 @@ function VIS7({ vis, setVis, profile }) {
 }
 
 
-// ── Vision 8 — Farm profile and SWOT ───────��─��──────────────────────���────
+// ── Vision 8 — Farm profile and SWOT ─────────��──────────────────────���────
 function VIS_PROFILE({ vis, profile, setProfile, goFA, fa }) {
   const advantages = (vis.items||[]).filter(i=>i.kind==="advantage" && i.text?.trim()).map(i=>i.text.trim());
   const values = (vis.items||[]).filter(i=>i.kind==="value" && i.text?.trim()).map(i=>i.text.trim());
@@ -6656,7 +6656,7 @@ export default function App() {
   const rdUnlocked = vis.stage >= visTotal && fa.stage >= faTotal;
 
   const canAdvance = useMemo(() => {
-    if (isFA) { if (fa.stage===1) { const a=fa.accounting||{}; return !!(a.basis&&a.preparer&&a.system); } if (fa.stage===2) return (fa.ent?.list||[]).length>0; return true; }
+    if (isFA) { if (fa.stage===1) { const a=fa.accounting||{}; return !!(a.basis&&a.preparer&&a.system); } if (fa.stage===2) return (fa.ent?.list||[]).length>0; if (fa.stage===3) { const g=fa.goals; return !!(g.trigger&&g.concern&&g.outcome); } return true; }
     if (isRD) { const d = rd.data, g = d.goals2||{}, leverItems = d.leverItems||{}, b = d.baseline||{}, sel = d.selectedOpps||[];
       if (!rdUnlocked) return false;
       if (!b.revTier) return false;
@@ -6719,7 +6719,7 @@ else if (isRD) { if (rd.stage<rdTotal) goRD(rd.stage+1); else goLegacy(1); }
 </div>
   }
   const FA_BODY = [
-  <FA0 fa={fa} setFA={setFA} />, <FA1Registry fa={fa} setFA={setFA} />,
+  <FA0 fa={fa} setFA={setFA} />, <FA1Registry fa={fa} setFA={setFA} />, <FA2 fa={fa} setFA={setFA} />,
   <FADocuments fa={fa} setFA={setFA} />, <FABudget fa={fa} setFA={setFA} />, <FA3 fa={fa} setFA={setFA} />, <FA4 fa={fa} setFA={setFA} />,
   ];
   const RD_BODY = [
