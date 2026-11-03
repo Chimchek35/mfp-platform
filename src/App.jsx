@@ -911,7 +911,7 @@ function FA3({ fa, setFA }) {
   );
 }
 
-// ────────────���───────────────��────────────�������─���──────────────────────────────��──
+// ────────────���───────────────��────────────���������─���──────────────────────────────��──
 // FA STAGE 4 — Peer benchmarking
 // ──────────────���─────────────────���───────────────────────���──────────────────���─
 function FA4({ fa, setFA }) {
@@ -2609,7 +2609,7 @@ function RD1({ rd, setRData, fa, profile }) {
 // them typically draw from farm business vs. wages vs. nonfarm business vs. transfers.
 const INCOME_BENCHMARK = [
   { label:"Residence farm", sub:"Small; operator's main job is off-farm", farm:"5–10%", wages:"55–65%", nonfarm:"10–15%", transfers:"15–25%", tiers:["< $500K"] },
-  { label:"Intermediate farm", sub:"Small; farming is the primary occupation", farm:"15–25%", wages:"45–55%", nonfarm:"10–15%", transfers:"15–20%", tiers:["< $500K","$500K – $2M"] },
+  { label:"Intermediate farm", sub:"Small; farming is the primary occupation", farm:"15��25%", wages:"45–55%", nonfarm:"10–15%", transfers:"15–20%", tiers:["< $500K","$500K – $2M"] },
   { label:"Commercial family farm", sub:"≥ $350K gross cash income", farm:"55–70%", wages:"15–25%", nonfarm:"5–10%", transfers:"10–15%", tiers:["$500K ��� $2M","$2M ��� $5M"] },
   { label:"Large-scale family farm", sub:"≥ $1M gross cash income", farm:"70–85%", wages:"5–15%", nonfarm:"5–10%", transfers:"5–10%", tiers:["$2M – $5M","$5M+"] },
 ];
@@ -3311,7 +3311,7 @@ function EfficiencyValueImpact({ sel, lev }) {
   );
 }
 
-// ══════���════════════════════════════════════���═���═����════��═══════����═════��══════��═══
+// ══════���══════════════════════════════════���═���═���═����════��═══════����═════��══════��═══
 // FARM PROFILE — a single 360° farm view that fills in as the farmer completes
 // onboarding and assessments, and feeds relevant fields back into FA, RD, and Risk
 // so nothing has to be entered twice.
@@ -4548,7 +4548,7 @@ function LEG6({ leg, setLegData, fa }) {
   );
 }
 
-// ── Stage 5 — Successor readiness ──────────��───��───��──────�����──────────────────
+// ── Stage 5 — Successor readiness ──────��───��───��───��──────�����──────────────────
 function LEG7({ leg, setLegData }) {
   const d = leg.data || {};
   const ex = d.exposure || {};
@@ -6730,7 +6730,7 @@ else if (isRD) { if (rd.stage<rdTotal) goRD(rd.stage+1); else goLegacy(1); }
   {stageVisual}
   {false && <div style={{ marginBottom:26, borderRadius:16, overflow:"hidden", border:`1px solid ${T.div}`, background:T.bgAlt }}><img src="/strategic-vision-roadmap.png" alt="Strategic vision roadmap from capabilities and values to a statement, profile, and final document" style={{ display:"block", width:"100%", height:150, objectFit:"cover" }} /><div style={{ display:"flex", justifyContent:"space-between", gap:10, padding:"10px 14px", color:T.fgS, fontSize:11.5 }}><span>Build the next decision-ready layer</span><span style={{ color:T.green, fontWeight:700 }}>Stage {stage} of {total}</span></div></div>}
   <div style={{ maxWidth:900, marginBottom:26, color:T.fgS, fontSize:14, lineHeight:1.6 }}>{moduleSupport}</div>
-  {isVis && stage < 10 && <VisionInlineVisual stageLabel="Core capability → defensible advantage" />}
+  {isVis && stage === 1 && <VisionInlineVisual stageLabel="Core capability → defensible advantage" />}
   {body}
   </section>
   );
