@@ -37,14 +37,14 @@ const FontStyles = () => (
   .mfp-root.mfp-turbotax-flow .mfp-flow-header>div:nth-child(3){gap:8px!important;flex:1;justify-content:center;}
   .mfp-root.mfp-turbotax-flow .mfp-flow-header>div:nth-child(3)>div{padding:10px 16px!important;border-radius:999px!important;}
   .mfp-root.mfp-turbotax-flow .mfp-flow-header>div:nth-child(3)>div:not([style*="rgb"]){background:transparent!important;}
-  .mfp-root.mfp-turbotax-flow .mfp-flow-rail{width:220px!important;background:linear-gradient(180deg,#083d62 0%,#0b5577 48%,#083d62 100%)!important;border-right:1px solid #062f4b;color:#fff!important;}
+  .mfp-root.mfp-turbotax-flow .mfp-flow-rail{width:290px!important;background:linear-gradient(180deg,#083d62 0%,#0b5577 48%,#083d62 100%)!important;border-right:1px solid #062f4b;color:#fff!important;}
   .mfp-root.mfp-turbotax-flow .mfp-flow-rail div,.mfp-root.mfp-turbotax-flow .mfp-flow-rail span{color:#fff!important;}
   .mfp-root.mfp-turbotax-flow .mfp-flow-rail nav>div[style*="background: transparent"]{color:#d9edf4!important;}
   .mfp-root.mfp-turbotax-flow .mfp-flow-rail>div:first-child{padding:34px 24px 22px!important;background:linear-gradient(145deg,#083d62 0%,#0c7390 62%,#20afd2 100%)!important;color:#fff;}
   .mfp-root.mfp-turbotax-flow .mfp-flow-rail nav{padding:14px 12px;}
   .mfp-root.mfp-turbotax-flow .mfp-flow-rail nav>div{border-left:0!important;border-radius:12px;padding:13px 14px!important;margin:4px 0;}
   .mfp-root.mfp-turbotax-flow .mfp-flow-main{background:#fff;}
-  .mfp-root.mfp-turbotax-flow .mfp-flow-main>div:first-child{height:78px!important;padding:0 58px!important;background:#fff!important;}
+  .mfp-root.mfp-turbotax-flow .mfp-flow-main>div:first-child{height:78px!important;padding:0 42px!important;background:#fff!important;}
   .mfp-root.mfp-turbotax-flow .mfp-flow-main>div:nth-child(2){height:6px!important;background:#eef0f4!important;}
   .mfp-root.mfp-turbotax-flow .mfp-flow-main>div:nth-child(2)>div{background:linear-gradient(90deg,#0C4477,#358733)!important;}
   .mfp-root.mfp-turbotax-flow .mfp-stage-card{background:transparent;border:0;border-radius:0;padding:0;box-shadow:none;}
@@ -159,7 +159,7 @@ const Flag = ({ type, children }) => {
 const Head = ({ eyebrow, title, sub, showFinancialVisual = true }) => {
   const isFinancial = eyebrow?.startsWith("Financial Analysis");
   return <div>
-  {isFinancial && showFinancialVisual && <img src="/financial-analysis-dashboard.png" alt="Financial analysis dashboard connecting documents, cash flow, budgets, and benchmarking" style={{ width:"100%", maxHeight:170, objectFit:"cover", borderRadius:16, marginBottom:22 }} />}
+  {isFinancial && showFinancialVisual && <img src="/financial-analysis-dashboard.png" alt="Financial analysis dashboard connecting documents, cash flow, budgets, and benchmarking" style={{ display:"block", width:"100%", height:"auto", maxHeight:"none", objectFit:"contain", borderRadius:16, marginBottom:22 }} />}
   {!isFinancial && <div style={eyebrowStyle}>{eyebrow}</div>}
   <h1 style={h1Style}>{title}</h1>
   <p style={subStyle}>{sub}</p>
@@ -6910,7 +6910,7 @@ else if (isRD) { if (rd.stage<rdTotal) goRD(rd.stage+1); else goLegacy(1); }
           </div>
           <div style={{ height:3, background:T.div, flexShrink:0 }}><div style={{ height:"100%", width:`${pct}%`, background:T.green, transition:"width .4s" }} /></div>
 
-          <div style={{ flex:1, padding:"30px 24px", maxWidth:1180, width:"100%", margin:"0 auto", boxSizing:"border-box" }}>
+          <div style={{ flex:1, padding:"30px 32px", maxWidth:"none", width:"100%", margin:"0 auto", boxSizing:"border-box" }}>
             {isLeg && (
               <div style={{ display:"flex", gap:8, alignItems:"center", borderBottom:`1px solid ${T.border}`, marginBottom:20, flexWrap:"wrap" }}>
                 {[["senior","Senior generation"],["successor","Successor"],["compare","Blind compare"]].map(([k,lab]) => {
