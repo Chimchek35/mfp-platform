@@ -159,9 +159,10 @@ const Flag = ({ type, children }) => {
 const Head = ({ eyebrow, title, sub, showFinancialVisual = true }) => {
   const isFinancial = eyebrow?.startsWith("Financial Analysis");
   const isRevenue = eyebrow?.startsWith("Revenue Diversification");
+  const isVision = eyebrow?.toLowerCase().startsWith("strategic vision");
   return <div>
   {(isFinancial || isRevenue) && showFinancialVisual && <img src="/financial-analysis-dashboard.png" alt="Financial analysis dashboard connecting documents, cash flow, budgets, and benchmarking" style={{ display:"block", width:"100%", height:"auto", aspectRatio:"7 / 1", maxHeight:"none", objectFit:"cover", objectPosition:"center", borderRadius:16, marginBottom:22 }} />}
-  {!isFinancial && <div style={eyebrowStyle}>{eyebrow}</div>}
+  {!isFinancial && !isVision && <div style={eyebrowStyle}>{eyebrow}</div>}
   <h1 style={h1Style}>{title}</h1>
   <p style={subStyle}>{sub}</p>
   </div>;
@@ -5591,7 +5592,7 @@ function VIS1({ vis, setVis, profile, goProfile }) {
   return (
     <div>
       <Head eyebrow="Strategic vision · Stage 1" title="Core Competencies and Competitive Advantage" sub="Start with the reason customers, employees, landlords, or partners choose this operation over another." /><div style={cardStyle({ borderTop:`4px solid ${T.blue}`, marginBottom:18 })}><div style={cardLblStyle()}>Bring existing profile</div><p style={{ color:T.fgM, fontSize:13.5, lineHeight:1.5, marginTop:0 }}>Upload a Maximum Farm Potential JSON export to update the profile fields used across the Strategic Vision categories.</p><input type="file" accept=".json,application/json" onChange={importProfile} /></div>
-      <div style={{ display:"grid", gridTemplateColumns:"minmax(0,1fr) minmax(280px,420px)", gap:24, alignItems:"center", marginBottom:24, padding:"22px 0", borderBottom:`1px solid ${T.div}` }}><div><div style={cardLblStyle()}>The capability behind the farm</div><p style={{ fontSize:15, color:T.fgM, lineHeight:1.55, margin:0, maxWidth:560 }}>What can this operation do exceptionally well—and what would be difficult for another farm to copy?</p></div><img src="/vision-competitive-advantage.png" alt="Infographic connecting farm enterprises, family ownership, cash flow, customers, and long-term growth" style={{ width:"100%", height:180, objectFit:"cover", borderRadius:16 }} /></div>
+      <div style={{ marginBottom:24, padding:"22px 0", borderBottom:`1px solid ${T.div}` }}><div style={cardLblStyle()}>The capability behind the farm</div><p style={{ fontSize:15, color:T.fgM, lineHeight:1.55, margin:0, maxWidth:560 }}>What can this operation do exceptionally well—and what would be difficult for another farm to copy?</p></div>
       {!hasProfile && (<>
         <Flag type="warn">Your Farm Profile does not have competitive advantage, core values, or objectives filled in yet. You can add items here directly, or fill the profile first.
           {goProfile && <div style={{ marginTop:9 }}><button onClick={goProfile} style={{ ...btnStyle("outline"), fontSize:12, padding:"6px 13px" }}>Open Farm Profile</button></div>}
@@ -6725,6 +6726,7 @@ else if (isRD) { if (rd.stage<rdTotal) goRD(rd.stage+1); else goLegacy(1); }
   const stageCard = (
   <section className="mfp-stage-card" aria-label={`${moduleName} question ${stage} of ${total}`}>
   {!isVis && stageVisual}
+  {isVis && <div style={eyebrowStyle}>Strategic Vision · Stage {stage}</div>}
   {false && <div style={{ marginBottom:26, borderRadius:16, overflow:"hidden", border:`1px solid ${T.div}`, background:T.bgAlt }}><img src="/strategic-vision-roadmap.png" alt="Strategic vision roadmap from capabilities and values to a statement, profile, and final document" style={{ display:"block", width:"100%", height:150, objectFit:"cover" }} /><div style={{ display:"flex", justifyContent:"space-between", gap:10, padding:"10px 14px", color:T.fgS, fontSize:11.5 }}><span>Build the next decision-ready layer</span><span style={{ color:T.green, fontWeight:700 }}>Stage {stage} of {total}</span></div></div>}
   <div style={{ maxWidth:900, marginBottom:26, color:T.fgS, fontSize:14, lineHeight:1.6 }}>{moduleSupport}</div>
   {isVis && <VisionInlineVisual stageLabel="Core capability → defensible advantage" />}
