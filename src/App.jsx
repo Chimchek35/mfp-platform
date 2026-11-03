@@ -164,7 +164,7 @@ const Head = ({ eyebrow, title, sub }) => (
   </div>
 );
 
-// ─���──────────────�����────────────────────────────────────�������������������������──�����────────────────────
+// ─�����──────────────�����────────────────────────────────────�������������������������──�����────────────────────
 // DATA
 // ───────────��────────────────��─��──────────────────────────────────────��─��─��─��─
 const FA_STAGES = [
@@ -2361,7 +2361,7 @@ function LivestockInsuranceCalculator({ risk, setRisk }) {
   );
 }
 
-// ───��������─�����─────���────���──────────���──���───────────────────────────────────────���──────
+// ───��������─�����──���──���────���──────────���──���───────────────────────────────────────���──────
 // RD helpers
 // ─────────────────────────────────────────────────────────────────────────────
 // Each lever category is now built from specific, measurable items rather than one
@@ -2554,28 +2554,32 @@ const scoredOpps = (rd, faEnterprises, faS3vals) => { const d=rd.data||{}; const
 // ────────────────────────�������──���─���─���───���─���────────────────���───────������──���������──���────
 function RD1({ rd, setRData, fa, profile }) {
   const d = rd.data; const b = d.baseline || {};
-  const profileFarmType = profile?.farmType || "";
+  const profileFarmTypes = [...new Set((Array.isArray(profile?.farmTypes) ? profile.farmTypes : String(profile?.productionMix||"").split(/,|;|\n/).map(v=>v.trim()).filter(Boolean)))];
+  const profileFarmType = profileFarmTypes[0] || profile?.farmType || "";
   const profileRevenueTier = profile?.revTier || "";
   const profileBusinessStage = profile?.bizStage || profile?.businessStage || "";
   const financialRevenue = Number(fa?.s3vals?.grossRevenue || fa?.s3vals?.grossFarmRevenue || 0);
   const financialRevenueTier = financialRevenue >= 5000000 ? "$5M+" : financialRevenue >= 2000000 ? "$2M – $5M" : financialRevenue >= 500000 ? "$500K – $2M" : financialRevenue > 0 ? "< $500K" : "";
   const profileSwot = [profile?.swotStrengths && `Strengths: ${profile.swotStrengths}`, profile?.swotWeaknesses && `Weaknesses: ${profile.swotWeaknesses}`, profile?.swotOpportunities && `Opportunities: ${profile.swotOpportunities}`, profile?.swotThreats && `Threats: ${profile.swotThreats}`].filter(Boolean).join("\n");
-  useEffect(() => { const patch={}; if(profileFarmType || fa?.enterprises?.length) patch.farmType=profileFarmType || ({ grain:"Row crop (grain)", dairy:"Dairy", beef:"Beef cattle", hogs:"Hogs", broilers:"Broilers", layers:"Layers", mixed:"Mixed" }[fa.enterprises[0]] || ""); if(profileRevenueTier || financialRevenueTier) patch.revTier=profileRevenueTier || financialRevenueTier; if(profileBusinessStage) patch.bizStage=profileBusinessStage; if(profileSwot) patch.swot=profileSwot; const score=faScoreOf(fa); if(Number.isFinite(score)) patch.mfpScore=score; if(Object.keys(patch).length) setRData(s=>({ ...s, data:{ ...(s.data||{}), baseline:{ ...(s.data?.baseline||{}), ...patch } } })); }, [profileFarmType, profileRevenueTier, profileBusinessStage, profileSwot, financialRevenueTier, fa]);
+  useEffect(() => { const patch={}; if(profileFarmTypes.length || fa?.enterprises?.length) { patch.farmTypes=profileFarmTypes.length ? profileFarmTypes : [({ grain:"Row crop (grain)", dairy:"Dairy", beef:"Beef cattle", hogs:"Hogs", broilers:"Broilers", layers:"Layers", mixed:"Mixed" }[fa.enterprises[0]] || "")].filter(Boolean); patch.farmType=patch.farmTypes[0] || ""; } if(financialRevenueTier) patch.revTier=financialRevenueTier; if(profileBusinessStage) patch.bizStage=profileBusinessStage; if(profileSwot) patch.swot=profileSwot; const score=faScoreOf(fa); if(Number.isFinite(score)) patch.mfpScore=score; if(Object.keys(patch).length) setRData(s=>({ ...s, data:{ ...(s.data||{}), baseline:{ ...(s.data?.baseline||{}), ...patch } } })); }, [profileFarmTypes.join("|"), profileFarmType, profileRevenueTier, profileBusinessStage, profileSwot, financialRevenueTier, fa]);
   const set = (f,v) => setRData(s => ({ ...s, baseline:{ ...(s.baseline||{}), [f]:v } }));
+  const inheritedTypes = Array.isArray(profile?.farmTypes) ? profile.farmTypes : String(profile?.productionMix||"").split(/,|;|\n/).map(v=>v.trim()).filter(Boolean);
+  const farmTypes = [...new Set((b.farmTypes||((b.farmType||"")?[b.farmType]:[])).concat(inheritedTypes))];
+  const toggleFarmType = (type) => set("farmTypes", farmTypes.includes(type) ? farmTypes.filter(v=>v!==type) : [...farmTypes,type]);
   const faEnt = (fa.enterprises||[])[0] || ""; const faEnt2 = { grain:"Row crop (grain)", dairy:"Dairy", beef:"Beef cattle" }[faEnt] || "";
   const sc = faScoreOf(fa); const mfp = parseFloat(b.mfpScore) || sc; const rf = mfp>=3.5?"ready":mfp>=2.5?"caution":"foundation"; const rl = { ready:"Ready to diversify", caution:"Diversify with caution", foundation:"Foundation first" }[rf];
   const FARM=["Row crop (grain)","Dairy","Beef cattle","Hogs","Broilers","Layers","Mixed"], TIERS=["< $500K","$500K – $2M","$2M – $5M","$5M+"], STAGES=["Establishment (0–3 yrs)","Growth (3–7 yrs)","Consolidation (7–15 yrs)","Transition (15+ yrs / succession)"];
   const SelField = ({ label, k, opts, val }) => (<div><label style={labelStyle}>{label}</label><select style={inputStyle()} value={val} onChange={e=>set(k,e.target.value)}><option value="">Select</option>{opts.map(t=><option key={t} value={t}>{t}</option>)}</select></div>);
   return (
     <div>
-      <Head eyebrow="Revenue Diversification · Stage 1" title="Baseline & readiness" sub="Your farm profile from the Financial Analysis module carries over automatically. Review and confirm below." />
+      <Head eyebrow="Revenue Diversification · Stage 1" title="Baseline & readiness" sub="Strategic Vision and Financial Analysis carry forward the farm types, financial tier, health score, and SWOT signals that shape this flow." />
       <FinancialHealthStrip fa={fa} />
       {faEnt && (<div style={{ background:T.waterL, color:"#0A6E8C", borderRadius:8, padding:"11px 14px", fontSize:12.5, display:"flex", alignItems:"flex-start", gap:9, marginBottom:16, lineHeight:1.5 }}><Fic type="link" /><span>Financial Analysis carried over — enterprise <b>{faEnt2||faEnt}</b> · financial-health score <b>{sc.toFixed(1)}/5</b> · readiness <b>{rl}</b></span></div>)}
       <div style={cardStyle()}>
         <div style={cardLblStyle()}>Farm profile — confirm or update</div>
         <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:14 }}>
-          <SelField label="Farm type" k="farmType" opts={FARM} val={b.farmType||faEnt2||""} />
-          <SelField label="Revenue tier" k="revTier" opts={TIERS} val={b.revTier||""} />
+  <div><label style={labelStyle}>Farm types</label><div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8 }}>{FARM.map(type=><label key={type} style={{ display:"flex", alignItems:"center", gap:8, padding:"9px 10px", border:`1px solid ${farmTypes.includes(type)?T.blue:T.border}`, borderRadius:8, background:farmTypes.includes(type)?T.blueL:"#fff", cursor:"pointer", fontSize:12.5 }}><input type="checkbox" checked={farmTypes.includes(type)} onChange={()=>toggleFarmType(type)} />{type}</label>)}</div></div>
+  <div><label style={labelStyle}>Revenue tier</label><div style={{ padding:"11px 12px", border:`1px solid ${T.border}`, borderRadius:8, background:T.bgAlt, color:T.fgM, fontSize:13 }}>{b.revTier||"Calculated after Financial Analysis"}</div></div>
           <SelField label="Business stage" k="bizStage" opts={STAGES} val={b.bizStage||""} />
                 </div>
       </div>
@@ -2671,7 +2675,7 @@ function RD2({ rd, setRData }) {
 
 // ──────────────���──────────────────────────────────────────────────────────────
 // RD STAGE 3 — Human capital, assets & financial capital
-// ─────────────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────���───────────
 function RD3({ rd, setRData }) {
   const items = rd.data.leverItems || {};
   const setItem = (id,v) => setRData(s => ({ ...s, leverItems:{ ...(s.leverItems||{}), [id]:v } }));
@@ -3274,7 +3278,7 @@ function EfficiencyValueImpact({ sel, lev }) {
   const leverCount = [usesAsset,usesTrust,usesRisk].filter(Boolean).length;
   const calendarFit = avgSeasonal<=2 ? { label:"Complements your calendar", tone:"ok", text:"These paths largely run outside your peak planting/harvest window — labor and equipment conflicts should be minimal." }
     : avgSeasonal>=4 ? { label:"Competes with fieldwork", tone:"warn", text:"These paths draw on the same labor and equipment windows as your core operation — plan capacity carefully before committing." }
-    : { label:"Partial overlap", tone:"info", text:"Some seasonal overlap with core fieldwork exists — confirm labor and equipment availability during peak weeks." };
+    : { label:"Partial overlap", tone:"info", text:"Some seasonal overlap with core fieldwork exists �� confirm labor and equipment availability during peak weeks." };
   const correlationNote = usesRisk
     ? "At least one selected path is intentionally counter-cyclical to commodity prices — this reduces whole-farm income correlation and should smooth cash flow across a full price cycle."
     : "Your selected paths lean toward asset or trust monetization rather than counter-cyclical income — they add revenue but may not reduce your exposure to a commodity price downturn.";
@@ -6589,11 +6593,13 @@ export default function App() {
   const legPct = Math.round(Math.min(leg.stage,legTotal)/legTotal*100);
   const visPct = Math.round(Math.min(vis.stage,visTotal)/visTotal*100);
   const pct = isFA ? faPct : isRD ? rdPct : isLeg ? legPct : isVis ? visPct : riskPct;
+  const rdUnlocked = vis.stage >= visTotal && fa.stage >= faTotal;
 
   const canAdvance = useMemo(() => {
     if (isFA) { if (fa.stage===1) { const a=fa.accounting||{}; return !!(a.basis&&a.preparer&&a.system); } if (fa.stage===2) return (fa.ent?.list||[]).length>0; if (fa.stage===3) { const g=fa.goals; return !!(g.trigger&&g.concern&&g.outcome); } return true; }
     if (isRD) { const d = rd.data, g = d.goals2||{}, leverItems = d.leverItems||{}, b = d.baseline||{}, sel = d.selectedOpps||[];
-      if (rd.stage===1) return !!(b.farmType&&b.revTier); if (rd.stage===2) return !!(g.trigger&&g.horizon&&g.capitalAppetite&&g.timeAppetite); if (rd.stage===3) return Object.keys(leverItems).length>0; if (rd.stage===4) return sel.length>0; return true; }
+      if (!rdUnlocked) return false;
+      if (rd.stage===1) return !!((b.farmTypes||[]).length&&b.revTier); if (rd.stage===2) return !!(g.trigger&&g.horizon&&g.capitalAppetite&&g.timeAppetite); if (rd.stage===3) return Object.keys(leverItems).length>0; if (rd.stage===4) return sel.length>0; return true; }
     return true;
   }, [isFA, isRD, fa, rd]);
 
@@ -6700,7 +6706,7 @@ else if (isRD) { if (rd.stage<rdTotal) goRD(rd.stage+1); else goLegacy(1); }
   ];
   const body = riskConvoActive
     ? <ConversationalRisk risk={risk} setRisk={setRisk} profile={profile} onExit={(stage)=>{ setRiskConvo(false); setRisk(s=>({ ...s, stage: stage || 5 })); }} />
-    : isFA ? FA_BODY[stage-1] : isRD ? RD_BODY[stage-1] : isLeg ? <div>{legBodyForRole}</div> : isVis ? VIS_BODY[stage-1] : RISK_BODY[stage-1];
+    : isFA ? FA_BODY[stage-1] : isRD ? (rdUnlocked ? RD_BODY[stage-1] : <div style={cardStyle({ borderTop:`4px solid ${T.blue}` })}><div style={cardLblStyle()}>Complete the foundation modules first</div><p style={{ color:T.fgM, lineHeight:1.6, marginTop:0 }}>Revenue Diversification uses your Strategic Vision and Financial Analysis results. Complete both modules before starting this flow so multiple farm types, revenue tier, financial health, and SWOT signals are grounded in your farm&apos;s work.</p><div style={{ display:"flex", gap:10, flexWrap:"wrap" }}><button type="button" onClick={()=>setModule("vision")} style={btnStyle("outline")}>Go to Strategic Vision</button><button type="button" onClick={()=>setModule("fa")} style={btnStyle("primary")}>Go to Financial Analysis</button></div></div>) : isLeg ? <div>{legBodyForRole}</div> : isVis ? VIS_BODY[stage-1] : RISK_BODY[stage-1];
   const moduleName = isVis ? "Strategic Vision" : isFA ? "Financial Analysis" : isLeg ? "Legacy" : isRD ? "Revenue Diversification" : "Farm Risk";
   const moduleSupport = isVis
     ? "Start with what you want this farm to make possible. We will work from your reality, not a textbook answer."
@@ -6786,7 +6792,7 @@ else if (isRD) { if (rd.stage<rdTotal) goRD(rd.stage+1); else goLegacy(1); }
               </div>
             </div>
           </div>
-          <div onClick={()=>setModule("rd")} style={rdTabStyle}>
+          <div title={rdUnlocked?"Start Revenue Diversification":"Complete Strategic Vision and Financial Analysis first"} onClick={()=>rdUnlocked&&setModule("rd")} style={{ ...rdTabStyle, opacity:rdUnlocked?1:0.5, cursor:rdUnlocked?"pointer":"not-allowed" }}>
             <IconSprout />
             <div>
               <div style={isRD?lblOn:lblOff}>Revenue Diversification</div>
