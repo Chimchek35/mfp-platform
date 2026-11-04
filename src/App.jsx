@@ -524,7 +524,7 @@ const REV_RAMP = { energy:[0,0,0,0,0,0,0,0,0,0,0,0], specialty:[0,0,0,0,0,0,0,2,
 
 // ─────────────────────────────────��───────────────────────────────────────────
 // FA STAGE 1 — Enterprise dashboard
-// ──────────────────────────────────────────────────�����������──────────────────────────
+// ──────────────────────────────────────────────────�������������──────────────────────────
 function FA1({ fa, setFA }) {
   const active = fa.enterprises;
   const toggle = (k) => setFA(s => ({ ...s, enterprises: s.enterprises.includes(k) ? s.enterprises.filter(x=>x!==k) : [...s.enterprises, k] }));
@@ -2892,7 +2892,7 @@ function RD3({ rd, setRData }) {
   );
 }
 
-// ───────────────────────────────────���─────���───���────���───────�����������───���────────────
+// ───────────────────────────────────���─────���───���────���─────���─�����������───���────────────
 // RD STAGE 4 — Opportunity mapping
 // ────���──────────���──���─────────────────────────��──�����─────────────────────────────
 const GROWTH_TIER_LABEL = { 1:"Tier 1 · Fastest structural growth", 2:"Tier 2 · Strong growth", 3:"Tier 3 · Steady & selective" };
@@ -4456,7 +4456,7 @@ function LEG2({ leg, setLegData }) {
   return <div><Head eyebrow="Legacy · Stage 3" title="The successor question" sub="There may be a clear successor, several possibilities, or no successor at all. Naming the reality is the useful first step." /><div style={cardStyle()}><div style={cardLblStyle()}>The successor question</div>{legRow("Is there an identified successor?", <select style={inputStyle()} value={v("successorStatus")} onChange={set("successorStatus")}><option value="">Select</option><option value="working">Yes, and they are already working in the business</option><option value="identified">Yes, identified but not yet involved day to day</option><option value="maybe">Maybe, more than one candidate or nobody has said it out loud</option><option value="none">No, there is no successor</option></select>)}{d.successorStatus === "none" && <><Flag type="info">No successor is a legitimate path, not a failure. It deserves the same rigour as a family transition.</Flag>{legRow("Which direction makes most sense to explore?", <select style={inputStyle()} value={v("noSuccessorPath")} onChange={set("noSuccessorPath")}><option value="">Select</option><option value="sale">Orderly sale of the operation</option><option value="lease">Lease the ground to a neighbouring operation</option><option value="employee">Transition to a non-family employee</option><option value="winddown">Planned wind-down over a set number of years</option><option value="unsure">Genuinely unsure, that is the question</option></select>)}</>}{d.successorStatus === "maybe" && <Flag type="warn">More than one candidate, or nobody having said it out loud, is a common starting point. Naming it is the work of the next few stages.</Flag>}</div></div>;
 }
 
-// ── Stage 3 — What exists on paper ───────────────────�������─────����──────────────
+// ── Stage 3 — What exists on paper ───────────────��───�������─────����──────────────
 function LEG3({ leg, setLegData }) {
   const d = leg.data || {};
   const v = (k) => d[k] || "";
@@ -5780,44 +5780,67 @@ const visStats = (vis) => {
 // ── Vision 1 — What you have already said ────────────────────────────────�������───
 // ── Vision intro — why this matters, and the vocabulary the module uses ──────
 function VIS_INTRO() {
-  const kinds = [
-    { h:"Competitive advantage", d:"Something your operation does that a well-run neighbour could not easily match, and that would still be true if you stepped back.", e:"The only certified organic storage within 60 miles. A 20-year direct contract with a local creamery.", bd:T.moss, bg:T.greenL, fg:T.dgreen },
-    { h:"Core competency", d:"Something you genuinely do well, that keeps you competitive, and that a good operator nearby could also do.", e:"Timely planting and harvest. Well-maintained equipment. Hard work and long hours.", bd:T.blue, bg:T.blueL, fg:T.blue },
-    { h:"Personal strength", d:"A real strength that currently lives in one person rather than in the business.", e:"Landlord relationships built over decades by one family member.", bd:T.amber, bg:T.amberL, fg:T.amberT },
+  const terms = [
+    { h:"Competitive advantage", dot:T.moss, d:"Something your operation does that a well-run neighbour could not easily match, and that would still be true if you stepped back for a year.", e:"The only certified organic storage within 60 miles. A 20-year direct contract with the local creamery." },
+    { h:"Core competency", dot:T.blue, d:"Something you genuinely do well and that keeps you in the game, but that a good operator down the road could also do if they put their mind to it.", e:"Planting and harvesting on time. Equipment that starts when it should. Long days." },
+    { h:"Personal strength", dot:T.amber, d:"A real strength that lives in one person rather than in the business. Valuable, but it leaves when they do.", e:"Landlord relationships one family member has built over thirty years." },
   ];
+  const prose = { fontSize:15, color:T.fg, lineHeight:1.7, margin:"0 0 14px", maxWidth:620 };
+  const rule = { borderTop:`1px solid ${T.border}`, margin:"30px 0 22px" };
+  const kicker = { fontSize:12, fontWeight:600, color:T.navy, margin:"0 0 14px" };
+  const cell = { padding:"14px 16px", fontSize:13.5, lineHeight:1.5 };
+  const result = (dot, label) => <span style={{ display:"inline-flex", alignItems:"center", gap:8, fontWeight:600, color:T.navy }}><span aria-hidden="true" style={{ width:8, height:8, borderRadius:"50%", background:dot, flexShrink:0 }} />{label}</span>;
   return (
     <div>
-      <Head eyebrow="Strategic vision · Before you start" title="Why strategic vision matters" sub="A farm makes hundreds of decisions a year: which ground to rent, what to buy, who to hire, what to say no to. A strategic vision is the test those decisions get held against." />
-      <div style={cardStyle({ borderTop:`4px solid ${T.navy}` })}>
-        <div style={cardLblStyle()}>What it does for the operation</div>
-        <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))", gap:14 }}>
-          {[["Faster, steadier decisions","When the direction is written down, each new opportunity is compared against it instead of being argued from scratch."],
-            ["Something others can hold","A spouse, successor, employee or lender can apply it without you in the room. That is what makes it the business's vision, not just yours."],
-            ["Effort in the right place","Knowing which strengths actually set you apart tells you where to invest, and which ones only need to be kept up."]].map(([h,b],k)=>(
-            <div key={k}><div style={{ fontSize:14, fontWeight:600, color:T.navy, marginBottom:4 }}>{h}</div><div style={{ fontSize:13, color:T.fgM, lineHeight:1.6 }}>{b}</div></div>
-          ))}
-        </div>
+      <Head eyebrow="Strategic vision · Before you start" title="Why strategic vision matters" sub="" />
+
+      <p style={{ ...prose, fontSize:18, lineHeight:1.6, color:T.navy }}>Every year a farm says yes or no to a few hundred things. Which ground to rent. Which machine to replace. Who to hire, and which neighbour&apos;s offer to turn down.</p>
+      <p style={prose}>Most of those calls get made on the day, by whoever is standing there. A strategic vision is simply the answer to &ldquo;what are we trying to be?&rdquo; written down clearly enough that the next decision can be checked against it, by you, by a successor, or by a lender reading it cold.</p>
+      <p style={{ ...prose, color:T.fgM }}>It starts with an honest look at what the operation is actually good at. That is where two terms come in, and they are easy to mix up.</p>
+
+      <div style={rule} />
+      <div style={kicker}>Three words this module uses</div>
+      <dl style={{ margin:0 }}>
+        {terms.map((t, i) => (
+          <div key={t.h} style={{ display:"flex", flexWrap:"wrap", gap:"6px 28px", padding:"16px 0", borderTop: i ? `1px solid ${T.div}` : "none" }}>
+            <dt style={{ flex:"0 0 200px", display:"flex", alignItems:"baseline", gap:9, fontSize:15, fontWeight:600, color:T.navy }}>
+              <span aria-hidden="true" style={{ width:8, height:8, borderRadius:"50%", background:t.dot, flexShrink:0, transform:"translateY(-1px)" }} />{t.h}
+            </dt>
+            <dd style={{ flex:"1 1 320px", margin:0 }}>
+              <div style={{ fontSize:14.5, color:T.fg, lineHeight:1.65 }}>{t.d}</div>
+              <div style={{ fontSize:13.5, color:T.fgM, lineHeight:1.6, marginTop:6, fontStyle:"italic" }}>{t.e}</div>
+            </dd>
+          </div>
+        ))}
+      </dl>
+
+      <div style={rule} />
+      <div style={kicker}>How you tell them apart</div>
+      <p style={{ ...prose, color:T.fgM }}>Each strength you name gets two questions. The answers place it on this grid.</p>
+      <div style={{ overflowX:"auto" }}>
+        <table style={{ width:"100%", minWidth:460, borderCollapse:"collapse", border:`1px solid ${T.border}`, borderRadius:8, overflow:"hidden", maxWidth:680 }}>
+          <thead>
+            <tr style={{ background:T.bgAlt }}>
+              <th scope="col" style={{ ...cell, textAlign:"left", fontWeight:500, color:T.fgM, width:"34%" }}><span style={{ position:"absolute", width:1, height:1, overflow:"hidden", clip:"rect(0 0 0 0)", whiteSpace:"nowrap" }}>Would it hold if you stepped back?</span></th>
+              <th scope="col" style={{ ...cell, textAlign:"left", fontWeight:600, color:T.navy, borderLeft:`1px solid ${T.border}` }}>A good neighbour <em>could not</em> match it</th>
+              <th scope="col" style={{ ...cell, textAlign:"left", fontWeight:600, color:T.navy, borderLeft:`1px solid ${T.border}` }}>A good neighbour <em>could</em> match it</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style={{ borderTop:`1px solid ${T.border}` }}>
+              <th scope="row" style={{ ...cell, textAlign:"left", fontWeight:600, color:T.navy, background:T.bgAlt }}>Still true if you stepped back a year</th>
+              <td style={{ ...cell, borderLeft:`1px solid ${T.border}` }}>{result(T.moss, "Competitive advantage")}</td>
+              <td style={{ ...cell, borderLeft:`1px solid ${T.border}` }}>{result(T.blue, "Core competency")}</td>
+            </tr>
+            <tr style={{ borderTop:`1px solid ${T.border}` }}>
+              <th scope="row" style={{ ...cell, textAlign:"left", fontWeight:600, color:T.navy, background:T.bgAlt }}>Would fade without you</th>
+              <td colSpan={2} style={{ ...cell, borderLeft:`1px solid ${T.border}` }}>{result(T.amber, "Personal strength")}<span style={{ color:T.fgM, marginLeft:10 }}>until it is handed on or written into the business</span></td>
+            </tr>
+          </tbody>
+        </table>
       </div>
-      <div style={cardStyle()}>
-        <div style={cardLblStyle()}>Three kinds of strength</div>
-        <p style={{ fontSize:14, color:T.fgM, marginTop:0, marginBottom:14, lineHeight:1.6 }}>The module sorts what your operation is good at into three kinds. All three are worth having. Each one leads to a different next step.</p>
-        <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(230px,1fr))", gap:12 }}>
-          {kinds.map(k => (
-            <div key={k.h} style={{ borderTop:`3px solid ${k.bd}`, background:k.bg, borderRadius:"0 0 8px 8px", padding:"13px 15px" }}>
-              <div style={{ fontSize:14, fontWeight:600, color:k.fg, marginBottom:5 }}>{k.h}</div>
-              <div style={{ fontSize:13, color:T.fg, lineHeight:1.55, marginBottom:8 }}>{k.d}</div>
-              <div style={{ fontSize:12.5, color:T.fgM, lineHeight:1.5 }}><span style={{ fontWeight:600 }}>For example: </span>{k.e}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-      <div style={cardStyle()}>
-        <div style={cardLblStyle()}>How each one gets sorted</div>
-        <p style={{ fontSize:14, color:T.fgM, margin:"0 0 10px", lineHeight:1.6 }}>Two plain questions for every strength you name:</p>
-        <div style={{ fontSize:14, color:T.fg, lineHeight:1.6, marginBottom:6 }}><span style={{ fontWeight:600 }}>1.</span> If a well-run operation nearby set out to do this as well as you do, could they?</div>
-        <div style={{ fontSize:14, color:T.fg, lineHeight:1.6, marginBottom:14 }}><span style={{ fontWeight:600 }}>2.</span> If you stepped back, would this still be true a year later?</div>
-        <Flag type="info">Most operations finish with more core competencies than competitive advantages. That is the normal result, not a bad one. A competency is usually where an advantage gets built from.</Flag>
-      </div>
+
+      <p style={{ ...prose, color:T.fgM, marginTop:22 }}>Expect most of your list to land in the middle column. That is normal. Real advantages are rare by definition, and they are usually built out of a competency someone kept pushing on.</p>
     </div>
   );
 }
@@ -6119,7 +6142,7 @@ function VIS4({ vis, setVis }) {
   );
 }
 
-// ─��� Vision 5 — Who holds this ──────��─���────────────��────────────���─────────────
+// ─��� Vision 5 — Who holds this ��─────��─���────────────��────────────���─────────────
 function VIS5({ vis, setVis, goLegacy }) {
   const h = vis.holders || {};
   const setH = (id,val) => setVis({ holders:{ ...h, [id]:val } });
