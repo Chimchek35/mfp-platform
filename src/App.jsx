@@ -524,7 +524,7 @@ const REV_RAMP = { energy:[0,0,0,0,0,0,0,0,0,0,0,0], specialty:[0,0,0,0,0,0,0,2,
 
 // ─────────────────────────────────��───────────────────────────────────────────
 // FA STAGE 1 — Enterprise dashboard
-// ──────────────────────────────────────────────────�������������������──────────────────────────
+// ──────────────────────────────────────────────────�����������������������──────────────────────────
 function FA1({ fa, setFA }) {
   const active = fa.enterprises;
   const toggle = (k) => setFA(s => ({ ...s, enterprises: s.enterprises.includes(k) ? s.enterprises.filter(x=>x!==k) : [...s.enterprises, k] }));
@@ -2640,7 +2640,7 @@ const scoredOpps = (rd, faEnterprises, faS3vals) => { const d=rd.data||{}; const
 
     return { ...o, leverMatch:Math.round(Math.min(100,leverMatch)), capOk, timeOk, sizeMatch, entMatch, isRelevant, isExcluded, skillMatch, faAdj, score:leverMatch*(capOk?1:0.3)*(timeOk?1:0.7)*(entMatch?1:0.1)*faAdj }; }).sort((a,b)=>b.score-a.score); };
 
-// ��������──��������───────────────────────────────────────────────────────────────────
+// ��������──��������──────────────────────────────────────────────────────────────────���
 // RD STAGE 1 — Baseline & readiness
 // ────────────────────────�������──���─���─�������───���─���────────────────���──��────������──���������──���────
 function RD1({ rd, setRData, fa, profile }) {
@@ -2766,7 +2766,7 @@ function RD2({ rd, setRData }) {
 
 // ──────────────���──────────────────────────────────────────────────────────────
 // RD STAGE 3 — Human capital, assets & financial capital
-// ──────────────────────────────────────────────────────────────������─���───────────
+// ─���─���──────────────────────────────────────────────────────────������─���───────────
 function CrewSkillsCard({ rd, setRData }) {
   const crew = rd.data.crewSkills || [];
   const toggleSkill = (id) => setRData(s => { const cur = s.crewSkills || []; return { ...s, crewSkills: cur.includes(id) ? cur.filter(x => x !== id) : [...cur, id] }; });
@@ -2892,7 +2892,7 @@ function RD3({ rd, setRData }) {
   );
 }
 
-// ───────────────────────────────────���─────���───���────�����─���─���─���─�����������───���────────────
+// ───────────────────────────────────���─────���───�����───������─���─���─���─�����������───���────────────
 // RD STAGE 4 — Opportunity mapping
 // ────���──────────���──���─────────────────────────��──�����─────────────────────────────
 const GROWTH_TIER_LABEL = { 1:"Tier 1 · Fastest structural growth", 2:"Tier 2 · Strong growth", 3:"Tier 3 · Steady & selective" };
@@ -3984,7 +3984,7 @@ function FarmProfilePage({ profile, setProfile, fa, rd, goFA, goRD, goRisk, goLe
 
 // ══════════════════════���══════════════════════════════════════════════════════
 // LEGACY — Transition readiness
-// ═══════════════════════════════════════════════════���═════════════════════════
+// ════════���════���═════════════════════════════════════���═════════════════════════
 // Deliberately does NOT open with assets. Operational transition is about who runs
 // the business; succession is about who owns it. This module tests the operating
 // question so the ownership question can be answered honestly, and hands off to
@@ -4978,7 +4978,7 @@ function LEG11({ leg, setLegData }) {
 }
 
 
-// ── Stage 12 — Parcels and land valuation ─────���────────���─────────────────────
+// ── Stage 12 — Parcels and land valuation ─────���────────����─────────────────────
 function LEG12({ leg, setLegData, profile }) {
   const d = leg.data || {};
   const parcels = d.parcels || [];
@@ -5800,9 +5800,15 @@ function VIS_INTRO() {
     <div>
       <Head eyebrow="Strategic vision · Before you start" title="Why strategic vision matters" sub="" />
 
-      <div style={{ display:"flex", flexWrap:"wrap", alignItems:"flex-start", gap:"20px 48px" }}>
-        <p style={{ flex:"1 1 340px", margin:0, fontSize:19, lineHeight:1.5, fontWeight:600, color:T.navy, letterSpacing:"-0.01em", textWrap:"pretty" }}>Every year a farm says yes or no to a few hundred things. Which ground to rent. Which machine to replace. Who to hire, and which neighbor&apos;s offer to turn down.</p>
-        <div style={{ flex:"1 1 340px", display:"flex", flexDirection:"column", gap:14, paddingLeft:20, borderLeft:`2px solid ${T.div}` }}>
+      <div style={{ display:"flex", flexWrap:"wrap", alignItems:"stretch", gap:"24px 40px" }}>
+        <div style={{ flex:"1 1 340px", display:"flex", flexDirection:"column", gap:20 }}>
+          <p style={{ margin:0, fontSize:19, lineHeight:1.5, fontWeight:600, color:T.navy, letterSpacing:"-0.01em", textWrap:"pretty" }}>Every year a farm says yes or no to a few hundred things. Which ground to rent. Which machine to replace. Who to hire, and which neighbor&apos;s offer to turn down.</p>
+          <figure style={{ margin:0, display:"flex", flexDirection:"column", gap:6, padding:"16px 20px", background:T.bg, border:`1px solid ${T.border}`, borderRadius:10 }}>
+            <figcaption style={{ fontSize:11, fontWeight:700, letterSpacing:"0.14em", textTransform:"uppercase", color:T.fgM }}>The one question a vision answers</figcaption>
+            <blockquote style={{ margin:0, fontSize:22, lineHeight:1.3, fontWeight:700, color:T.navy, letterSpacing:"-0.015em" }}>&ldquo;What are we trying to be?&rdquo;</blockquote>
+          </figure>
+        </div>
+        <div style={{ flex:"1 1 340px", display:"flex", flexDirection:"column", justifyContent:"center", gap:14, paddingLeft:24, borderLeft:`2px solid ${T.div}` }}>
           <p style={{ ...prose, margin:0, fontSize:15, lineHeight:1.65, textWrap:"pretty" }}>Most of those calls get made on the day, by whoever is standing there. A strategic vision is simply the answer to <strong style={{ color:T.navy, fontWeight:600 }}>&ldquo;what are we trying to be?&rdquo;</strong> written down clearly enough that the next decision can be checked against it, by you, by a successor, or by a lender reading it cold.</p>
           <p style={{ ...prose, margin:0, fontSize:15, lineHeight:1.65, color:T.fgM, textWrap:"pretty" }}>It starts with an honest look at what the operation is actually good at. That is where two terms come in, and they are easy to mix up.</p>
         </div>
@@ -5826,33 +5832,62 @@ function VIS_INTRO() {
       </dl>
 
       {sectionHead(2, "How you tell them apart")}
-      <p style={{ ...prose, color:T.fgM, marginBottom:16, maxWidth:620 }}>Each strength you name gets two questions. The answers place it on this grid.</p>
-      <div style={{ overflowX:"auto" }}>
-        <table style={{ width:"100%", minWidth:520, maxWidth:1040, borderCollapse:"separate", borderSpacing:6, margin:"0 -6px" }}>
+      <p style={{ ...prose, color:T.fgM, marginBottom:20, maxWidth:620 }}>Each strength you name gets two questions. The answers place it on this grid.</p>
+      <div style={{ overflowX:"auto", border:`1px solid ${T.border}`, borderRadius:12, background:T.bg }}>
+        <table style={{ width:"100%", minWidth:560, borderCollapse:"separate", borderSpacing:8, tableLayout:"fixed" }}>
+          <colgroup>
+            <col style={{ width:"22%" }} />
+            <col />
+            <col />
+          </colgroup>
           <thead>
             <tr>
-              <th scope="col" style={{ ...axisHead, width:"30%" }}><span style={{ position:"absolute", width:1, height:1, overflow:"hidden", clip:"rect(0 0 0 0)", whiteSpace:"nowrap" }}>Would it hold if you stepped back?</span></th>
-              <th scope="col" style={{ ...axisHead, paddingBottom:6 }}>A good neighbor <em style={{ color:T.navy }}>could not</em> match it</th>
-              <th scope="col" style={{ ...axisHead, paddingBottom:6 }}>A good neighbor <em style={{ color:T.navy }}>could</em> match it</th>
+              <th scope="col" style={{ ...axisHead, padding:"10px 12px 4px", verticalAlign:"bottom" }}>
+                <span style={{ display:"block", fontSize:10.5, fontWeight:700, letterSpacing:"0.12em", textTransform:"uppercase", color:T.blue }}>Two questions</span>
+              </th>
+              <th scope="col" style={{ ...axisHead, padding:"10px 16px 4px", verticalAlign:"bottom" }}>
+                <span style={{ display:"block", fontSize:10.5, fontWeight:700, letterSpacing:"0.12em", textTransform:"uppercase", color:T.fgM, marginBottom:4 }}>Could a neighbor match it?</span>
+                <span style={{ fontSize:14, fontWeight:700, color:T.navy }}>No</span>
+              </th>
+              <th scope="col" style={{ ...axisHead, padding:"10px 16px 4px", verticalAlign:"bottom" }}>
+                <span style={{ display:"block", fontSize:10.5, fontWeight:700, letterSpacing:"0.12em", textTransform:"uppercase", color:T.fgM, marginBottom:4 }}>Could a neighbor match it?</span>
+                <span style={{ fontSize:14, fontWeight:700, color:T.navy }}>Yes</span>
+              </th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <th scope="row" style={{ ...axisHead, paddingLeft:0, textAlign:"right", paddingRight:14 }}>Still true if you stepped back a year</th>
-              <td style={{ ...cellBase, background:T.greenL, borderRadius:8, height:64 }}>{result(T.moss, "Competitive advantage")}</td>
-              <td style={{ ...cellBase, background:T.blueL, borderRadius:8 }}>{result(T.blue, "Core competency")}</td>
+              <th scope="row" style={{ ...axisHead, padding:"16px 12px", verticalAlign:"middle", borderTop:`1px solid ${T.div}` }}>
+                <span style={{ display:"block", fontSize:10.5, fontWeight:700, letterSpacing:"0.12em", textTransform:"uppercase", color:T.fgM, marginBottom:4 }}>If you stepped back a year</span>
+                <span style={{ fontSize:14, fontWeight:700, color:T.navy }}>It still holds</span>
+              </th>
+              <td style={{ ...cellBase, background:T.greenL, borderRadius:8, padding:"20px 22px", verticalAlign:"middle" }}>
+                {result(T.moss, "Competitive advantage")}
+                <span style={{ display:"block", marginTop:6, paddingLeft:19, color:T.fgM }}>Rare. Protect it and build on it.</span>
+              </td>
+              <td style={{ ...cellBase, background:T.blueL, borderRadius:8, padding:"20px 22px", verticalAlign:"middle" }}>
+                {result(T.blue, "Core competency")}
+                <span style={{ display:"block", marginTop:6, paddingLeft:19, color:T.fgM }}>Common. Keep it sharp; it keeps you in the game.</span>
+              </td>
             </tr>
             <tr>
-              <th scope="row" style={{ ...axisHead, paddingLeft:0, textAlign:"right", paddingRight:14 }}>Would fade without you</th>
-              <td colSpan={2} style={{ ...cellBase, background:T.amberL, borderRadius:8 }}>
-                <div style={{ display:"flex", flexWrap:"wrap", alignItems:"center", gap:"4px 12px" }}>{result(T.amber, "Personal strength")}<span style={{ color:T.fgM }}>until it is handed on or written into the business</span></div>
+              <th scope="row" style={{ ...axisHead, padding:"16px 12px", verticalAlign:"middle", borderTop:`1px solid ${T.div}` }}>
+                <span style={{ display:"block", fontSize:10.5, fontWeight:700, letterSpacing:"0.12em", textTransform:"uppercase", color:T.fgM, marginBottom:4 }}>If you stepped back a year</span>
+                <span style={{ fontSize:14, fontWeight:700, color:T.navy }}>It fades</span>
+              </th>
+              <td colSpan={2} style={{ ...cellBase, background:T.amberL, borderRadius:8, padding:"20px 22px", verticalAlign:"middle" }}>
+                {result(T.amber, "Personal strength")}
+                <span style={{ display:"block", marginTop:6, paddingLeft:19, color:T.fgM }}>Either answer to the first question. It belongs to the business only once it is handed on or written down.</span>
               </td>
             </tr>
           </tbody>
         </table>
       </div>
 
-      <p style={{ ...prose, color:T.fgM, marginTop:28, paddingTop:18, borderTop:`1px solid ${T.div}`, maxWidth:680 }}><strong style={{ color:T.navy, fontWeight:600 }}>Expect most of your list to land in the middle column.</strong> That is normal. Real advantages are rare by definition, and they are usually built out of a competency someone kept pushing on.</p>
+      <div style={{ display:"flex", alignItems:"flex-start", gap:14, marginTop:20, padding:"16px 20px", background:T.blueL, borderRadius:10 }}>
+        <span aria-hidden="true" style={{ width:10, height:10, marginTop:7, borderRadius:3, background:T.blue, flexShrink:0 }} />
+        <p style={{ ...prose, color:T.fg, maxWidth:760 }}><strong style={{ color:T.navy, fontWeight:600 }}>Expect most of your list to land in Core competency.</strong> That is normal. Real advantages are rare by definition, and they are usually built out of a competency someone kept pushing on.</p>
+      </div>
     </div>
   );
 }
@@ -6532,7 +6567,7 @@ function VIS8({ vis, profile }) {
 }
 
 
-// ══════════════════════════════════════════════����══════════════════════════════
+// ══════════════════════════════════════════════����══════════════════════════��═══
 // LOCAL PERSISTENCE — the farm record stays on the farmer's own machine
 // ══════════════════════��══�����═══════════════════════════════════════════════���═══
 // Everything a farmer enters saves to their browser automatically and reloads
