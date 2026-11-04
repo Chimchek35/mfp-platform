@@ -524,7 +524,7 @@ const REV_RAMP = { energy:[0,0,0,0,0,0,0,0,0,0,0,0], specialty:[0,0,0,0,0,0,0,2,
 
 // ─────────────────────────────────��───────────────────────────────────────────
 // FA STAGE 1 — Enterprise dashboard
-// ──────────────────────────────────────────────────�������──────────────────────────
+// ──────────────────────────────────────────────────�����������──────────────────────────
 function FA1({ fa, setFA }) {
   const active = fa.enterprises;
   const toggle = (k) => setFA(s => ({ ...s, enterprises: s.enterprises.includes(k) ? s.enterprises.filter(x=>x!==k) : [...s.enterprises, k] }));
@@ -2892,7 +2892,7 @@ function RD3({ rd, setRData }) {
   );
 }
 
-// ───────────────────────────────────���─────���───���────���────────������───���────────────
+// ───────────────────────────────────���─────���───���────���───────�����������───���────────────
 // RD STAGE 4 — Opportunity mapping
 // ────���──────────���──���─────────────────────────��──�����─────────────────────────────
 const GROWTH_TIER_LABEL = { 1:"Tier 1 · Fastest structural growth", 2:"Tier 2 · Strong growth", 3:"Tier 3 · Steady & selective" };
@@ -4456,7 +4456,7 @@ function LEG2({ leg, setLegData }) {
   return <div><Head eyebrow="Legacy · Stage 3" title="The successor question" sub="There may be a clear successor, several possibilities, or no successor at all. Naming the reality is the useful first step." /><div style={cardStyle()}><div style={cardLblStyle()}>The successor question</div>{legRow("Is there an identified successor?", <select style={inputStyle()} value={v("successorStatus")} onChange={set("successorStatus")}><option value="">Select</option><option value="working">Yes, and they are already working in the business</option><option value="identified">Yes, identified but not yet involved day to day</option><option value="maybe">Maybe, more than one candidate or nobody has said it out loud</option><option value="none">No, there is no successor</option></select>)}{d.successorStatus === "none" && <><Flag type="info">No successor is a legitimate path, not a failure. It deserves the same rigour as a family transition.</Flag>{legRow("Which direction makes most sense to explore?", <select style={inputStyle()} value={v("noSuccessorPath")} onChange={set("noSuccessorPath")}><option value="">Select</option><option value="sale">Orderly sale of the operation</option><option value="lease">Lease the ground to a neighbouring operation</option><option value="employee">Transition to a non-family employee</option><option value="winddown">Planned wind-down over a set number of years</option><option value="unsure">Genuinely unsure, that is the question</option></select>)}</>}{d.successorStatus === "maybe" && <Flag type="warn">More than one candidate, or nobody having said it out loud, is a common starting point. Naming it is the work of the next few stages.</Flag>}</div></div>;
 }
 
-// ── Stage 3 — What exists on paper ────────────────────���──────����──────────────
+// ── Stage 3 — What exists on paper ───────────────────�������─────����──────────────
 function LEG3({ leg, setLegData }) {
   const d = leg.data || {};
   const v = (k) => d[k] || "";
@@ -5498,7 +5498,7 @@ function LegCompare({ leg, setLegData, setSucc }) {
   );
 }
 
-// ── Stage 13 — Where this leaves you ───────────────��─��──��────────────────────
+// ── Stage 13 — Where this leaves you ───��────��──────��─��──��────────────────────
 function LEG13({ leg, profile }) {
   const d = leg.data || {};
   const tierKey = legacyTier(leg);
@@ -5624,29 +5624,31 @@ function LEG13({ leg, profile }) {
 // than the owner cannot invoke it to stop something, it is not institutional yet.
 
 const VIS_STAGES = [
-  { n:1, label:"Core Competencies and Competitive Advantage" },
-  { n:2, label:"Test competitive advantage" },
-  { n:3, label:"Core values" },
-  { n:4, label:"Test core values" },
-  { n:5, label:"What it has cost you" },
-  { n:6, label:"Turn it into rules" },
-  { n:7, label:"Who holds this" },
-  { n:8, label:"Where it binds" },
-  { n:9, label:"The statement" },
-  { n:10, label:"Farm profile & SWOT" },
-  { n:11, label:"The document" },
+  { n:1, label:"Why strategic vision matters" },
+  { n:2, label:"Core Competencies and Competitive Advantage" },
+  { n:3, label:"Sort your strengths" },
+  { n:4, label:"Core values" },
+  { n:5, label:"Test core values" },
+  { n:6, label:"What it has cost you" },
+  { n:7, label:"Turn it into rules" },
+  { n:8, label:"Who holds this" },
+  { n:9, label:"Where it binds" },
+  { n:10, label:"The statement" },
+  { n:11, label:"Farm profile & SWOT" },
+  { n:12, label:"The document" },
 ];
+const VIS_PROFILE_STAGE = 11;
 
-// The four tests. Most answers fail at least one, which is the point of running them.
+// The four tests. The first two sort strengths into kinds; none of the outcomes is a fail.
 const VIS_TESTS = [
-  { id:"neighbour", label:"The neighbour test",
-    q:"If the operation across the road did exactly this, would it work as well for them?",
-    fail:"yes", failVerdict:"table stakes",
-    failNote:"Then it is table stakes, not an advantage. Worth doing, but it does not distinguish this operation." },
-  { id:"absence", label:"The absence test",
-    q:"Would this still be true if you were not here?",
-    fail:"no", failVerdict:"person-dependent",
-    failNote:"Then it is a person, not a business asset. That is not a criticism, it is the single most useful thing this module can tell a succession plan." },
+  { id:"neighbour", label:"Could a good neighbour match it?",
+    q:"If a well-run operation nearby set out to do this as well as you do, could they?",
+    fail:"yes", failVerdict:"competency",
+    failNote:"Then this is a core competency rather than a competitive advantage. It is still a real strength and losing it would hurt. It just is not the thing that sets you apart." },
+  { id:"absence", label:"Does it depend on one person?",
+    q:"If you stepped back from the operation, would this still be true a year later?",
+    fail:"no", failVerdict:"personal",
+    failNote:"Then it is a personal strength rather than something the business owns yet. Very common on a family farm, and the single most useful thing this module can hand to a succession plan." },
   { id:"evidence", label:"The evidence test",
     q:"What happened in the last two years that proves this?",
     kind:"text",
@@ -5657,13 +5659,58 @@ const VIS_TESTS = [
     failNote:"A value that has never cost anything is not governing behaviour yet. This is the question most operators have a real answer to and have never been asked." },
 ];
 
+// Three kinds of strength, not a pass and two fails. Each leads somewhere different.
 const VIS_VERDICTS = {
-  real:            { label:"Holds up", pill:"strong",  note:"Survives the tests. This belongs in the statement." },
-  "table stakes":  { label:"Table stakes", pill:"watch", note:"Real, but not distinguishing. Keep doing it; do not build the strategy on it." },
-  "person-dependent":{ label:"Person-dependent", pill:"vuln", note:"Lives in a person rather than the business. Carries straight into the Legacy module as a knowledge transfer target." },
-  unproven:        { label:"Unproven", pill:"watch", note:"No evidence recorded yet. Find it, or soften the claim." },
-  untested:        { label:"Not tested yet", pill:"blank", note:"" },
+  advantage: { label:"Competitive advantage", pill:"strong",
+    note:"Hard for a neighbour to copy and it does not walk out the door with any one person. This is what the strategy gets built on.",
+    next:"Protect it, invest in it, and say it plainly in the statement." },
+  competency: { label:"Core competency", pill:"info",
+    note:"Something this operation genuinely does well. A good operator nearby could do it too, which makes it the price of being competitive rather than what sets you apart.",
+    next:"Keep it strong. Losing it would hurt, and it is also the most likely place a real advantage gets built from." },
+  personal: { label:"A personal strength", pill:"watch",
+    note:"Real and valuable, and it currently lives in a person rather than in the business. That is extremely common on a family farm and it is not a weakness.",
+    next:"Decide whether to build it into the business, or plan around the fact that it travels with one person. The Legacy module works that through." },
+  evidence: { label:"Worth evidencing", pill:"blank",
+    note:"Likely true, and nothing has been written down yet that would show it to a lender, a buyer or a successor.",
+    next:"A single concrete example from the last two years is usually enough to move this." },
+  untested: { label:"Not sorted yet", pill:"blank", note:"", next:"" },
 };
+
+const VIS_NO_ADVANTAGE = {
+  head:"Most operations come out of this with core competencies rather than a competitive advantage",
+  body:"That is the usual result, not a bad one. A true competitive advantage is rare by definition. What you have named here is a set of real capabilities, and the practical question is which one is closest to becoming something a neighbour could not copy.",
+};
+
+// When a lender or advisor has already called something an advantage, the tool
+// should not overrule them. Turn the disagreement into a sharper question.
+const VIS_ADVISOR_NOTE = {
+  head:"Someone who knows the operation called this an advantage",
+  body:"They may well be right. Two questions cannot see everything a person who has worked with you for years can, and they may be weighing something this does not ask about.",
+  ask:"The useful move is to go back to them with one question: what specifically makes this hard for another operation to match? Their answer is usually the real advantage, stated more precisely than either of you had it before.",
+};
+
+const VIS_BUILD_PROMPT = {
+  q:"What would have to be true for a good neighbour to find this hard to match?",
+  hint:"Scale, a relationship nobody else has, a piece of equipment, a certification, a way of doing it that took years. If you can name it, that is the advantage you are building toward.",
+};
+
+// One connective line per stage saying why it follows the last one.
+const VIS_SEQUENCE = {
+  2:"Start here. Everything else in this module works off what you name on this page.",
+  3:"Now sort them. Two questions each, and they decide where your effort is best spent.",
+  4:"Now the values: the principles that decide things when the profitable option is not the right one.",
+  5:"Now test the values. A value only counts if it changes a real decision.",
+  6:"A value that has never cost anything is not steering decisions yet.",
+  7:"Now turn what you have into rules somebody else could actually follow.",
+  8:"Now the harder question: does anyone else in the operation hold this, or just you?",
+  9:"Now connect the rules to the decisions they are meant to govern.",
+  10:"Now assemble it, in your words, and choose what the team sees.",
+  11:"Check the profile and SWOT this vision now feeds.",
+  12:"Last step. This is the version you hand to people.",
+};
+const VisSequence = ({ n }) => VIS_SEQUENCE[n] ? (
+  <p style={{ fontSize:13.5, color:T.blue, margin:"0 0 16px", lineHeight:1.6 }}>{VIS_SEQUENCE[n]}</p>
+) : null;
 
 // Decision points elsewhere in MFP where a rule can actually bind. This is what
 // separates an operational vision from wall decoration.
@@ -5671,7 +5718,7 @@ const VIS_BINDS = [
   { id:"diversification", label:"New enterprise or venture decisions", where:"Revenue Diversification, scenario comparison" },
   { id:"capital",         label:"Capital purchases and borrowing",     where:"Financial Analysis, Revenue Diversification sequencing" },
   { id:"land",            label:"Taking on ground, rented or owned",   where:"Revenue Diversification, Legacy" },
-  { id:"risk",            label:"What risk to carry, transfer or avoid", where:"Farm Risk, strategy selection" },
+  { id:"risk",            label:"What risk to carry, transfer or avoid", where:"Risk Ready, strategy selection" },
   { id:"people",          label:"Hiring, roles and who decides what",  where:"Legacy, successor readiness" },
   { id:"market",          label:"Who we sell to and on what terms",    where:"Revenue Diversification" },
   { id:"succession",      label:"Ownership and transition decisions",  where:"Legacy, fair versus equal" },
@@ -5703,12 +5750,14 @@ const visSeedItems = (profile) => {
   return out;
 };
 
+// Person-dependence is checked first: it is the most actionable finding and it
+// carries into succession planning whether or not the strength is also rare.
 const visVerdictOf = (item) => {
   const t = item.tests || {};
-  if (t.neighbour === "yes") return "table stakes";
-  if (t.absence === "no") return "person-dependent";
-  if (item.kind !== "goal" && t.neighbour && t.absence && !(t.evidence||"").trim()) return "unproven";
-  if (t.neighbour && t.absence) return "real";
+  if (t.absence === "no") return "personal";
+  if (t.neighbour === "yes") return "competency";
+  if (item.kind !== "goal" && t.neighbour && t.absence && !(t.evidence||"").trim()) return "evidence";
+  if (t.neighbour && t.absence) return "advantage";
   return "untested";
 };
 
@@ -5718,9 +5767,10 @@ const visStats = (vis) => {
   return {
     total: items.length,
     tested: tested.length,
-    real: items.filter(i => visVerdictOf(i) === "real").length,
-    personDependent: items.filter(i => visVerdictOf(i) === "person-dependent").length,
-    tableStakes: items.filter(i => visVerdictOf(i) === "table stakes").length,
+    real: items.filter(i => visVerdictOf(i) === "advantage").length,
+    personDependent: items.filter(i => visVerdictOf(i) === "personal").length,
+    tableStakes: items.filter(i => visVerdictOf(i) === "competency").length,
+    needEvidence: items.filter(i => visVerdictOf(i) === "evidence").length,
     rules: (vis.rules||[]).length,
     boundRules: (vis.rules||[]).filter(r => (r.binds||[]).length > 0).length,
   };
@@ -5728,23 +5778,73 @@ const visStats = (vis) => {
 
 
 // ── Vision 1 — What you have already said ────────────────────────────────�������───
-function VIS1({ vis, setVis, profile, goProfile }) {
+// ── Vision intro — why this matters, and the vocabulary the module uses ──────
+function VIS_INTRO() {
+  const kinds = [
+    { h:"Competitive advantage", d:"Something your operation does that a well-run neighbour could not easily match, and that would still be true if you stepped back.", e:"The only certified organic storage within 60 miles. A 20-year direct contract with a local creamery.", bd:T.moss, bg:T.greenL, fg:T.dgreen },
+    { h:"Core competency", d:"Something you genuinely do well, that keeps you competitive, and that a good operator nearby could also do.", e:"Timely planting and harvest. Well-maintained equipment. Hard work and long hours.", bd:T.blue, bg:T.blueL, fg:T.blue },
+    { h:"Personal strength", d:"A real strength that currently lives in one person rather than in the business.", e:"Landlord relationships built over decades by one family member.", bd:T.amber, bg:T.amberL, fg:T.amberT },
+  ];
+  return (
+    <div>
+      <Head eyebrow="Strategic vision · Before you start" title="Why strategic vision matters" sub="A farm makes hundreds of decisions a year: which ground to rent, what to buy, who to hire, what to say no to. A strategic vision is the test those decisions get held against." />
+      <div style={cardStyle({ borderTop:`4px solid ${T.navy}` })}>
+        <div style={cardLblStyle()}>What it does for the operation</div>
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))", gap:14 }}>
+          {[["Faster, steadier decisions","When the direction is written down, each new opportunity is compared against it instead of being argued from scratch."],
+            ["Something others can hold","A spouse, successor, employee or lender can apply it without you in the room. That is what makes it the business's vision, not just yours."],
+            ["Effort in the right place","Knowing which strengths actually set you apart tells you where to invest, and which ones only need to be kept up."]].map(([h,b],k)=>(
+            <div key={k}><div style={{ fontSize:14, fontWeight:600, color:T.navy, marginBottom:4 }}>{h}</div><div style={{ fontSize:13, color:T.fgM, lineHeight:1.6 }}>{b}</div></div>
+          ))}
+        </div>
+      </div>
+      <div style={cardStyle()}>
+        <div style={cardLblStyle()}>Three kinds of strength</div>
+        <p style={{ fontSize:14, color:T.fgM, marginTop:0, marginBottom:14, lineHeight:1.6 }}>The module sorts what your operation is good at into three kinds. All three are worth having. Each one leads to a different next step.</p>
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(230px,1fr))", gap:12 }}>
+          {kinds.map(k => (
+            <div key={k.h} style={{ borderTop:`3px solid ${k.bd}`, background:k.bg, borderRadius:"0 0 8px 8px", padding:"13px 15px" }}>
+              <div style={{ fontSize:14, fontWeight:600, color:k.fg, marginBottom:5 }}>{k.h}</div>
+              <div style={{ fontSize:13, color:T.fg, lineHeight:1.55, marginBottom:8 }}>{k.d}</div>
+              <div style={{ fontSize:12.5, color:T.fgM, lineHeight:1.5 }}><span style={{ fontWeight:600 }}>For example: </span>{k.e}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div style={cardStyle()}>
+        <div style={cardLblStyle()}>How each one gets sorted</div>
+        <p style={{ fontSize:14, color:T.fgM, margin:"0 0 10px", lineHeight:1.6 }}>Two plain questions for every strength you name:</p>
+        <div style={{ fontSize:14, color:T.fg, lineHeight:1.6, marginBottom:6 }}><span style={{ fontWeight:600 }}>1.</span> If a well-run operation nearby set out to do this as well as you do, could they?</div>
+        <div style={{ fontSize:14, color:T.fg, lineHeight:1.6, marginBottom:14 }}><span style={{ fontWeight:600 }}>2.</span> If you stepped back, would this still be true a year later?</div>
+        <Flag type="info">Most operations finish with more core competencies than competitive advantages. That is the normal result, not a bad one. A competency is usually where an advantage gets built from.</Flag>
+      </div>
+    </div>
+  );
+}
+
+function VIS1({ vis, setVis, profile, setProfile, goProfile }) {
   const items = (vis.items || []).filter(i => i.kind === "advantage");
   const carouselRef = useRef(null);
   const [activeAdvantage, setActiveAdvantage] = useState(0);
   const [draftAdvantage, setDraftAdvantage] = useState("");
   const seeded = !!vis.seeded;
-  const seed = () => setVis({ items: visSeedItems(profile).filter(i => i.kind === "advantage"), seeded:true });
+  const profileHasVision = ["advantage","values","nearTerm","longTerm"].some(f => (profile||{})[f] && String(profile[f]).trim());
+  // Profile answers load automatically as a first draft; asking someone to press
+  // a button to import their own answers earns nothing.
+  useEffect(() => {
+    if (seeded || !profileHasVision) return;
+    setVis({ items:[...(vis.items||[]), ...visSeedItems(profile).filter(i => !(vis.items||[]).some(x => x.text === i.text))], seeded:true });
+  }, [seeded, profileHasVision]);
   const setItem = (id, patch) => setVis({ items: (vis.items || []).map(i => i.id===id ? {...i,...patch} : i) });
   const add = () => setVis({ items:[...(vis.items || []), { id:"custom-"+Date.now(), kind:"advantage", sourceLabel:"Added here", text:"", tests:{}, verdict:"untested" }], seeded:true });
   const addDraft = () => { if (!draftAdvantage.trim()) return; setVis({ items:[...(vis.items||[]), { id:"custom-"+Date.now(), kind:"advantage", sourceLabel:"Added here", text:draftAdvantage.trim(), tests:{}, verdict:"untested" }], seeded:true }); setDraftAdvantage(""); };
-  const remove = (id) => setVis({ items: items.filter(i => i.id!==id) });
-  const hasProfile = ["advantage","values","nearTerm","longTerm"].some(f => (profile||{})[f] && String(profile[f]).trim());
+  const remove = (id) => setVis({ items: (vis.items || []).filter(i => i.id!==id) });
+  const hasProfile = profileHasVision;
   const importProfile = e => { const file=e.target.files?.[0]; e.target.value=""; if(!file) return; const reader=new FileReader(); reader.onload=()=>{ try { const imported=profileFromMFPExport(JSON.parse(reader.result)); if(imported) { setProfile(s=>({ ...s, ...imported })); setVis(s=>({ ...s, items:[...(s.items||[]), ...visSeedItems(imported).filter(i=>!s.items?.some(existing=>existing.text===i.text))], seeded:true })); } } catch { window.alert("That profile file could not be imported."); } }; reader.readAsText(file); };
 
   return (
     <div>
-      <Head eyebrow="Strategic vision · Stage 1" title="Core Competencies and Competitive Advantage" sub="Start with the reason customers, employees, landlords, or partners choose this operation over another." /><SectionSteps><div style={cardStyle({ borderTop:`4px solid ${T.blue}`, marginBottom:18 })}><div style={cardLblStyle()}>Bring existing profile</div><p style={{ color:T.fgM, fontSize:13.5, lineHeight:1.5, marginTop:0 }}>Upload a Maximum Farm Potential JSON export to update the profile fields used across the Strategic Vision categories.</p><input type="file" accept=".json,application/json" onChange={importProfile} /></div>
+      <Head eyebrow="Strategic vision · Stage 2" title="Core Competencies and Competitive Advantage" sub="Start with the reason customers, employees, landlords, or partners choose this operation over another." /><SectionSteps><div style={cardStyle({ borderTop:`4px solid ${T.blue}`, marginBottom:18 })}><div style={cardLblStyle()}>Bring existing profile</div><p style={{ color:T.fgM, fontSize:13.5, lineHeight:1.5, marginTop:0 }}>Upload a Maximum Farm Potential JSON export to update the profile fields used across the Strategic Vision categories.</p><input type="file" accept=".json,application/json" onChange={importProfile} /></div>
       <div data-section-lead="true" style={{ marginBottom:24, padding:"22px 0", borderBottom:`1px solid ${T.div}` }}><div style={cardLblStyle()}>The capability behind the farm</div><p style={{ fontSize:15, color:T.fgM, lineHeight:1.55, margin:0, maxWidth:560 }}>What can this operation do exceptionally well—and what would be difficult for another farm to copy?</p></div>
       {!hasProfile && (<>
         <Flag type="warn">Your Farm Profile does not have competitive advantage, core values, or objectives filled in yet. You can add items here directly, or fill the profile first.
@@ -5799,7 +5899,7 @@ function VIS1({ vis, setVis, profile, goProfile }) {
   const add = () => setVis({ items:[...(vis.items || []), { id:"value-"+Date.now(), kind:"value", sourceLabel:"Added here", text:"", tests:{}, verdict:"untested" }] });
   const seed = () => setVis({ items:[...(vis.items || []), ...(profile.values && !values.length ? [{ id:"profile-value-"+Date.now(), kind:"value", sourceLabel:"Farm Profile", text:profile.values, tests:{}, verdict:"untested" }] : [])], valuesSeeded:true });
   return <div>
-    <Head eyebrow="Strategic vision · Stage 2" title="Core values" sub="Identify the principles that should guide choices when the easiest or most profitable option is not automatically the right one." />
+    <Head eyebrow="Strategic vision · Stage 4" title="Core values" sub="Identify the principles that should guide choices when the easiest or most profitable option is not automatically the right one." />
     <SectionSteps>
     <div style={cardStyle({ borderTop:`4px solid ${T.blue}` })}>
       <div style={cardLblStyle()}>Why this matters</div>
@@ -5816,18 +5916,19 @@ function VIS1({ vis, setVis, profile, goProfile }) {
   const isValuesTest = kind === "value";
   const items = (vis.items||[]).filter(i => i.kind === kind && i.text && i.text.trim());
   const setTest = (id, tid, val) => setVis({ items: (vis.items||[]).map(i => i.id===id ? { ...i, tests:{ ...(i.tests||{}), [tid]:val } } : i) });
+  const setItem = (id, patch) => setVis({ items: (vis.items||[]).map(i => i.id===id ? { ...i, ...patch } : i) });
   const s = visStats(vis);
 
-  const title = isValuesTest ? "Test core values" : "Test competitive advantage";
-  const eyebrow = isValuesTest ? "Strategic vision · Stage 4" : "Strategic vision · Stage 2";
-  const sub = isValuesTest ? "Test whether each value changes a real decision." : "Test which advantages are real, specific, and defensible.";
+  const title = isValuesTest ? "Test core values" : "Sort your strengths";
+  const eyebrow = isValuesTest ? "Strategic vision · Stage 5" : "Strategic vision · Stage 3";
+  const sub = isValuesTest ? "Test whether each value changes a real decision." : "Two questions per item. They decide which kind of strength each one is, which tells you where to put your effort.";
   if (!items.length) return <div><Head eyebrow={eyebrow} title={title} sub="" /><Flag type="warn">Nothing to test yet. Go back a stage and bring in what you have written.</Flag></div>;
   
   return (
   <div>
   <Head eyebrow={eyebrow} title={title} sub={sub} />
       <SectionSteps key={kind}>
-      <Flag type="info">A shorter, honest list is more useful than a long one.</Flag>
+      <Flag type="info">{isValuesTest ? "A shorter, honest list is more useful than a long one." : "There is no wrong answer here and nothing gets thrown away. Most items land as core competencies, which is the normal result and a perfectly good one."}</Flag>
 
       {items.map(it => {
         const t = it.tests || {};
@@ -5836,7 +5937,7 @@ function VIS1({ vis, setVis, profile, goProfile }) {
         const isGoal = it.kind === "goal";
         const tests = VIS_TESTS.filter(x => isGoal ? x.id === "evidence" : (it.kind === "value" ? x.id !== "neighbour" : x.id !== "cost"));
         return (
-          <div key={it.id} style={cardStyle(verdict==="person-dependent" ? { borderLeft:`3px solid ${T.red}` } : verdict==="table stakes" ? { borderLeft:`3px solid ${T.amber}` } : verdict==="real" ? { borderLeft:`3px solid ${T.moss}` } : {})}>
+          <div key={it.id} style={cardStyle(verdict==="personal" ? { borderLeft:`3px solid ${T.amber}` } : verdict==="competency" ? { borderLeft:`3px solid ${T.blue}` } : verdict==="advantage" ? { borderLeft:`3px solid ${T.moss}` } : {})}>
             <div style={{ display:"flex", justifyContent:"space-between", alignItems:"baseline", gap:12, flexWrap:"wrap", marginBottom:4 }}>
               <span style={{ fontSize:10.5, letterSpacing:"0.12em", textTransform:"uppercase", color:T.fgS }}>{it.kind === "advantage" ? "Advantage" : it.kind === "value" ? "Value" : "Objective"}</span>
               <span style={pillStyle(v.pill)}>{v.label}</span>
@@ -5862,7 +5963,32 @@ function VIS1({ vis, setVis, profile, goProfile }) {
             ))}
 
             {verdict !== "untested" && v.note && (
-              <div style={{ borderLeft:`2px solid ${scColor(v.pill)}`, background:T.bgAlt, borderRadius:"0 5px 5px 0", padding:"10px 13px", fontSize:13, color:T.fgM, lineHeight:1.55 }}>{v.note}</div>
+              <div style={{ borderLeft:`2px solid ${scColor(v.pill)}`, background:T.bgAlt, borderRadius:"0 5px 5px 0", padding:"10px 13px", fontSize:13, color:T.fgM, lineHeight:1.55 }}>
+                {v.note}
+                {v.next && <div style={{ marginTop:6, color:T.fg }}>{v.next}</div>}
+              </div>
+            )}
+
+            {verdict === "competency" && (
+              <div style={{ marginTop:12 }}>
+                <label style={{ display:"flex", alignItems:"center", gap:9, fontSize:13, color:T.fgM, cursor:"pointer", marginBottom:10 }}>
+                  <input type="checkbox" checked={!!it.advisorCalled} onChange={e=>setItem(it.id,{ advisorCalled:e.target.checked })} />
+                  A lender, advisor or someone who knows the operation has called this a competitive advantage
+                </label>
+                {it.advisorCalled && (
+                  <div style={{ borderLeft:`2px solid ${T.blue}`, background:T.blueL, borderRadius:"0 5px 5px 0", padding:"12px 15px", marginBottom:11 }}>
+                    <div style={{ fontSize:13.5, fontWeight:600, color:T.navy, marginBottom:5 }}>{VIS_ADVISOR_NOTE.head}</div>
+                    <p style={{ fontSize:13, color:T.fgM, margin:"0 0 7px", lineHeight:1.6 }}>{VIS_ADVISOR_NOTE.body}</p>
+                    <p style={{ fontSize:13, color:T.fg, margin:0, lineHeight:1.6 }}>{VIS_ADVISOR_NOTE.ask}</p>
+                  </div>
+                )}
+                <label style={labelStyle}>{VIS_BUILD_PROMPT.q}</label>
+                <div style={{ fontSize:12, color:T.fgS, marginBottom:6 }}>{VIS_BUILD_PROMPT.hint}</div>
+                <textarea style={inputStyle({ minHeight:52, fontSize:13.5 })} value={it.buildPath||""} onChange={e=>setItem(it.id,{ buildPath:e.target.value })} />
+                {(it.buildPath||"").trim().length > 15 && (
+                  <div style={{ marginTop:9 }}><Flag type="ok">That is the thing to build. A competency with a named path to becoming hard to copy is a strategy rather than a description. Worth carrying into your objectives.</Flag></div>
+                )}
+              </div>
             )}
           </div>
         );
@@ -5870,14 +5996,20 @@ function VIS1({ vis, setVis, profile, goProfile }) {
 
       {s.tested > 0 && (
         <div style={cardStyle({ borderTop:`4px solid ${T.navy}` })}>
-          <div style={cardLblStyle()}>Where that leaves you</div>
+          <div style={cardLblStyle()}>What you have</div>
           <div style={{ display:"flex", gap:26, flexWrap:"wrap" }}>
-            {[["Holds up", s.real, T.dgreen],["Table stakes", s.tableStakes, T.amberT],["Person-dependent", s.personDependent, T.red]].map(([lab,n,col],k)=>(
+            {[["Competitive advantages", s.real, T.dgreen],["Core competencies", s.tableStakes, T.blue],["Personal strengths", s.personDependent, T.amberT],["Worth evidencing", s.needEvidence, T.fgS]].map(([lab,n,col],k)=>(
               <div key={k}><div style={{ fontSize:11, color:T.fgS, marginBottom:3 }}>{lab}</div><div style={{ fontSize:24, fontWeight:600, color:n>0?col:T.fgS }}>{n}</div></div>
             ))}
           </div>
-          {s.personDependent > 0 && <div style={{ marginTop:13 }}><Flag type="warn">{s.personDependent === 1 ? "One advantage lives" : `${s.personDependent} advantages live`} in a person rather than the business. That is the most important finding this module produces, and it carries into the Legacy module as a knowledge transfer target.</Flag></div>}
-          {s.real === 0 && s.tested >= 2 && <div style={{ marginTop:11 }}><Flag type="info">Nothing has survived intact yet. That is common and it is not a verdict on the operation. It usually means the real advantage has not been named yet rather than that there is not one.</Flag></div>}
+          {s.real === 0 && s.tested >= 2 && (
+            <div style={{ marginTop:14, borderLeft:`2px solid ${T.blue}`, background:T.blueL, borderRadius:"0 5px 5px 0", padding:"13px 16px" }}>
+              <div style={{ fontSize:14.5, fontWeight:600, color:T.navy, marginBottom:5 }}>{VIS_NO_ADVANTAGE.head}</div>
+              <div style={{ fontSize:13.5, color:T.fgM, lineHeight:1.65 }}>{VIS_NO_ADVANTAGE.body}</div>
+            </div>
+          )}
+          {s.personDependent > 0 && <div style={{ marginTop:13 }}><Flag type="info">{s.personDependent === 1 ? "One strength currently travels" : `${s.personDependent} strengths currently travel`} with a person rather than the business. That is the most useful thing this module hands to a succession plan, and the Legacy module picks it up directly.</Flag></div>}
+          {s.real > 0 && <div style={{ marginTop:13 }}><Flag type="ok">{s.real === 1 ? "One competitive advantage" : `${s.real} competitive advantages`} identified. That is what the statement in stage 10 should lead with.</Flag></div>}
         </div>
       )}
       </SectionSteps>
@@ -5892,10 +6024,10 @@ function VIS3({ vis, setVis }) {
   const answered = values.filter(v => ((v.tests||{}).cost||"").trim().length > 10).length;
   return (
     <div>
-      <Head eyebrow="Strategic vision · Stage 5" title="What it has cost you" sub="A value becomes real when it changes a decision." />
+      <Head eyebrow="Strategic vision · Stage 6" title="What it has cost you" sub="A value becomes real when it changes a decision." />
       <SectionSteps>
       {values.length === 0 ? (
-        <Flag type="warn">No core values recorded yet. Go back to stage 1 and mark at least one claim as a core value.</Flag>
+        <Flag type="warn">No core values recorded yet. Go back to stage 4 and add at least one core value.</Flag>
       ) : (
         <>
           <Flag type="info">Name one decision, contract, tenant, or price you gave up to keep this value.</Flag>
@@ -5921,7 +6053,7 @@ function VIS3({ vis, setVis }) {
 
 // ── Vision 4 — Turn it into rules ��─────────────────��─────────────────────────
 function VIS4({ vis, setVis }) {
-  const items = (vis.items||[]).filter(i => i.text && visVerdictOf(i) !== "table stakes");
+  const items = (vis.items||[]).filter(i => i.text);
   const rules = vis.rules || [];
   const setRule = (i, patch) => setVis({ rules: rules.map((r,k)=>k===i?{...r,...patch}:r) });
   const add = (fromId) => setVis({ rules:[...rules, { id:"r"+Date.now(), fromItem:fromId||"", statement:"", owner:"", exception:"", binds:[] }] });
@@ -5929,7 +6061,7 @@ function VIS4({ vis, setVis }) {
 
   return (
     <div>
-      <Head eyebrow="Strategic vision · Stage 6" title="Turn it into rules" sub="This is where a personal vision becomes an organizational one. A value cannot be followed by an employee. A rule can, and more importantly a rule can be cited back at you." />
+      <Head eyebrow="Strategic vision · Stage 7" title="Turn it into rules" sub="This is where a personal vision becomes an organizational one. A value cannot be followed by an employee. A rule can, and more importantly a rule can be cited back at you." />
       <SectionSteps>
       <div style={cardStyle({ borderTop:`4px solid ${T.blue}` })}>
         <div style={cardLblStyle()}>What the conversion looks like</div>
@@ -5987,7 +6119,7 @@ function VIS4({ vis, setVis }) {
   );
 }
 
-// ─��� Vision 5 — Who holds this ────────���────────────��────────────���─────────────
+// ─��� Vision 5 — Who holds this ──────��─���────────────��────────────���─────────────
 function VIS5({ vis, setVis, goLegacy }) {
   const h = vis.holders || {};
   const setH = (id,val) => setVis({ holders:{ ...h, [id]:val } });
@@ -5996,7 +6128,7 @@ function VIS5({ vis, setVis, goLegacy }) {
   const canState = VIS_HOLDERS.filter(p => h[p.id] === 3);
   return (
     <div>
-      <Head eyebrow="Strategic vision · Stage 7" title="Who holds this" sub="A vision one person holds is a preference. A vision the organization holds is a constraint. The difference is whether anyone else could state it, and whether they could use it to stop something." />
+      <Head eyebrow="Strategic vision · Stage 8" title="Who holds this" sub="A vision one person holds is a preference. A vision the organization holds is a constraint. The difference is whether anyone else could state it, and whether they could use it to stop something." />
       <SectionSteps>
       <div style={cardStyle()}>
         <div style={cardLblStyle()}>Where each person actually stands</div>
@@ -6036,7 +6168,7 @@ function VIS5({ vis, setVis, goLegacy }) {
       </div>
 
       {canState.length >= 2 && <Flag type="ok">{canState.length} people could state this themselves. That is the threshold where it starts behaving like an organizational vision rather than the owner's view.</Flag>}
-      {unspoken.length === VIS_HOLDERS.length && <Flag type="warn">Nobody has discussed this yet. The statement in stage 7 is worth producing anyway, because it gives you something concrete to discuss rather than starting from a blank page.</Flag>}
+      {unspoken.length === VIS_HOLDERS.length && <Flag type="warn">Nobody has discussed this yet. The statement in stage 10 is worth producing anyway, because it gives you something concrete to discuss rather than starting from a blank page.</Flag>}
       </SectionSteps>
     </div>
   );
@@ -6053,7 +6185,7 @@ function VIS6({ vis, setVis }) {
   const unbound = rules.filter(r => r.statement && (r.binds||[]).length === 0);
   return (
     <div>
-      <Head eyebrow="Strategic vision · Stage 8" title="Where it binds" sub="A vision that does not show up where decisions get made is wall decoration. Mark which decisions each rule actually governs." />
+      <Head eyebrow="Strategic vision · Stage 9" title="Where it binds" sub="A vision that does not show up where decisions get made is wall decoration. Mark which decisions each rule actually governs." />
       <SectionSteps>
       {rules.length === 0 ? (
         <Flag type="warn">No rules yet. Go back to stage 4 and write at least one.</Flag>
@@ -6100,14 +6232,16 @@ function VIS7({ vis, setVis, profile }) {
   const approved = vis.approved || {};
   const setApproved = (k,v) => setVis({ approved:{ ...approved, [k]:v } });
 
-  const real = (vis.items||[]).filter(i => visVerdictOf(i) === "real");
+  const real = (vis.items||[]).filter(i => visVerdictOf(i) === "advantage");
+  const competencies = (vis.items||[]).filter(i => i.kind === "advantage" && visVerdictOf(i) === "competency");
   const goals = (vis.items||[]).filter(i => i.kind === "goal" && i.text);
   const rules = (vis.rules||[]).filter(r => r.statement);
-  const personDep = (vis.items||[]).filter(i => visVerdictOf(i) === "person-dependent");
+  const personDep = (vis.items||[]).filter(i => visVerdictOf(i) === "personal");
+  const winners = real.filter(i=>i.kind==="advantage");
 
   const assemble = () => setVis({ published:{
     doWhat: pub.doWhat || (profile||{}).productionMix || "",
-    whyWeWin: pub.whyWeWin || real.filter(i=>i.kind==="advantage").map(i=>i.text).join(". "),
+    whyWeWin: pub.whyWeWin || (winners.length ? winners : competencies.slice(0,3)).map(i=>i.text).join(". "),
     wontDo: pub.wontDo || rules.map(r=>r.statement).join("\n"),
     whereGoing: pub.whereGoing || goals.filter(g=>g.sourceLabel.includes("Long")).map(g=>g.text).join(". ") || goals.map(g=>g.text).join(". "),
     howKnow: pub.howKnow || "",
@@ -6115,7 +6249,7 @@ function VIS7({ vis, setVis, profile }) {
 
   const SECTIONS = [
     { k:"doWhat",     label:"What we do",            hint:"One line. A specific business, not a category." },
-    { k:"whyWeWin",   label:"Why we win",            hint:"Only what survived the tests in stage 2." },
+    { k:"whyWeWin",   label:"Why we win",            hint:"Lead with your competitive advantages. If there are none yet, your strongest core competencies." },
     { k:"wontDo",     label:"What we will not do",   hint:"The hardest section and the most useful. Your rules go here." },
     { k:"whereGoing", label:"Where we are going",    hint:"Concrete enough that someone could disagree with it." },
     { k:"howKnow",    label:"How we will know",      hint:"Three or four measures." },
@@ -6123,7 +6257,7 @@ function VIS7({ vis, setVis, profile }) {
 
   return (
     <div>
-      <Head eyebrow="Strategic vision · Stage 9" title="The statement" sub="Assembled from your own words rather than rewritten. A farm team can tell instantly when a document was not written by the person who runs the place." />
+      <Head eyebrow="Strategic vision · Stage 10" title="The statement" sub="Assembled from your own words rather than rewritten. A farm team can tell instantly when a document was not written by the person who runs the place." />
 
       <SectionSteps>
       {!vis.assembled && (
@@ -6164,7 +6298,7 @@ function VIS7({ vis, setVis, profile }) {
           <div style={cardStyle()}>
             <div style={cardLblStyle()}>Where this stands</div>
             <div style={{ display:"flex", gap:26, flexWrap:"wrap", marginBottom:12 }}>
-              {[["Claims that held up", s.real],["Rules written", s.rules],["Rules that bind a decision", s.boundRules],["Sections approved", SECTIONS.filter(x=>approved[x.k]).length + " of 5"]].map(([lab,n],k)=>(
+              {[["Competitive advantages", s.real],["Rules written", s.rules],["Rules that bind a decision", s.boundRules],["Sections approved", SECTIONS.filter(x=>approved[x.k]).length + " of 5"]].map(([lab,n],k)=>(
                 <div key={k}><div style={{ fontSize:11, color:T.fgS, marginBottom:3 }}>{lab}</div><div style={{ fontSize:22, fontWeight:600, color:T.navy }}>{n}</div></div>
               ))}
             </div>
@@ -6214,7 +6348,7 @@ function VIS8({ vis, profile }) {
   ];
   const live = SECTIONS.filter(s => approved[s.k] && (pub[s.k]||"").trim());
   const held = SECTIONS.filter(s => !approved[s.k] && (pub[s.k]||"").trim());
-  const personDep = (vis.items||[]).filter(i => visVerdictOf(i) === "person-dependent");
+  const personDep = (vis.items||[]).filter(i => visVerdictOf(i) === "personal");
   const farmName = (profile||{}).location ? `${profile.location}` : "";
 
   // Short form takes the first sentence of each approved section, plus the rules.
@@ -6226,8 +6360,8 @@ function VIS8({ vis, profile }) {
   if (!live.length) {
     return (
       <div>
-        <Head eyebrow="Strategic vision · Stage 8" title="The document" sub="Nothing is approved for publishing yet." />
-        <Flag type="warn">Go back to stage 7 and tick "Approved to publish" on the sections you are willing to stand behind in front of your team. Nothing appears here until you do, which is deliberate.</Flag>
+        <Head eyebrow="Strategic vision · Stage 12" title="The document" sub="Nothing is approved for publishing yet." />
+        <Flag type="warn">Go back to stage 10 and tick "Approved to publish" on the sections you are willing to stand behind in front of your team. Nothing appears here until you do, which is deliberate.</Flag>
         {held.length > 0 && (
           <div style={cardStyle()}>
             <div style={cardLblStyle()}>Written but not approved</div>
@@ -6242,7 +6376,7 @@ function VIS8({ vis, profile }) {
 
   return (
     <div>
-      <Head eyebrow="Strategic vision · Stage 8" title="The document" sub="What actually gets handed to the team. Only approved sections appear. Everything diagnostic stays in your working record." />
+      <Head eyebrow="Strategic vision · Stage 12" title="The document" sub="What actually gets handed to the team. Only approved sections appear. Everything diagnostic stays in your working record." />
 
       <div style={{ display:"flex", gap:8, alignItems:"center", borderBottom:`1px solid ${T.border}`, marginBottom:18, flexWrap:"wrap" }}>
         {[["full","The one-pager"],["short","Short form"],["rollout","Rollout guide"]].map(([k,lab]) => {
@@ -6365,7 +6499,7 @@ function VIS8({ vis, profile }) {
 
 // ══════════════════════════════════════════════����══════════════════════════════
 // LOCAL PERSISTENCE — the farm record stays on the farmer's own machine
-// ═════════════════════════�����═══════════════════════════════════════════════���═══
+// ══════════════════════��══�����═══════════════════════════════════════════════���═══
 // Everything a farmer enters saves to their browser automatically and reloads
 // next time. Nothing is transmitted. For this data in particular — succession
 // tensions, sweat equity figures, who the operator thinks is not ready — that is
@@ -6817,7 +6951,7 @@ export default function App() {
 
   const chips = isFA ? fa.enterprises.map(e => ({ label: ENT[e]?ENT[e].label:e }))
     : isRD ? (rd.data.selectedOpps||[]).slice(0,3).map(id => { const o=OPPS.find(x=>x.id===id); return { label:o?o.label:id }; })
-    : isVis ? [{ label: visStats(vis).tested > 0 ? `${visStats(vis).real} of ${visStats(vis).total} hold up` : `${visStats(vis).total} claims` }]
+    : isVis ? [{ label: visStats(vis).tested > 0 ? `${visStats(vis).real} ${visStats(vis).real===1?"advantage":"advantages"} · ${visStats(vis).tableStakes} ${visStats(vis).tableStakes===1?"competency":"competencies"}` : `${visStats(vis).total} claims` }]
     : isLeg ? (legRole === "successor"
         ? [{ label:`${mirrorProgress(leg).suc} of ${mirrorProgress(leg).total} answered` }]
         : legRole === "compare"
@@ -6902,7 +7036,8 @@ else if (isRD) { if (rd.stage<rdTotal) goRD(rd.stage+1); else goLegacy(1); }
     : legRole === "compare" ? <LegCompare leg={leg} setLegData={setLegData} setSucc={setSucc} />
     : LEG_BODY[stage-1];
   const VIS_BODY = [
-  <VIS1 vis={vis} setVis={setVis} profile={profile} goProfile={()=>goVision(10)} />,
+  <VIS_INTRO />,
+  <VIS1 vis={vis} setVis={setVis} profile={profile} setProfile={setProfile} goProfile={()=>goVision(VIS_PROFILE_STAGE)} />,
   <VIS2 vis={vis} setVis={setVis} kind="advantage" />,
   <VIS_VALUES vis={vis} setVis={setVis} profile={profile} />,
   <VIS2 vis={vis} setVis={setVis} kind="value" />,
@@ -6934,6 +7069,7 @@ else if (isRD) { if (rd.stage<rdTotal) goRD(rd.stage+1); else goLegacy(1); }
   {false && <div style={{ marginBottom:26, borderRadius:16, overflow:"hidden", border:`1px solid ${T.div}`, background:T.bgAlt }}><img src="/strategic-vision-roadmap.png" alt="Strategic vision roadmap from capabilities and values to a statement, profile, and final document" style={{ display:"block", width:"100%", height:150, objectFit:"cover" }} /><div style={{ display:"flex", justifyContent:"space-between", gap:10, padding:"10px 14px", color:T.fgS, fontSize:11.5 }}><span>Build the next decision-ready layer</span><span style={{ color:T.green, fontWeight:700 }}>Stage {stage} of {total}</span></div></div>}
   <div style={{ maxWidth:900, marginBottom:26, color:T.fgS, fontSize:14, lineHeight:1.6 }}>{moduleSupport}</div>
   {isVis && stage === 1 && <VisionInlineVisual stageLabel="Core capability → defensible advantage" />}
+  {isVis && <VisSequence n={stage} />}
   {body}
   </section>
   );
@@ -7036,7 +7172,7 @@ else if (isRD) { if (rd.stage<rdTotal) goRD(rd.stage+1); else goLegacy(1); }
 
       <div style={{ display:"flex", flex:1, overflow:"hidden" }}>
 
-        {isEagleEye ? <EagleEye profile={profile} vision={vis} onBack={() => goVision(10)} /> : isProfile ? (
+        {isEagleEye ? <EagleEye profile={profile} vision={vis} onBack={() => goVision(VIS_PROFILE_STAGE)} /> : isProfile ? (
           <>
             <aside className="mfp-flow-rail" style={{ width:240, background:"#0b5577", borderRight:`1px solid #062f4b`, display:"flex", flexDirection:"column", flexShrink:0, overflowY:"auto" }}>
               <div style={{ padding:"22px 18px 14px" }}>
