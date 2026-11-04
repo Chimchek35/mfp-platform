@@ -1154,7 +1154,7 @@ const THREAT_PROMPTS = {
   natural:     ["Drought or a wet spring you cannot plant into", "Hail, wind, or a tornado", "An early freeze or flooding"],
   operational: ["Losing your biggest buyer or contract", "A disease outbreak in the herd", "A supplier who cannot deliver on time", "A recall or contamination issue"],
   personnel:   ["You or a key operator injured or unable to work", "Losing the one person who knows a critical job", "A death, divorce, or family dispute", "Not being able to find seasonal help"],
-  social:      ["A video or post about the farm going around", "A neighbour complaint or nuisance claim", "Pressure over a practice you use"],
+  social:      ["A video or post about the farm going around", "A neighbor complaint or nuisance claim", "Pressure over a practice you use"],
   technology:  ["Losing farm records or accounting data", "A hack, ransomware, or fraudulent payment", "GPS, monitors, or software failing mid-season"],
   price:       ["Commodity price dropping below your cost of production", "Input costs rising faster than output prices", "Interest rates on the operating line"],
   yield:       ["A crop failure or badly below-average yield", "Poor conception or death loss in livestock", "A pest or disease that cuts production"],
@@ -3994,7 +3994,7 @@ function FarmProfilePage({ profile, setProfile, fa, rd, goFA, goRD, goRisk, goLe
 // nothing here scores the family, and the tool is willing to say "not yet".
 
 const LEG_NORMALIZE = [
-  { tag:"THE TIMING", head:"Almost nobody starts this early", body:"Most families begin when something forces it. A health scare, a bad year, a conversation that went badly, or a neighbour's transfer that fell apart. Arriving late is the normal way to arrive." },
+  { tag:"THE TIMING", head:"Almost nobody starts this early", body:"Most families begin when something forces it. A health scare, a bad year, a conversation that went badly, or a neighbor's transfer that fell apart. Arriving late is the normal way to arrive." },
   { tag:"THE SILENCE", head:"The conversation has probably been avoided for years", body:"Both generations are usually waiting for the other to raise it. The senior generation does not want to look like they are leaving. The successor does not want to look like they are asking." },
   { tag:"THE IDENTITY", head:"Stepping back can feel like being erased", body:"For many operators the farm is not what they do, it is who they are. That is why plans stall on something that looks financial and is not." },
   { tag:"THE RESENTMENT", head:"There is often something nobody has said", body:"Years of below-market wages, a promise heard differently, or a sibling who left and still expects a share can sit underneath the financial questions." },
@@ -4453,7 +4453,7 @@ function LEG2({ leg, setLegData }) {
   const d = leg.data || {};
   const v = (k) => d[k] || "";
   const set = (k) => (e) => setLegData({ [k]: e.target.value });
-  return <div><Head eyebrow="Legacy · Stage 3" title="The successor question" sub="There may be a clear successor, several possibilities, or no successor at all. Naming the reality is the useful first step." /><div style={cardStyle()}><div style={cardLblStyle()}>The successor question</div>{legRow("Is there an identified successor?", <select style={inputStyle()} value={v("successorStatus")} onChange={set("successorStatus")}><option value="">Select</option><option value="working">Yes, and they are already working in the business</option><option value="identified">Yes, identified but not yet involved day to day</option><option value="maybe">Maybe, more than one candidate or nobody has said it out loud</option><option value="none">No, there is no successor</option></select>)}{d.successorStatus === "none" && <><Flag type="info">No successor is a legitimate path, not a failure. It deserves the same rigour as a family transition.</Flag>{legRow("Which direction makes most sense to explore?", <select style={inputStyle()} value={v("noSuccessorPath")} onChange={set("noSuccessorPath")}><option value="">Select</option><option value="sale">Orderly sale of the operation</option><option value="lease">Lease the ground to a neighbouring operation</option><option value="employee">Transition to a non-family employee</option><option value="winddown">Planned wind-down over a set number of years</option><option value="unsure">Genuinely unsure, that is the question</option></select>)}</>}{d.successorStatus === "maybe" && <Flag type="warn">More than one candidate, or nobody having said it out loud, is a common starting point. Naming it is the work of the next few stages.</Flag>}</div></div>;
+  return <div><Head eyebrow="Legacy · Stage 3" title="The successor question" sub="There may be a clear successor, several possibilities, or no successor at all. Naming the reality is the useful first step." /><div style={cardStyle()}><div style={cardLblStyle()}>The successor question</div>{legRow("Is there an identified successor?", <select style={inputStyle()} value={v("successorStatus")} onChange={set("successorStatus")}><option value="">Select</option><option value="working">Yes, and they are already working in the business</option><option value="identified">Yes, identified but not yet involved day to day</option><option value="maybe">Maybe, more than one candidate or nobody has said it out loud</option><option value="none">No, there is no successor</option></select>)}{d.successorStatus === "none" && <><Flag type="info">No successor is a legitimate path, not a failure. It deserves the same rigour as a family transition.</Flag>{legRow("Which direction makes most sense to explore?", <select style={inputStyle()} value={v("noSuccessorPath")} onChange={set("noSuccessorPath")}><option value="">Select</option><option value="sale">Orderly sale of the operation</option><option value="lease">Lease the ground to a neighboring operation</option><option value="employee">Transition to a non-family employee</option><option value="winddown">Planned wind-down over a set number of years</option><option value="unsure">Genuinely unsure, that is the question</option></select>)}</>}{d.successorStatus === "maybe" && <Flag type="warn">More than one candidate, or nobody having said it out loud, is a common starting point. Naming it is the work of the next few stages.</Flag>}</div></div>;
 }
 
 // ── Stage 3 — What exists on paper ───��───��───��───��───�������─────����──────────────
@@ -4497,7 +4497,7 @@ function LEG1_COMBINED({ leg, setLegData }) {
               <select style={inputStyle()} value={v("noSuccessorPath")} onChange={set("noSuccessorPath")}>
                 <option value="">Select</option>
                 <option value="sale">Orderly sale of the operation</option>
-                <option value="lease">Lease the ground to a neighbouring operation</option>
+                <option value="lease">Lease the ground to a neighboring operation</option>
                 <option value="employee">Transition to a non-family employee</option>
                 <option value="winddown">Planned wind-down over a set number of years</option>
                 <option value="unsure">Genuinely unsure, that is the question</option>
@@ -5641,7 +5641,7 @@ const VIS_PROFILE_STAGE = 11;
 
 // The four tests. The first two sort strengths into kinds; none of the outcomes is a fail.
 const VIS_TESTS = [
-  { id:"neighbour", label:"Could a good neighbour match it?",
+  { id:"neighbour", label:"Could a good neighbor match it?",
     q:"If a well-run operation nearby set out to do this as well as you do, could they?",
     fail:"yes", failVerdict:"competency",
     failNote:"Then this is a core competency rather than a competitive advantage. It is still a real strength and losing it would hurt. It just is not the thing that sets you apart." },
@@ -5662,7 +5662,7 @@ const VIS_TESTS = [
 // Three kinds of strength, not a pass and two fails. Each leads somewhere different.
 const VIS_VERDICTS = {
   advantage: { label:"Competitive advantage", pill:"strong",
-    note:"Hard for a neighbour to copy and it does not walk out the door with any one person. This is what the strategy gets built on.",
+    note:"Hard for a neighbor to copy and it does not walk out the door with any one person. This is what the strategy gets built on.",
     next:"Protect it, invest in it, and say it plainly in the statement." },
   competency: { label:"Core competency", pill:"info",
     note:"Something this operation genuinely does well. A good operator nearby could do it too, which makes it the price of being competitive rather than what sets you apart.",
@@ -5678,7 +5678,7 @@ const VIS_VERDICTS = {
 
 const VIS_NO_ADVANTAGE = {
   head:"Most operations come out of this with core competencies rather than a competitive advantage",
-  body:"That is the usual result, not a bad one. A true competitive advantage is rare by definition. What you have named here is a set of real capabilities, and the practical question is which one is closest to becoming something a neighbour could not copy.",
+  body:"That is the usual result, not a bad one. A true competitive advantage is rare by definition. What you have named here is a set of real capabilities, and the practical question is which one is closest to becoming something a neighbor could not copy.",
 };
 
 // When a lender or advisor has already called something an advantage, the tool
@@ -5690,7 +5690,7 @@ const VIS_ADVISOR_NOTE = {
 };
 
 const VIS_BUILD_PROMPT = {
-  q:"What would have to be true for a good neighbour to find this hard to match?",
+  q:"What would have to be true for a good neighbor to find this hard to match?",
   hint:"Scale, a relationship nobody else has, a piece of equipment, a certification, a way of doing it that took years. If you can name it, that is the advantage you are building toward.",
 };
 
@@ -5781,7 +5781,7 @@ const visStats = (vis) => {
 // ── Vision intro — why this matters, and the vocabulary the module uses ──────
 function VIS_INTRO() {
   const terms = [
-    { h:"Competitive advantage", dot:T.moss, d:"Something your operation does that a well-run neighbour could not easily match, and that would still be true if you stepped back for a year.", e:"The only certified organic storage within 60 miles. A 20-year direct contract with the local creamery." },
+    { h:"Competitive advantage", dot:T.moss, d:"Something your operation does that a well-run neighbor could not easily match, and that would still be true if you stepped back for a year.", e:"The only certified organic storage within 60 miles. A 20-year direct contract with the local creamery." },
     { h:"Core competency", dot:T.blue, d:"Something you genuinely do well and that keeps you in the game, but that a good operator down the road could also do if they put their mind to it.", e:"Planting and harvesting on time. Equipment that starts when it should. Long days." },
     { h:"Personal strength", dot:T.amber, d:"A real strength that lives in one person rather than in the business. Valuable, but it leaves when they do.", e:"Landlord relationships one family member has built over thirty years." },
   ];
@@ -5801,7 +5801,7 @@ function VIS_INTRO() {
       <Head eyebrow="Strategic vision · Before you start" title="Why strategic vision matters" sub="" />
 
       <div style={{ display:"flex", flexWrap:"wrap", alignItems:"flex-start", gap:"20px 48px" }}>
-        <p style={{ flex:"1 1 340px", margin:0, fontSize:19, lineHeight:1.5, fontWeight:600, color:T.navy, letterSpacing:"-0.01em", textWrap:"pretty" }}>Every year a farm says yes or no to a few hundred things. Which ground to rent. Which machine to replace. Who to hire, and which neighbour&apos;s offer to turn down.</p>
+        <p style={{ flex:"1 1 340px", margin:0, fontSize:19, lineHeight:1.5, fontWeight:600, color:T.navy, letterSpacing:"-0.01em", textWrap:"pretty" }}>Every year a farm says yes or no to a few hundred things. Which ground to rent. Which machine to replace. Who to hire, and which neighbor&apos;s offer to turn down.</p>
         <div style={{ flex:"1 1 340px", display:"flex", flexDirection:"column", gap:14, paddingLeft:20, borderLeft:`2px solid ${T.div}` }}>
           <p style={{ ...prose, margin:0, fontSize:15, lineHeight:1.65, textWrap:"pretty" }}>Most of those calls get made on the day, by whoever is standing there. A strategic vision is simply the answer to <strong style={{ color:T.navy, fontWeight:600 }}>&ldquo;what are we trying to be?&rdquo;</strong> written down clearly enough that the next decision can be checked against it, by you, by a successor, or by a lender reading it cold.</p>
           <p style={{ ...prose, margin:0, fontSize:15, lineHeight:1.65, color:T.fgM, textWrap:"pretty" }}>It starts with an honest look at what the operation is actually good at. That is where two terms come in, and they are easy to mix up.</p>
@@ -5832,8 +5832,8 @@ function VIS_INTRO() {
           <thead>
             <tr>
               <th scope="col" style={{ ...axisHead, width:"30%" }}><span style={{ position:"absolute", width:1, height:1, overflow:"hidden", clip:"rect(0 0 0 0)", whiteSpace:"nowrap" }}>Would it hold if you stepped back?</span></th>
-              <th scope="col" style={{ ...axisHead, paddingBottom:6 }}>A good neighbour <em style={{ color:T.navy }}>could not</em> match it</th>
-              <th scope="col" style={{ ...axisHead, paddingBottom:6 }}>A good neighbour <em style={{ color:T.navy }}>could</em> match it</th>
+              <th scope="col" style={{ ...axisHead, paddingBottom:6 }}>A good neighbor <em style={{ color:T.navy }}>could not</em> match it</th>
+              <th scope="col" style={{ ...axisHead, paddingBottom:6 }}>A good neighbor <em style={{ color:T.navy }}>could</em> match it</th>
             </tr>
           </thead>
           <tbody>
@@ -6859,7 +6859,7 @@ const GENERIC_FARM_STRATEGY = {
   location: "Midwest corn belt, mixed county",
   size: "1,100 acres owned and rented",
   productionMix: "Corn and soybean rotation with a small cow-calf herd on marginal ground",
-  ventures: "Custom planting and harvest for two neighbours, on-farm grain storage",
+  ventures: "Custom planting and harvest for two neighbors, on-farm grain storage",
   grossIncome: "920000",
   nearTerm: "Complete a written succession plan. Get enterprise-level cost visibility in place before the next operating loan renewal. Hold gross margin steady through the current input cost cycle.",
   longTerm: "Transition ownership and management to the next generation on agreed terms. Add a second meaningful income stream that does not move with commodity price. Grow the land base slowly, and only where it adjoins existing ground.",
