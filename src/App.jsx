@@ -524,7 +524,7 @@ const REV_RAMP = { energy:[0,0,0,0,0,0,0,0,0,0,0,0], specialty:[0,0,0,0,0,0,0,2,
 
 // ─────────────────────────────────��───────────────────────────────────────────
 // FA STAGE 1 — Enterprise dashboard
-// ──────────────────────────────────────────────────�����������������──────────────────────────
+// ──────────────────────────────────────────────────�������������������──────────────────────────
 function FA1({ fa, setFA }) {
   const active = fa.enterprises;
   const toggle = (k) => setFA(s => ({ ...s, enterprises: s.enterprises.includes(k) ? s.enterprises.filter(x=>x!==k) : [...s.enterprises, k] }));
@@ -2892,7 +2892,7 @@ function RD3({ rd, setRData }) {
   );
 }
 
-// ───────────────────────────────────���─────���───���────���─���─���─���─�����������───���────────────
+// ───────────────────────────────────���─────���───���────�����─���─���─���─�����������───���────────────
 // RD STAGE 4 — Opportunity mapping
 // ────���──────────���──���─────────────────────────��──�����─────────────────────────────
 const GROWTH_TIER_LABEL = { 1:"Tier 1 · Fastest structural growth", 2:"Tier 2 · Strong growth", 3:"Tier 3 · Steady & selective" };
@@ -4456,7 +4456,7 @@ function LEG2({ leg, setLegData }) {
   return <div><Head eyebrow="Legacy · Stage 3" title="The successor question" sub="There may be a clear successor, several possibilities, or no successor at all. Naming the reality is the useful first step." /><div style={cardStyle()}><div style={cardLblStyle()}>The successor question</div>{legRow("Is there an identified successor?", <select style={inputStyle()} value={v("successorStatus")} onChange={set("successorStatus")}><option value="">Select</option><option value="working">Yes, and they are already working in the business</option><option value="identified">Yes, identified but not yet involved day to day</option><option value="maybe">Maybe, more than one candidate or nobody has said it out loud</option><option value="none">No, there is no successor</option></select>)}{d.successorStatus === "none" && <><Flag type="info">No successor is a legitimate path, not a failure. It deserves the same rigour as a family transition.</Flag>{legRow("Which direction makes most sense to explore?", <select style={inputStyle()} value={v("noSuccessorPath")} onChange={set("noSuccessorPath")}><option value="">Select</option><option value="sale">Orderly sale of the operation</option><option value="lease">Lease the ground to a neighbouring operation</option><option value="employee">Transition to a non-family employee</option><option value="winddown">Planned wind-down over a set number of years</option><option value="unsure">Genuinely unsure, that is the question</option></select>)}</>}{d.successorStatus === "maybe" && <Flag type="warn">More than one candidate, or nobody having said it out loud, is a common starting point. Naming it is the work of the next few stages.</Flag>}</div></div>;
 }
 
-// ── Stage 3 — What exists on paper ───────��───��───��───�������─────����──────────────
+// ── Stage 3 — What exists on paper ───��───��───��───��───�������─────����──────────────
 function LEG3({ leg, setLegData }) {
   const d = leg.data || {};
   const v = (k) => d[k] || "";
@@ -5800,10 +5800,12 @@ function VIS_INTRO() {
     <div>
       <Head eyebrow="Strategic vision · Before you start" title="Why strategic vision matters" sub="" />
 
-      <div style={{ display:"flex", flexDirection:"column", gap:16, maxWidth:660 }}>
-        <p style={{ margin:0, fontSize:20, lineHeight:1.5, fontWeight:600, color:T.navy, letterSpacing:"-0.01em", textWrap:"pretty" }}>Every year a farm says yes or no to a few hundred things. Which ground to rent. Which machine to replace. Who to hire, and which neighbour&apos;s offer to turn down.</p>
-        <p style={{ ...prose, margin:0, fontSize:15, lineHeight:1.65, textWrap:"pretty" }}>Most of those calls get made on the day, by whoever is standing there. A strategic vision is simply the answer to <strong style={{ color:T.navy, fontWeight:600 }}>&ldquo;what are we trying to be?&rdquo;</strong> written down clearly enough that the next decision can be checked against it, by you, by a successor, or by a lender reading it cold.</p>
-        <p style={{ ...prose, margin:0, fontSize:15, lineHeight:1.65, color:T.fgM, textWrap:"pretty" }}>It starts with an honest look at what the operation is actually good at. That is where two terms come in, and they are easy to mix up.</p>
+      <div style={{ display:"flex", flexWrap:"wrap", alignItems:"flex-start", gap:"20px 48px" }}>
+        <p style={{ flex:"1 1 340px", margin:0, fontSize:19, lineHeight:1.5, fontWeight:600, color:T.navy, letterSpacing:"-0.01em", textWrap:"pretty" }}>Every year a farm says yes or no to a few hundred things. Which ground to rent. Which machine to replace. Who to hire, and which neighbour&apos;s offer to turn down.</p>
+        <div style={{ flex:"1 1 340px", display:"flex", flexDirection:"column", gap:14, paddingLeft:20, borderLeft:`2px solid ${T.div}` }}>
+          <p style={{ ...prose, margin:0, fontSize:15, lineHeight:1.65, textWrap:"pretty" }}>Most of those calls get made on the day, by whoever is standing there. A strategic vision is simply the answer to <strong style={{ color:T.navy, fontWeight:600 }}>&ldquo;what are we trying to be?&rdquo;</strong> written down clearly enough that the next decision can be checked against it, by you, by a successor, or by a lender reading it cold.</p>
+          <p style={{ ...prose, margin:0, fontSize:15, lineHeight:1.65, color:T.fgM, textWrap:"pretty" }}>It starts with an honest look at what the operation is actually good at. That is where two terms come in, and they are easy to mix up.</p>
+        </div>
       </div>
 
       {sectionHead(1, "Three words this module uses")}
@@ -5826,7 +5828,7 @@ function VIS_INTRO() {
       {sectionHead(2, "How you tell them apart")}
       <p style={{ ...prose, color:T.fgM, marginBottom:16, maxWidth:620 }}>Each strength you name gets two questions. The answers place it on this grid.</p>
       <div style={{ overflowX:"auto" }}>
-        <table style={{ width:"100%", minWidth:520, maxWidth:760, borderCollapse:"separate", borderSpacing:6, margin:"0 -6px" }}>
+        <table style={{ width:"100%", minWidth:520, maxWidth:1040, borderCollapse:"separate", borderSpacing:6, margin:"0 -6px" }}>
           <thead>
             <tr>
               <th scope="col" style={{ ...axisHead, width:"30%" }}><span style={{ position:"absolute", width:1, height:1, overflow:"hidden", clip:"rect(0 0 0 0)", whiteSpace:"nowrap" }}>Would it hold if you stepped back?</span></th>
@@ -6875,7 +6877,7 @@ const GENERIC_FARM_FINANCIALS = {
   livingWithdrawals:"68000", incomeTaxes:"34000",
 };
 
-const VisionInlineVisual = ({ stageLabel }) => <div style={{ margin:"4px 0 26px", borderRadius:16, overflow:"hidden", border:`1px solid ${T.div}`, background:T.bgAlt }}><img src="/strategic-vision-roadmap.png" alt="View from a family office window over a diversified farm enterprise with crops, livestock, trucking, a farm store, and construction yard" style={{ display:"block", width:"100%", height:"auto", aspectRatio:"5 / 1", objectFit:"cover", objectPosition:"center 58%" }} /><div style={{ display:"flex", justifyContent:"space-between", gap:10, padding:"10px 14px", color:T.fgS, fontSize:11.5 }}><span>{stageLabel}</span><span style={{ color:T.green, fontWeight:700 }}>Vision in progress</span></div></div>;
+const VisionInlineVisual = ({ stageLabel }) => <div style={{ margin:"4px 0 26px", borderRadius:16, overflow:"hidden", border:`1px solid ${T.div}`, background:T.bgAlt }}><img src="/strategic-vision-roadmap.png" alt="View from a family office window over a diversified farm enterprise with crops, livestock, trucking, a farm store, and construction yard" style={{ display:"block", width:"100%", height:"auto", aspectRatio:"6 / 1", maxHeight:240, objectFit:"cover", objectPosition:"center 58%" }} /><div style={{ display:"flex", justifyContent:"space-between", gap:10, padding:"10px 14px", color:T.fgS, fontSize:11.5 }}><span>{stageLabel}</span><span style={{ color:T.green, fontWeight:700 }}>Vision in progress</span></div></div>;
 
 export default function App() {
   const [module, setModule] = useState("vision");
