@@ -524,7 +524,7 @@ const REV_RAMP = { energy:[0,0,0,0,0,0,0,0,0,0,0,0], specialty:[0,0,0,0,0,0,0,2,
 
 // ─────────────────────────────────��───────────────────────────────────────────
 // FA STAGE 1 — Enterprise dashboard
-// ──────────────────────────────────────────────────�������������──────────────────────────
+// ──────────────────────────────────────────────────���������������──────────────────────────
 function FA1({ fa, setFA }) {
   const active = fa.enterprises;
   const toggle = (k) => setFA(s => ({ ...s, enterprises: s.enterprises.includes(k) ? s.enterprises.filter(x=>x!==k) : [...s.enterprises, k] }));
@@ -2892,7 +2892,7 @@ function RD3({ rd, setRData }) {
   );
 }
 
-// ───────────────────────────────────���─────���───���────���─────���─�����������───���────────────
+// ───────────────────────────────────���─────���───���────���───���─���─�����������───���────────────
 // RD STAGE 4 — Opportunity mapping
 // ────���──────────���──���─────────────────────────��──�����─────────────────────────────
 const GROWTH_TIER_LABEL = { 1:"Tier 1 · Fastest structural growth", 2:"Tier 2 · Strong growth", 3:"Tier 3 · Steady & selective" };
@@ -4456,7 +4456,7 @@ function LEG2({ leg, setLegData }) {
   return <div><Head eyebrow="Legacy · Stage 3" title="The successor question" sub="There may be a clear successor, several possibilities, or no successor at all. Naming the reality is the useful first step." /><div style={cardStyle()}><div style={cardLblStyle()}>The successor question</div>{legRow("Is there an identified successor?", <select style={inputStyle()} value={v("successorStatus")} onChange={set("successorStatus")}><option value="">Select</option><option value="working">Yes, and they are already working in the business</option><option value="identified">Yes, identified but not yet involved day to day</option><option value="maybe">Maybe, more than one candidate or nobody has said it out loud</option><option value="none">No, there is no successor</option></select>)}{d.successorStatus === "none" && <><Flag type="info">No successor is a legitimate path, not a failure. It deserves the same rigour as a family transition.</Flag>{legRow("Which direction makes most sense to explore?", <select style={inputStyle()} value={v("noSuccessorPath")} onChange={set("noSuccessorPath")}><option value="">Select</option><option value="sale">Orderly sale of the operation</option><option value="lease">Lease the ground to a neighbouring operation</option><option value="employee">Transition to a non-family employee</option><option value="winddown">Planned wind-down over a set number of years</option><option value="unsure">Genuinely unsure, that is the question</option></select>)}</>}{d.successorStatus === "maybe" && <Flag type="warn">More than one candidate, or nobody having said it out loud, is a common starting point. Naming it is the work of the next few stages.</Flag>}</div></div>;
 }
 
-// ── Stage 3 — What exists on paper ───────────────��───�������─────����──────────────
+// ── Stage 3 — What exists on paper ───────────��───��───�������─────����──────────────
 function LEG3({ leg, setLegData }) {
   const d = leg.data || {};
   const v = (k) => d[k] || "";
@@ -5785,62 +5785,74 @@ function VIS_INTRO() {
     { h:"Core competency", dot:T.blue, d:"Something you genuinely do well and that keeps you in the game, but that a good operator down the road could also do if they put their mind to it.", e:"Planting and harvesting on time. Equipment that starts when it should. Long days." },
     { h:"Personal strength", dot:T.amber, d:"A real strength that lives in one person rather than in the business. Valuable, but it leaves when they do.", e:"Landlord relationships one family member has built over thirty years." },
   ];
-  const prose = { fontSize:15, color:T.fg, lineHeight:1.7, margin:"0 0 14px", maxWidth:620 };
-  const rule = { borderTop:`1px solid ${T.border}`, margin:"30px 0 22px" };
-  const kicker = { fontSize:12, fontWeight:600, color:T.navy, margin:"0 0 14px" };
-  const cell = { padding:"14px 16px", fontSize:13.5, lineHeight:1.5 };
-  const result = (dot, label) => <span style={{ display:"inline-flex", alignItems:"center", gap:8, fontWeight:600, color:T.navy }}><span aria-hidden="true" style={{ width:8, height:8, borderRadius:"50%", background:dot, flexShrink:0 }} />{label}</span>;
+  const tint = { [T.moss]:T.greenL, [T.blue]:T.blueL, [T.amber]:T.amberL };
+  const prose = { fontSize:15, color:T.fg, lineHeight:1.7, margin:0 };
+  const sectionHead = (n, label) => (
+    <div style={{ display:"flex", alignItems:"center", gap:14, margin:"44px 0 20px" }}>
+      <span style={{ fontSize:11, fontWeight:700, letterSpacing:"0.14em", textTransform:"uppercase", color:T.blue, whiteSpace:"nowrap" }}>{label}</span>
+      <span aria-hidden="true" style={{ flex:1, height:1, background:T.border }} />
+    </div>
+  );
+  const cellBase = { padding:"18px 20px", fontSize:13.5, lineHeight:1.5, verticalAlign:"top" };
+  const axisHead = { ...cellBase, textAlign:"left", fontSize:12, fontWeight:600, color:T.fgM, letterSpacing:"0.02em" };
+  const result = (dot, label) => <span style={{ display:"inline-flex", alignItems:"center", gap:9, fontSize:15, fontWeight:700, color:T.navy }}><span aria-hidden="true" style={{ width:10, height:10, borderRadius:3, background:dot, flexShrink:0 }} />{label}</span>;
   return (
     <div>
       <Head eyebrow="Strategic vision · Before you start" title="Why strategic vision matters" sub="" />
 
-      <p style={{ ...prose, fontSize:18, lineHeight:1.6, color:T.navy }}>Every year a farm says yes or no to a few hundred things. Which ground to rent. Which machine to replace. Who to hire, and which neighbour&apos;s offer to turn down.</p>
-      <p style={prose}>Most of those calls get made on the day, by whoever is standing there. A strategic vision is simply the answer to &ldquo;what are we trying to be?&rdquo; written down clearly enough that the next decision can be checked against it, by you, by a successor, or by a lender reading it cold.</p>
-      <p style={{ ...prose, color:T.fgM }}>It starts with an honest look at what the operation is actually good at. That is where two terms come in, and they are easy to mix up.</p>
+      <div style={{ display:"flex", flexWrap:"wrap", gap:"20px 48px", alignItems:"flex-start" }}>
+        <p style={{ flex:"1 1 340px", margin:0, fontSize:22, lineHeight:1.45, fontWeight:600, color:T.navy, letterSpacing:"-0.01em", textWrap:"balance" }}>Every year a farm says yes or no to a few hundred things. Which ground to rent. Which machine to replace. Who to hire, and which neighbour&apos;s offer to turn down.</p>
+        <div style={{ flex:"1 1 320px", display:"flex", flexDirection:"column", gap:14, paddingTop:4 }}>
+          <p style={prose}>Most of those calls get made on the day, by whoever is standing there. A strategic vision is simply the answer to <strong style={{ color:T.navy, fontWeight:600 }}>&ldquo;what are we trying to be?&rdquo;</strong> written down clearly enough that the next decision can be checked against it, by you, by a successor, or by a lender reading it cold.</p>
+          <p style={{ ...prose, color:T.fgM }}>It starts with an honest look at what the operation is actually good at. That is where two terms come in, and they are easy to mix up.</p>
+        </div>
+      </div>
 
-      <div style={rule} />
-      <div style={kicker}>Three words this module uses</div>
-      <dl style={{ margin:0 }}>
-        {terms.map((t, i) => (
-          <div key={t.h} style={{ display:"flex", flexWrap:"wrap", gap:"6px 28px", padding:"16px 0", borderTop: i ? `1px solid ${T.div}` : "none" }}>
-            <dt style={{ flex:"0 0 200px", display:"flex", alignItems:"baseline", gap:9, fontSize:15, fontWeight:600, color:T.navy }}>
-              <span aria-hidden="true" style={{ width:8, height:8, borderRadius:"50%", background:t.dot, flexShrink:0, transform:"translateY(-1px)" }} />{t.h}
-            </dt>
-            <dd style={{ flex:"1 1 320px", margin:0 }}>
-              <div style={{ fontSize:14.5, color:T.fg, lineHeight:1.65 }}>{t.d}</div>
-              <div style={{ fontSize:13.5, color:T.fgM, lineHeight:1.6, marginTop:6, fontStyle:"italic" }}>{t.e}</div>
+      {sectionHead(1, "Three words this module uses")}
+      <dl style={{ margin:0, display:"flex", flexWrap:"wrap", gap:14 }}>
+        {terms.map((t) => (
+          <div key={t.h} style={{ flex:"1 1 240px", display:"flex", flexDirection:"column", background:T.bg, border:`1px solid ${T.border}`, borderRadius:10, overflow:"hidden" }}>
+            <div aria-hidden="true" style={{ height:4, background:t.dot }} />
+            <div style={{ padding:"18px 20px 16px", display:"flex", flexDirection:"column", gap:10, flex:1 }}>
+              <dt style={{ fontSize:16, fontWeight:700, color:T.navy, letterSpacing:"-0.005em" }}>{t.h}</dt>
+              <dd style={{ margin:0, fontSize:14, color:T.fg, lineHeight:1.6, flex:1 }}>{t.d}</dd>
+            </div>
+            <dd style={{ margin:0, padding:"12px 20px 14px", background:tint[t.dot], fontSize:13, color:T.fgM, lineHeight:1.55 }}>
+              <span style={{ display:"block", fontSize:10.5, fontWeight:700, letterSpacing:"0.12em", textTransform:"uppercase", color:T.navy, marginBottom:4 }}>For example</span>
+              {t.e}
             </dd>
           </div>
         ))}
       </dl>
 
-      <div style={rule} />
-      <div style={kicker}>How you tell them apart</div>
-      <p style={{ ...prose, color:T.fgM }}>Each strength you name gets two questions. The answers place it on this grid.</p>
+      {sectionHead(2, "How you tell them apart")}
+      <p style={{ ...prose, color:T.fgM, marginBottom:16, maxWidth:620 }}>Each strength you name gets two questions. The answers place it on this grid.</p>
       <div style={{ overflowX:"auto" }}>
-        <table style={{ width:"100%", minWidth:460, borderCollapse:"collapse", border:`1px solid ${T.border}`, borderRadius:8, overflow:"hidden", maxWidth:680 }}>
+        <table style={{ width:"100%", minWidth:520, maxWidth:760, borderCollapse:"separate", borderSpacing:6, margin:"0 -6px" }}>
           <thead>
-            <tr style={{ background:T.bgAlt }}>
-              <th scope="col" style={{ ...cell, textAlign:"left", fontWeight:500, color:T.fgM, width:"34%" }}><span style={{ position:"absolute", width:1, height:1, overflow:"hidden", clip:"rect(0 0 0 0)", whiteSpace:"nowrap" }}>Would it hold if you stepped back?</span></th>
-              <th scope="col" style={{ ...cell, textAlign:"left", fontWeight:600, color:T.navy, borderLeft:`1px solid ${T.border}` }}>A good neighbour <em>could not</em> match it</th>
-              <th scope="col" style={{ ...cell, textAlign:"left", fontWeight:600, color:T.navy, borderLeft:`1px solid ${T.border}` }}>A good neighbour <em>could</em> match it</th>
+            <tr>
+              <th scope="col" style={{ ...axisHead, width:"30%" }}><span style={{ position:"absolute", width:1, height:1, overflow:"hidden", clip:"rect(0 0 0 0)", whiteSpace:"nowrap" }}>Would it hold if you stepped back?</span></th>
+              <th scope="col" style={{ ...axisHead, paddingBottom:6 }}>A good neighbour <em style={{ color:T.navy }}>could not</em> match it</th>
+              <th scope="col" style={{ ...axisHead, paddingBottom:6 }}>A good neighbour <em style={{ color:T.navy }}>could</em> match it</th>
             </tr>
           </thead>
           <tbody>
-            <tr style={{ borderTop:`1px solid ${T.border}` }}>
-              <th scope="row" style={{ ...cell, textAlign:"left", fontWeight:600, color:T.navy, background:T.bgAlt }}>Still true if you stepped back a year</th>
-              <td style={{ ...cell, borderLeft:`1px solid ${T.border}` }}>{result(T.moss, "Competitive advantage")}</td>
-              <td style={{ ...cell, borderLeft:`1px solid ${T.border}` }}>{result(T.blue, "Core competency")}</td>
+            <tr>
+              <th scope="row" style={{ ...axisHead, paddingLeft:0, textAlign:"right", paddingRight:14 }}>Still true if you stepped back a year</th>
+              <td style={{ ...cellBase, background:T.greenL, borderRadius:8, height:64 }}>{result(T.moss, "Competitive advantage")}</td>
+              <td style={{ ...cellBase, background:T.blueL, borderRadius:8 }}>{result(T.blue, "Core competency")}</td>
             </tr>
-            <tr style={{ borderTop:`1px solid ${T.border}` }}>
-              <th scope="row" style={{ ...cell, textAlign:"left", fontWeight:600, color:T.navy, background:T.bgAlt }}>Would fade without you</th>
-              <td colSpan={2} style={{ ...cell, borderLeft:`1px solid ${T.border}` }}>{result(T.amber, "Personal strength")}<span style={{ color:T.fgM, marginLeft:10 }}>until it is handed on or written into the business</span></td>
+            <tr>
+              <th scope="row" style={{ ...axisHead, paddingLeft:0, textAlign:"right", paddingRight:14 }}>Would fade without you</th>
+              <td colSpan={2} style={{ ...cellBase, background:T.amberL, borderRadius:8 }}>
+                <div style={{ display:"flex", flexWrap:"wrap", alignItems:"center", gap:"4px 12px" }}>{result(T.amber, "Personal strength")}<span style={{ color:T.fgM }}>until it is handed on or written into the business</span></div>
+              </td>
             </tr>
           </tbody>
         </table>
       </div>
 
-      <p style={{ ...prose, color:T.fgM, marginTop:22 }}>Expect most of your list to land in the middle column. That is normal. Real advantages are rare by definition, and they are usually built out of a competency someone kept pushing on.</p>
+      <p style={{ ...prose, color:T.fgM, marginTop:28, paddingTop:18, borderTop:`1px solid ${T.div}`, maxWidth:680 }}><strong style={{ color:T.navy, fontWeight:600 }}>Expect most of your list to land in the middle column.</strong> That is normal. Real advantages are rare by definition, and they are usually built out of a competency someone kept pushing on.</p>
     </div>
   );
 }
@@ -5915,7 +5927,7 @@ function VIS1({ vis, setVis, profile, setProfile, goProfile }) {
   );
 }
 
-// ── Vision 2 — Core values ───────────────────────────────────────────────────
+// ── Vision 2 — Core values ────────���──────────────────────────────────────────
   function VIS_VALUES({ vis, setVis, profile }) {
   const values = (vis.items || []).filter(i => i.kind === "value");
   const setValue = (id, text) => setVis({ items:(vis.items || []).map(i => i.id===id ? { ...i, text } : i) });
@@ -5934,7 +5946,7 @@ function VIS1({ vis, setVis, profile, setProfile, goProfile }) {
   </div>;
   }
 
-// ── Vision 3 — Test it ────────────�����──────��────────────���─────���───���─���─────────
+// ── Vision 3 — Test it ────────────�����──────��──────���─────���─────���───���─���─────────
   function VIS2({ vis, setVis, kind="advantage" }) {
   const isValuesTest = kind === "value";
   const items = (vis.items||[]).filter(i => i.kind === kind && i.text && i.text.trim());
