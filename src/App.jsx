@@ -126,7 +126,7 @@ const IconCheckSm = ({ color = "#fff", size = 11 }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>
 );
 
-// ─────────────────────────────────────────────────�������───────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
 // STYLE HELPERS
 // ─────────────────────────────────────────────────────────────────────────────
 const cardStyle = (extra={}) => ({ background:"#fff", border:`1px solid ${T.border}`, borderRadius:16, padding:"24px 28px", marginBottom:20, boxShadow:"0 8px 24px rgba(14,28,57,.06)", ...extra });
@@ -209,9 +209,9 @@ const Head = ({ eyebrow, title, sub, showFinancialVisual = true }) => {
   </div>;
 };
 
-// ─���������������──────────────�����────────────────────────────────────�������������������������──�����────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
 // DATA
-// ─��─��───��───��────────────────��─��──────────────────────────────────────��─��─��─���─
+// ─────────────────────────────────────────────────────────────────────────────
 const FA_STAGES = [
   { n:1, label:"Your accounting profile" }, { n:2, label:"Enterprise registry & shared costs" },
   { n:3, label:"Upload your documents" }, { n:4, label:"Budgeting & working capital" }, { n:5, label:"Ratio deep dive" }, { n:6, label:"Peer benchmarking" },
@@ -391,7 +391,7 @@ const OPPS = [
   { id:"fiberCrew", label:"Trenching, boring & fiber make-ready", category:"Human capital", cluster:"Skilled Trades & Industrial Services", growthTier:1, sizeFit:["mid","large"], desc:"Use tile drainage and excavation equipment and operators for rural broadband (BEAD) and utility site work. The U.S. is short about 58,000 skilled workers for rural broadband, and scattered rural builds favor local crews.", demand:"Scattered rural builds favor local crews", time:"6–12 months", capital:"$10K–$150K", fit:{asset:80,trust:70,risk:50}, reg:4, seasonal:5, effort:5, liquidity:2, employeeLed:true, offSeason:false, draft:true },
   { id:"vegMgmt", label:"Solar & right-of-way vegetation management", category:"Human capital", cluster:"Skilled Trades & Industrial Services", growthTier:2, sizeFit:["small","mid","large"], desc:"Graze sheep or mow solar sites and utility corridors using existing livestock, fencing, and mowing skills. Most solar grazers also sell mowing, weeding, and fencing.", demand:"Grazing ran about 60% of mowing cost in one Virginia case", time:"6–18 months", capital:"$5K–$30K", fit:{asset:55,trust:60,risk:40}, reg:3, seasonal:4, effort:3, liquidity:3, employeeLed:true, offSeason:false, draft:true },
   { id:"shopAcquisition", label:"Acquire a retiring machine or fab shop", category:"Human capital", cluster:"Skilled Trades & Industrial Services", growthTier:2, sizeFit:["large"], desc:"Buy an existing shop from an owner without a successor and move farm welders and mechanics into it. Buying avoids the certification and qualification barriers that make starting a shop from scratch hard.", demand:"Machine shop count falling about 1% a year", time:"Immediate at close", capital:"$150K–$1M+", fit:{asset:40,trust:80,risk:85}, reg:3, seasonal:1, effort:5, liquidity:1, employeeLed:true, offSeason:true, draft:true },
-  // ─��� Financial capital deployment — opportunity-cost alternatives to physical/sweat-equity
+  // ── Financial capital deployment — opportunity-cost alternatives to physical/sweat-equity
   // ventures. These convert capital directly into future income or risk protection with
   // minimal ongoing physical effort. Not financial advice — for comparison only; a licensed
   // financial advisor or Farm Credit advisor should be consulted before committing capital.
@@ -514,7 +514,7 @@ const RD_ACTIONS = {
   selfInsurance:[{t:"r",title:"Consult an insurance and tax specialist about captive or self-insurance structures",d:"This is one of the more complex tools on this list — specialized advice is essential before proceeding."},{t:"a",title:"Quantify your current premium spend and loss history first",d:"Compare what you're paying now in premiums against the cost of building an equivalent reserve to see if this is worth pursuing."},{t:"g",title:"Fund the reserve systematically over multiple years",d:"Self-insurance only works if the reserve is large enough to absorb a real loss — underfunding defeats the purpose."}],
   retirementPlan:[{t:"r",title:"Confirm current-year contribution limits with your tax advisor",d:"SEP-IRA and defined benefit limits change annually and depend on your business structure and income — this needs a current-year check, not a rule of thumb."},{t:"a",title:"Model the tax savings against this specific year's income",d:"The benefit is largest in high-income years — a tax advisor can confirm the real dollar impact for your situation."},{t:"g",title:"Set up systematic annual contributions rather than one-time decisions",d:"Consistent funding across multiple years builds meaningfully more retirement income than sporadic contributions."}],
   sellerFinancing:[{t:"r",title:"Have an attorney draft and properly secure the note",d:"Proper collateral documentation protects you if the buyer defaults — do not handshake this."},{t:"a",title:"Underwrite the buyer's ability to pay as carefully as a bank would",d:"You're taking on real credit risk — don't skip due diligence just because it's a neighbor or relative."},{t:"g",title:"Price the interest rate to reflect the real risk you're taking",d:"Compare against current ag lending rates — below-market seller financing is effectively a gift, not an investment."}],
-  agReit:[{t:"r",title:"Compare 2–3 platforms on fee structure, minimum investment, and historical distributions",d:"Not financial advice — fee drag varies significantly between platforms and materially affects net return."},{t:"a",title:"Confirm the liquidity terms before committing capital",d:"Understand exactly when and how you could exit �� some platforms only offer liquidity windows annually or at fund maturity."},{t:"g",title:"Treat this as a longer-horizon layer, not a near-term reserve",d:"This fits the third step of the sequencing framework — fund your equipment reserve and diversify income first."}],
+  agReit:[{t:"r",title:"Compare 2–3 platforms on fee structure, minimum investment, and historical distributions",d:"Not financial advice — fee drag varies significantly between platforms and materially affects net return."},{t:"a",title:"Confirm the liquidity terms before committing capital",d:"Understand exactly when and how you could exit — some platforms only offer liquidity windows annually or at fund maturity."},{t:"g",title:"Treat this as a longer-horizon layer, not a near-term reserve",d:"This fits the third step of the sequencing framework — fund your equipment reserve and diversify income first."}],
 };
 
 const REV_RAMP = { energy:[0,0,0,0,0,0,0,0,0,0,0,0], specialty:[0,0,0,0,0,0,0,2,5,7,8,8], custom:[0,0,3,5,5,5,5,5,5,5,3,0], carbon:[0,0,0,0,0,0,2,3,3,3,3,3], education:[0,0,2,4,5,6,6,5,4,4,2,0], processing:[0,0,0,0,0,0,0,0,1,2,4,6], consulting:[0,2,3,4,4,4,4,4,4,4,3,2], storage:[0,0,0,0,0,0,0,8,8,8,4,4],
@@ -522,9 +522,9 @@ const REV_RAMP = { energy:[0,0,0,0,0,0,0,0,0,0,0,0], specialty:[0,0,0,0,0,0,0,2,
   addBeefHerd:[0,0,0,0,0,0,0,0,0,1,2,3], growFeedCrops:[0,0,0,0,0,0,0,0,3,5,3,0], vegetableCrops:[0,0,0,0,0,2,4,5,4,2,0,0], perennialCrops:[0,0,0,0,0,0,0,0,0,0,0,0],
   annuity:[3,3,3,3,3,3,3,3,3,3,3,3], wholeLife:[0,0,0,0,0,0,1,1,1,1,1,1], selfInsurance:[0,0,0,0,1,1,1,2,2,2,2,2], retirementPlan:[2,2,2,2,2,2,2,2,2,2,2,2], sellerFinancing:[4,4,4,4,4,4,4,4,4,4,4,4], agReit:[0,0,0,2,2,2,2,2,2,2,2,2] };
 
-// ─────────────────────────────────��───────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
 // FA STAGE 1 — Enterprise dashboard
-// ──────────────────────────────────────────────────�����������������������──────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
 function FA1({ fa, setFA }) {
   const active = fa.enterprises;
   const toggle = (k) => setFA(s => ({ ...s, enterprises: s.enterprises.includes(k) ? s.enterprises.filter(x=>x!==k) : [...s.enterprises, k] }));
@@ -607,7 +607,7 @@ function FA1Registry({ fa, setFA }) {
   </div>;
 }
 
-// ─────────────────────────�����────���─��───────────────────────────────────────────
+// ────────────────────────────────────────────────────────────────────────────
 // FA STAGE 2 — Goal alignment
 // ─────────────────────────────────────────────────────────────────────────────
 function FA2({ fa, setFA }) {
@@ -615,7 +615,7 @@ function FA2({ fa, setFA }) {
   const set = (f,v) => setFA(s => ({ ...s, goals:{ ...s.goals, [f]:v } }));
   const Qs = [
     { key:"trigger", title:"What triggered this review?", opts:[["lender","Lender / Farm Credit meeting coming up","Loan review, line renewal, or annual meeting"],["year","Difficult year — margins compressed","Input cost spike, price collapse, or tough crop year"],["growth","Planning growth or major investment","Evaluating land purchase or expansion"],["succession","Succession or transition planning","Getting the financial picture clear before a generational transfer"],["habit","Building a monitoring habit","Want to track financials consistently"]] },
-    { key:"concern", title:"Which area concerns you most?", opts:[["cashflow","Cash flow — can I cover obligations?","Operating line pulling tighter"],["profitability","Profitability — am I making money per enterprise?","Unsure which enterprises cover full costs"],["debt","Debt load �� is my balance sheet sustainable?","D/A ratio or equity position"],["efficiency","Efficiency — where are costs too high?","OER or cost per unit vs. peers"],["benchmarks","Benchmarking — how do I compare?","Want to see where I stand vs. similar operations"]] },
+    { key:"concern", title:"Which area concerns you most?", opts:[["cashflow","Cash flow — can I cover obligations?","Operating line pulling tighter"],["profitability","Profitability — am I making money per enterprise?","Unsure which enterprises cover full costs"],["debt","Debt load — is my balance sheet sustainable?","D/A ratio or equity position"],["efficiency","Efficiency — where are costs too high?","OER or cost per unit vs. peers"],["benchmarks","Benchmarking — how do I compare?","Want to see where I stand vs. similar operations"]] },
     { key:"outcome", title:"What does success look like?", opts:[["understand","Understand what my numbers mean","Translate ratios into plain language"],["improve","Action plan for my weakest ratios","2–3 highest-leverage actions"],["lenderready","Be lender-ready","Ratios and narrative ready for my Farm Credit advisor"],["monitor","Annual monitoring system","Repeatable process I can run every year"]] },
   ];
   const tracking = g.tracking || [];
@@ -656,7 +656,7 @@ function FA2({ fa, setFA }) {
   );
 }
 
-// ──────��─��─��─��───────────────────────────────────────���──���─���─────��─────────────
+// ─────────────────────────────────────────────────────────────────────────────
 // FA STAGE 3 — Ratio deep dive
 // ─────────────────────────────────────────────────────────────────────────────
 // Shared ratio engine for Financial Analysis Stage 3. Extracted to a single function so
@@ -688,7 +688,7 @@ const computeFARatios = (s3) => {
   const dDeferredRev = gv("deferredRevEnd")-gv("deferredRevBegin");
   const revAdj = dAR + dCropInv + dLivestockInv + dFeederInv - dDeferredRev;
 
-  // Expense-side accrual adjustments: Δ(payables + accruals) ��� Δ(prepaid + growing crops)
+  // Expense-side accrual adjustments: Δ(payables + accruals) ─ Δ(prepaid + growing crops)
   const dAP = gv("apEnd")-gv("apBegin");
   const dAccrInt = gv("accrIntEnd")-gv("accrIntBegin");
   const dOtherAccr = gv("otherAccrEnd")-gv("otherAccrBegin");
@@ -768,9 +768,9 @@ const computeFARatios = (s3) => {
            accrualGross, accrualOpex, ratios, categories };
 };
 
-// ───────────────────────────────────────────────────────────────��─────────────
+// ─────────────────────────────────────────────────────────────────────────────
 // FA STAGE 3 — Document upload & AI-assisted extraction (placeholder / demo)
-// ──────────────────────────────────��──────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
 // This UI is fully built and clickable end-to-end, but the actual scan step below
 // returns realistic MOCK data rather than calling a real extraction service. Real
 // document scanning requires a server-side component: an uploaded file can never be
@@ -790,7 +790,7 @@ const MOCK_EXTRACTED_DATA = {
   endAssets:{val:"2960000",src:"Balance sheet — Dec 31"}, endLiab:{val:"1195000",src:"Balance sheet — Dec 31"},
   livingWithdrawals:{val:"68000",src:"Estimated from records"}, incomeTaxes:{val:"34000",src:"Tax return"},
   arBegin:{val:"18000",src:"Balance sheet — Jan 1"}, arEnd:{val:"27000",src:"Balance sheet — Dec 31"},
-  cropInvBegin:{val:"145000",src:"Balance sheet ��� Jan 1"}, cropInvEnd:{val:"189000",src:"Balance sheet — Dec 31"},
+  cropInvBegin:{val:"145000",src:"Balance sheet — Jan 1"}, cropInvEnd:{val:"189000",src:"Balance sheet — Dec 31"},
   livestockInvBegin:{val:"0",src:"Balance sheet — Jan 1"}, livestockInvEnd:{val:"0",src:"Balance sheet — Dec 31"},
   feederInvBegin:{val:"0",src:"Balance sheet — Jan 1"}, feederInvEnd:{val:"0",src:"Balance sheet — Dec 31"},
   deferredRevBegin:{val:"12000",src:"Balance sheet — Jan 1"}, deferredRevEnd:{val:"8000",src:"Balance sheet — Dec 31"},
@@ -850,7 +850,7 @@ function DocumentScanUpload({ fa, setFA }) {
             {uploadSlot("beginBS","Balance sheet — Jan 1","PDF or photo, optional")}
             {uploadSlot("endBS","Balance sheet — Dec 31","PDF or photo, optional")}
           </div>
-          <button onClick={runMockScan} disabled={!canScan||scanning} style={{ ...btnStyle("primary"), opacity:(!canScan||scanning)?0.5:1, pointerEvents:(!canScan||scanning)?"none":"auto" }}>{scanning?"Scanning�����":"Scan documents ��"}</button>
+          <button onClick={runMockScan} disabled={!canScan||scanning} style={{ ...btnStyle("primary"), opacity:(!canScan||scanning)?0.5:1, pointerEvents:(!canScan||scanning)?"none":"auto" }}>{scanning?"Scanning…":"Scan documents …"}</button>
         </>
       ) : (
         <>
@@ -992,9 +992,9 @@ function FA3({ fa, setFA }) {
   );
 }
 
-// ────────────���───────────────��────────────�����������─���──────────────────────────────��──
+// ─────────────────────────────────────────────────────────────────────────────
 // FA STAGE 4 — Peer benchmarking
-// ──────────────���─────────────────���───────────────────────���──────────────────���─
+// ─────────────────────────────────────────────────────────────────────────────
 function FA4({ fa, setFA }) {
   const b = fa.s4bench;
   const v = id => b[id]||""; const sv = (id,val) => setFA(s=>({...s,s4bench:{...s.s4bench,[id]:val}})); const gv = id => parseFloat(b[id]);
@@ -1006,7 +1006,7 @@ function FA4({ fa, setFA }) {
   const unitSuf = bb => bb.unit==="%"?"%":bb.unit==="x"?"x":"";
   return (
     <div>
-      <Head eyebrow="Financial Analysis · Stage 7" title="Peer benchmarking" sub="Compeer Financial and IFBA 2023–24 data. Mid-size row crop, $500K��$5M revenue, Midwest region." />
+      <Head eyebrow="Financial Analysis · Stage 7" title="Peer benchmarking" sub="Compeer Financial and IFBA 2023–24 data. Mid-size row crop, $500K–$5M revenue, Midwest region." />
       <div style={cardStyle()}>
         <div style={cardLblStyle()}>Enter your values</div>
         <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:14 }}>
@@ -1042,9 +1042,9 @@ function FA4({ fa, setFA }) {
   );
 }
 
-// ────────────────────���────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
 // FARM RISK — quiz categories & question bank
-// ────────────────────────────────────────────────────────��─���─����────────────────
+// ─────────────────────────────────────────────────────────────────────────────
 // Adapted from the Nationwide Farm Risk Ready℠ framework (risk identification,
 // managing/preventing risk, contingency planning, communicating the plan).
 const RISK_CATS = [
@@ -1132,9 +1132,9 @@ function RiskCategoryStage({ risk, setRisk, catIndex, fa, onStartConvo }) {
   );
 }
 
-// ───────────────────────────────��─────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
 // FARM RISK READY℠ PLAN BUILDER — shared data
-// ─────────────────��───────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
 const THREAT_CATEGORIES = [
   { id:"facility", label:"Facility", desc:"Fires, explosions, structure collapse", color:T.red, colorL:T.redL },
   { id:"natural", label:"Natural", desc:"Storms, floods, or wildfires", color:T.amber, colorL:T.amberL },
@@ -1224,7 +1224,7 @@ function RiskResultsStage({ risk }) {
 }
 
 
-// ═════════════════════════���═══════════════════════════════════════════════════
+// ═════════════════════════─═══════════════════════════════════════════════════
 // CONVERSATIONAL CAPTURE — Farm Risk Ready, steps 1 through 7
 // ═════════════════════════════════════════════════════════════════════════════
 // Speech capture runs entirely in the browser through the Web Speech API, so it
@@ -2271,7 +2271,7 @@ function CropInsuranceCalculator({ risk, setRisk, fa, profile }) {
           <div style={{ fontSize:12.5, color:"#0A6E8C", lineHeight:1.5 }}>
             <b>Financial Analysis carried over</b> — {faIpa>0 ? `your grain input cost of $${Math.round(faIpa)}/ac from Stage 1 is available.` : `whole-farm figures from Stage 3 suggest roughly $${Math.round(derivedVariable||0)}/ac in variable costs.`} These are whole-farm or blended-grain figures — if you separate corn and soybean costs, treat this as a starting point to confirm, not a precise per-crop number.
           </div>
-          <button onClick={useFAData} style={{ ...btnStyle("outline"), fontSize:11.5, padding:"6px 14px", whiteSpace:"nowrap", flexShrink:0 }}>Use my Financial Analysis numbers ���</button>
+          <button onClick={useFAData} style={{ ...btnStyle("outline"), fontSize:11.5, padding:"6px 14px", whiteSpace:"nowrap", flexShrink:0 }}>Use my Financial Analysis numbers →</button>
         </div>
       )}
 
@@ -2354,8 +2354,8 @@ function CropInsuranceCalculator({ risk, setRisk, fa, profile }) {
   );
 }
 
-// ───────────────���────────────────────���────────────────────────────────────────
-// FARM RISK �� Stage 11: Livestock insurance calculator
+// ─────────────────────────────────────────────────────────────────────────────
+// FARM RISK ─ Stage 11: Livestock insurance calculator
 // ─────────────────────────────────────────────────────────────────────────────
 // Models Livestock Risk Protection (LRP) mechanics: a price floor set at coverage
 // level × expected ending value, compared against cost of production per cwt.
@@ -2446,7 +2446,7 @@ function LivestockInsuranceCalculator({ risk, setRisk }) {
   );
 }
 
-// ───�����������������������─���──���────���──────────���──���───────────────────────────────────────���──────
+// ──────────────────────────────────────────────────────────────────────────
 // RD helpers
 // ─────────────────────────────────────────────────────────────────────────────
 // Each lever category is now built from specific, measurable items rather than one
@@ -2616,7 +2616,7 @@ const scoredOpps = (rd, faEnterprises, faS3vals) => { const d=rd.data||{}; const
     const timeOk = g.timeAppetite!=="minimal" || PASSIVE_TIME_OPPS.includes(o.id);
     const sizeMatch = !sizeBucket || !o.sizeFit ? true : o.sizeFit.includes(sizeBucket);
     const entMatch = !o.entSpecific || o.entSpecific===faEnt;
-    // entExclude: for "add a new enterprise you don't already run" opportunities ��� suppress
+    // entExclude: for "add a new enterprise you don't already run" opportunities ─ suppress
     // if the farmer already operates any of the excluded enterprises. entRelevant: modest
     // boost if the farmer runs an enterprise this opportunity is a natural complement to.
     const isExcluded = o.entExclude && o.entExclude.some(e => enterprises.includes(e));
@@ -2624,7 +2624,7 @@ const scoredOpps = (rd, faEnterprises, faS3vals) => { const d=rd.data||{}; const
     if (sizeMatch) leverMatch = leverMatch * 1.15; // modest boost for farms this opportunity typically suits
     if (o.entSpecific && !entMatch) leverMatch = leverMatch * 0.15; // heavily suppress enterprise-specific paths that don't apply
     if (isRelevant) leverMatch = leverMatch * 1.2; // boost — this complements an enterprise the farm already runs
-    if (isExcluded) leverMatch = leverMatch * 0.2; // heavily suppress ��� this isn't diversification if you already run it
+    if (isExcluded) leverMatch = leverMatch * 0.2; // heavily suppress — this isn't diversification if you already run it
     const crew = d.crewSkills || [];
     const skillMatch = CREW_SKILLS.some(c => crew.includes(c.id) && c.opps.includes(o.id));
     if (skillMatch) leverMatch = leverMatch * 1.35;
@@ -2640,9 +2640,9 @@ const scoredOpps = (rd, faEnterprises, faS3vals) => { const d=rd.data||{}; const
 
     return { ...o, leverMatch:Math.round(Math.min(100,leverMatch)), capOk, timeOk, sizeMatch, entMatch, isRelevant, isExcluded, skillMatch, faAdj, score:leverMatch*(capOk?1:0.3)*(timeOk?1:0.7)*(entMatch?1:0.1)*faAdj }; }).sort((a,b)=>b.score-a.score); };
 
-// ��������──��������──────────────────────────────────────────────────────────────────���
+// ───────────────────────────────────────────────────────────────────────
 // RD STAGE 1 — Baseline & readiness
-// ────────────────────────�������──���─���─�������───���─���────────────────���──��────������──���������──���────
+// ─────────────────────────────────────────────────────────────────────────
 function RD1({ rd, setRData, fa, profile }) {
   const d = rd.data; const b = d.baseline || {};
   const profileFarmTypes = [...new Set((Array.isArray(profile?.farmTypes) ? profile.farmTypes : String(profile?.productionMix||"").split(/,|;|\n/).map(v=>v.trim()).filter(Boolean)))];
@@ -2696,8 +2696,8 @@ function RD1({ rd, setRData, fa, profile }) {
 // them typically draw from farm business vs. wages vs. nonfarm business vs. transfers.
 const INCOME_BENCHMARK = [
   { label:"Residence farm", sub:"Small; operator's main job is off-farm", farm:"5–10%", wages:"55–65%", nonfarm:"10–15%", transfers:"15–25%", tiers:["< $500K"] },
-  { label:"Intermediate farm", sub:"Small; farming is the primary occupation", farm:"15��25%", wages:"45–55%", nonfarm:"10–15%", transfers:"15–20%", tiers:["< $500K","$500K – $2M"] },
-  { label:"Commercial family farm", sub:"≥ $350K gross cash income", farm:"55–70%", wages:"15–25%", nonfarm:"5–10%", transfers:"10–15%", tiers:["$500K ��� $2M","$2M ��� $5M"] },
+  { label:"Intermediate farm", sub:"Small; farming is the primary occupation", farm:"15–25%", wages:"45–55%", nonfarm:"10–15%", transfers:"15–20%", tiers:["< $500K","$500K – $2M"] },
+  { label:"Commercial family farm", sub:"≥ $350K gross cash income", farm:"55–70%", wages:"15–25%", nonfarm:"5–10%", transfers:"10–15%", tiers:["$500K – $2M","$2M – $5M"] },
   { label:"Large-scale family farm", sub:"≥ $1M gross cash income", farm:"70–85%", wages:"5–15%", nonfarm:"5–10%", transfers:"5–10%", tiers:["$2M – $5M","$5M+"] },
 ];
 function PeerIncomeBenchmark({ revTier }) {
@@ -2727,16 +2727,16 @@ function PeerIncomeBenchmark({ revTier }) {
   );
 }
 
-// ─────────��──�����───��─��───��───��─��──��────────────────────────────────���───────────
+// ────────────────────────────────────────────────────────────────────────────
 // RD STAGE 2 — Goal alignment
-// ───────────────────────────��────────────────────────────────────────��────��───
+// ──────────────────────────────��──────────────────────────────────────────────
 function RD2({ rd, setRData }) {
   const g = rd.data.goals2 || {};
   const set = (f,v) => setRData(s => ({ ...s, goals2:{ ...(s.goals2||{}), [f]:v } }));
   const Qs = [
     { key:"trigger", title:"What is prompting you to think about diversification?", opts:[["income","Add a new income stream","Grow total revenue beyond the primary commodity"],["risk","Reduce commodity price dependence","One bad year in grain or milk prices is too much exposure"],["assets","Put underutilized assets to work","Land, equipment or facilities that could generate more"],["succession","Build something to pass on","Diversification as part of a legacy and transition plan"],["curiosity","Understand my options first","No specific trigger — want to see what's possible"]] },
     { key:"horizon", title:"What time horizon are you planning for?", opts:[["1yr","First revenue within 12 months","Need results quickly"],["3yr","Building toward a 3-year plan","Willing to invest in groundwork now"],["5yr","Long-term structural change","A fundamental shift in how the farm generates income"]] },
-    { key:"capitalAppetite", title:"How much capital are you willing to invest?", opts:[["zero","$0 ����� no-capital paths only","Revenue from existing assets only"],["low","Under $10K","Small pilot investment"],["medium","$10K–$50K","Moderate investment if the return case is clear"],["high","$50K+","Meaningful investment for the right opportunity"]] },
+    { key:"capitalAppetite", title:"How much capital are you willing to invest?", opts:[["zero","$0 — no-capital paths only","Revenue from existing assets only"],["low","Under $10K","Small pilot investment"],["medium","$10K–$50K","Moderate investment if the return case is clear"],["high","$50K+","Meaningful investment for the right opportunity"]] },
     { key:"timeAppetite", title:"How much personal time can you commit?", opts:[["minimal","Less than 5 hours/week","Largely passive or handled by existing labor"],["moderate","5–15 hours/week","Can add a side activity without sacrificing core operations"],["significant","15+ hours/week","Willing to restructure around a new primary activity"]] },
   ];
   const Radio = ({ on }) => <div style={{ width:18, height:18, borderRadius:"50%", border:`2px solid ${on?T.blue:T.border}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>{on && <div style={{ width:8, height:8, borderRadius:"50%", background:T.blue }} />}</div>;
@@ -2764,9 +2764,9 @@ function RD2({ rd, setRData }) {
   );
 }
 
-// ──────────────���──────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
 // RD STAGE 3 — Human capital, assets & financial capital
-// ─���─���──────────────────────────────────────────────────────────������─���───────────
+// ────────────────────────────────────────────────────────────────────────────
 function CrewSkillsCard({ rd, setRData }) {
   const crew = rd.data.crewSkills || [];
   const toggleSkill = (id) => setRData(s => { const cur = s.crewSkills || []; return { ...s, crewSkills: cur.includes(id) ? cur.filter(x => x !== id) : [...cur, id] }; });
@@ -2892,9 +2892,9 @@ function RD3({ rd, setRData }) {
   );
 }
 
-// ───────────────────────────────────���─────���───�����───������─���─���─���─�����������───���────────────
+// ──────────────────────────────────────────────────────────────────────────
 // RD STAGE 4 — Opportunity mapping
-// ────���──────────���──���─────────────────────────��──�����─────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
 const GROWTH_TIER_LABEL = { 1:"Tier 1 · Fastest structural growth", 2:"Tier 2 · Strong growth", 3:"Tier 3 · Steady & selective" };
 const GROWTH_TIER_COLOR = { 1:T.dgreen, 2:T.blue, 3:T.tan };
 
@@ -2989,9 +2989,9 @@ function RD4({ rd, setRData, fa }) {
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────��───────
+// ─────────────────────────────────────────────────────────────────────────────
 // RD STAGE 5 — Barrier identification
-// ────────����───────────────────────────────────────────────────────────────────
+// ────────────────────────────────────────────────────────────────────────────
 // Cross-cutting regulatory & compliance checklist — surfaces for any selected path with
 // meaningful regulatory load (reg >= 3), independent of that path's specific barrier list.
 const COMPLIANCE_ITEMS = {
@@ -3020,7 +3020,7 @@ function RD5({ rd, setRData }) {
       </div>
       {maxReg>=3 && (
         <div style={cardStyle({ borderTop:`4px solid ${T.amber}` })}>
-          <div style={cardLblStyle()}><Apex color={T.amber} />Regulatory & compliance review ��� before you commit capital</div>
+          <div style={cardLblStyle()}><Apex color={T.amber} />Regulatory & compliance review — before you commit capital</div>
           <div style={{ fontSize:12.5, color:T.fgM, marginBottom:12, lineHeight:1.5 }}>At least one selected path carries meaningful regulatory load. Review these before signing contracts, leases, or making capital purchases.</div>
           {Object.entries(COMPLIANCE_ITEMS).map(([key,text]) => {
             const on = complianceAcked[key];
@@ -3058,9 +3058,9 @@ function RD5({ rd, setRData }) {
   );
 }
 
-// ────────────────────────────────���───────────────────────────────────��───����────
+// ─────────────────────────────────────────────────────────────────────────────
 // RD STAGE 6 — Policy & grant enablers
-// ────────────────────────────────────────────���───────���───────────────────��────
+// ─────────────────────────────────────────────────────────────────────────────
 // Deliberately mirrors Barrier Identification's structure — same per-opportunity card
 // layout, same checkbox-to-acknowledge pattern — but framed as tailwinds rather than
 // obstacles: policy and grant programs that could actively support a selected path,
@@ -3111,7 +3111,7 @@ function RDPolicyEnablers({ rd, setRData }) {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // RD STAGE 7 — Scenario comparison
-// ─────────────────────────────────────────────────────────────────────────────
+// ───────────────��─────────────────────────────────────────────────────────────
 const VALUES_ALIGNMENT_OPTS = [
   { id:"strong", label:"Strong fit", color:T.dgreen, bg:T.greenL },
   { id:"neutral", label:"Neutral", color:T.fgS, bg:T.div },
@@ -3240,9 +3240,9 @@ function OpportunityCostLens({ financialSel, physicalSel, setRData }) {
   );
 }
 
-// ───────────────────────────────────────────────────────────────────���─────────
+// ─────────────────────────────────────────────────────────────────────────────
 // RD STAGE 7 — Financial reserves & sequencing
-// ────────��────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
 // Distinct from Stage 4 (which opportunity to pursue): this stage is about capital
 // placement and timing — where reserve money sits, and in what order to fund the
 // equipment reserve, diversify income, and layer in longer-horizon investments.
@@ -3303,7 +3303,7 @@ function RD7({ rd, setRData, fa }) {
             </div>
             <div style={{ height:8, background:T.div, borderRadius:4, overflow:"hidden", marginBottom:8 }}><div style={{ height:"100%", width:`${fundedPct}%`, background:fundedPct>=100?T.dgreen:fundedPct>=60?T.amber:T.red, borderRadius:4, transition:"width .3s" }} /></div>
             {gap>0 && <Flag type="warn">At your current contribution rate, you're ${Math.round(gap).toLocaleString()}/year short of fully funding this reserve by the time the equipment needs replacing.</Flag>}
-            {reserveFunded && <Flag type="ok">Your reserve is on pace �� consider whether the next dollar is better spent on income diversification or a longer-horizon investment.</Flag>}
+            {reserveFunded && <Flag type="ok">Your reserve is on pace — consider whether the next dollar is better spent on income diversification or a longer-horizon investment.</Flag>}
           </>
         )}
         <div style={{ marginTop:14 }}>
@@ -3374,7 +3374,7 @@ function RD7({ rd, setRData, fa }) {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // RD STAGE 8 — Action plan
-// ──────────────────────────────────────���────────────────────���──────��──────────
+// ─────────────────────────────────────────────────────────────────────────────
 function RD8({ rd, fa }) {
   const d = rd.data; const selected = d.selectedOpps || []; const ranked = d.rankedOpps || []; const lev = d.leverItems || {}; const b = d.baseline || {};
   const sel = selected.map(id => OPPS.find(o=>o.id===id)).filter(Boolean).sort((a,c) => { const ra=(ranked.find(r=>r.id===a.id)||{}).rank||99, rb=(ranked.find(r=>r.id===c.id)||{}).rank||99; return ra-rb; });
@@ -3435,7 +3435,7 @@ function EfficiencyValueImpact({ sel, lev }) {
   const leverCount = [usesAsset,usesTrust,usesRisk].filter(Boolean).length;
   const calendarFit = avgSeasonal<=2 ? { label:"Complements your calendar", tone:"ok", text:"These paths largely run outside your peak planting/harvest window — labor and equipment conflicts should be minimal." }
     : avgSeasonal>=4 ? { label:"Competes with fieldwork", tone:"warn", text:"These paths draw on the same labor and equipment windows as your core operation — plan capacity carefully before committing." }
-    : { label:"Partial overlap", tone:"info", text:"Some seasonal overlap with core fieldwork exists �� confirm labor and equipment availability during peak weeks." };
+    : { label:"Partial overlap", tone:"info", text:"Some seasonal overlap with core fieldwork exists — confirm labor and equipment availability during peak weeks." };
   const correlationNote = usesRisk
     ? "At least one selected path is intentionally counter-cyclical to commodity prices — this reduces whole-farm income correlation and should smooth cash flow across a full price cycle."
     : "Your selected paths lean toward asset or trust monetization rather than counter-cyclical income — they add revenue but may not reduce your exposure to a commodity price downturn.";
@@ -3454,7 +3454,7 @@ function EfficiencyValueImpact({ sel, lev }) {
         </div>
         <div style={{ background:T.bgAlt, borderRadius:8, padding:"12px 14px" }}>
           <div style={{ fontSize:10.5, fontWeight:700, color:T.fgS, textTransform:"uppercase", letterSpacing:"0.05em", marginBottom:6 }}>Portfolio breadth</div>
-          <div style={{ fontSize:12.5, color:T.navy, lineHeight:1.5 }}>{leverCount>=2 ? `Your selections draw on ${leverCount} of the 3 diversification levers — a genuinely diversified plan rather than one concentrated bet.` : "Your selections lean on a single lever ��� consider whether one more path from a different lever would strengthen the plan."}</div>
+          <div style={{ fontSize:12.5, color:T.navy, lineHeight:1.5 }}>{leverCount>=2 ? `Your selections draw on ${leverCount} of the 3 diversification levers — a genuinely diversified plan rather than one concentrated bet.` : "Your selections lean on a single lever — consider whether one more path from a different lever would strengthen the plan."}</div>
         </div>
       </div>
       <Flag type={calendarFit.tone}>{calendarFit.label}: {calendarFit.text}</Flag>
@@ -3464,11 +3464,11 @@ function EfficiencyValueImpact({ sel, lev }) {
   );
 }
 
-// ══════���═══════════════════════════════���══���═���═���═����════��═══════����═════��══════��═══
+// ══════─═══════════════════════════════─══─═─═─═─════─═══════─═════─══════─═══
 // FARM PROFILE — a single 360° farm view that fills in as the farmer completes
 // onboarding and assessments, and feeds relevant fields back into FA, RD, and Risk
 // so nothing has to be entered twice.
-// ═════════════════════════════════════════════════════════════════════════════
+// ════════════��════════════════════════════════════════════════════════════════
 const ENT_KEYWORDS = { grain:["corn","soy","soybean","wheat","grain","oats"], dairy:["dairy","milk"], beef:["cattle","beef","cow-calf","cow calf"], hogs:["hog","hogs","swine","pork"], perennials:["perennial","orchard","vineyard","agroforestry"], produce:["produce","vegetable","vegetables","market garden"], other:["other","mixed enterprise"] };
 const matchEnterprisesFromText = (text) => {
   const t = (text||"").toLowerCase();
@@ -3507,9 +3507,9 @@ const FindingBlock = ({ kind, tag, heading, source, children }) => {
   );
 };
 
-// ═══════════════════��══��════════���═════════════════════════════════════════════
+// ═══════════════════─══─════════─═════════════════════════════════════════════
 // ACTION PLAN — twelve business areas, ranked into three priorities
-// ═════════════════════════════���══���═════════════════════════════════════���══════
+// ═════════════════════════════─══─═════════════════════════════════════─══════
 // Areas map to one of the four MFP categories, and some map to a guided module.
 // Ranking is weight-aware: a constraint area gates everything downstream, a value
 // area produces the largest near-term lift, so neither is ranked on raw score alone.
@@ -3798,7 +3798,7 @@ function FarmProfilePage({ profile, setProfile, fa, rd, goFA, goRD, goRisk, goLe
                     <p style={{ fontSize:11, color:T.fgS, margin:0, whiteSpace:"nowrap" }}>{t[1]}</p>
                   </div>
                   <p style={{ fontSize:12.5, color:T.fgM, margin:"4px 0 8px" }}>{t[2]}</p>
-                  <p style={{ fontSize:12, color:T.green, margin:0 }}>��� {t[3]}</p>
+                  <p style={{ fontSize:12, color:T.green, margin:0 }}>→ {t[3]}</p>
                 </div>
               ))}
             </div>
@@ -3982,9 +3982,9 @@ function FarmProfilePage({ profile, setProfile, fa, rd, goFA, goRD, goRisk, goLe
 }
 
 
-// ══════════════════════���══════════════════════════════════════════════════════
+// ══════════════════════─══════════════════════════════════════════════════════
 // LEGACY — Transition readiness
-// ════════���════���═════════════════════════════════════���═════════════════════════
+// ════════─════─═════════════════════════════════════─═════════════════════════
 // Deliberately does NOT open with assets. Operational transition is about who runs
 // the business; succession is about who owns it. This module tests the operating
 // question so the ownership question can be answered honestly, and hands off to
@@ -4139,7 +4139,7 @@ function LegacyVoiceField({ children }) {
           {listening ? "Stop" : "Speak"}
         </button>
       </div>
-      {listening && <div role="status" style={{ marginTop:5, fontSize:11.5, color:T.blue }}>Listening�� pause when you&apos;re finished.</div>}
+      {listening && <div role="status" style={{ marginTop:5, fontSize:11.5, color:T.blue }}>Listening… pause when you&apos;re finished.</div>}
       {!supported && <div style={{ marginTop:4, fontSize:11, color:T.fgS }}>Voice input is unavailable in this browser.</div>}
     </div>
   );
@@ -4156,8 +4156,8 @@ const legRow = (label, children, sub) => {
   );
 };
 
-// ═══════════════════════════════════════════��══════════════���══════════════════
-// LAND VALUATION �� Phase 1 engine
+// ═══════════════════════════════════════════─══════════════─══════════════════
+// LAND VALUATION ─ Phase 1 engine
 // ═════════════════════════════════════════════════════════════════════════════
 // Land class routes to a method rather than one model with adjustments bolted on.
 // Two independent methods run on income-producing classes and their divergence
@@ -4295,9 +4295,9 @@ const valueParcel = (p) => {
 };
 
 
-// ══════════════════════════════════════════════════════════════��══════════════
+// ══════════════════════════════════════════════════════════════─══════════════
 // BLIND COMPARE — the same questions, answered independently
-// ��════��═════════════════════════════════════════����══════════════════������════════
+// ─════─═════════════════════════════════════════─══════════════════─════════
 // One array drives both sides and the comparison, so the two generations are
 // provably answering the same question rather than two similar ones.
 //
@@ -4448,7 +4448,7 @@ function LEG1({ leg, setLegData }) {
   return <div><Head eyebrow="Legacy · Stage 2" title="The people" sub="Start with the people who make the operation work today and the family members whose interests may shape what comes next." /><div style={cardStyle()}><div style={cardLblStyle()}>The people</div>{legRow("Who is involved in the operation today, and what does each person do?", <textarea style={inputStyle({ minHeight:100 })} value={v("people")} onChange={set("people")} placeholder="Names, roles, rough ages. Include anyone whose absence would be felt." />)}{legRow("Who is off the farm but still part of the family picture?", <textarea style={inputStyle({ minHeight:80 })} value={v("offFarmPeople")} onChange={set("offFarmPeople")} placeholder="Off-farm children, siblings with an interest in the ground, anyone with an expectation." />, "These are the people most often left out and the most common source of trouble later.")}</div></div>;
 }
 
-// ── Stage 2 — The successor question ────────────────────────────────���────────
+// ── Stage 2 — The successor question ─────────────────────────────────────────
 function LEG2({ leg, setLegData }) {
   const d = leg.data || {};
   const v = (k) => d[k] || "";
@@ -4456,7 +4456,7 @@ function LEG2({ leg, setLegData }) {
   return <div><Head eyebrow="Legacy · Stage 3" title="The successor question" sub="There may be a clear successor, several possibilities, or no successor at all. Naming the reality is the useful first step." /><div style={cardStyle()}><div style={cardLblStyle()}>The successor question</div>{legRow("Is there an identified successor?", <select style={inputStyle()} value={v("successorStatus")} onChange={set("successorStatus")}><option value="">Select</option><option value="working">Yes, and they are already working in the business</option><option value="identified">Yes, identified but not yet involved day to day</option><option value="maybe">Maybe, more than one candidate or nobody has said it out loud</option><option value="none">No, there is no successor</option></select>)}{d.successorStatus === "none" && <><Flag type="info">No successor is a legitimate path, not a failure. It deserves the same rigour as a family transition.</Flag>{legRow("Which direction makes most sense to explore?", <select style={inputStyle()} value={v("noSuccessorPath")} onChange={set("noSuccessorPath")}><option value="">Select</option><option value="sale">Orderly sale of the operation</option><option value="lease">Lease the ground to a neighboring operation</option><option value="employee">Transition to a non-family employee</option><option value="winddown">Planned wind-down over a set number of years</option><option value="unsure">Genuinely unsure, that is the question</option></select>)}</>}{d.successorStatus === "maybe" && <Flag type="warn">More than one candidate, or nobody having said it out loud, is a common starting point. Naming it is the work of the next few stages.</Flag>}</div></div>;
 }
 
-// ── Stage 3 — What exists on paper ───��───��───��───��───�������─────����──────────────
+// ── Stage 3 — What exists on paper ────────────────────────────────────────
 function LEG3({ leg, setLegData }) {
   const d = leg.data || {};
   const v = (k) => d[k] || "";
@@ -4520,7 +4520,7 @@ function LEG1_COMBINED({ leg, setLegData }) {
   );
 }
 
-// ── Stage 2 — The three transfers ───────────────────────────────────────────�����
+// ── Stage 2 — The three transfers ────────────────────────────────────────────
 function LEG4({ leg, setLegData }) {
   const d = leg.data || {};
   const t = d.transfers || {};
@@ -4587,7 +4587,7 @@ function LEG4({ leg, setLegData }) {
   );
 }
 
-// ── Stage 3 — The next chapter ──────���─────���─���──���──�����──────��───────────────────
+// ── Stage 3 — The next chapter ───────────────────────────────────────────────
 function LEG5({ leg, setLegData }) {
   const d = leg.data || {};
   const v = (k) => d[k] || "";
@@ -4701,7 +4701,7 @@ function LEG6({ leg, setLegData, fa }) {
   );
 }
 
-// ── Stage 5 — Successor readiness ─��────��───��───��───��──────�����──────────────────
+// ── Stage 5 — Successor readiness ────────────────────────────────────────────
 function LEG7({ leg, setLegData }) {
   const d = leg.data || {};
   const ex = d.exposure || {};
@@ -4757,7 +4757,7 @@ function LEG7({ leg, setLegData }) {
   );
 }
 
-// ── Stage 6 — Who knows what ─────────────────────────────────────────────────
+// ── Stage 6 — Who knows what ──────────────────────────��──────────────────────
 function LEG8({ leg, setLegData }) {
   const d = leg.data || {};
   const k = d.knows || {};
@@ -4828,7 +4828,7 @@ function LEG8({ leg, setLegData }) {
   );
 }
 
-// ── Stage 7 — Fair is not equal ───────────────────────────────────────────��──
+// ── Stage 7 — Fair is not equal ──────────────────────────────────────────────
 function LEG9({ leg, setLegData }) {
   const d = leg.data || {};
   const chosen = d.fairApproaches || {};
@@ -4872,7 +4872,7 @@ function LEG9({ leg, setLegData }) {
   );
 }
 
-// ── Stage 8 — Triggers & contingencies ──────���─────────���────���────────��────────
+// ── Stage 8 — Triggers & contingencies ───────────────────────────────────────
 function LEG10({ leg, setLegData }) {
   const d = leg.data || {};
   const c = d.contingency || {};
@@ -4978,7 +4978,7 @@ function LEG11({ leg, setLegData }) {
 }
 
 
-// ── Stage 12 — Parcels and land valuation ─────���────────����─────────────────────
+// ── Stage 12 — Parcels and land valuation ────────────────────────────────────
 function LEG12({ leg, setLegData, profile }) {
   const d = leg.data || {};
   const parcels = d.parcels || [];
@@ -5182,9 +5182,9 @@ function LEG12({ leg, setLegData, profile }) {
 }
 
 
-// ══════���══════════════════════════════════════════════════════���═══���══������═════���═
+// ══════─═══��══════════════════════════════════════════════════─═══─══─═════─═
 // SUCCESSOR TRACK
-// ════════════════════���════���══════���═════════��══════════════════════════════════
+// ════════════════════─════─══════─═════════─══════════════════════════════════
 // Written to the successor, not about them. Their entry point is not "help plan a
 // retirement" but "find out what you would be inheriting and put your version on
 // the table". Nothing in this track is visible to the senior generation until the
@@ -5498,7 +5498,7 @@ function LegCompare({ leg, setLegData, setSucc }) {
   );
 }
 
-// ── Stage 13 — Where this leaves you ───��────��──────��─��──��────────────────────
+// ── Stage 13 — Where this leaves you ─────────────────────────────────────────
 function LEG13({ leg, profile }) {
   const d = leg.data || {};
   const tierKey = legacyTier(leg);
@@ -5777,7 +5777,6 @@ const visStats = (vis) => {
 };
 
 
-// ── Vision 1 — What you have already said ────────────────────────────────�������───
 // ── Vision intro — why this matters, and the vocabulary the module uses ──────
 function VIS_INTRO() {
   const terms = [
@@ -5787,7 +5786,7 @@ function VIS_INTRO() {
   ];
   const tint = { [T.moss]:T.greenL, [T.blue]:T.blueL, [T.amber]:T.amberL };
   const prose = { fontSize:15, color:T.fg, lineHeight:1.7, margin:0 };
-  const sectionHead = (n, label) => (
+  const sectionHead = (label) => (
     <div style={{ display:"flex", alignItems:"center", gap:14, margin:"44px 0 20px" }}>
       <span style={{ fontSize:11, fontWeight:700, letterSpacing:"0.14em", textTransform:"uppercase", color:T.blue, whiteSpace:"nowrap" }}>{label}</span>
       <span aria-hidden="true" style={{ flex:1, height:1, background:T.border }} />
@@ -5814,7 +5813,7 @@ function VIS_INTRO() {
         </div>
       </div>
 
-      {sectionHead(1, "Three words this module uses")}
+      {sectionHead("Three words this module uses")}
       <dl style={{ margin:0, display:"flex", flexWrap:"wrap", gap:14 }}>
         {terms.map((t) => (
           <div key={t.h} style={{ flex:"1 1 240px", display:"flex", flexDirection:"column", background:T.bg, border:`1px solid ${T.border}`, borderRadius:10, overflow:"hidden" }}>
@@ -5831,7 +5830,7 @@ function VIS_INTRO() {
         ))}
       </dl>
 
-      {sectionHead(2, "How you tell them apart")}
+      {sectionHead("How you tell them apart")}
       <p style={{ ...prose, color:T.fgM, marginBottom:20, maxWidth:620 }}>Each strength you name gets two questions. The answers place it on this grid.</p>
       <div style={{ overflowX:"auto", border:`1px solid ${T.border}`, borderRadius:12, background:T.bg }}>
         <table style={{ width:"100%", minWidth:560, borderCollapse:"separate", borderSpacing:8, tableLayout:"fixed" }}>
@@ -5909,14 +5908,13 @@ function VIS1({ vis, setVis, profile, setProfile, goProfile }) {
   const add = () => setVis({ items:[...(vis.items || []), { id:"custom-"+Date.now(), kind:"advantage", sourceLabel:"Added here", text:"", tests:{}, verdict:"untested" }], seeded:true });
   const addDraft = () => { if (!draftAdvantage.trim()) return; setVis({ items:[...(vis.items||[]), { id:"custom-"+Date.now(), kind:"advantage", sourceLabel:"Added here", text:draftAdvantage.trim(), tests:{}, verdict:"untested" }], seeded:true }); setDraftAdvantage(""); };
   const remove = (id) => setVis({ items: (vis.items || []).filter(i => i.id!==id) });
-  const hasProfile = profileHasVision;
   const importProfile = e => { const file=e.target.files?.[0]; e.target.value=""; if(!file) return; const reader=new FileReader(); reader.onload=()=>{ try { const imported=profileFromMFPExport(JSON.parse(reader.result)); if(imported) { setProfile(s=>({ ...s, ...imported })); setVis(s=>({ ...s, items:[...(s.items||[]), ...visSeedItems(imported).filter(i=>!s.items?.some(existing=>existing.text===i.text))], seeded:true })); } } catch { window.alert("That profile file could not be imported."); } }; reader.readAsText(file); };
 
   return (
     <div>
       <Head eyebrow="Strategic vision · Stage 2" title="Core Competencies and Competitive Advantage" sub="Start with the reason customers, employees, landlords, or partners choose this operation over another." /><SectionSteps><div style={cardStyle({ borderTop:`4px solid ${T.blue}`, marginBottom:18 })}><div style={cardLblStyle()}>Bring existing profile</div><p style={{ color:T.fgM, fontSize:13.5, lineHeight:1.5, marginTop:0 }}>Upload a Maximum Farm Potential JSON export to update the profile fields used across the Strategic Vision categories.</p><input type="file" accept=".json,application/json" onChange={importProfile} /></div>
       <div data-section-lead="true" style={{ marginBottom:24, padding:"22px 0", borderBottom:`1px solid ${T.div}` }}><div style={cardLblStyle()}>The capability behind the farm</div><p style={{ fontSize:15, color:T.fgM, lineHeight:1.55, margin:0, maxWidth:560 }}>What can this operation do exceptionally well—and what would be difficult for another farm to copy?</p></div>
-      {!hasProfile && (<>
+      {!profileHasVision && (<>
         <Flag type="warn">Your Farm Profile does not have competitive advantage, core values, or objectives filled in yet. You can add items here directly, or fill the profile first.
           {goProfile && <div style={{ marginTop:9 }}><button onClick={goProfile} style={{ ...btnStyle("outline"), fontSize:12, padding:"6px 13px" }}>Open Farm Profile</button></div>}
         </Flag>
@@ -5962,7 +5960,7 @@ function VIS1({ vis, setVis, profile, setProfile, goProfile }) {
   );
 }
 
-// ── Vision 2 — Core values ────────���──────────────────────────────────────────
+// ── Vision 2 — Core values ───────────────────────────────────────────────────
   function VIS_VALUES({ vis, setVis, profile }) {
   const values = (vis.items || []).filter(i => i.kind === "value");
   const setValue = (id, text) => setVis({ items:(vis.items || []).map(i => i.id===id ? { ...i, text } : i) });
@@ -5973,7 +5971,7 @@ function VIS1({ vis, setVis, profile, setProfile, goProfile }) {
     <SectionSteps>
     <div style={cardStyle({ borderTop:`4px solid ${T.blue}` })}>
       <div style={cardLblStyle()}>Why this matters</div>
-      <p style={{ fontSize:14, color:T.fgM, lineHeight:1.65, margin:0 }}>Core values turn a farm&apos;s identity into a decision filter. They help the household decide what work to accept, how to treat land and people, and what trade-offs are worth making. A value becomes useful when it can change a decision ��� not when it is only a good-sounding word.</p>
+      <p style={{ fontSize:14, color:T.fgM, lineHeight:1.65, margin:0 }}>Core values turn a farm&apos;s identity into a decision filter. They help the household decide what work to accept, how to treat land and people, and what trade-offs are worth making. A value becomes useful when it can change a decision — not when it is only a good-sounding word.</p>
     </div>
     {!values.length && profile.values && !vis.valuesSeeded && <div style={cardStyle()}><div style={cardLblStyle()}>Bring forward what you already wrote</div><p style={{ fontSize:13, color:T.fgM }}>Your Farm Profile already has a values statement. Start there, then make it more specific if needed.</p><button onClick={seed} style={btnStyle("primary")}>Bring in core values →</button></div>}
     <div style={cardStyle()}><div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12 }}><div style={cardLblStyle({ marginBottom:0 })}>Your core values</div><button onClick={add} style={{ ...btnStyle("outline"), fontSize:12, padding:"6px 13px" }}>+ Add one</button></div>{values.length ? values.map(v=><div key={v.id} style={{ marginBottom:12 }}><LegacyVoiceField><textarea style={inputStyle({ minHeight:64, fontSize:14 })} value={v.text} onChange={e=>setValue(v.id,e.target.value)} placeholder="Name the principle and what it means in practice" /></LegacyVoiceField></div>) : <div style={{ color:T.fgS, fontSize:13 }}>Add the principles you want this operation to be known for.</div>}</div>
@@ -5981,7 +5979,7 @@ function VIS1({ vis, setVis, profile, setProfile, goProfile }) {
   </div>;
   }
 
-// ── Vision 3 — Test it ────────────�����──────��──────���─────���─────���───���─���─────────
+// ── Vision 3 — Test it ──────────────────────────────────────────────────────
   function VIS2({ vis, setVis, kind="advantage" }) {
   const isValuesTest = kind === "value";
   const items = (vis.items||[]).filter(i => i.kind === kind && i.text && i.text.trim());
@@ -6121,7 +6119,7 @@ function VIS3({ vis, setVis }) {
   );
 }
 
-// ── Vision 4 — Turn it into rules ��─────────────────��─────────────────────────
+// ── Vision 4 — Turn it into rules ────────────────────────────────────────────
 function VIS4({ vis, setVis }) {
   const items = (vis.items||[]).filter(i => i.text);
   const rules = vis.rules || [];
@@ -6189,7 +6187,7 @@ function VIS4({ vis, setVis }) {
   );
 }
 
-// ─��� Vision 5 — Who holds this ��─────��─���────────────��────────────���─────────────
+// ── Vision 5 — Who holds this ────────────────────────────────────────────────
 function VIS5({ vis, setVis, goLegacy }) {
   const h = vis.holders || {};
   const setH = (id,val) => setVis({ holders:{ ...h, [id]:val } });
@@ -6244,7 +6242,7 @@ function VIS5({ vis, setVis, goLegacy }) {
   );
 }
 
-// ── Vision 6 — Where it binds ────���─��────�����───────────��───────��────���───────────
+// ── Vision 6 — Where it binds ────────────────────────────────────────────────
 function VIS6({ vis, setVis }) {
   const rules = vis.rules || [];
   const toggle = (i, bindId) => {
@@ -6294,7 +6292,7 @@ function VIS6({ vis, setVis }) {
   );
 }
 
-// ── Vision 7 — The statement ───────────────────────────���───────���──��──────────
+// ── Vision 7 — The statement ─────────────────────────────────────────────────
 function VIS7({ vis, setVis, profile }) {
   const s = visStats(vis);
   const pub = vis.published || {};
@@ -6383,7 +6381,7 @@ function VIS7({ vis, setVis, profile }) {
 }
 
 
-// ── Vision 8 — Farm profile and SWOT ───────��─��─���────────────────────���────
+// ── Vision 8 — Farm profile and SWOT ─────────────────────────────────────
 function VIS_PROFILE({ vis, profile, setProfile, goFA, fa }) {
   const advantages = (vis.items||[]).filter(i=>i.kind==="advantage" && i.text?.trim()).map(i=>i.text.trim());
   const values = (vis.items||[]).filter(i=>i.kind==="value" && i.text?.trim()).map(i=>i.text.trim());
@@ -6396,10 +6394,10 @@ function VIS_PROFILE({ vis, profile, setProfile, goFA, fa }) {
   const field = (label,key,placeholder,multi=false) => <label style={{ ...labelStyle, display:"block" }}>{label}{multi?<textarea value={draft[key]||""} onChange={update(key)} placeholder={placeholder} style={inputStyle({ minHeight:70, marginTop:6 })} />:<input value={draft[key]||""} onChange={update(key)} placeholder={placeholder} style={inputStyle({ marginTop:6 })} />}</label>;
   const box = (title, text, color) => <div style={cardStyle({ marginBottom:0, borderTop:`4px solid ${color}` })}><div style={cardLblStyle()}>{title}</div><div style={{ color:text?T.fgM:T.fgS, fontSize:13.5, lineHeight:1.5 }}>{text || "This section will populate after the Strategic Vision intake or a JSON profile import."}</div></div>;
   const swot = { strengths:advantages.join("; "), weaknesses:draft.swotWeaknesses, opportunities:draft.swotOpportunities||draft.nearTerm, threats:draft.swotThreats||draft.productionMix };
-  return <div><Head eyebrow="Strategic Vision · Profile and SWOT" title="Farm profile and SWOT" sub="This section combines the farm profile, JSON import, and vision-derived SWOT. It stays intentionally empty until the first two vision steps or an uploaded profile provide content." /><div style={{ display:"flex", gap:24, alignItems:"flex-end", borderBottom:`1px solid ${T.border}`, marginBottom:24 }}><button type="button" onClick={()=>setProfileTab("profile")} style={{ background:"none", border:0, borderBottom:`3px solid ${profileTab==="profile"?T.blue:"transparent"}`, padding:"0 2px 12px", color:profileTab==="profile"?T.blue:T.fgS, fontWeight:700, cursor:"pointer" }}>Farm Profile</button><button type="button" onClick={()=>setProfileTab("swot")} style={{ background:"none", border:0, borderBottom:`3px solid ${profileTab==="swot"?T.blue:"transparent"}`, padding:"0 2px 12px", color:profileTab==="swot"?T.blue:T.fgS, fontWeight:700, cursor:"pointer" }}>Farm SWOT</button><button type="button" onClick={()=>setProfileTab("glance")} style={{ background:"none", border:0, borderBottom:`3px solid ${profileTab==="glance"?T.blue:"transparent"}`, padding:"0 2px 12px", color:profileTab==="glance"?T.blue:T.fgS, fontWeight:700, cursor:"pointer" }}>Business at a glance</button></div><div style={{ display:profileTab==="profile"?"block":"none" }}><div style={cardStyle({ borderTop:`4px solid ${T.blue}`, display:"none" })}><div style={cardLblStyle()}>Bring in an existing profile</div><p style={{ color:T.fgM, fontSize:13.5, lineHeight:1.5, marginTop:0 }}>Upload a Maximum Farm Potential JSON export to prefill these fields. The import stays in this working session until you save it.</p><input type="file" accept=".json,application/json" onChange={importJSON} /></div><div style={cardStyle()}><div style={cardLblStyle()}>Farm profile</div>{field("Farm name","name","e.g., Jensen Family Farms")}{field("Location","location","State and county")}{field("Size and production mix","productionMix","Acres, livestock, and primary enterprises",true)}{field("Business ventures beyond production","ventures","Services, shops, leases, or other ventures",true)}{field("Near-term objective","nearTerm","What should improve in the next 1–3 years?",true)}{field("Long-term direction","longTerm","Where is the farm headed?",true)}{field("Core values","values","What will this operation not trade away?",true)}{field("Competitive advantage","advantage","What makes this operation difficult to copy?",true)}</div></div><div style={{ display:profileTab==="swot"?"block":"none" }}><div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(250px,1fr))", gap:14 }}>{box("Strengths",hasVisionInputs?swot.strengths:"",T.green)}{box("Weaknesses / trade-offs",hasVisionInputs?swot.weaknesses:"",T.amber)}{box("Opportunities",hasVisionInputs?swot.opportunities:"",T.blue)}{box("Threats / conditions",hasVisionInputs?swot.threats:"",T.red)}</div></div><div style={{ display:profileTab==="glance"?"block":"none" }}><div style={cardStyle()}><div style={cardLblStyle()}>Business at a glance</div><div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))", gap:12 }}>{[["Farm name",draft.name],["Location",draft.location],["Production mix",draft.productionMix],["Near-term direction",draft.nearTerm],["Financial basis",fa?.accounting?.basis],["Working capital",fa?.budget ? `$${((Number(fa.budget.cash)||0)+(Number(fa.budget.line)||0)-(Number(fa.budget.committed)||0)-(Number(fa.budget.debt)||0)).toLocaleString()}` : ""]].map(([label,value])=><div key={label} style={{ padding:14, background:value?T.bgAlt:"#f2f4f6", borderRadius:8, color:value?T.navy:T.fgS }}><div style={{ fontSize:11, fontWeight:700, textTransform:"uppercase", letterSpacing:"0.05em", marginBottom:5 }}>{label}</div><div style={{ fontSize:14 }}>{value||"Not updated yet"}</div></div>)}</div><p style={{ color:T.fgS, fontSize:12.5, lineHeight:1.5, marginBottom:0 }}>Financial values update from Financial Analysis as records, budgets, and working capital assumptions are completed.</p></div></div><div style={cardStyle({ background:T.blueL, borderColor:"#c8d9e8", marginTop:16 })}><strong>Save profile for Eagle Eye and MFP modules</strong><p style={{ margin:"5px 0 13px", color:T.fgM, fontSize:13, lineHeight:1.5 }}>Saving makes the profile available to Eagle Eye Intelligence, Financial Analysis, Revenue Diversification, and Farm Risk.</p><button type="button" onClick={() => { save(); goFA(1); }} style={btnStyle("primary")}>Save profile and continue to Financial Analysis ���</button></div></div>;
+  return <div><Head eyebrow="Strategic Vision · Profile and SWOT" title="Farm profile and SWOT" sub="This section combines the farm profile, JSON import, and vision-derived SWOT. It stays intentionally empty until the first two vision steps or an uploaded profile provide content." /><div style={{ display:"flex", gap:24, alignItems:"flex-end", borderBottom:`1px solid ${T.border}`, marginBottom:24 }}><button type="button" onClick={()=>setProfileTab("profile")} style={{ background:"none", border:0, borderBottom:`3px solid ${profileTab==="profile"?T.blue:"transparent"}`, padding:"0 2px 12px", color:profileTab==="profile"?T.blue:T.fgS, fontWeight:700, cursor:"pointer" }}>Farm Profile</button><button type="button" onClick={()=>setProfileTab("swot")} style={{ background:"none", border:0, borderBottom:`3px solid ${profileTab==="swot"?T.blue:"transparent"}`, padding:"0 2px 12px", color:profileTab==="swot"?T.blue:T.fgS, fontWeight:700, cursor:"pointer" }}>Farm SWOT</button><button type="button" onClick={()=>setProfileTab("glance")} style={{ background:"none", border:0, borderBottom:`3px solid ${profileTab==="glance"?T.blue:"transparent"}`, padding:"0 2px 12px", color:profileTab==="glance"?T.blue:T.fgS, fontWeight:700, cursor:"pointer" }}>Business at a glance</button></div><div style={{ display:profileTab==="profile"?"block":"none" }}><div style={cardStyle({ borderTop:`4px solid ${T.blue}`, display:"none" })}><div style={cardLblStyle()}>Bring in an existing profile</div><p style={{ color:T.fgM, fontSize:13.5, lineHeight:1.5, marginTop:0 }}>Upload a Maximum Farm Potential JSON export to prefill these fields. The import stays in this working session until you save it.</p><input type="file" accept=".json,application/json" onChange={importJSON} /></div><div style={cardStyle()}><div style={cardLblStyle()}>Farm profile</div>{field("Farm name","name","e.g., Jensen Family Farms")}{field("Location","location","State and county")}{field("Size and production mix","productionMix","Acres, livestock, and primary enterprises",true)}{field("Business ventures beyond production","ventures","Services, shops, leases, or other ventures",true)}{field("Near-term objective","nearTerm","What should improve in the next 1–3 years?",true)}{field("Long-term direction","longTerm","Where is the farm headed?",true)}{field("Core values","values","What will this operation not trade away?",true)}{field("Competitive advantage","advantage","What makes this operation difficult to copy?",true)}</div></div><div style={{ display:profileTab==="swot"?"block":"none" }}><div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(250px,1fr))", gap:14 }}>{box("Strengths",hasVisionInputs?swot.strengths:"",T.green)}{box("Weaknesses / trade-offs",hasVisionInputs?swot.weaknesses:"",T.amber)}{box("Opportunities",hasVisionInputs?swot.opportunities:"",T.blue)}{box("Threats / conditions",hasVisionInputs?swot.threats:"",T.red)}</div></div><div style={{ display:profileTab==="glance"?"block":"none" }}><div style={cardStyle()}><div style={cardLblStyle()}>Business at a glance</div><div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))", gap:12 }}>{[["Farm name",draft.name],["Location",draft.location],["Production mix",draft.productionMix],["Near-term direction",draft.nearTerm],["Financial basis",fa?.accounting?.basis],["Working capital",fa?.budget ? `$${((Number(fa.budget.cash)||0)+(Number(fa.budget.line)||0)-(Number(fa.budget.committed)||0)-(Number(fa.budget.debt)||0)).toLocaleString()}` : ""]].map(([label,value])=><div key={label} style={{ padding:14, background:value?T.bgAlt:"#f2f4f6", borderRadius:8, color:value?T.navy:T.fgS }}><div style={{ fontSize:11, fontWeight:700, textTransform:"uppercase", letterSpacing:"0.05em", marginBottom:5 }}>{label}</div><div style={{ fontSize:14 }}>{value||"Not updated yet"}</div></div>)}</div><p style={{ color:T.fgS, fontSize:12.5, lineHeight:1.5, marginBottom:0 }}>Financial values update from Financial Analysis as records, budgets, and working capital assumptions are completed.</p></div></div><div style={cardStyle({ background:T.blueL, borderColor:"#c8d9e8", marginTop:16 })}><strong>Save profile for Eagle Eye and MFP modules</strong><p style={{ margin:"5px 0 13px", color:T.fgM, fontSize:13, lineHeight:1.5 }}>Saving makes the profile available to Eagle Eye Intelligence, Financial Analysis, Revenue Diversification, and Farm Risk.</p><button type="button" onClick={() => { save(); goFA(1); }} style={btnStyle("primary")}>Save profile and continue to Financial Analysis →</button></div></div>;
 }
 
-// ── Vision 9 — The document ────────�����─���────────���─��───────────────────────────
+// ── Vision 9 — The document ─────────────────────────────────────────────────
 // Renders ONLY approved sections. Everything diagnostic stays in the working
 // record: demoted claims, person-dependent advantages, cost-test answers and the
 // who-holds-this ratings never appear here. Publishing a document that names a
@@ -6567,9 +6565,9 @@ function VIS8({ vis, profile }) {
 }
 
 
-// ══════════════════════════════════════════════����══════════════════════════��═══
+// ══════════════════════════════════════════════─══════════════════════════─═══
 // LOCAL PERSISTENCE — the farm record stays on the farmer's own machine
-// ══════════════════════��══�����═══════════════════════════════════════════════���═══
+// ══════════════════════─══─═══════════════════════════════════════════════─═══
 // Everything a farmer enters saves to their browser automatically and reloads
 // next time. Nothing is transmitted. For this data in particular — succession
 // tensions, sweat equity figures, who the operator thinks is not ready — that is
@@ -6874,9 +6872,9 @@ function DataControls({ state, savedAt, storageOk, onImport, onImportProfile, on
   );
 }
 
-// ═══════════════════��═══════���════════════════════════════════════════════════��
+// ═══════════════════─═══════─════════════════════════════════════════════════─
 // ROOT APP
-// ═════════════════════════════════════════════���═════════════════════════════���═
+// ��════════════════════════════════════════════─═════════════════════════════─═
 // Generic farm SWOT, pre-populated so the quadrants open with a real starting point
 // rather than four empty boxes. Every line is editable and meant to be replaced with
 // the operation's own read once the conversation gets specific.
@@ -6928,7 +6926,7 @@ export default function App() {
   const [risk, setRisk] = useState({ stage:1, answers:{} });
   const [leg, setLeg] = useState({ stage:1, data:{}, succ:{}, role:"senior" });
   const [vis, setVisState] = useState({ stage:1, items:[], rules:[], holders:{}, published:{}, approved:{} });
-  const setVis = (patch) => setVisState(s => ({ ...s, ...patch }));
+  const setVis = (patch) => setVisState(s => ({ ...s, ...(typeof patch === "function" ? patch(s) : patch) }));
 
   // Restore the local record first, then prefer a signed-in server record when available.
   useEffect(() => {
