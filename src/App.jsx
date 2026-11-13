@@ -2467,7 +2467,7 @@ function LivestockInsuranceCalculator({ risk, setRisk }) {
 
 // ──────────────────────────────────────────────────────────────────────────
 // RD helpers
-// ─────────────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────��───────────
 // Each lever category is now built from specific, measurable items rather than one
 // blanket rating. Every item is framed so a HIGHER value (0–100) always means MORE
 // opportunity — i.e. "idle capacity" or "strength," not raw utilization — so scoring
@@ -2626,22 +2626,29 @@ const capacityFinancial = (cap, faS3vals, sourceCount) => {
 // 400-acre and a 4,000-acre farm compare directly. Skipped questions are excluded from
 // the mean, never scored zero.
 const IDLE_WEEK_BANDS = [[30,95],[24,78],[18,58],[12,38]];
+// Upper bounds keep a typo from sailing past every band: more marginal acres than total
+// acres, or storage ten times production, is almost always a mis-entered figure.
+const STORAGE_RATIO_CAP = 2.0, MARGINAL_RATIO_CAP = 1.0, IDLE_WEEKS_CAP = 52;
 const capacityAssets = (cap, totalAcres) => {
   const a = cap.assets;
   const storageBu = numOrNull(a.storageCapacityBu), prodBu = numOrNull(a.typicalProductionBu);
-  const storageRatio = a.hasStorableCrop !== false && storageBu !== null && prodBu !== null && prodBu > 0 ? storageBu / prodBu : null;
-  const idle = numOrNull(a.equipmentIdleWeeks);
+  const rawStorageRatio = a.hasStorableCrop !== false && storageBu !== null && prodBu !== null && prodBu > 0 ? storageBu / prodBu : null;
+  const storageRatio = rawStorageRatio === null ? null : Math.min(rawStorageRatio, STORAGE_RATIO_CAP);
+  const rawIdle = numOrNull(a.equipmentIdleWeeks);
+  const idle = rawIdle === null ? null : Math.min(rawIdle, IDLE_WEEKS_CAP);
   const marginal = numOrNull(a.marginalAcres);
   const acres = numOrNull(totalAcres);
-  const marginalRatio = marginal !== null && acres !== null && acres > 0 ? marginal / acres : null;
+  const rawMarginalRatio = marginal !== null && acres !== null && acres > 0 ? marginal / acres : null;
+  const marginalRatio = rawMarginalRatio === null ? null : Math.min(rawMarginalRatio, MARGINAL_RATIO_CAP);
   const sf = numOrNull(a.unusedBuildingSqFt);
-  const truckIdle = a.ownsTrucks !== false ? numOrNull(a.truckIdleWeeks) : null;
+  const rawTruckIdle = a.ownsTrucks !== false ? numOrNull(a.truckIdleWeeks) : null;
+  const truckIdle = rawTruckIdle === null ? null : Math.min(rawTruckIdle, IDLE_WEEKS_CAP);
   const rows = [
-    { id:"storage", label:"Storage beyond own production", skipped: a.hasStorableCrop === false, measure: storageRatio === null ? null : `${storageRatio.toFixed(2)}× typical production`, score: storageRatio === null ? null : bandUp(storageRatio, [[1.5,95],[1.25,78],[1.05,55],[0.90,30]], 10) },
-    { id:"equipment", label:"Equipment idle time", skipped:false, measure: idle === null ? null : `${Math.round(idle)} idle weeks a year`, score: idle === null ? null : bandUp(idle, IDLE_WEEK_BANDS, 18) },
-    { id:"land", label:"Marginal or idle ground", skipped: acres === null || acres <= 0, measure: marginalRatio === null ? (marginal !== null && (acres === null || acres <= 0) ? "Needs total acres in Financial Analysis" : null) : `${Math.round(marginalRatio*100)}% of ${Math.round(acres).toLocaleString()} acres`, score: marginalRatio === null ? null : bandUp(marginalRatio, [[0.15,95],[0.10,78],[0.05,55],[0.02,30]], 10) },
+    { id:"storage", label:"Storage beyond own production", skipped: a.hasStorableCrop === false, measure: storageRatio === null ? null : `${storageRatio.toFixed(2)}× typical production`, score: storageRatio === null ? null : bandUp(storageRatio, [[1.5,95],[1.25,78],[1.05,55],[0.90,30]], 10), check: rawStorageRatio !== null && rawStorageRatio > STORAGE_RATIO_CAP ? `Storage is ${rawStorageRatio.toFixed(1)}× a typical crop. Check this figure; it is scored at ${STORAGE_RATIO_CAP.toFixed(1)}×.` : null },
+    { id:"equipment", label:"Equipment idle time", skipped:false, measure: idle === null ? null : `${Math.round(idle)} idle weeks a year`, score: idle === null ? null : bandUp(idle, IDLE_WEEK_BANDS, 18), check: rawIdle !== null && rawIdle > IDLE_WEEKS_CAP ? "More than 52 weeks a year. Check this figure." : null },
+    { id:"land", label:"Marginal or idle ground", skipped: acres === null || acres <= 0, measure: marginalRatio === null ? (marginal !== null && (acres === null || acres <= 0) ? "Needs total acres in Financial Analysis" : null) : `${Math.round(marginalRatio*100)}% of ${Math.round(acres).toLocaleString()} acres`, score: marginalRatio === null ? null : bandUp(marginalRatio, [[0.15,95],[0.10,78],[0.05,55],[0.02,30]], 10), check: rawMarginalRatio !== null && rawMarginalRatio > MARGINAL_RATIO_CAP ? `${Math.round(marginal).toLocaleString()} marginal acres is more than the ${Math.round(acres).toLocaleString()} total acres in Financial Analysis. Check this figure.` : null },
     { id:"buildings", label:"Unused building space", skipped:false, measure: sf === null ? null : `${Math.round(sf).toLocaleString()} sq ft`, score: sf === null ? null : bandUp(sf, [[10000,95],[5000,78],[2000,55],[500,30]], 10) },
-    { id:"trucks", label:"Truck idle time", skipped: a.ownsTrucks === false, measure: truckIdle === null ? null : `${Math.round(truckIdle)} idle weeks a year`, score: truckIdle === null ? null : bandUp(truckIdle, IDLE_WEEK_BANDS, 18) },
+    { id:"trucks", label:"Truck idle time", skipped: a.ownsTrucks === false, measure: truckIdle === null ? null : `${Math.round(truckIdle)} idle weeks a year`, score: truckIdle === null ? null : bandUp(truckIdle, IDLE_WEEK_BANDS, 18), check: rawTruckIdle !== null && rawTruckIdle > IDLE_WEEKS_CAP ? "More than 52 weeks a year. Check this figure." : null },
   ];
   const scored = rows.filter(x => !x.skipped && x.score !== null);
   const score = scored.length ? Math.round(meanOf(scored.map(x => x.score))) : null;
@@ -3036,7 +3043,7 @@ function DerivationRows({ rows, total, totalLabel, color }) {
       {rows.map((r, i) => (
         <div key={r.id} style={{ display:"grid", gridTemplateColumns:"minmax(150px,1.4fr) minmax(120px,1.2fr) 72px", gap:10, alignItems:"center", padding:"8px 12px", borderTop:i?`1px solid ${T.border}`:"none", background:i%2?T.bgAlt:"#fff", opacity:r.skipped?0.55:1 }}>
           <span style={{ fontSize:12.5, fontWeight:600, color:T.navy }}>{r.label}</span>
-          <span style={{ fontSize:11.5, color:T.fgM }}>{r.skipped ? "Not applicable, excluded" : r.measure || "Not answered"}</span>
+          <span style={{ fontSize:11.5, color:T.fgM }}>{r.skipped ? "Not applicable, excluded" : r.measure || "Not answered"}{!r.skipped && r.check && <span style={{ display:"block", fontSize:11, color:T.amberT, fontWeight:600, marginTop:2 }}>{r.check}</span>}</span>
           <span style={{ fontSize:12.5, fontWeight:700, textAlign:"right", color:r.score===null||r.skipped?T.fgS:color }}>{r.skipped||r.score===null ? "—" : `${r.score} / 100`}</span>
         </div>
       ))}
@@ -3071,29 +3078,73 @@ function ChoiceField({ label, value, onChange, options, hint }) {
   ));
 }
 
-function CommitmentCalendar({ calendar, onCycle, onClear, window, flatOut }) {
+// Starting patterns by operation type. Labelled as a starting point and the score carries a
+// marker until at least one month has been changed by hand, so nobody accepts one blindly.
+const CALENDAR_PRESETS = [
+  { id:"rowcrop", label:"Row crop", cal:[1,1,2,3,3,2,1,2,3,3,2,1] },
+  { id:"dairy", label:"Dairy", cal:[2,2,2,2,2,2,2,2,2,2,2,2] },
+  { id:"cowcalf", label:"Cow-calf", cal:[1,2,3,3,2,2,2,2,2,2,1,1] },
+  { id:"orchard", label:"Orchard", cal:[1,1,2,2,2,1,2,3,3,3,1,0] },
+];
+
+// Phones get a row-per-month layout with four labelled buttons: a 12-cell strip is 19–22px
+// per cell on a phone, well under a 44px tap target, and a mis-tap on tap-to-cycle costs
+// three more taps to undo. No horizontal scroll either way.
+const useIsNarrow = (bp = 768) => {
+  const [narrow, setNarrow] = useState(() => typeof window !== "undefined" && window.innerWidth < bp);
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.matchMedia) return;
+    const mq = window.matchMedia(`(max-width: ${bp - 1}px)`);
+    const on = () => setNarrow(mq.matches);
+    on();
+    if (mq.addEventListener) mq.addEventListener("change", on); else mq.addListener(on);
+    return () => { if (mq.removeEventListener) mq.removeEventListener("change", on); else mq.removeListener(on); };
+  }, [bp]);
+  return narrow;
+};
+
+function CommitmentCalendar({ calendar, presetLabel, onCycle, onSet, onPreset, onClear, window, flatOut }) {
+  const narrow = useIsNarrow(768);
   const cal = calendar || Array(12).fill(null);
   return (
     <div>
       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"baseline", gap:10, flexWrap:"wrap", marginBottom:8 }}>
-        <div style={{ fontSize:12.5, fontWeight:600, color:T.navy }}>How committed is the operation in each month? Tap a month to cycle Light, Moderate, Busy, Flat out.</div>
-        {calendar && <button type="button" onClick={onClear} style={{ ...btnStyle("outline"), fontSize:11, padding:"4px 10px" }}>Clear calendar</button>}
+        <div style={{ fontSize:12.5, fontWeight:600, color:T.navy }}>How committed is the operation in each month?{narrow ? "" : " Tap a month to cycle Light, Moderate, Busy, Flat out."}</div>
+        {calendar && <button type="button" onClick={onClear} style={{ ...btnStyle("outline"), fontSize:11, padding:"6px 12px", minHeight:36 }}>Clear calendar</button>}
       </div>
-      <div style={{ display:"grid", gridTemplateColumns:"repeat(12, minmax(0,1fr))", gap:4 }}>
-        {cal.map((v, i) => {
-          const set = v !== null && v !== undefined; const lvl = set ? CALENDAR_LEVELS[v] : null;
-          return (
-            <button key={i} type="button" onClick={()=>onCycle(i)} aria-label={`${MONTHS_LONG[i]}: ${lvl ? lvl.label : "not set"}. Tap to change.`} style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:4, padding:"8px 2px", borderRadius:7, border:`1.5px solid ${set?CAL_LEVEL_COLOR[v]:T.border}`, background:set?CAL_LEVEL_COLOR[v]:"#fff", color:set?"#fff":T.fgM, cursor:"pointer", minWidth:0 }}>
-              <span style={{ fontSize:11, fontWeight:700 }}>{MONTHS_SHORT[i]}</span>
-              <span style={{ fontSize:9.5, fontWeight:600, lineHeight:1.1, textAlign:"center" }}>{lvl ? lvl.label : "–"}</span>
-            </button>
-          );
-        })}
+      <div style={{ display:"flex", alignItems:"center", gap:6, flexWrap:"wrap", marginBottom:10 }}>
+        <span style={{ fontSize:11.5, color:T.fgM }}>Start from a typical pattern, then adjust:</span>
+        {CALENDAR_PRESETS.map(p => <button key={p.id} type="button" onClick={()=>onPreset(p)} style={{ padding:"6px 12px", minHeight:36, borderRadius:999, border:`1.5px solid ${presetLabel===p.label?T.blue:T.border}`, background:presetLabel===p.label?T.blueL:"#fff", color:T.navy, fontSize:12, fontWeight:600, cursor:"pointer" }}>{p.label}</button>)}
       </div>
+      {narrow ? (
+        <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
+          {cal.map((v, i) => (
+            <div key={i} role="radiogroup" aria-label={`${MONTHS_LONG[i]} commitment`} style={{ display:"flex", alignItems:"center", gap:6 }}>
+              <span style={{ width:38, flexShrink:0, fontSize:12.5, fontWeight:700, color:T.navy }}>{MONTHS_SHORT[i]}</span>
+              {CALENDAR_LEVELS.map(l => { const on = v === l.v; return (
+                <button key={l.v} type="button" role="radio" aria-checked={on} aria-label={`${MONTHS_LONG[i]}: ${l.label}`} onClick={()=>onSet(i, l.v)} style={{ flex:1, minWidth:0, minHeight:44, padding:"6px 2px", borderRadius:7, border:`1.5px solid ${on?CAL_LEVEL_COLOR[l.v]:T.border}`, background:on?CAL_LEVEL_COLOR[l.v]:"#fff", color:on?"#fff":T.fgM, fontSize:11.5, fontWeight:700, cursor:"pointer" }}>{l.label}</button>
+              ); })}
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(12, minmax(0,1fr))", gap:4 }}>
+          {cal.map((v, i) => {
+            const set = v !== null && v !== undefined; const lvl = set ? CALENDAR_LEVELS[v] : null;
+            return (
+              <button key={i} type="button" onClick={()=>onCycle(i)} aria-label={`${MONTHS_LONG[i]}: ${lvl ? lvl.label : "not set"}. Tap to change.`} style={{ display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:4, minHeight:48, padding:"8px 2px", borderRadius:7, border:`1.5px solid ${set?CAL_LEVEL_COLOR[v]:T.border}`, background:set?CAL_LEVEL_COLOR[v]:"#fff", color:set?"#fff":T.fgM, cursor:"pointer", minWidth:0 }}>
+                <span style={{ fontSize:11, fontWeight:700 }}>{MONTHS_SHORT[i]}</span>
+                <span style={{ fontSize:9.5, fontWeight:600, lineHeight:1.1, textAlign:"center" }}>{lvl ? lvl.label : "–"}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
       <div style={{ display:"flex", gap:12, flexWrap:"wrap", marginTop:8 }}>
         {CALENDAR_LEVELS.map(l => <span key={l.v} style={{ display:"flex", alignItems:"center", gap:5, fontSize:11, color:T.fgM }}><span aria-hidden="true" style={{ width:10, height:10, borderRadius:3, background:CAL_LEVEL_COLOR[l.v], display:"inline-block" }} /><b style={{ color:T.navy }}>{l.label}</b> · {l.help}</span>)}
       </div>
       {calendar && <div style={{ marginTop:12, fontSize:13, fontWeight:700, color:T.navy }}>Longest open window: {fmtWindow(window)}</div>}
+      {calendar && presetLabel && <div style={{ marginTop:4, fontSize:11.5, color:T.amberT, fontStyle:"italic" }}>Starting point from the {presetLabel} pattern. Change at least one month to make it yours; until then the score carries this marker.</div>}
       {!calendar && <div style={{ marginTop:12, fontSize:12, color:T.fgS, fontStyle:"italic" }}>Untouched calendars are treated as not answered, not as an average year.</div>}
       {flatOut && <div style={{ marginTop:10 }}><Flag type="danger">No open window anywhere in the year. Any new venture needs someone other than you to run it, or something existing has to come off the plate first.</Flag></div>}
     </div>
@@ -3106,8 +3157,12 @@ function RD3({ rd, setRData, fa, goFA }) {
   const report = capacityReportOf(d, fa.s3vals, fa.enterprises);
   const { financial, assets, human, scores, modes } = report;
   const setCap = (section, key, value) => setRData(s => { const c = s.capacity || {}; return { ...s, capacity:{ ...c, [section]:{ ...(c[section]||{}), [key]:value } } }; });
-  const setCalendar = (cal) => setRData(s => ({ ...s, capacity:{ ...(s.capacity||{}), calendar:cal } }));
+  // Any hand edit clears the preset marker; applying a preset sets it.
+  const setCalendar = (cal, presetId = null) => setRData(s => ({ ...s, capacity:{ ...(s.capacity||{}), calendar:cal, calendarPreset:presetId } }));
   const cycleMonth = (i) => { const cur = cap.calendar || Array(12).fill(0); const next = cur.slice(); next[i] = (next[i] + 1) % 4; setCalendar(next); };
+  const setMonth = (i, v) => { const cur = cap.calendar || Array(12).fill(0); const next = cur.slice(); next[i] = v; setCalendar(next); };
+  const applyPreset = (p) => setCalendar(p.cal.slice(), p.id);
+  const activePreset = cap.calendar ? CALENDAR_PRESETS.find(p => p.id === d.capacity?.calendarPreset) : null;
   const totalAcres = numOrNull(fa.s3vals?.acres);
   const anyMeasured = Object.values(modes).some(m => m === "objective");
   const allWeak = Object.values(scores).every(s => Number.isFinite(s) && s < 34);
@@ -3153,7 +3208,7 @@ function RD3({ rd, setRData, fa, goFA }) {
         <LeverHeader cat="trust" score={scores.trust} mode={modes.trust} />
         <div style={{ fontSize:11, fontWeight:700, color:T.fgS, textTransform:"uppercase", letterSpacing:"0.08em", marginBottom:8 }}>Part A · Commitment calendar</div>
         <p style={{ fontSize:12.5, color:T.fgM, lineHeight:1.55, marginTop:0, marginBottom:12 }}>For labour the real constraint is not a quantity, it is a calendar. What matters is whether the open months are contiguous: a farm with a three-month winter opening can take on work a farm at constant &quot;moderate&quot; cannot.</p>
-        <CommitmentCalendar calendar={cap.calendar} onCycle={cycleMonth} onClear={()=>setCalendar(null)} window={human.window} flatOut={human.flatOut} />
+        <CommitmentCalendar calendar={cap.calendar} presetLabel={activePreset ? activePreset.label : null} onCycle={cycleMonth} onSet={setMonth} onPreset={applyPreset} onClear={()=>setCalendar(null)} window={human.window} flatOut={human.flatOut} />
         <div style={{ fontSize:11, fontWeight:700, color:T.fgS, textTransform:"uppercase", letterSpacing:"0.08em", margin:"22px 0 8px" }}>Part B · Behavioural anchors</div>
         <p style={{ fontSize:12.5, color:T.fgM, lineHeight:1.55, marginTop:0, marginBottom:4 }}>Management judgment and relationships cannot be made objective, but they can be anchored to things that are countable.</p>
         <CountField label={BEHAVIOUR_ITEMS[0].label} value={cap.behaviour.buyerCount ?? null} onChange={v=>setCap("behaviour","buyerCount",v)} />
@@ -3162,7 +3217,7 @@ function RD3({ rd, setRData, fa, goFA }) {
         <ChoiceField label={BEHAVIOUR_ITEMS[3].label} value={cap.behaviour.hiredRecently ?? null} onChange={v=>setCap("behaviour","hiredRecently",v)} options={[[true,"Yes"],[false,"No"]]} />
         <ChoiceField label={BEHAVIOUR_ITEMS[4].label} value={cap.behaviour.successorInMgmt ?? null} onChange={v=>setCap("behaviour","successorInMgmt",v)} options={[["yes","Yes, in management"],["no","Involved, but labour only"],["none","No successor"]]} />
         <DerivationRows color={LEVER_META.trust.color} total={human.score} rows={[
-          { id:"cal", label:"Commitment calendar (40%)", measure: human.calendarScore === null ? null : `Slack ${cap.calendar ? Math.round(cap.calendar.reduce((s,v)=>s+(3-v),0)/36*100) : 0}%, longest window ${human.window ? human.window.run : 0} mo`, score:human.calendarScore },
+          { id:"cal", label:"Commitment calendar (40%)", measure: human.calendarScore === null ? null : `Slack ${cap.calendar ? Math.round(cap.calendar.reduce((s,v)=>s+(3-v),0)/36*100) : 0}%, longest window ${human.window ? human.window.run : 0} mo`, score:human.calendarScore, check: activePreset ? `Unadjusted ${activePreset.label} starting pattern` : null },
           ...human.rows.map(r => ({ id:r.id, label:r.label.replace(/\?$/,""), measure: r.answered ? (typeof r.value === "boolean" ? (r.value ? "Yes" : "No") : r.id === "successorInMgmt" ? ({ yes:"In management", no:"Labour only", none:"No successor" })[r.value] : String(r.value)) : null, score:r.score })),
         ]} />
       </div>
@@ -3421,7 +3476,7 @@ function RDPolicyEnablers({ rd, setRData }) {
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// ────────────────────────���────────────────────────────────────────────────────
 // RD STAGE 7 — Scenario comparison
 // ──────────────����─────────────────────────────────────────────────────────────
 const VALUES_ALIGNMENT_OPTS = [
@@ -4900,7 +4955,7 @@ function LEG4({ leg, setLegData }) {
   );
 }
 
-// ── Stage 3 — The next chapter ───────────────────────────────────────────────
+// ── Stage 3 — The next chapter ─────────���─────────────────────────────────────
 function LEG5({ leg, setLegData }) {
   const d = leg.data || {};
   const v = (k) => d[k] || "";
