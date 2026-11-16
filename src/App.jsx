@@ -284,6 +284,53 @@ const MONTH_HEADER = /^(jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-
 const INCOME_WORDS = /income|revenue|sales|receipt|proceeds|payment(s)? received|gov(ernment|t)\.? pay|crop insurance|custom work income|patronage|rent(al)? income|dividend/i;
 const EXPENSE_WORDS = /expense|cost|input|seed|fertili[sz]er|chemical|fuel|repair|labor|labour|rent|lease|interest|insurance|deprec|utilit|supplies|feed|vet|custom hire|principal|tax|living|withdraw/i;
 const SUBTOTAL_ROW = /^(total|sub-?total|net|gross margin|balance|cash (flow|position)|beginning|ending|surplus|deficit|difference)/i;
+const HEADER_WORDS = /total|budget|annual|amount|debit|credit|withdrawal|deposit|date|category|item|description|memo|type|account|plan|actual|^(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)/i;
+// Spreadsheet exports often put a title and blank lines above the real header row. Use the
+// first row that reads like headers (keywords, several cells, no money values); fall back to row 0.
+const findHeaderRow = (table) => {
+  const limit = Math.min(table.length, 12);
+  for (let i = 0; i < limit; i++) {
+    const cells = (table[i] || []).map(c => String(c ?? "").trim());
+    const filled = cells.filter(Boolean);
+    if (filled.length < 2) continue;
+    const numeric = filled.filter(c => parseMoney(c) !== null && /\d/.test(c) && !/^\d{4}$/.test(c)).length;
+    if (numeric > 0) continue;
+    if (filled.some(c => HEADER_WORDS.test(c))) return i;
+    const next = (table[i + 1] || []).map(c => String(c ?? "").trim());
+    if (next.some(c => parseMoney(c) !== null && /\d/.test(c))) return i;
+  }
+  return 0;
+};
+const readFinancialCsv = (text, name) => {
+  const table = csvToRows(String(text || ""));
+  const headerRow = findHeaderRow(table);
+  const headers = table[headerRow] || [];
+  const rows = table.slice(headerRow + 1).filter(r => r.some(c => String(c ?? "").trim()));
+  return { name, headers, rows, headerRow, importedAt:new Date().toISOString(), error:rows.length ? null : "No rows found under the header line. The file needs a header row with one line item or transaction per line below it." };
+};
+const BUDGET_IMPORT_MAP = { committed:"outflow", receipts:"inflow", annualExpenses:"outflow", annualIncome:"inflow" };
+// Writes import totals into the budget fields named in keys and marks them "import" so a
+// later hand edit can take them back. Budget layouts also carry their line items.
+const applyImportToBudget = (s, summary, keys, fileName) => {
+  const cur = s.budget || {}; const next = { ...cur }; const nextSources = { ...(cur.sources || {}) };
+  keys.forEach(k => { next[k] = String(Math.round(summary[BUDGET_IMPORT_MAP[k]])); nextSources[k] = "import"; });
+  if (summary.layout === "budget" && (keys.includes("annualIncome") || keys.includes("annualExpenses"))) { next.annualLines = summary.lines; next.annualSource = fileName || cur.annualSource || null; }
+  return { ...s, budget:{ ...next, sources:nextSources } };
+};
+// Fill whichever budget fields are still empty (or were themselves filled by an earlier
+// import). Returns the new state plus which keys were filled, for the caller's message.
+const absorbCsvIntoFA = (s, tx) => {
+  let next = { ...s, transactions:tx };
+  const summary = summarizeTransactions(tx);
+  let filled = [];
+  if (summary.amountCol) {
+    const cur = s.budget || {};
+    const candidates = summary.layout === "budget" ? ["annualIncome", "annualExpenses", "committed", "receipts"] : ["committed", "receipts"];
+    filled = candidates.filter(k => !String(cur[k] || "").trim() || (cur.sources || {})[k] === "import");
+    if (filled.length) next = applyImportToBudget(next, summary, filled, tx.name);
+  }
+  return { state:next, summary, filled };
+};
 const summarizeTransactions = (tx) => {
   const out = { inflow:0, outflow:0, net:0, amountCol:null, span:null, layout:null, headers:[], lines:[] };
   if (!tx || !Array.isArray(tx.rows) || !tx.rows.length) return out;
@@ -301,13 +348,20 @@ const summarizeTransactions = (tx) => {
     out.layout = "split"; out.amountCol = [headers[debitIdx], headers[creditIdx]].filter(Boolean).join(" / ");
     tx.rows.forEach(r => { const d = debitIdx >= 0 ? parseMoney(r[debitIdx]) : null; const c = creditIdx >= 0 ? parseMoney(r[creditIdx]) : null; if (d !== null) out.outflow += Math.abs(d); if (c !== null) out.inflow += Math.abs(c); });
   } else {
-    const totalIdx = findCol(/^(total|annual|year(ly)?|budget(ed)?|plan(ned)?|projected|fy ?\d{2,4}|\d{4})\b/i) >= 0 ? findCol(/^(total|annual|year(ly)?|budget(ed)?|plan(ned)?|projected|fy ?\d{2,4}|\d{4})\b/i) : findCol(/total|budget/i);
+    let totalIdx = findCol(/^(total|annual|year(ly)?|budget(ed)?|plan(ned)?|projected|fy ?\d{2,4}|\d{4})\b/i) >= 0 ? findCol(/^(total|annual|year(ly)?|budget(ed)?|plan(ned)?|projected|fy ?\d{2,4}|\d{4})\b/i) : findCol(/total|budget/i);
     const monthIdx = headers.map((h, i) => MONTH_HEADER.test(h) ? i : -1).filter(i => i >= 0);
     const typeIdx = findCol(/^(type|kind|class|category type|in ?\/ ?out|direction|flow)$/i);
+    const isMoneyCol = (i) => { const cells = tx.rows.map(r => String(r[i] ?? "").trim()).filter(Boolean); return cells.length >= 2 && cells.filter(c => parseMoney(c) !== null && /\d/.test(c)).length / cells.length >= 0.7 && !cells.every(c => /^\d{1,2}[\/-]\d{1,2}([\/-]\d{2,4})?$/.test(c)); };
+    if (totalIdx >= 0 && !isMoneyCol(totalIdx)) totalIdx = -1;
+    if (totalIdx < 0 && !monthIdx.length) {
+      // Unnamed or oddly named money column: take the right-most column that holds money.
+      const width = Math.max(headers.length, ...tx.rows.map(r => r.length));
+      for (let i = width - 1; i >= 0; i--) { if (isMoneyCol(i)) { totalIdx = i; out.amountCol = headers[i] || `column ${i + 1}`; break; } }
+    }
     const labelIdx = headers.findIndex((h, i) => i !== typeIdx && i !== totalIdx && !monthIdx.includes(i));
     if (totalIdx >= 0 || monthIdx.length) {
       out.layout = "budget";
-      out.amountCol = totalIdx >= 0 ? headers[totalIdx] : `${monthIdx.length} month columns`;
+      out.amountCol = totalIdx >= 0 ? (headers[totalIdx] || out.amountCol || `column ${totalIdx + 1}`) : `${monthIdx.length} month columns`;
       let section = null;
       tx.rows.forEach(r => {
         const label = String(r[labelIdx] ?? "").trim();
@@ -321,6 +375,7 @@ const summarizeTransactions = (tx) => {
         if (dir === "in") out.inflow += Math.abs(value); else out.outflow += Math.abs(value);
         out.lines.push({ label, amount:Math.abs(value), dir });
       });
+      if (!out.lines.length) { out.layout = null; out.amountCol = null; }
     }
   }
   out.net = out.inflow - out.outflow;
@@ -7537,13 +7592,36 @@ else if (isRD) { if (rd.stage<rdTotal) goRD(rd.stage+1); else goLegacy(1); }
         return { error:`${file.name}: could not reach the upload service. Check your connection and try again.` };
       }
     };
+    const isCsv = file => /\.csv$/i.test(file.name) || /csv/i.test(file.type || "");
+    const describeImport = (summary, filled) => {
+      if (!summary.amountCol) return `Stored. No figures recognised: columns found were ${summary.headers.length ? summary.headers.map(h => `“${h}”`).join(", ") : "empty"}.`;
+      const kind = summary.layout === "budget" ? "budget" : "transaction export";
+      const totals = summary.layout === "budget" ? `income $${Math.round(summary.inflow).toLocaleString()}, expenses $${Math.round(summary.outflow).toLocaleString()}` : `in $${Math.round(summary.inflow).toLocaleString()}, out $${Math.round(summary.outflow).toLocaleString()}`;
+      const target = filled.includes("annualIncome") || filled.includes("annualExpenses") ? "Annual operating budget and working capital filled in Stage 4." : filled.length ? "Working capital filled in Stage 4." : "Stage 4 already had hand-entered figures, so nothing was overwritten; use the buttons there to replace them.";
+      return `Read as a ${kind} (${totals}). ${target}`;
+    };
+    // CSVs are read in the browser as well as stored, so a budget or bank export dropped here
+    // populates Stage 4 even if the storage call fails.
     const addDocs = async (files, input) => {
       const selected = Array.from(files || []); if (!selected.length) return;
       setUploading(true); setUploadErrors([]);
+      const parsed = await Promise.all(selected.map(async file => isCsv(file) ? readFinancialCsv(await file.text().catch(() => ""), file.name) : null));
       const results = await Promise.all(selected.map(uploadOne));
-      const docs = results.filter(r => r.doc).map(r => r.doc);
-      if (docs.length) setFA(s => ({ ...s, documents:[...(s.documents||[]), ...docs] }));
-      setUploadErrors(results.filter(r => r.error).map(r => r.error));
+      const errors = results.map((r, i) => r.error ? (parsed[i] && !parsed[i].error ? `${r.error} The figures were still read into Stage 4.` : r.error) : null).filter(Boolean);
+      setFA(s => {
+        let state = s; const docs = [];
+        results.forEach((r, i) => {
+          const tx = parsed[i];
+          let status = r.doc?.status;
+          if (tx) {
+            if (tx.error) status = `Stored. ${tx.error}`;
+            else { const absorbed = absorbCsvIntoFA(state, tx); state = absorbed.state; status = describeImport(absorbed.summary, absorbed.filled); }
+          }
+          if (r.doc) docs.push({ ...r.doc, status });
+        });
+        return docs.length ? { ...state, documents:[...(state.documents||[]), ...docs] } : state;
+      });
+      setUploadErrors(errors);
       setUploading(false);
       if (input) input.value = "";
     };
@@ -7559,9 +7637,8 @@ else if (isRD) { if (rd.stage<rdTotal) goRD(rd.stage+1); else goLegacy(1); }
     const n=k=>Number(b[k])||0;
     // Money out becomes committed bills, money in becomes expected receipts. Applied on
     // import only where the field is still empty; the buttons replace on purpose.
-    const IMPORT_MAP={ committed:"outflow", receipts:"inflow", annualExpenses:"outflow", annualIncome:"inflow" };
-    const applyImport=(summary, keys, s, fileName)=>{ const cur=s.budget||{}; const next={...cur}; const nextSources={...(cur.sources||{})}; keys.forEach(k=>{ next[k]=String(Math.round(summary[IMPORT_MAP[k]])); nextSources[k]="import"; }); if(summary.layout==="budget" && (keys.includes("annualIncome")||keys.includes("annualExpenses"))){ next.annualLines=summary.lines; next.annualSource=fileName||cur.annualSource||null; } return {...s,budget:{...next,sources:nextSources}}; };
-    const importCSV=e=>{ const file=e.target.files?.[0]; e.target.value=""; if(!file) return; const reader=new FileReader(); reader.onload=()=>{ const table=csvToRows(String(reader.result||"")); const headers=table[0]||[]; const rows=table.slice(1); const tx={name:file.name,headers,rows,importedAt:new Date().toISOString(),error:rows.length?null:"No transaction rows found. The first line should be column headers with one transaction per line below it."}; setFA(s=>{ let next={...s,transactions:tx}; const summary=summarizeTransactions(tx); if(summary.amountCol){ const cur=s.budget||{}; const candidates=summary.layout==="budget"?["annualIncome","annualExpenses","committed","receipts"]:["committed","receipts"]; const empty=candidates.filter(k=>!String(cur[k]||"").trim()||(cur.sources||{})[k]==="import"); if(empty.length) next=applyImport(summary,empty,next,file.name); } return next; }); }; reader.onerror=()=>setFA(s=>({...s,transactions:{name:file.name,headers:[],rows:[],importedAt:new Date().toISOString(),error:"That file could not be read."}})); reader.readAsText(file); };
+    const applyImport=(summary, keys, s, fileName)=>applyImportToBudget(s, summary, keys, fileName);
+    const importCSV=e=>{ const file=e.target.files?.[0]; e.target.value=""; if(!file) return; const reader=new FileReader(); reader.onload=()=>{ const tx=readFinancialCsv(reader.result, file.name); setFA(s=>absorbCsvIntoFA(s, tx).state); }; reader.onerror=()=>setFA(s=>({...s,transactions:{name:file.name,headers:[],rows:[],importedAt:new Date().toISOString(),error:"That file could not be read."}})); reader.readAsText(file); };
     const txSummary=summarizeTransactions(fa.transactions);
     const useImport=(keys)=>setFA(s=>applyImport(txSummary,keys,s,fa.transactions?.name));
     const hasAnnual=String(b.annualIncome||"").trim()!==""||String(b.annualExpenses||"").trim()!=="";
