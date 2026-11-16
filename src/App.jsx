@@ -287,17 +287,21 @@ const SUBTOTAL_ROW = /^(total|sub-?total|net|gross margin|balance|cash (flow|pos
 const HEADER_WORDS = /total|budget|annual|amount|debit|credit|withdrawal|deposit|date|category|item|description|memo|type|account|plan|actual|^(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)/i;
 // Spreadsheet exports often put a title and blank lines above the real header row. Use the
 // first row that reads like headers (keywords, several cells, no money values); fall back to row 0.
+const DATE_LIKE = /^\d{1,2}[/.-]\d{1,2}([/.-]\d{2,4})?$|^\d{4}-\d{2}-\d{2}/;
+// A cell holds a money value when it parses as a number, carries a digit, and is neither a
+// date nor a word (so "Jan 1 2025" and "FY2026" are labels, not amounts).
+const isMoneyCell = (c) => { const s = String(c ?? "").trim(); return !!s && parseMoney(s) !== null && /\d/.test(s) && !/[a-z]/i.test(s) && !DATE_LIKE.test(s); };
 const findHeaderRow = (table) => {
   const limit = Math.min(table.length, 12);
   for (let i = 0; i < limit; i++) {
     const cells = (table[i] || []).map(c => String(c ?? "").trim());
     const filled = cells.filter(Boolean);
     if (filled.length < 2) continue;
-    const numeric = filled.filter(c => parseMoney(c) !== null && /\d/.test(c) && !/^\d{4}$/.test(c)).length;
+    const numeric = filled.filter(c => isMoneyCell(c) && !/^\d{4}$/.test(c)).length;
     if (numeric > 0) continue;
     if (filled.some(c => HEADER_WORDS.test(c))) return i;
     const next = (table[i + 1] || []).map(c => String(c ?? "").trim());
-    if (next.some(c => parseMoney(c) !== null && /\d/.test(c))) return i;
+    if (next.some(isMoneyCell)) return i;
   }
   return 0;
 };
@@ -320,16 +324,23 @@ const applyImportToBudget = (s, summary, keys, fileName) => {
 // Fill whichever budget fields are still empty (or were themselves filled by an earlier
 // import). Returns the new state plus which keys were filled, for the caller's message.
 const absorbCsvIntoFA = (s, tx) => {
+  const balance = tx.error ? null : parseBalanceSheet(tx);
+  if (balance) {
+    const applied = applyToS3(s, balanceSheetToS3(balance, "end"), `balance:${tx.name}`);
+    return { state:applied.state, summary:{ layout:"balance", amountCol:balance.columns[0], headers:tx.headers, inflow:0, outflow:0, lines:[] }, filled:applied.filled, balance };
+  }
   let next = { ...s, transactions:tx };
   const summary = summarizeTransactions(tx);
   let filled = [];
+  let ratioFilled = [];
   if (summary.amountCol) {
     const cur = s.budget || {};
     const candidates = summary.layout === "budget" ? ["annualIncome", "annualExpenses", "committed", "receipts"] : ["committed", "receipts"];
     filled = candidates.filter(k => !String(cur[k] || "").trim() || (cur.sources || {})[k] === "import");
     if (filled.length) next = applyImportToBudget(next, summary, filled, tx.name);
+    if (summary.layout === "budget") { const applied = applyToS3(next, budgetToS3(summary.lines), `budget:${tx.name}`); next = applied.state; ratioFilled = applied.filled; }
   }
-  return { state:next, summary, filled };
+  return { state:next, summary, filled, ratioFilled };
 };
 const summarizeTransactions = (tx) => {
   const out = { inflow:0, outflow:0, net:0, amountCol:null, span:null, layout:null, headers:[], lines:[] };
@@ -351,7 +362,7 @@ const summarizeTransactions = (tx) => {
     let totalIdx = findCol(/^(total|annual|year(ly)?|budget(ed)?|plan(ned)?|projected|fy ?\d{2,4}|\d{4})\b/i) >= 0 ? findCol(/^(total|annual|year(ly)?|budget(ed)?|plan(ned)?|projected|fy ?\d{2,4}|\d{4})\b/i) : findCol(/total|budget/i);
     const monthIdx = headers.map((h, i) => MONTH_HEADER.test(h) ? i : -1).filter(i => i >= 0);
     const typeIdx = findCol(/^(type|kind|class|category type|in ?\/ ?out|direction|flow)$/i);
-    const isMoneyCol = (i) => { const cells = tx.rows.map(r => String(r[i] ?? "").trim()).filter(Boolean); return cells.length >= 2 && cells.filter(c => parseMoney(c) !== null && /\d/.test(c)).length / cells.length >= 0.7 && !cells.every(c => /^\d{1,2}[\/-]\d{1,2}([\/-]\d{2,4})?$/.test(c)); };
+    const isMoneyCol = (i) => { const cells = tx.rows.map(r => String(r[i] ?? "").trim()).filter(Boolean); return cells.length >= 2 && cells.filter(isMoneyCell).length / cells.length >= 0.7; };
     if (totalIdx >= 0 && !isMoneyCol(totalIdx)) totalIdx = -1;
     if (totalIdx < 0 && !monthIdx.length) {
       // Unnamed or oddly named money column: take the right-most column that holds money.
@@ -384,6 +395,140 @@ const summarizeTransactions = (tx) => {
     if (ts.length) { const f = d => new Date(d).toLocaleDateString(undefined, { month:"short", year:"numeric" }); const a = f(Math.min(...ts)), b = f(Math.max(...ts)); out.span = a === b ? a : `${a} – ${b}`; }
   }
   return out;
+};
+
+// ── Balance sheet → ratio deep dive ─────────────────────────────────────────────
+// Reads a lender-style net worth statement: section headings (current assets, long-term
+// liabilities…), line items, and totals, with one value column (a single snapshot) or two
+// (beginning and end of year). Output keys match the s3vals ids computeFARatios reads.
+const moneyColumnsOf = (rows, headers) => {
+  const width = Math.max(headers.length, ...rows.map(r => r.length), 0);
+  const cols = [];
+  for (let i = 0; i < width; i++) {
+    const cells = rows.map(r => String(r[i] ?? "").trim()).filter(Boolean);
+    const money = cells.filter(isMoneyCell);
+    if (cells.length >= 2 && money.length / cells.length >= 0.6) cols.push(i);
+  }
+  return cols;
+};
+const BS_SECTION = [
+  { re:/^(total\s+)?current\s+(farm\s+)?assets?\b/i, id:"curA" }, { re:/^(total\s+)?(intermediate|non-?current|long-?term|fixed|capital)\s+(farm\s+)?assets?\b/i, id:"ltA" },
+  { re:/^(total\s+)?current\s+(farm\s+)?liabilit/i, id:"curL" }, { re:/^(total\s+)?(intermediate|non-?current|long-?term)\s+(farm\s+)?(liabilit|debt)/i, id:"ltL" },
+  { re:/^(total\s+)?(farm\s+)?assets?\b/i, id:"assets" }, { re:/^(total\s+)?(farm\s+)?liabilit/i, id:"liab" },
+];
+const BS_ITEM = [
+  { re:/receivable/i, key:"ar", side:"a" }, { re:/prepaid/i, key:"prepaid", side:"a" }, { re:/growing crop|crop in (the )?ground|investment in (growing )?crops?/i, key:"growingCrop", side:"a" },
+  { re:/feeder|purchased (market )?livestock|feed (held )?for resale/i, key:"feederInv", side:"a" }, { re:/market livestock|livestock (inventory|held for sale)|raised livestock/i, key:"livestockInv", side:"a" },
+  { re:/(crop|grain|hay|forage|corn|soybean|wheat)s?\b.*(inventor|on hand|in (the )?bin|in storage|held)|(inventor).*(crop|grain|hay)/i, key:"cropInv", side:"a" },
+  { re:/accrued interest|interest (payable|accrued|owed)/i, key:"accrInt", side:"l" }, { re:/deferred|unearned/i, key:"deferredRev", side:"l" },
+  { re:/accrued|accrual|(wages|taxes|rent) (payable|owed|due)/i, key:"otherAccr", side:"l" }, { re:/accounts payable|\bpayables?\b(?!.*notes)|open account|bills? (unpaid|owed)/i, key:"ap", side:"l" },
+];
+const parseBalanceSheet = (tx) => {
+  const headers = (tx.headers || []).map(h => String(h ?? "").trim());
+  const rows = tx.rows || [];
+  const labelOf = r => r.map(c => String(c ?? "").trim()).find(c => c && parseMoney(c) === null) || "";
+  const text = rows.map(labelOf).join(" | ");
+  if (!/asset/i.test(text) || !/liabilit|debt|loan|payable/i.test(text)) return null;
+  const cols = moneyColumnsOf(rows, headers);
+  if (!cols.length) return null;
+  const headerSays = (i, re) => re.test(headers[i] || "");
+  let beginCol = null, endCol = null, singleCol = null;
+  if (cols.length >= 2) {
+    const b = cols.find(i => headerSays(i, /begin|open|start|jan|prior|previous|last/i)), e = cols.find(i => headerSays(i, /end|clos|dec|current|this|final/i));
+    if (b !== undefined && e !== undefined && b !== e) { beginCol = b; endCol = e; }
+    else { beginCol = cols[0]; endCol = cols[1]; }
+  } else singleCol = cols[0];
+  const blank = () => ({ totals:{}, sections:{ curA:0, ltA:0, curL:0, ltL:0, otherA:0, otherL:0 }, items:{}, lines:0 });
+  const snaps = { begin:blank(), end:blank(), single:blank() };
+  let section = null;
+  rows.forEach(r => {
+    const label = labelOf(r); if (!label) return;
+    const vals = { begin:beginCol !== null ? parseMoney(r[beginCol]) : null, end:endCol !== null ? parseMoney(r[endCol]) : null, single:singleCol !== null ? parseMoney(r[singleCol]) : null };
+    const hasValue = Object.values(vals).some(v => v !== null && !Number.isNaN(v));
+    const isTotal = /^total\b/i.test(label);
+    const lower = label.toLowerCase();
+    if (/net worth|equity|owner'?s? capital|liabilities (and|&|\+) (net worth|equity)/i.test(lower)) return;
+    const sec = BS_SECTION.find(s => s.re.test(label));
+    if (sec && !isTotal && !hasValue) { section = sec.id; return; }
+    if (sec && !isTotal && hasValue && /^(current|intermediate|non-?current|long-?term|fixed|capital)/i.test(label) && !BS_ITEM.some(it => it.re.test(label))) { section = sec.id; }
+    if (isTotal && sec) { Object.entries(vals).forEach(([k, v]) => { if (v !== null && !Number.isNaN(v)) snaps[k].totals[sec.id] = Math.abs(v); }); return; }
+    if (isTotal || !hasValue) return;
+    const item = BS_ITEM.find(it => it.re.test(label));
+    Object.entries(vals).forEach(([k, v]) => {
+      if (v === null || Number.isNaN(v)) return;
+      const snap = snaps[k]; snap.lines++;
+      const amt = Math.abs(v);
+      if (item) snap.items[item.key] = (snap.items[item.key] || 0) + amt;
+      const bucket = section || (item ? (item.side === "a" ? "curA" : "curL") : null);
+      if (bucket) snap.sections[bucket] += amt;
+    });
+  });
+  const resolve = (snap) => {
+    const t = snap.totals, s = snap.sections;
+    const curA = t.curA ?? (s.curA || null), ltA = t.ltA ?? (s.ltA || null), curL = t.curL ?? (s.curL || null), ltL = t.ltL ?? (s.ltL || null);
+    const assets = t.assets ?? ((curA || ltA) ? (curA || 0) + (ltA || 0) : null);
+    const liab = t.liab ?? ((curL || ltL) ? (curL || 0) + (ltL || 0) : null);
+    return { currentAssets:curA, currentLiab:curL, totalAssets:assets, totalLiab:liab, items:snap.items, lines:snap.lines };
+  };
+  const out = { name:tx.name, columns:cols.map(i => headers[i] || `column ${i + 1}`), twoColumn:singleCol === null, begin:null, end:null, single:null };
+  if (singleCol !== null) out.single = resolve(snaps.single); else { out.begin = resolve(snaps.begin); out.end = resolve(snaps.end); }
+  const any = [out.single, out.begin, out.end].some(sn => sn && (sn.totalAssets || sn.totalLiab || sn.currentAssets || sn.currentLiab));
+  return any ? out : null;
+};
+const ACCRUAL_KEYS = ["ar", "cropInv", "livestockInv", "feederInv", "deferredRev", "ap", "accrInt", "otherAccr", "prepaid", "growingCrop"];
+// Turns a parsed balance sheet into s3vals fields. A single-column sheet is applied as the
+// snapshot the caller chooses ("end" by default, which is what liquidity ratios use).
+const balanceSheetToS3 = (bs, snapshot = "end") => {
+  const patch = {};
+  const put = (key, v) => { if (v !== null && v !== undefined && !Number.isNaN(v)) patch[key] = String(Math.round(v)); };
+  const applySnap = (sn, which) => {
+    if (!sn) return;
+    put(`${which}Assets`, sn.totalAssets); put(`${which}Liab`, sn.totalLiab);
+    if (which === "end") { put("currentAssets", sn.currentAssets); put("currentLiab", sn.currentLiab); }
+    ACCRUAL_KEYS.forEach(k => { if (sn.items[k] !== undefined) put(`${k}${which === "begin" ? "Begin" : "End"}`, sn.items[k]); });
+  };
+  if (bs.twoColumn) { applySnap(bs.begin, "begin"); applySnap(bs.end, "end"); }
+  else applySnap(bs.single, snapshot === "begin" ? "begin" : "end");
+  return patch;
+};
+
+// ── Operating budget → financial inputs ──────────────────────────────────────
+// Sorts budget line items into the Schedule F style inputs the ratio engine needs. Debt
+// principal, family living and income taxes are budgeted cash outflows but not operating
+// expenses, so they are lifted out of opex and placed in their own fields.
+const BUDGET_LINE_RULES = [
+  { re:/depreciation/i, key:"depr" }, { re:/\binterest\b/i, key:"interest" }, { re:/principal|loan payment|debt (service|payment)|term (loan|debt)/i, key:"principal" },
+  { re:/family living|living (expense|draw|withdrawal)|owner'?s? draw|personal|household/i, key:"livingWithdrawals" }, { re:/income tax|self[- ]employment tax|fed(eral)? tax|state tax/i, key:"incomeTaxes" },
+  { re:/capital (purchase|expenditure)|equipment purchase|machinery purchase|land purchase|down payment/i, key:"capital" },
+];
+const INPUT_COST_RE = /\bseed\b|fertil|lime\b|chem|herbicide|pesticide|insecticide|fungicide|fuel|diesel|gas(oline)?|\boil\b|lubric|crop insurance|drying|\bfeed\b|veterinar|\bvet\b|medicine|breeding fee|semen/i;
+const RENT_RE = /cash rent|land rent|\brent\b|lease(?!.*equipment)|pasture rent/i;
+const budgetToS3 = (lines) => {
+  const sums = { gross:0, opex:0, inputs:0, rent:0, depr:0, interest:0, principal:0, livingWithdrawals:0, incomeTaxes:0 };
+  (lines || []).forEach(line => {
+    const amt = Math.abs(Number(line.amount) || 0); if (!amt) return;
+    if (line.dir === "in") { sums.gross += amt; return; }
+    const rule = BUDGET_LINE_RULES.find(r => r.re.test(line.label || ""));
+    if (rule) { if (rule.key !== "capital") sums[rule.key] += amt; return; }
+    sums.opex += amt;
+    if (INPUT_COST_RE.test(line.label || "")) sums.inputs += amt;
+    if (RENT_RE.test(line.label || "")) sums.rent += amt;
+  });
+  const patch = {};
+  Object.entries(sums).forEach(([k, v]) => { if (v > 0) patch[k] = String(Math.round(v)); });
+  return patch;
+};
+// Writes imported values into s3vals, skipping fields a person typed by hand, and records
+// where each value came from so the form can show it and a later edit can take it back.
+const applyToS3 = (s, patch, source) => {
+  const cur = s.s3vals || {}; const src = { ...(s.s3src || {}) }; const next = { ...cur }; const filled = [];
+  Object.entries(patch).forEach(([k, v]) => {
+    const value = String(cur[k] ?? "").trim();
+    const hand = value && !src[k] && value !== GENERIC_FARM_FINANCIALS[k];
+    if (hand) return;
+    next[k] = v; src[k] = source; filled.push(k);
+  });
+  return { state:{ ...s, s3vals:next, s3src:src }, filled };
 };
 const parseFinancialCsv = (text) => {
   const rows = csvToRows(text);
@@ -924,7 +1069,7 @@ const computeFARatios = (s3) => {
            accrualGross, accrualOpex, ratios, categories };
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
+// ───────��─────────────────────────────────────────────────────────────────────
 // FA STAGE 3 — Document upload & AI-assisted extraction (placeholder / demo)
 // ─────────────────────────────────────────────────────────────────────────────
 // This UI is fully built and clickable end-to-end, but the actual scan step below
@@ -1036,9 +1181,94 @@ function DocumentScanUpload({ fa, setFA }) {
   );
 }
 
+const S3_LABELS = { gross:"Gross farm income", opex:"Operating expenses", inputs:"Input costs", rent:"Land rent", depr:"Depreciation", interest:"Interest", principal:"Principal payments", livingWithdrawals:"Family living", incomeTaxes:"Income taxes", currentAssets:"Current assets", currentLiab:"Current liabilities", beginAssets:"Beginning assets", beginLiab:"Beginning liabilities", endAssets:"Ending assets", endLiab:"Ending liabilities" };
+const describeS3Source = (src) => { if (!src) return null; const [kind, ...rest] = String(src).split(":"); const name = rest.join(":"); return kind === "balance" ? `From balance sheet · ${name}` : kind === "budget" ? `From operating budget · ${name}` : `From ${name}`; };
+// Lets the ratio page take a balance sheet straight from a CSV, reuse a document already
+// stored in Stage 3, and lift the Stage 4 operating budget into the financial inputs.
+function RatioRecordsImport({ fa, setFA }) {
+  const [result, setResult] = useState(null);
+  const [busy, setBusy] = useState(null);
+  const [lastSheet, setLastSheet] = useState(null);
+  const docs = (fa.documents || []).filter(d => /\.csv$/i.test(d.name || "") && d.pathname);
+  const budgetLines = fa.budget?.annualLines || [];
+  const budgetPatch = budgetLines.length ? budgetToS3(budgetLines) : {};
+  const budgetName = fa.budget?.annualSource || "Stage 4 budget";
+  const budgetApplied = fa.s3budgetApplied === budgetName;
+
+  useEffect(() => {
+    if (!budgetLines.length || budgetApplied) return;
+    setFA(s => ({ ...applyToS3(s, budgetToS3(s.budget?.annualLines || []), `budget:${budgetName}`).state, s3budgetApplied:budgetName }));
+  }, [budgetLines.length, budgetApplied, budgetName, setFA]);
+
+  const applySheet = (bs, snapshot, label) => {
+    setFA(s => applyToS3(s, balanceSheetToS3(bs, snapshot), `balance:${bs.name}`).state);
+    setLastSheet({ bs, snapshot });
+    const sn = bs.twoColumn ? bs.end : bs.single;
+    const bits = [sn?.totalAssets ? `assets ${fmt$(sn.totalAssets)}` : null, sn?.totalLiab ? `liabilities ${fmt$(sn.totalLiab)}` : null, sn?.currentAssets ? `current assets ${fmt$(sn.currentAssets)}` : null, sn?.currentLiab ? `current liabilities ${fmt$(sn.currentLiab)}` : null].filter(Boolean).join(", ");
+    setResult({ type:"ok", text:`${label}: read as a balance sheet${bs.twoColumn ? " with beginning and end-of-year columns" : snapshot === "begin" ? " applied as the beginning-of-year snapshot" : " applied as the end-of-year snapshot"} (${bits}). Values in the Balance sheet snapshot tab now carry a "From balance sheet" label; anything you had typed by hand was left alone.` });
+  };
+  const readTx = (tx, label) => {
+    if (tx.error) { setResult({ type:"warn", text:`${label}: ${tx.error}` }); return; }
+    const bs = parseBalanceSheet(tx);
+    if (bs) { applySheet(bs, "end", label); return; }
+    const summary = summarizeTransactions(tx);
+    if (summary.layout === "budget") {
+      setFA(s => ({ ...applyToS3(s, budgetToS3(summary.lines), `budget:${tx.name}`).state, s3budgetApplied:tx.name }));
+      setResult({ type:"ok", text:`${label}: read as an operating budget (income ${fmt$(summary.inflow)}, expenses ${fmt$(summary.outflow)}) and sorted into the Financial inputs tab.` });
+      return;
+    }
+    setResult({ type:"warn", text:`${label}: could not be read as a balance sheet. It needs line items with asset and liability labels and a value column; columns found were ${tx.headers.length ? tx.headers.map(h => `“${h}”`).join(", ") : "empty"}.` });
+  };
+  const onUpload = e => {
+    const file = e.target.files?.[0]; e.target.value = ""; if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => readTx(readFinancialCsv(reader.result, file.name), file.name);
+    reader.onerror = () => setResult({ type:"warn", text:`${file.name} could not be read. Try exporting it again as CSV.` });
+    reader.readAsText(file);
+  };
+  const useStored = async doc => {
+    setBusy(doc.id); setResult(null);
+    try {
+      const response = await fetch(`/api/document-content?pathname=${encodeURIComponent(doc.pathname)}`, { credentials:"include", headers:{ "X-MFP-Record": recordId() } });
+      const payload = await response.json().catch(() => null);
+      if (!response.ok || typeof payload?.text !== "string") throw new Error(payload?.error || `Could not read ${doc.name} from storage.`);
+      readTx(readFinancialCsv(payload.text, doc.name), doc.name);
+    } catch (error) {
+      setResult({ type:"warn", text:error.message || `Could not read ${doc.name} from storage.` });
+    }
+    setBusy(null);
+  };
+  const budgetSummary = Object.entries(budgetPatch).map(([k, v]) => `${S3_LABELS[k] || k} ${fmt$(Number(v))}`).join(" · ");
+  return (
+    <div style={cardStyle({ borderTop:`4px solid ${T.blue}` })}>
+      <div style={cardLblStyle()}>Bring in your records</div>
+      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16 }}>
+        <div>
+          <label style={labelStyle}>Upload a balance sheet</label>
+          <span style={{ fontSize:11, color:T.fgS, marginBottom:6, display:"block", fontStyle:"italic" }}>CSV from your lender or spreadsheet. One value column is applied as the end-of-year snapshot; two columns fill beginning and end of year.</span>
+          <input type="file" accept=".csv,text/csv,text/plain" onChange={onUpload} style={{ width:"100%", padding:10, border:`1px dashed ${T.blue}`, borderRadius:8, background:T.blueL }} />
+          {lastSheet && !lastSheet.bs.twoColumn && <button type="button" onClick={() => applySheet(lastSheet.bs, lastSheet.snapshot === "begin" ? "end" : "begin", lastSheet.bs.name)} style={{ ...btnStyle("outline"), fontSize:11.5, padding:"6px 12px", marginTop:8 }}>{lastSheet.snapshot === "begin" ? "Apply as end-of-year instead" : "Apply as beginning-of-year instead"}</button>}
+        </div>
+        <div>
+          <label style={labelStyle}>Use a stored document</label>
+          <span style={{ fontSize:11, color:T.fgS, marginBottom:6, display:"block", fontStyle:"italic" }}>CSV files uploaded in Stage 3 are kept with this analysis and can be read into the ratio inputs here.</span>
+          {docs.length === 0 ? <div style={{ fontSize:12.5, color:T.fgM, background:T.bgAlt, borderRadius:8, padding:"10px 12px" }}>No stored CSV documents yet. Upload one here, or add it in Stage 3 and come back.</div>
+            : docs.map(doc => <div key={doc.id} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", gap:10, padding:"8px 0", borderBottom:`1px solid ${T.div}` }}><div style={{ minWidth:0 }}><div style={{ fontSize:12.5, fontWeight:600, color:T.navy, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{doc.name}</div><div style={{ fontSize:11, color:T.fgS }}>{Math.max(1, Math.round((doc.size || 0) / 1024))} KB</div></div><button type="button" onClick={() => useStored(doc)} disabled={busy === doc.id} style={{ ...btnStyle("outline"), fontSize:11.5, padding:"6px 12px", whiteSpace:"nowrap" }}>{busy === doc.id ? "Reading…" : "Read into ratios"}</button></div>)}
+        </div>
+      </div>
+      <div style={{ marginTop:14, background:T.bgAlt, borderRadius:8, padding:"10px 12px", fontSize:12.5, color:T.fgM, lineHeight:1.5 }}>
+        {budgetLines.length ? <><strong style={{ color:T.navy }}>Operating budget ({budgetName}).</strong> {budgetSummary}. Sorted into the Financial inputs tab; principal, family living and income taxes are kept out of operating expenses.</> : <><strong style={{ color:T.navy }}>Operating budget.</strong> Import a budget in Stage 4 (or Stage 3) and its income and expense lines will fill the Financial inputs tab here.</>}
+      </div>
+      {result && <div style={{ marginTop:12 }}><Flag type={result.type === "ok" ? "info" : "warn"}>{result.text}</Flag></div>}
+    </div>
+  );
+}
+
 function FA3({ fa, setFA }) {
   const s3 = fa.s3vals;
-  const v = id => s3[id]||""; const sv = (id,val) => setFA(s=>({...s,s3vals:{...s.s3vals,[id]:val}}));
+  const src = fa.s3src || {};
+  const v = id => s3[id]||""; const sv = (id,val) => setFA(s=>{ const nextSrc = { ...(s.s3src||{}) }; delete nextSrc[id]; return {...s,s3vals:{...s.s3vals,[id]:val}, s3src:nextSrc}; });
+  const fieldNote = id => { const from = describeS3Source(src[id]); if (from) return <span style={{ fontSize:10.5, color:T.dgreen, display:"block", marginTop:4, fontWeight:600 }}>{from}</span>; if (v(id) && v(id) === GENERIC_FARM_FINANCIALS[id]) return <span style={{ fontSize:10.5, color:T.fgS, display:"block", marginTop:4, fontStyle:"italic" }}>Example value — replace with your own or import a record above</span>; return null; };
   const { hasData, hasAccrualData, nfi, nfifo, oer, dscr, assetTurnover, sgr, ratios: RATIOS } = computeFARatios(s3);
   const [showAccrual, setShowAccrual] = useState(hasAccrualData);
   const [ratioTab, setRatioTab] = useState("balance");
@@ -1059,6 +1289,7 @@ function FA3({ fa, setFA }) {
   return (
     <div>
       <Head eyebrow="Financial Analysis · Stage 6" title="Ratio deep dive" sub="Enter your financial data — from your MFP Financial Data Worksheet, your own records, or your best estimate. Ratios calculate automatically as you type." showFinancialVisual={false} /><div style={{ display:"flex", gap:8, flexWrap:"wrap", borderBottom:`1px solid ${T.border}`, marginBottom:20 }}><button type="button" onClick={()=>setRatioTab("balance")} style={{ ...btnStyle(ratioTab==="balance"?"primary":"outline"), borderRadius:8, marginBottom:8 }}>Balance sheet snapshot</button><button type="button" onClick={()=>setRatioTab("scorecard")} style={{ ...btnStyle(ratioTab==="scorecard"?"primary":"outline"), borderRadius:8, marginBottom:8 }}>Ratio scorecard</button><button type="button" onClick={()=>setRatioTab("inputs")} style={{ ...btnStyle(ratioTab==="inputs"?"primary":"outline"), borderRadius:8, marginBottom:8 }}>Financial inputs & accrual</button></div>
+      <RatioRecordsImport fa={fa} setFA={setFA} />
           <div style={{ display:ratioTab==="inputs"?"block":"none" }}>{/* financial inputs and accrual adjustments */}<div style={cardStyle()}>
         <div style={cardLblStyle()}>Financial data</div>
         <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16 }}>
@@ -1071,6 +1302,7 @@ function FA3({ fa, setFA }) {
                 <input type="number" style={inputStyle()} placeholder="Enter value" value={v(f.id)} onChange={e=>sv(f.id,e.target.value)} />
                 {f.suf && <span style={{ fontSize:13, color:T.fgS }}>{f.suf}</span>}
               </div>
+              {fieldNote(f.id)}
             </div>
           ))}
         </div>
@@ -1087,6 +1319,7 @@ function FA3({ fa, setFA }) {
                 {f.pre && <span style={{ fontSize:13, color:T.fgS }}>{f.pre}</span>}
                 <input type="number" style={inputStyle()} placeholder="Enter value" value={v(f.id)} onChange={e=>sv(f.id,e.target.value)} />
               </div>
+              {fieldNote(f.id)}
             </div>
           ))}
         </div>
@@ -1122,9 +1355,10 @@ function FA3({ fa, setFA }) {
           </>
         )}
       </div>
-      {hasData && (
+      {(
         <div style={{ ...cardStyle({ borderTop:`4px solid ${T.green}` }), display:ratioTab==="scorecard"?"block":"none" }}>
           <div style={cardLblStyle()}>Ratio scorecard{hasAccrualData && <span style={{ ...pillStyle("info"), marginLeft:10, fontSize:10 }}>Accrual-adjusted</span>}</div>
+          {!hasData && <div style={{ marginBottom:12 }}><Flag type="info">Liquidity and solvency ratios calculate from the balance sheet alone. Efficiency and growth ratios also need {[!(parseFloat(s3.gross)>0) && "gross farm income", !(parseFloat(s3.opex)>0) && "operating expenses", !(parseFloat(s3.acres)>0) && "total acres farmed"].filter(Boolean).join(", ")} in the Financial inputs tab.</Flag></div>}
           <div style={{ display:"grid", gridTemplateColumns:"1fr 100px 160px", gap:8, background:T.bgAlt, borderRadius:6, padding:"8px 12px", marginBottom:4 }}>
             {["Ratio","Your value","Benchmark"].map((hh,i)=>(<div key={i} style={{ fontSize:11, fontWeight:700, color:T.fgS, textTransform:"uppercase", letterSpacing:"0.05em", textAlign:i===1?"right":"left" }}>{hh}</div>))}
           </div>
@@ -7593,12 +7827,18 @@ else if (isRD) { if (rd.stage<rdTotal) goRD(rd.stage+1); else goLegacy(1); }
       }
     };
     const isCsv = file => /\.csv$/i.test(file.name) || /csv/i.test(file.type || "");
-    const describeImport = (summary, filled) => {
+    const describeImport = ({ summary, filled, ratioFilled, balance }) => {
+      if (balance) {
+        const sn = balance.twoColumn ? balance.end : balance.single;
+        const bits = [sn?.totalAssets ? `assets $${Math.round(sn.totalAssets).toLocaleString()}` : null, sn?.totalLiab ? `liabilities $${Math.round(sn.totalLiab).toLocaleString()}` : null].filter(Boolean).join(", ");
+        return `Read as a balance sheet${balance.twoColumn ? " with beginning and end-of-year columns" : ""} (${bits || "totals not found"}). ${filled.length ? `${filled.length} balance sheet inputs filled in the Ratio deep dive.` : "Ratio deep dive already had hand-entered balance sheet figures, so nothing was overwritten."}`;
+      }
       if (!summary.amountCol) return `Stored. No figures recognised: columns found were ${summary.headers.length ? summary.headers.map(h => `“${h}”`).join(", ") : "empty"}.`;
       const kind = summary.layout === "budget" ? "budget" : "transaction export";
       const totals = summary.layout === "budget" ? `income $${Math.round(summary.inflow).toLocaleString()}, expenses $${Math.round(summary.outflow).toLocaleString()}` : `in $${Math.round(summary.inflow).toLocaleString()}, out $${Math.round(summary.outflow).toLocaleString()}`;
       const target = filled.includes("annualIncome") || filled.includes("annualExpenses") ? "Annual operating budget and working capital filled in Stage 4." : filled.length ? "Working capital filled in Stage 4." : "Stage 4 already had hand-entered figures, so nothing was overwritten; use the buttons there to replace them.";
-      return `Read as a ${kind} (${totals}). ${target}`;
+      const ratio = ratioFilled?.length ? ` ${ratioFilled.length} financial inputs filled in the Ratio deep dive.` : "";
+      return `Read as a ${kind} (${totals}). ${target}${ratio}`;
     };
     // CSVs are read in the browser as well as stored, so a budget or bank export dropped here
     // populates Stage 4 even if the storage call fails.
@@ -7615,7 +7855,7 @@ else if (isRD) { if (rd.stage<rdTotal) goRD(rd.stage+1); else goLegacy(1); }
           let status = r.doc?.status;
           if (tx) {
             if (tx.error) status = `Stored. ${tx.error}`;
-            else { const absorbed = absorbCsvIntoFA(state, tx); state = absorbed.state; status = describeImport(absorbed.summary, absorbed.filled); }
+            else { const absorbed = absorbCsvIntoFA(state, tx); state = absorbed.state; status = describeImport(absorbed); }
           }
           if (r.doc) docs.push({ ...r.doc, status });
         });

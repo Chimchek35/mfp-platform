@@ -19,7 +19,7 @@ async function readBody(req) {
 // Files are namespaced by the signed-in user when there is one, otherwise by the
 // anonymous farm-record id the browser keeps alongside its local record. The app
 // has no sign-in screen yet, so the anonymous path is the one most people take.
-async function ownerKey(req) {
+export async function ownerKey(req) {
   try {
     const session = await auth.api.getSession({ headers: fromNodeHeaders(req.headers) });
     if (session?.user?.id) return `user/${session.user.id}`;

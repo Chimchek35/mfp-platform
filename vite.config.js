@@ -2,6 +2,7 @@ import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
 import marketPrices from './api/market-prices.js'
 import uploadDocuments from './api/upload-documents.js'
+import documentContent from './api/document-content.js'
 
 // Vite only serves the front end. The Vercel functions in /api need the project
 // env in process.env and a minimal res.status().json() shim to run under the dev
@@ -34,6 +35,7 @@ function apiRoutes() {
     configureServer(server) {
       mountApi(server, '/api/market-prices', marketPrices)
       mountApi(server, '/api/upload-documents', uploadDocuments)
+      mountApi(server, '/api/document-content', documentContent)
     },
   }
 }
