@@ -253,12 +253,36 @@ const categorizeFinancialRow = (row) => {
   const shared = /shared|general|home|farm & home|multiple|overhead/i.test(text);
   return { ...row, category: shared ? "Shared / allocate" : (match?.[1] || "Uncategorized"), allocation: shared ? 50 : 100, confidence: shared ? "Review" : (match ? "Suggested" : "Needs review") };
 };
+// Character-level CSV tokenizer: handles quoted commas, doubled quotes, CRLF, a UTF-8 BOM,
+// line breaks inside quoted fields, and the semicolon/tab delimiters some exports use.
+const csvToRows = (text) => {
+  const src = String(text || "").replace(/^\uFEFF/, "");
+  const firstLine = src.split(/\r?\n/, 1)[0] || "";
+  const delimiter = [",", ";", "\t"].map(d => [d, firstLine.split(d).length]).sort((a, b) => b[1] - a[1])[0][0];
+  const rows = []; let row = []; let field = ""; let quoted = false;
+  for (let i = 0; i < src.length; i++) {
+    const ch = src[i];
+    if (quoted) {
+      if (ch === '"') { if (src[i + 1] === '"') { field += '"'; i++; } else quoted = false; }
+      else field += ch;
+    } else if (ch === '"') quoted = true;
+    else if (ch === delimiter) { row.push(field); field = ""; }
+    else if (ch === "\n" || ch === "\r") { if (ch === "\r" && src[i + 1] === "\n") i++; row.push(field); rows.push(row); row = []; field = ""; }
+    else field += ch;
+  }
+  if (field !== "" || row.length) { row.push(field); rows.push(row); }
+  return rows.map(r => r.map(v => v.trim())).filter(r => r.some(v => v !== ""));
+};
 const parseFinancialCsv = (text) => {
-  const lines = text.split(/\\r?\\n/).filter(Boolean);
-  if (!lines.length) return [];
-  const split = line => line.match(/(?:[^,\\"]|\\"[^\\"]*\\")+/g)?.map(v => v.trim().replace(/^\\"|\\"$/g, "")) || [];
-  const headers = split(lines[0]).map((h,i) => h || `Column ${i+1}`);
-  return lines.slice(1).map((line, i) => { const vals=split(line); const row={}; headers.forEach((h,j)=>row[h]=vals[j]||""); return { id:`csv-${Date.now()}-${i}`, ...categorizeFinancialRow(row) }; }).filter(row => Object.values(row).some(v => v));
+  const rows = csvToRows(text);
+  if (rows.length < 2) return [];
+  const headers = rows[0].map((h, i) => h || `Column ${i + 1}`);
+  const stamp = Date.now();
+  return rows.slice(1).map((vals, i) => {
+    const row = {};
+    headers.forEach((h, j) => { row[h] = vals[j] ?? ""; });
+    return { id:`csv-${stamp}-${i}`, ...categorizeFinancialRow(row) };
+  });
 };
 
 function FA0({ fa, setFA }) {
@@ -279,7 +303,8 @@ function FA0({ fa, setFA }) {
     {p.basis && p.basis !== "accrual" && <div style={{ ...cardStyle(), display:q>=3?"block":"none" }}><div style={cardLblStyle()}>Can we convert cash results when needed?</div><p style={{ margin:"0 0 12px", color:T.fgM, fontSize:13, lineHeight:1.5 }}>A balance-sheet conversion improves comparability. Only confirm what you can actually provide.</p>{CONVERSION_CHECKS.map((label,i)=><label key={label} style={{ display:"flex", gap:10, alignItems:"center", padding:"9px 0", fontSize:13 }}><input type="checkbox" checked={p.conv?.[i] === "yes"} onChange={e=>set("conv",{ ...(p.conv||{}), [i]:e.target.checked?"yes":"no" })} /><span>{label}</span></label>)}</div>}
     <div style={{ ...cardStyle(), display:q===1?"block":"none" }}><div style={cardLblStyle()}>Who prepares your financial records?</div>{BOOK_PREPARER.map(([id,label])=><Option key={id} group="preparer" value={id}>{label}</Option>)}</div>
     <div style={{ ...cardStyle(), display:q===2?"block":"none" }}><div style={cardLblStyle()}>Where do you keep the records?</div>{BOOK_SYSTEM.map(([id,label])=><Option key={id} group="system" value={id}>{label}</Option>)}</div>
-    <div style={{ ...cardStyle(), display:q===3?"block":"none" }}><div style={cardLblStyle()}>Import transactions for a first-pass categorization</div><div style={{ color:T.fgM, fontSize:13, lineHeight:1.5, marginBottom:12 }}>Upload a CSV exported from your bank, bookkeeping system, or spreadsheet. We suggest categories from the description and flag shared expenses for your review. Your file stays in this working session.</div><input type="file" accept=".csv,text/csv" onChange={e=>{ const file=e.target.files?.[0]; if(!file) return; const reader=new FileReader(); reader.onload=ev=>setFA(s=>({ ...s, csvTransactions:parseFinancialCsv(String(ev.target.result||"")) })); reader.readAsText(file); }} style={{ width:"100%", padding:"10px", border:`1px dashed ${T.blue}`, borderRadius:8, background:T.blueL }} />
+    <div style={{ ...cardStyle(), display:q===3?"block":"none" }}><div style={cardLblStyle()}>Import transactions for a first-pass categorization</div><div style={{ color:T.fgM, fontSize:13, lineHeight:1.5, marginBottom:12 }}>Upload a CSV exported from your bank, bookkeeping system, or spreadsheet. We suggest categories from the description and flag shared expenses for your review. Your file stays in this working session.</div><input type="file" accept=".csv,text/csv,text/plain" onChange={e=>{ const input=e.target; const file=input.files?.[0]; if(!file) return; const reader=new FileReader(); reader.onload=ev=>{ const rows=parseFinancialCsv(String(ev.target.result||"")); setFA(s=>({ ...s, csvTransactions:rows, csvImport:{ name:file.name, rows:rows.length, error:rows.length?null:"No transaction rows found. The first line should be column headers (for example Date, Description, Amount) with one transaction per line below it." } })); input.value=""; }; reader.onerror=()=>{ setFA(s=>({ ...s, csvImport:{ name:file.name, rows:0, error:"That file could not be read. Try exporting it again as CSV." } })); input.value=""; }; reader.readAsText(file); }} style={{ width:"100%", padding:"10px", border:`1px dashed ${T.blue}`, borderRadius:8, background:T.blueL }} />
+      {fa.csvImport?.error && <div style={{ marginTop:12 }}><Flag type="warn"><strong>{fa.csvImport.name}</strong>: {fa.csvImport.error}</Flag></div>}
       {(fa.csvTransactions||[]).length>0 && <div style={{ marginTop:16 }}><div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:8 }}><strong>{fa.csvTransactions.length} transactions ready for review</strong><span style={{ fontSize:12, color:T.fgS }}>Suggestions are not final</span></div><div style={{ overflowX:"auto", border:`1px solid ${T.border}`, borderRadius:8 }}><table style={{ width:"100%", borderCollapse:"collapse", fontSize:12 }}><thead><tr>{["Description","Amount","Suggested category","Allocation","Why / action"].map(h=><th key={h} style={{ textAlign:"left", padding:"9px 10px", background:T.bgAlt, color:T.fgM, whiteSpace:"nowrap" }}>{h}</th>)}</tr></thead><tbody>{fa.csvTransactions.slice(0,50).map((row,i)=>{ const desc=row.Description||row.description||row.Memo||row.memo||Object.values(row)[0]||"Transaction"; const amount=row.Amount||row.amount||row.Debit||row.debit||"—"; return <tr key={row.id||i}><td style={{ padding:"8px 10px", borderTop:`1px solid ${T.div}` }}>{desc}</td><td style={{ padding:"8px 10px", borderTop:`1px solid ${T.div}`, whiteSpace:"nowrap" }}>{amount}</td><td style={{ padding:"8px 10px", borderTop:`1px solid ${T.div}` }}><select value={row.category} onChange={e=>setFA(s=>({...s,csvTransactions:s.csvTransactions.map((r,j)=>j===i?{...r,category:e.target.value,confidence:"Reviewed"}:r)}))} style={{ ...inputStyle(), minHeight:34, padding:"4px 8px", fontSize:12 }}>{FINANCIAL_CATEGORIES.map(c=><option key={c}>{c}</option>)}</select></td><td style={{ padding:"8px 10px", borderTop:`1px solid ${T.div}`, minWidth:130 }}><input type="range" min="0" max="100" step="25" value={row.allocation??100} onChange={e=>setFA(s=>({...s,csvTransactions:s.csvTransactions.map((r,j)=>j===i?{...r,allocation:Number(e.target.value),category:Number(e.target.value)<100?"Shared / allocate":r.category,confidence:"Reviewed"}:r)}))} /><div style={{ fontSize:11, color:T.fgM }}>{row.allocation??100}% to selected enterprise</div></td><td style={{ padding:"8px 10px", borderTop:`1px solid ${T.div}`, color:row.confidence==="Needs review"||row.confidence==="Review"?T.amberT:T.dgreen }}>{row.confidence==="Review"?"Shared expense — allocate across enterprises":row.confidence}</td></tr>})}</tbody></table></div>{fa.csvTransactions.length>50&&<div style={{ fontSize:12, color:T.fgS, marginTop:6 }}>Showing the first 50 rows. All imported rows remain available for the analysis.</div>}</div>}
     </div>
     <div style={{ ...cardStyle({ background:T.blueL, borderColor:"#c8d9e8" }), display:q>=3?"block":"none" }}><div style={{ display:"flex", gap:10, alignItems:"flex-start" }}><IconChart color={T.blue} size={20} /><div><div style={{ fontWeight:700, color:T.navy }}>Why this comes first</div><div style={{ color:T.fgM, fontSize:13, lineHeight:1.5, marginTop:3 }}>Tax records can be perfectly correct and still be the wrong starting point for enterprise profitability. Your answers determine which ratios can be compared confidently and where we should ask for a balance-sheet adjustment.</div></div></div></div>
@@ -2467,7 +2492,7 @@ function LivestockInsuranceCalculator({ risk, setRisk }) {
 
 // ──────────────────────────────────────────────────────────────────────────
 // RD helpers
-// ─────────────────────────────────────────────────────────────────��───────────
+// ─────────────────────────────────────────────────────────────────���───────────
 // Each lever category is now built from specific, measurable items rather than one
 // blanket rating. Every item is framed so a HIGHER value (0–100) always means MORE
 // opportunity — i.e. "idle capacity" or "strength," not raw utilization — so scoring
