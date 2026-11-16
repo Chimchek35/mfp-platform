@@ -5575,7 +5575,7 @@ function LEG12({ leg, setLegData, profile }) {
 }
 
 
-// ══════��═══��══════════════════════════════════════════════════─═══─══─═════─═
+// ══════��═══��══════════════════════════════════════════════════─══��─══─═════─═
 // SUCCESSOR TRACK
 // ════════════════════─════─══════─═════════─══════════════════════════════════
 // Written to the successor, not about them. Their entry point is not "help plan a
@@ -7012,6 +7012,20 @@ const loadRecord = () => {
 
 const clearRecord = () => { try { window.localStorage.removeItem(MFP_STORE_KEY); } catch(e){} };
 
+// Anonymous id that namespaces uploaded documents for this browser's record
+// until the operation signs in. Survives clearRecord so documents stay findable.
+const MFP_RECORD_ID_KEY = "mfp.recordId";
+const recordId = () => {
+  try {
+    let id = window.localStorage.getItem(MFP_RECORD_ID_KEY);
+    if (!id) {
+      id = (window.crypto?.randomUUID ? window.crypto.randomUUID() : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`);
+      window.localStorage.setItem(MFP_RECORD_ID_KEY, id);
+    }
+    return id;
+  } catch (e) { return `session-${Date.now().toString(36)}`; }
+};
+
 const FA_DEFAULT = { stage:1, accounting:{}, enterprises:[], goals:{}, wholeFarm:{}, ratioVals:{}, s3vals:{}, s4bench:{}, s5:{}, actionChecked:{} };
 const RD_DEFAULT = { stage:1, data:{} };
 const RISK_DEFAULT = { stage:1, answers:{} };
@@ -7446,9 +7460,38 @@ else if (isRD) { if (rd.stage<rdTotal) goRD(rd.stage+1); else goLegacy(1); }
   function FADocuments({ fa, setFA }) {
     const docs = fa.documents || [];
     const [uploading, setUploading] = useState(false);
-    const addDocs = async (files) => { const selected=Array.from(files||[]); if(!selected.length) return; setUploading(true); try { const uploaded=await Promise.all(selected.map(async file => { const bytes=new Uint8Array(await file.arrayBuffer()); let binary=""; for(let i=0;i<bytes.length;i+=0x8000) binary+=String.fromCharCode(...bytes.subarray(i,i+0x8000)); const response=await fetch("/api/upload-documents",{ method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ name:file.name, size:file.size, type:file.type, data:btoa(binary) }) }); if(!response.ok) throw new Error("Upload failed"); const stored=await response.json(); return { id:`doc-${Date.now()}-${file.name}`, ...stored, status:"Stored and ready for review" }; })); setFA(s=>({ ...s, documents:[...(s.documents||[]), ...uploaded] })); } catch(error) { console.error("[mfp] document upload failed",error); window.alert("The document could not be stored. Please try again."); } finally { setUploading(false); } };
+    const [uploadErrors, setUploadErrors] = useState([]);
+    const MAX_DOC_MB = 4;
+    // Raw bytes with metadata in headers: a base64 JSON body inflates the file by a third
+    // and runs into the 4.5 MB function body limit well before the advertised cap.
+    const uploadOne = async (file) => {
+      if (file.size > MAX_DOC_MB * 1024 * 1024) return { error:`${file.name} is ${(file.size/1024/1024).toFixed(1)} MB. Files must be ${MAX_DOC_MB} MB or smaller.` };
+      try {
+        const response = await fetch("/api/upload-documents", { method:"POST", credentials:"include", headers:{ "Content-Type": file.type || "application/octet-stream", "X-MFP-Filename": encodeURIComponent(file.name), "X-MFP-Record": recordId() }, body:file });
+        const text = await response.text();
+        let payload = null; try { payload = JSON.parse(text); } catch (e) { payload = null; }
+        if (!response.ok || !payload?.pathname) {
+          const reason = payload?.error || (response.status === 404 || /<!doctype html/i.test(text) ? "The upload service is not running on this server." : `Upload failed (HTTP ${response.status}).`);
+          return { error:`${file.name}: ${reason}` };
+        }
+        return { doc:{ id:`doc-${Date.now()}-${file.name}`, ...payload, status:"Stored and ready for review" } };
+      } catch (error) {
+        console.error("[mfp] document upload failed", error);
+        return { error:`${file.name}: could not reach the upload service. Check your connection and try again.` };
+      }
+    };
+    const addDocs = async (files, input) => {
+      const selected = Array.from(files || []); if (!selected.length) return;
+      setUploading(true); setUploadErrors([]);
+      const results = await Promise.all(selected.map(uploadOne));
+      const docs = results.filter(r => r.doc).map(r => r.doc);
+      if (docs.length) setFA(s => ({ ...s, documents:[...(s.documents||[]), ...docs] }));
+      setUploadErrors(results.filter(r => r.error).map(r => r.error));
+      setUploading(false);
+      if (input) input.value = "";
+    };
     const remove = id => setFA(s => ({ ...s, documents:(s.documents||[]).filter(doc=>doc.id!==id) }));
-    return <div><Head eyebrow="Financial Analysis · Stage 4" title="Upload your documents" sub="Bring the records you trust; we will keep source and assumption visible." /><div style={cardStyle({ borderTop:`4px solid ${T.blue}` })}><div style={cardLblStyle()}>Choose files to review</div><p style={{ color:T.fgM, fontSize:13.5, lineHeight:1.6, marginTop:0 }}>Upload statements, enterprise reports, tax summaries, budgets, or CSV exports. PDF, CSV, XLS, XLSX, and common image files are supported.</p><input type="file" multiple accept=".pdf,.csv,.xls,.xlsx,.png,.jpg,.jpeg" onChange={e=>addDocs(e.target.files)} disabled={uploading} style={{ width:"100%", padding:16, border:`1px dashed ${T.blue}`, borderRadius:8, background:T.blueL }} /><div style={{ marginTop:10, color:T.fgS, fontSize:12 }}>{uploading?"Storing documents securely…":"Documents are stored privately and remain associated with this analysis."}</div></div>{docs.length===0?<div style={cardStyle({ background:T.bgAlt })}><div style={{ color:T.fgM, fontSize:13.5 }}>No documents uploaded yet. You can continue with estimates, or add the records you trust most.</div></div>:<div style={cardStyle()}><div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}><div style={cardLblStyle()}>Documents in this analysis</div><span style={{ fontSize:12, color:T.fgS }}>{docs.length} file{docs.length===1?"":"s"}</span></div>{docs.map(doc=><div key={doc.id} style={{ display:"flex", justifyContent:"space-between", gap:12, alignItems:"center", padding:"11px 0", borderBottom:`1px solid ${T.div}` }}><div><strong style={{ color:T.navy, fontSize:13 }}>{doc.name}</strong><div style={{ color:T.fgS, fontSize:12, marginTop:3 }}>{doc.type} · {Math.max(1,Math.round(doc.size/1024))} KB · {doc.status}</div></div><button type="button" onClick={()=>remove(doc.id)} style={btnStyle("ghost")}>Remove</button></div>)}</div>}<div style={cardStyle({ background:T.blueL, borderColor:"#c8d9e8" })}><strong>Review before using</strong><p style={{ margin:"5px 0 0", color:T.fgM, fontSize:13, lineHeight:1.5 }}>A document can be accurate and still use a different period, allocation method, or accounting basis. The next steps keep source and assumption visible.</p></div></div>;
+    return <div><Head eyebrow="Financial Analysis · Stage 4" title="Upload your documents" sub="Bring the records you trust; we will keep source and assumption visible." /><div style={cardStyle({ borderTop:`4px solid ${T.blue}` })}><div style={cardLblStyle()}>Choose files to review</div><p style={{ color:T.fgM, fontSize:13.5, lineHeight:1.6, marginTop:0 }}>Upload statements, enterprise reports, tax summaries, budgets, or CSV exports. PDF, CSV, XLS, XLSX, and common image files up to {MAX_DOC_MB} MB each are supported.</p><input type="file" multiple accept=".pdf,.csv,.xls,.xlsx,.png,.jpg,.jpeg" onChange={e=>addDocs(e.target.files, e.target)} disabled={uploading} style={{ width:"100%", padding:16, border:`1px dashed ${T.blue}`, borderRadius:8, background:T.blueL }} /><div style={{ marginTop:10, color:T.fgS, fontSize:12 }}>{uploading?"Storing documents securely…":"Documents are stored privately and remain associated with this analysis."}</div>{uploadErrors.length>0 && <div style={{ marginTop:12 }}><Flag type="warn"><strong>Not stored.</strong>{uploadErrors.map((m,i)=><div key={i} style={{ marginTop:4 }}>{m}</div>)}</Flag></div>}</div>{docs.length===0?<div style={cardStyle({ background:T.bgAlt })}><div style={{ color:T.fgM, fontSize:13.5 }}>No documents uploaded yet. You can continue with estimates, or add the records you trust most.</div></div>:<div style={cardStyle()}><div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}><div style={cardLblStyle()}>Documents in this analysis</div><span style={{ fontSize:12, color:T.fgS }}>{docs.length} file{docs.length===1?"":"s"}</span></div>{docs.map(doc=><div key={doc.id} style={{ display:"flex", justifyContent:"space-between", gap:12, alignItems:"center", padding:"11px 0", borderBottom:`1px solid ${T.div}` }}><div><strong style={{ color:T.navy, fontSize:13 }}>{doc.name}</strong><div style={{ color:T.fgS, fontSize:12, marginTop:3 }}>{doc.type} · {Math.max(1,Math.round(doc.size/1024))} KB · {doc.status}</div></div><button type="button" onClick={()=>remove(doc.id)} style={btnStyle("ghost")}>Remove</button></div>)}</div>}<div style={cardStyle({ background:T.blueL, borderColor:"#c8d9e8" })}><strong>Review before using</strong><p style={{ margin:"5px 0 0", color:T.fgM, fontSize:13, lineHeight:1.5 }}>A document can be accurate and still use a different period, allocation method, or accounting basis. The next steps keep source and assumption visible.</p></div></div>;
   }
   function FABudget({ fa, setFA }) {
     const [budgetTab, setBudgetTab] = useState("annual");
