@@ -902,7 +902,18 @@ function FA1Registry({ fa, setFA }) {
   return <div>
     <Head eyebrow="Financial Analysis · Stage 2" title="Build your enterprise registry" sub="Your operation does not have to fit a fixed list. Name each enterprise, describe how well it is tracked, and choose an allocation basis that reflects what actually causes shared costs." />
     <div style={cardStyle()}><div style={cardLblStyle()}>Add your enterprises</div><div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>{FINANCIAL_ENT_KINDS.map(([id,label])=><button key={id} type="button" onClick={()=>add(id)} style={btnStyle("outline")}>+ {label}</button>)}</div>{!list.length&&<Flag type="info">Start with the enterprises that have their own revenue stream or use meaningful amounts of shared equipment, labor, land, or overhead.</Flag>}</div>
-    {list.map((e,i)=><div key={e.id} style={cardStyle()}><div style={{ display:"flex", justifyContent:"space-between", gap:12, alignItems:"center", marginBottom:12 }}><input aria-label="Enterprise name" value={e.name} onChange={ev=>setRow(e.id,{name:ev.target.value})} style={inputStyle({ fontSize:17, fontWeight:700, maxWidth:420 })} /><button type="button" onClick={()=>update({list:list.filter(x=>x.id!==e.id)})} style={btnStyle("ghost")}>Remove</button></div><div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))", gap:14 }}><label style={labelStyle}>What kind of enterprise?<select value={e.kind} onChange={ev=>{const k=FINANCIAL_ENT_KINDS.find(x=>x[0]===ev.target.value);setRow(e.id,{kind:k[0],unit:k[2]})}} style={inputStyle()}>{FINANCIAL_ENT_KINDS.map(([id,label])=><option key={id} value={id}>{label}</option>)}</select></label><label style={labelStyle}>How well are costs tracked?<select value={e.tracking||"none"} onChange={ev=>setRow(e.id,{tracking:ev.target.value})} style={inputStyle()}>{FINANCIAL_TRACKING.map(([id,label])=><option key={id} value={id}>{label}</option>)}</select></label></div></div>)}
+    {list.map((e,i)=><div key={e.id} style={cardStyle()}><div style={{ display:"flex", justifyContent:"space-between", gap:12, alignItems:"center", marginBottom:12 }}><input aria-label="Enterprise name" value={e.name} onChange={ev=>setRow(e.id,{name:ev.target.value})} style={inputStyle({ fontSize:17, fontWeight:700, maxWidth:420 })} /><button type="button" onClick={()=>update({list:list.filter(x=>x.id!==e.id)})} style={btnStyle("ghost")}>Remove</button></div><div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))", gap:14 }}><label style={labelStyle}>What kind of enterprise?<select value={e.kind} onChange={ev=>{const k=FINANCIAL_ENT_KINDS.find(x=>x[0]===ev.target.value);setRow(e.id,{kind:k[0],unit:k[2]})}} style={inputStyle()}>{FINANCIAL_ENT_KINDS.map(([id,label])=><option key={id} value={id}>{label}</option>)}</select></label><label style={labelStyle}>How well are costs tracked?<select value={e.tracking||"none"} onChange={ev=>setRow(e.id,{tracking:ev.target.value})} style={inputStyle()}>{FINANCIAL_TRACKING.map(([id,label])=><option key={id} value={id}>{label}</option>)}</select></label><label style={labelStyle}>Annual gross revenue<div style={{ display:"flex", alignItems:"center", gap:6 }}><span style={{ fontSize:13, color:T.fgS }}>$</span><input type="number" value={e.revenue||""} onChange={ev=>setRow(e.id,{revenue:ev.target.value})} placeholder="Most farms know what each thing sold for" style={inputStyle()} /></div></label></div></div>)}
+    {(() => {
+      const h = enterpriseRevenueHHI(fa);
+      if (!h || list.length < 2) return null;
+      const pct = (n) => `${Math.round(n*100)}%`;
+      const st = h.effective >= 3.5 ? "strong" : h.effective >= 1.8 ? "watch" : "vuln";
+      return <div style={cardStyle({ borderTop:`4px solid ${T.blue}` })}><div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", gap:12, flexWrap:"wrap", marginBottom:10 }}><div style={cardLblStyle({ marginBottom:0 })}>Effective revenue streams</div><span style={pillStyle(st)}>{h.effective.toFixed(2)} effective from {list.length} named</span></div>
+        <div style={{ display:"flex", gap:26, flexWrap:"wrap", marginBottom:10 }}>
+          {[["Named enterprises", String(list.length)],["With revenue entered", String(h.count)],["Largest share", pct(h.dominant)],["Concentration (HHI)", h.hhi.toFixed(2)],["Effective streams", h.effective.toFixed(2)]].map(([l,val],k)=><div key={k}><div style={{ fontSize:11, color:T.fgS, marginBottom:3 }}>{l}</div><div style={{ fontSize:17, fontWeight:600, color:T.navy }}>{val}</div></div>)}
+        </div>
+        <p style={{ fontSize:12.5, color:T.fgM, margin:0, lineHeight:1.6 }}>A count of revenue sources cannot see concentration: five streams split 80 / 5 / 5 / 5 / 5 are 1.54 effective streams, barely more diversified than a single enterprise. The effective count is scale-free, so it compares across any size of operation, and it is the figure that measures your Income diversification dimension on the Farm Profile.{h.count < list.length && ` ${list.length - h.count} enterprise${list.length - h.count === 1 ? " has" : "s have"} no revenue entered yet and ${list.length - h.count === 1 ? "is" : "are"} not in the figure.`}</p></div>;
+    })()}
     <div style={cardStyle()}><div style={cardLblStyle()}>Shared expense allocation policy</div><p style={{ margin:"0 0 14px", color:T.fgM, fontSize:13 }}>When an expense belongs to more than one enterprise, use the driver that best reflects what caused the cost. Revenue share is available, but is usually the weakest explanation for equipment and labor costs.</p>{FINANCIAL_ALLOCATIONS.map(([id,label])=><label key={id} style={{ display:"flex", alignItems:"center", gap:10, padding:"9px 0", borderBottom:`1px solid ${T.div}`, fontSize:13 }}><input type="radio" name="defaultAllocation" checked={(ent.defaultAllocation||"none")===id} onChange={()=>update({defaultAllocation:id})} /> <span style={{ fontWeight:600 }}>{label}</span><span style={{ color:T.fgS, fontSize:12 }}>{id==="hours"?"Best for equipment, fuel, and repairs":id==="labor"?"Best for wages and benefits":id==="revenue"?"Use only for general overhead":""}</span></label>)}</div>
     {list.length>0&&<div style={cardStyle({ background:T.blueL, borderColor:"#c8d9e8" })}><strong>{list.length} enterprise{list.length===1?"":"s"} defined.</strong><div style={{ color:T.fgM, fontSize:13, marginTop:4 }}>The next stages will keep direct costs separate, make shared allocations visible, and show confidence levels when an enterprise does not have enough tracking detail.</div></div>}
   </div>;
@@ -966,6 +977,14 @@ function FA2({ fa, setFA }) {
 const faStR = (val,sv2,vv,lb) => val===null?"blank":(lb?(val<=sv2?"strong":val>=vv?"vuln":"watch"):(val>=sv2?"strong":val<=vv?"vuln":"watch"));
 const faFP = n => n===null?"—":Math.round(n)+"%";
 const faFD = n => n===null?"—":n.toFixed(2)+"x";
+// Capitalisation rate for the imputed charge on owned land in the economic total
+// expense ratio. Defensible for the Midwest; other regions need their own figure.
+const FA_LAND_CAP_RATE = 0.03;
+const FA_TIER = {
+  1: { label:"Tier 1", short:"T1", desc:"Compares directly across almost any farm. A fixed threshold is defensible." },
+  2: { label:"Tier 2", short:"T2", desc:"Needs a peer class before it means anything: enterprise type, scale band, tenure mix, region." },
+  3: { label:"Tier 3", short:"T3", desc:"Needs normalising, not just a peer group. The denominator is structural rather than operational." },
+};
 // FFSC (Farm Financial Standards Council) accrual adjustments — the specific
 // balance-sheet-driven corrections that convert Schedule F cash-basis income into the
 // accrual-adjusted figure lenders and FINBIN/ARMS benchmarks actually use. Cash-basis
@@ -1029,21 +1048,62 @@ const computeFARatios = (s3) => {
   const debtToAsset = endAssets > 0 ? (gv("endLiab")/endAssets)*100 : null;
   const equityRatio = debtToAsset === null ? null : 100 - debtToAsset;
 
+  // ── Comparability layer ───────────────────────────────────────────────────
+  // A fixed threshold assumes every farm is the same kind of business. Land tenure
+  // is the biggest distortion: two identically run operations can show an operating
+  // expense ratio of 67% or 98% purely on whether they own or rent the ground.
+  const landValue = gv("landValue"), machineryValue = gv("machineryValue");
+  const laborCost = gv("laborCost"), ownerLabor = gv("ownerLaborValue"), fte = gv("fte");
+  const hasNormInputs = landValue > 0 || machineryValue > 0 || laborCost > 0 || ownerLabor > 0 || fte > 0;
+  const effGross = hasAccrualData ? accrualGross : gross;
+  const effOpex = hasAccrualData ? accrualOpex : opex;
+
+  // Operating asset turnover strips land out of the denominator, so a farm that owns
+  // its ground and one that rents return the same figure.
+  const opAssets = avgAssets - landValue;
+  const opAssetTurnover = hasData && avgAssets > 0 && opAssets > 0 ? (effGross / opAssets) * 100 : null;
+
+  // Economic total expense ratio charges owned land at a capitalisation rate and
+  // unpaid operator/family labour at market. Below 1.00 is a true economic profit.
+  // 3% is defensible for the Midwest and should be revisited for other regions.
+  const impliedLandCharge = landValue * FA_LAND_CAP_RATE;
+  const econTotalExpense = hasData && (landValue > 0 || ownerLabor > 0)
+    ? (effOpex + impliedLandCharge + ownerLabor + depr + interest) / effGross : null;
+
+  // Labour: the only financial measures of human capital in the standard set.
+  const totalLabor = laborCost + ownerLabor;
+  const laborEfficiency = hasData && totalLabor > 0 ? (totalLabor / effGross) * 100 : null;
+  const laborProductivity = hasData && fte > 0 ? effGross / fte : null;
+  const laborCostPerAcre = hasData && totalLabor > 0 ? totalLabor / acres : null;
+
+  // Machinery
+  const machCostPerAcre = hasData && (depr > 0 || gv("repairs") > 0 || gv("fuelOil") > 0) ? (depr + gv("repairs") + gv("fuelOil")) / acres : null;
+  const machInvestPerAcre = hasData && machineryValue > 0 ? machineryValue / acres : null;
+
+  // Tenure mix sets the peer class this farm belongs in.
+  const ownedShare = avgAssets > 0 && hasNormInputs ? Math.min(100, (landValue / avgAssets) * 100) : null;
+  const tenureClass = ownedShare === null ? null
+    : ownedShare >= 55 ? "owner-heavy" : ownedShare >= 20 ? "mixed tenure" : "renter-heavy";
+
+  // Tier 1 compares directly across almost any farm, so a fixed threshold is
+  // defensible. Tier 2 needs a peer class (enterprise type, scale, tenure, region).
+  // Tier 3 has a structural denominator and needs normalising, not just a peer group.
   const ratios = [
-    {key:"oer",cat:"efficiency",label:"Operating expense ratio",val:faFP(oer),status:faStR(oer,65,80,true),bench:"Strong < 65%"},
-    {key:"ipa",cat:"efficiency",label:"Input cost per acre",val:fmt$(ipa)+"/ac",status:faStR(ipa,478,535,true),bench:"Strong < $478"},
-    {key:"assetTurnover",cat:"efficiency",label:"Asset turnover ratio",val:faFP(assetTurnover),status:faStR(assetTurnover,40,20,false),bench:"Strong > 40%"},
-    {key:"grpa",cat:"efficiency",label:"Gross revenue per acre",val:fmt$(grpa)+"/ac",status:faStR(grpa,951,800,false),bench:"Strong > $951"},
-    {key:"currentRatio",cat:"liquidity",label:"Current ratio",val:currentRatio===null?"—":currentRatio.toFixed(2)+"x",status:faStR(currentRatio,2.0,1.0,false),bench:"Strong > 2.0x"},
-    {key:"workingCapital",cat:"liquidity",label:"Working capital",val:fmt$(workingCapital),status:workingCapital===null?"blank":workingCapital>0?"strong":"vuln",bench:"Positive covers a short year"},
-    {key:"wcToRevenue",cat:"liquidity",label:"Working capital to revenue",val:faFP(wcToRevenue),status:faStR(wcToRevenue,25,10,false),bench:"Strong > 25%"},
-    {key:"debtToAsset",cat:"solvency",label:"Debt-to-asset ratio",val:faFP(debtToAsset),status:faStR(debtToAsset,30,60,true),bench:"Strong < 30%"},
-    {key:"equityRatio",cat:"solvency",label:"Equity ratio",val:faFP(equityRatio),status:faStR(equityRatio,70,40,false),bench:"Strong > 70%"},
-    {key:"dscr",cat:"solvency",label:"Debt service coverage",val:faFD(dscr),status:faStR(dscr,1.25,1.0,false),bench:"Strong > 1.25x"},
-    ...(hasAccrualData ? [{key:"nfifo",cat:"growth",label:"Net farm income from operations",val:fmt$(nfifo),status:nfifo===null?"blank":nfifo>=0?"strong":"vuln",bench:"Accrual-adjusted operating trend"}] : []),
-    {key:"nfi",cat:"growth",label:hasAccrualData?"Net farm income (incl. capital gains/losses)":"Net farm income",val:fmt$(nfi),status:nfi===null?"blank":nfi>=0?"strong":"vuln",bench:"Positive covers full cost"},
-    {key:"sgr",cat:"growth",label:"Sustainable growth rate",val:faFP(sgr),status:faStR(sgr,10,0,false),bench:"Strong > 10%"},
-    {key:"nrpa",cat:"growth",label:"Net return per acre",val:fmt$(nrpa)+"/ac",status:faStR(nrpa,150,50,false),bench:"Strong > $150"},
+    {key:"oer",cat:"efficiency",tier:2,label:"Operating expense ratio",val:faFP(oer),status:faStR(oer,65,80,true),bench:"Strong < 65%"},
+    {key:"ipa",cat:"efficiency",tier:2,label:"Input cost per acre",val:fmt$(ipa)+"/ac",status:faStR(ipa,478,535,true),bench:"Strong < $478"},
+    {key:"assetTurnover",cat:"efficiency",tier:3,label:"Asset turnover ratio",val:faFP(assetTurnover),status:faStR(assetTurnover,40,20,false),bench:"Strong > 40%"},
+    {key:"grpa",cat:"efficiency",tier:2,label:"Gross revenue per acre",val:fmt$(grpa)+"/ac",status:faStR(grpa,951,800,false),bench:"Strong > $951"},
+    {key:"currentRatio",cat:"liquidity",tier:1,label:"Current ratio",val:currentRatio===null?"—":currentRatio.toFixed(2)+"x",status:faStR(currentRatio,2.0,1.0,false),bench:"Strong > 2.0x"},
+    {key:"workingCapital",cat:"liquidity",tier:1,label:"Working capital",val:fmt$(workingCapital),status:workingCapital===null?"blank":workingCapital>0?"strong":"vuln",bench:"Positive covers a short year"},
+    {key:"wcToRevenue",cat:"liquidity",tier:1,label:"Working capital to revenue",val:faFP(wcToRevenue),status:faStR(wcToRevenue,25,10,false),bench:"Strong > 25%"},
+    {key:"debtToAsset",cat:"solvency",tier:2,label:"Debt-to-asset ratio",val:faFP(debtToAsset),status:faStR(debtToAsset,30,60,true),bench:"Strong < 30%"},
+    {key:"equityRatio",cat:"solvency",tier:2,label:"Equity ratio",val:faFP(equityRatio),status:faStR(equityRatio,70,40,false),bench:"Strong > 70%"},
+    {key:"dscr",cat:"solvency",tier:1,label:"Debt service coverage",val:faFD(dscr),status:faStR(dscr,1.25,1.0,false),bench:"Strong > 1.25x"},
+    ...(hasAccrualData ? [{key:"nfifo",cat:"growth",tier:2,label:"Net farm income from operations",val:fmt$(nfifo),status:nfifo===null?"blank":nfifo>=0?"strong":"vuln",bench:"Accrual-adjusted operating trend"}] : []),
+    {key:"nfi",cat:"growth",tier:2,label:hasAccrualData?"Net farm income (incl. capital gains/losses)":"Net farm income",val:fmt$(nfi),status:nfi===null?"blank":nfi>=0?"strong":"vuln",bench:"Positive covers full cost"},
+    {key:"econTotalExpense",cat:"growth",tier:1,label:"Economic total expense ratio",val:econTotalExpense===null?"—":econTotalExpense.toFixed(2),status:faStR(econTotalExpense,1.0,1.15,true),bench:"Below 1.00 is an economic profit"},
+    {key:"sgr",cat:"growth",tier:3,label:"Sustainable growth rate",val:faFP(sgr),status:faStR(sgr,10,0,false),bench:"Strong > 10%"},
+    {key:"nrpa",cat:"growth",tier:2,label:"Net return per acre",val:fmt$(nrpa)+"/ac",status:faStR(nrpa,150,50,false),bench:"Strong > $150"},
   ];
 
   // Roll the ratios up into the four financial health categories. A category takes
@@ -1065,8 +1125,52 @@ const computeFARatios = (s3) => {
   });
 
   return { hasData, hasAccrualData, oer, ipa, grpa, nrpa, nfi, nfifo, dscr, assetTurnover, sgr,
+           hasNormInputs, opAssetTurnover, econTotalExpense, impliedLandCharge, laborEfficiency, laborProductivity, laborCostPerAcre,
+           machCostPerAcre, machInvestPerAcre, ownedShare, tenureClass, landValue, totalLabor, fte,
            currentRatio, workingCapital, wcToRevenue, debtToAsset, equityRatio,
            accrualGross, accrualOpex, ratios, categories };
+};
+
+// Revenue concentration. HHI is scale-free, so unlike a count of revenue sources it
+// compares across any size of operation without a peer class. Its inverse, the
+// effective number of revenue streams, is the form a farmer can read: five sources
+// split 80/5/5/5/5 is 1.54 effective streams, barely more than a single enterprise.
+const revenueHHI = (shares) => {
+  const vals = (shares||[]).map(s=>parseFloat(s)||0).filter(v=>v>0);
+  const tot = vals.reduce((a,b)=>a+b,0);
+  if (tot <= 0 || vals.length === 0) return null;
+  const hhi = vals.reduce((a,v)=>a+Math.pow(v/tot,2),0);
+  return { hhi, effective: 1/hhi, count: vals.length, dominant: Math.max(...vals)/tot };
+};
+const enterpriseRevenueHHI = (fa) => revenueHHI(((((fa||{}).ent||{}).list)||[]).map(e=>e.revenue));
+
+// Labour targets differ enormously by enterprise. The 10–11% figure in common use is
+// a row-crop number; applied to an orchard it flags a well-run operation as failing.
+const LABOR_TARGETS = {
+  grain:0.11, forage:0.11, specialty:0.28, perennial:0.30,
+  dairy:0.20, beef:0.15, swine:0.15, poultry:0.15,
+  service:0.35, storage:0.15, land:0.05, other:0.15,
+};
+const laborTargetFor = (fa) => {
+  const list = (((fa||{}).ent||{}).list)||[];
+  if (!list.length) return { target:0.15, basis:"15% general target; add enterprises in Stage 2 to set one from your enterprise mix" };
+  const t = Math.max(...list.map(e => LABOR_TARGETS[e.kind] ?? 0.15));
+  const kind = list.find(e => (LABOR_TARGETS[e.kind] ?? 0.15) === t);
+  const label = (FINANCIAL_ENT_KINDS.find(k => k[0] === (kind ? kind.kind : "other")) || FINANCIAL_ENT_KINDS[FINANCIAL_ENT_KINDS.length-1])[1];
+  return { target:t, basis:`${Math.round(t*100)}% target, set by your ${label.toLowerCase()} enterprise` };
+};
+
+// Accounting profile helpers shared by the ratio deep dive and the overrides.
+// Conversion is possible only with a balance sheet at both ends of the year.
+const convReady = (ap) => { const p = ap||{}; if (p.basis === "accrual") return true; const c = p.conv||{}; return c[0] === "yes" && c[1] === "yes"; };
+const basisConfidence = (ap) => {
+  const p = ap||{};
+  if (!p.basis) return { level:"Unknown", note:"Accounting basis not recorded in Stage 1." };
+  if (p.basis === "accrual") return { level:"High", note:"Accrual figures already reflect when income was earned and costs incurred." };
+  const dist = Object.values(p.distortions||{}).filter(v => v === "yes").length;
+  if (convReady(p)) return { level:"Medium", note:"Cash basis, but two balance sheets make an accrual conversion possible." };
+  if (dist >= 2) return { level:"Low", note:`Cash basis with ${dist} tax-timing distortions recorded and no balance sheets to correct them.` };
+  return { level:"Medium", note:"Cash basis without a conversion path; treat profitability ratios as indicative." };
 };
 
 // ───────��─────────────────────────────────────────────────────────────────────
@@ -1269,9 +1373,25 @@ function FA3({ fa, setFA }) {
   const src = fa.s3src || {};
   const v = id => s3[id]||""; const sv = (id,val) => setFA(s=>{ const nextSrc = { ...(s.s3src||{}) }; delete nextSrc[id]; return {...s,s3vals:{...s.s3vals,[id]:val}, s3src:nextSrc}; });
   const fieldNote = id => { const from = describeS3Source(src[id]); if (from) return <span style={{ fontSize:10.5, color:T.dgreen, display:"block", marginTop:4, fontWeight:600 }}>{from}</span>; if (v(id) && v(id) === GENERIC_FARM_FINANCIALS[id]) return <span style={{ fontSize:10.5, color:T.fgS, display:"block", marginTop:4, fontStyle:"italic" }}>Example value — replace with your own or import a record above</span>; return null; };
-  const { hasData, hasAccrualData, nfi, nfifo, oer, dscr, assetTurnover, sgr, ratios: RATIOS } = computeFARatios(s3);
+  const R = computeFARatios(s3);
+  const { hasData, hasAccrualData, nfi, nfifo, oer, dscr, assetTurnover, sgr, ratios: RATIOS } = R;
   const [showAccrual, setShowAccrual] = useState(hasAccrualData);
   const [ratioTab, setRatioTab] = useState("balance");
+  const entList = ((fa.ent||{}).list)||[];
+  const entKinds = [...new Set(entList.map(e => (FINANCIAL_ENT_KINDS.find(k => k[0] === e.kind) || [])[1]).filter(Boolean))];
+  const peerClassKnown = R.tenureClass !== null && entKinds.length > 0;
+  const conf = basisConfidence(fa.accounting);
+  // Needed to make ratios comparable across farms. These separate performance from
+  // balance sheet structure, which is what a fixed benchmark cannot do.
+  const NORM_INPUTS = [
+    {id:"landValue",label:"Market value of owned farmland",sub:"The land portion of your total assets. Enter 0 if you rent everything.",pre:"$"},
+    {id:"machineryValue",label:"Market value of machinery and equipment",sub:"What the line would sell for, not book value",pre:"$"},
+    {id:"laborCost",label:"Hired labor cost",sub:"Wages, payroll taxes and benefits for everyone you pay",pre:"$"},
+    {id:"ownerLaborValue",label:"Value of unpaid operator and family labor",sub:"What you would have to pay someone to do the work you and your family do unpaid",pre:"$"},
+    {id:"fte",label:"Full-time equivalent workers",sub:"Including yourself. Two half-time people count as one."},
+    {id:"repairs",label:"Machinery repairs and parts",sub:"Schedule F line 25",pre:"$"},
+    {id:"fuelOil",label:"Fuel and oil",sub:"Schedule F line 17",pre:"$"},
+  ];
   const INPUTS = [{id:"gross",label:"Gross farm income",sub:"Total farm revenue for the year",pre:"$"},{id:"opex",label:"Total operating expenses",sub:"Cash operating costs, before depreciation and interest",pre:"$"},{id:"inputs",label:"Input costs (seed, fert, chem, fuel)",sub:"Estimate if not tracked separately",pre:"$"},{id:"rent",label:"Land rent paid",sub:"Cash rent paid to landlords",pre:"$"},{id:"depr",label:"Depreciation",sub:"From your tax return or accountant",pre:"$"},{id:"interest",label:"Interest paid",sub:"From loan statements",pre:"$"},{id:"acres",label:"Total acres farmed",sub:"Owned + rented",suf:"ac"},{id:"principal",label:"Annual principal payments",sub:"From loan statements",pre:"$"}];
   const BS_INPUTS = [{id:"currentAssets",label:"Current farm assets",sub:"Cash, receivables, inventory, prepaid, anything convertible within 12 months",pre:"$"},{id:"currentLiab",label:"Current farm liabilities",sub:"Operating line, payables, accrued interest, principal due within 12 months",pre:"$"},{id:"beginAssets",label:"Beginning-of-year total farm assets",sub:"From your lender's balance sheet or net worth statement",pre:"$"},{id:"beginLiab",label:"Beginning-of-year total farm liabilities",sub:"Loan balances as of January 1",pre:"$"},{id:"endAssets",label:"End-of-year total farm assets",sub:"From your lender's balance sheet or net worth statement",pre:"$"},{id:"endLiab",label:"End-of-year total farm liabilities",sub:"Loan balances as of December 31",pre:"$"},{id:"livingWithdrawals",label:"Family living withdrawals",sub:"Cash taken out for household expenses",pre:"$"},{id:"incomeTaxes",label:"Income taxes paid",sub:"From your tax return or accountant",pre:"$"}];
   const ACCRUAL_ITEMS = [
@@ -1324,6 +1444,50 @@ function FA3({ fa, setFA }) {
           ))}
         </div>
       </div>
+      <div style={{ ...cardStyle({ borderTop:`4px solid ${T.blue}` }), display:ratioTab==="balance"?"block":"none" }}>
+        <div style={cardLblStyle()}>What makes your ratios comparable to another farm</div>
+        <div style={{ fontSize:12.5, color:T.fgM, marginBottom:4, lineHeight:1.55 }}>
+          Two operations with identical crops, yields and management can show an operating expense ratio of 67% or 98% depending on whether they own their ground or rent it. Neither is better run. Any benchmark that compares both against the same threshold is measuring balance sheet structure and calling it performance.
+        </div>
+        <div style={{ fontSize:12.5, color:T.fgM, marginBottom:16, lineHeight:1.55 }}>
+          These figures separate performance from structure. Land value and unpaid labour unlock the two normalised measures; labour cost and FTEs are the only financial measures of human capital in the standard set.
+        </div>
+        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16 }}>
+          {NORM_INPUTS.map(f => (
+            <div key={f.id}>
+              <label style={labelStyle}>{f.label}</label>
+              <span style={{ fontSize:11, color:T.fgS, marginBottom:6, display:"block", fontStyle:"italic" }}>{f.sub}</span>
+              <div style={{ display:"flex", alignItems:"center", gap:6 }}>
+                {f.pre && <span style={{ fontSize:13, color:T.fgS }}>{f.pre}</span>}
+                <input type="number" style={inputStyle()} placeholder="Enter value" value={v(f.id)} onChange={e=>sv(f.id,e.target.value)} />
+              </div>
+              {fieldNote(f.id)}
+            </div>
+          ))}
+        </div>
+        {hasData && R.hasNormInputs && (
+          <div style={{ marginTop:16, background:T.bgAlt, borderRadius:8, padding:"13px 16px" }}>
+            <div style={{ fontSize:10.5, letterSpacing:"0.13em", textTransform:"uppercase", color:T.fgS, marginBottom:10 }}>Your comparison class</div>
+            <div style={{ display:"flex", gap:26, flexWrap:"wrap" }}>
+              {[["Tenure", R.tenureClass || "—"],
+                ["Enterprise type", entKinds.length ? entKinds.join(", ") : "not recorded"],
+                ["Land as share of assets", R.ownedShare===null?"—":Math.round(R.ownedShare)+"%"],
+                ["Asset turnover · raw", R.assetTurnover===null?"—":Math.round(R.assetTurnover)+"%"],
+                ["Asset turnover · land excluded", R.opAssetTurnover===null?"—":Math.round(R.opAssetTurnover)+"%"],
+                ["Economic total expense", R.econTotalExpense===null?"—":R.econTotalExpense.toFixed(2)],
+                ["Labour efficiency", R.laborEfficiency===null?"—":R.laborEfficiency.toFixed(1)+"%"],
+                ["Revenue per FTE", R.laborProductivity===null?"—":fmt$(R.laborProductivity)]].map(([l,val],k)=>(
+                <div key={k}><div style={{ fontSize:11, color:T.fgS, marginBottom:3 }}>{l}</div>
+                <div style={{ fontSize:17, fontWeight:600, color:T.navy, textTransform:k===0?"capitalize":"none" }}>{val}</div></div>
+              ))}
+            </div>
+            <p style={{ fontSize:12, color:T.fgM, margin:"11px 0 0", lineHeight:1.6 }}>
+              Operating asset turnover strips land out, so it compares directly against a farm with the opposite tenure. Economic total expense charges owned land at {Math.round(FA_LAND_CAP_RATE*100)}% and your own unpaid labour at market; below 1.00 is a true economic profit, and most farms sit above it.
+              {R.laborEfficiency!==null && ` Labour target for your enterprise mix: ${laborTargetFor(fa).basis}.`}
+            </p>
+          </div>
+        )}
+      </div>
       <div style={cardStyle()}>
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:showAccrual?14:0 }}>
           <div style={cardLblStyle({ marginBottom:0 })}>Accrual adjustments (advanced, optional)</div>
@@ -1359,22 +1523,43 @@ function FA3({ fa, setFA }) {
         <div style={{ ...cardStyle({ borderTop:`4px solid ${T.green}` }), display:ratioTab==="scorecard"?"block":"none" }}>
           <div style={cardLblStyle()}>Ratio scorecard{hasAccrualData && <span style={{ ...pillStyle("info"), marginLeft:10, fontSize:10 }}>Accrual-adjusted</span>}</div>
           {!hasData && <div style={{ marginBottom:12 }}><Flag type="info">Liquidity and solvency ratios calculate from the balance sheet alone. Efficiency and growth ratios also need {[!(parseFloat(s3.gross)>0) && "gross farm income", !(parseFloat(s3.opex)>0) && "operating expenses", !(parseFloat(s3.acres)>0) && "total acres farmed"].filter(Boolean).join(", ")} in the Financial inputs tab.</Flag></div>}
-          <div style={{ display:"grid", gridTemplateColumns:"1fr 100px 160px", gap:8, background:T.bgAlt, borderRadius:6, padding:"8px 12px", marginBottom:4 }}>
-            {["Ratio","Your value","Benchmark"].map((hh,i)=>(<div key={i} style={{ fontSize:11, fontWeight:700, color:T.fgS, textTransform:"uppercase", letterSpacing:"0.05em", textAlign:i===1?"right":"left" }}>{hh}</div>))}
-          </div>
-          {RATIOS.map((r,i) => (
-            <div key={i} style={{ display:"grid", gridTemplateColumns:"1fr 100px 160px", gap:8, padding:"10px 12px", borderBottom:`1px solid ${T.div}`, alignItems:"center" }}>
-              <div style={{ fontSize:13 }}>{r.label}</div>
-              <div style={{ fontSize:18, fontWeight:800, color:scColor(r.status), textAlign:"right" }}>{r.val}</div>
-              <div style={{ fontSize:11.5, color:T.fgS }}>{r.bench}</div>
+          {hasData && !peerClassKnown && (
+            <div style={{ marginBottom:12 }}>
+              <Flag type="warn">
+                <b>Tier 2 and 3 labels below are not yet comparable.</b> Only Tier 1 ratios can honestly be read against a fixed strong / watch / vulnerable label. The rest need a peer class, and yours is incomplete: {[R.tenureClass===null && "enter owned land value in the Balance sheet tab to set your tenure class", entKinds.length===0 && "add your enterprises in Stage 2 to set your enterprise type"].filter(Boolean).join("; ")}. Until then, treat those labels as a row-crop, mixed-tenure reading rather than a verdict.
+              </Flag>
             </div>
-          ))}
+          )}
+          {hasData && peerClassKnown && (
+            <div style={{ marginBottom:12 }}>
+              <Flag type="info">Tier 2 labels are read against a <b>{R.tenureClass}, {entKinds.join(" / ").toLowerCase()}</b> peer class. Tier 3 ratios carry a structural denominator; the land-excluded and economic versions in the Balance sheet tab are the comparable forms.</Flag>
+            </div>
+          )}
+          <div style={{ display:"grid", gridTemplateColumns:"1fr 54px 100px 160px", gap:8, background:T.bgAlt, borderRadius:6, padding:"8px 12px", marginBottom:4 }}>
+            {["Ratio","Tier","Your value","Benchmark"].map((hh,i)=>(<div key={i} style={{ fontSize:11, fontWeight:700, color:T.fgS, textTransform:"uppercase", letterSpacing:"0.05em", textAlign:i===2?"right":i===1?"center":"left" }}>{hh}</div>))}
+          </div>
+          {RATIOS.map((r,i) => {
+            const qualified = r.tier !== 1 && r.status !== "blank";
+            return (
+              <div key={i} style={{ display:"grid", gridTemplateColumns:"1fr 54px 100px 160px", gap:8, padding:"10px 12px", borderBottom:`1px solid ${T.div}`, alignItems:"center" }}>
+                <div style={{ fontSize:13 }}>{r.label}</div>
+                <div style={{ textAlign:"center" }} title={FA_TIER[r.tier].desc}><span style={{ ...pillStyle(r.tier===1?"strong":r.tier===2?"info":"blank"), letterSpacing:"0.06em" }}>{FA_TIER[r.tier].short}</span></div>
+                <div style={{ fontSize:18, fontWeight:800, color:qualified && !peerClassKnown ? T.fgM : scColor(r.status), textAlign:"right" }}>{r.val}</div>
+                <div style={{ fontSize:11.5, color:T.fgS }}>{r.bench}{qualified && <span style={{ display:"block", fontSize:10.5, fontStyle:"italic" }}>{r.tier===3?"needs normalising":peerClassKnown?"within peer class":"peer class pending"}</span>}</div>
+              </div>
+            );
+          })}
+          <div style={{ display:"flex", gap:16, flexWrap:"wrap", marginTop:12, fontSize:11.5, color:T.fgS, lineHeight:1.5 }}>
+            {[1,2,3].map(t => <div key={t} style={{ flex:"1 1 200px" }}><b style={{ color:T.fgM }}>{FA_TIER[t].label}.</b> {FA_TIER[t].desc}</div>)}
+          </div>
           <div style={{ marginTop:14 }}>
             {nfi!==null && nfi<0 && <Flag type="danger">Net farm income is negative — depreciation and interest are eroding equity.</Flag>}
-            {oer!==null && oer>80 && <Flag type="danger">OER above 80% — operating costs consume more than 80 cents of every revenue dollar.</Flag>}
+            {nfi!==null && nfi>=0 && R.econTotalExpense!==null && R.econTotalExpense>1 && <Flag type="warn">Cash net farm income is positive, but the economic total expense ratio is {R.econTotalExpense.toFixed(2)}. Once owned land and your own labour are charged at market, this operation is not earning a return on them. That is a precise way into a conversation that is otherwise difficult to open.</Flag>}
+            {oer!==null && oer>80 && <Flag type={peerClassKnown && R.tenureClass==="renter-heavy" ? "warn" : "danger"}>OER above 80% — operating costs consume more than 80 cents of every revenue dollar.{R.tenureClass==="renter-heavy" && " Rent sits in operating cost, so a renter-heavy operation runs structurally higher here; compare against renters, not owners."}</Flag>}
             {dscr!==null && dscr<1 && <Flag type="danger">DSCR below 1.0x — net income does not cover debt service. Contact your Farm Credit advisor.</Flag>}
-            {sgr!==null && sgr<0 && <Flag type="danger">Sustainable growth rate is negative — the farm is drawing down equity to cover living expenses and taxes, not building it.</Flag>}
-            {assetTurnover!==null && assetTurnover<20 && <Flag type="warn">Asset turnover below 20% — a large asset base relative to the revenue it generates. Common for land-heavy operations, but worth understanding why.</Flag>}
+            {sgr!==null && sgr<0 && <Flag type="danger">Sustainable growth rate is negative — the farm is drawing down equity to cover living expenses and taxes, not building it.{R.tenureClass==="renter-heavy" && " On a thin equity base this ratio swings violently; read it alongside debt service coverage."}</Flag>}
+            {assetTurnover!==null && assetTurnover<20 && <Flag type="warn">Asset turnover below 20% — a large asset base relative to the revenue it generates.{R.opAssetTurnover!==null ? ` With land excluded it is ${Math.round(R.opAssetTurnover)}%, which is the figure to compare against another farm.` : " Common for land-heavy operations; enter owned land value to see the land-excluded figure."}</Flag>}
+            {conf.level==="Low" && <Flag type="warn">Accounting profile is low confidence: {conf.note} Profitability ratios here are indicative, and will not override your assessed Financial analysis score.</Flag>}
           </div>
         </div>
       )}
@@ -3628,7 +3813,7 @@ function RD3({ rd, setRData, fa, goFA }) {
 
 // ──────────────────────────────────────────────────────────────────────────
 // RD STAGE 4 — Opportunity mapping
-// ─────────────────────────────────────────────────────────────────────────────
+// ───────────────────────────────────────────���─────────────────────────────────
 const GROWTH_TIER_LABEL = { 1:"Tier 1 · Fastest structural growth", 2:"Tier 2 · Strong growth", 3:"Tier 3 · Steady & selective" };
 const GROWTH_TIER_COLOR = { 1:T.dgreen, 2:T.blue, 3:T.tan };
 
@@ -4274,12 +4459,104 @@ const AP_AREAS = [
   { n:12, id:"succession", label:"Succession & transition",      cat:"legacy",       score:2.6, weight:"constraint", module:"legacy" },
 ];
 
+// ═════════════════════════════════════════════════════════════════════════════
+// METRIC OVERRIDES — a measurement beats a self-assessment
+// ═════════════════════════════════════════════════════════════════════════════
+// Several MFP dimensions are scored from a conversation. Where a hard number exists
+// for the same thing, the number should win. Three rules: a measurement only
+// overrides when its inputs are actually present; the assessed score is never
+// deleted, because the gap between belief and measurement is itself a finding; and
+// low-confidence data does not get to overrule a conversation.
+const band5 = (v, cuts) => { for (const [t,s] of cuts) if (v >= t) return s; return cuts[cuts.length-1][1]; };
+const BOOK_SYSTEM_RECORDS = { paper:1, sheet:2, generic:3, farm:4, service:3 };
+
+const METRIC_OVERRIDES = [
+  {
+    dim:7, id:"incomediv", label:"Income diversification",
+    metric:"Effective revenue streams (inverse HHI)",
+    compute:(fa) => {
+      const ops = (((fa||{}).ent||{}).list)||[];
+      const shares = ops.map(o=>o.revenue).filter(s => parseFloat(s) > 0);
+      if (ops.length < 2 || shares.length < 2) return null;
+      const h = revenueHHI(shares);
+      if (!h) return null;
+      const score = band5(h.effective, [[4.5,5.0],[3.5,4.3],[2.5,3.5],[1.8,2.5],[1.3,1.5],[0,0.5]]);
+      return { score, raw:`${h.effective.toFixed(2)} effective streams from ${ops.length} named sources`,
+        detail:`HHI ${h.hhi.toFixed(2)}, largest share ${Math.round(h.dominant*100)}%. A count of revenue sources overstates diversification when one dominates; this does not.`,
+        confidence: shares.length === ops.length ? "high" : "medium" };
+    },
+  },
+  {
+    dim:4, id:"workforce", label:"Workforce planning",
+    metric:"Labour efficiency and productivity, against an enterprise-specific target",
+    compute:(fa) => {
+      const r = computeFARatios(fa.s3vals);
+      if (!r.hasData || r.laborEfficiency === null) return null;
+      const { target, basis } = laborTargetFor(fa);
+      const ratio = (r.laborEfficiency/100) / target;
+      const score = band5(1/ratio, [[1.25,4.6],[1.0,3.8],[0.77,2.8],[0.59,1.8],[0,1.0]]);
+      return { score, raw:`Labour at ${r.laborEfficiency.toFixed(1)}% of revenue${r.laborProductivity?`, ${fmt$(r.laborProductivity)} per FTE`:""}`,
+        detail:basis + ". The 10–11% figure in common use is a row-crop number and would flag a well-run orchard or dairy as failing.",
+        confidence: r.fte > 0 ? "high" : "medium" };
+    },
+  },
+  {
+    dim:3, id:"records", label:"Records & data management",
+    metric:"Accounting profile",
+    compute:(fa) => {
+      const ap = fa.accounting||{};
+      if (!ap.basis) return null;
+      let score = BOOK_SYSTEM_RECORDS[ap.system] || 1;
+      if (convReady(ap)) score += 1;
+      if (ap.basis === "accrual") score += 0.5;
+      score = Math.min(5, Math.round(score*10)/10);
+      const sys = (BOOK_SYSTEM.find(s=>s[0]===ap.system)||[])[1] || "system not recorded";
+      return { score, raw:`${sys}${convReady(ap)?", two balance sheets available":""}`,
+        detail:"Measured from what you actually keep and whether accrual conversion is possible, rather than from an impression of how organised the records are.",
+        confidence:"high" };
+    },
+  },
+  {
+    dim:5, id:"finanalysis", label:"Financial analysis",
+    metric:"Whole-farm financial health",
+    compute:(fa) => {
+      const r = computeFARatios(fa.s3vals);
+      if (!r.hasData) return null;
+      const cats = (r.categories||[]).filter(c=>c.status!=="blank");
+      if (!cats.length) return null;
+      const pts = { strong:5, watch:3, vuln:1 };
+      const score = Math.round((cats.reduce((s,c)=>s+pts[c.status],0)/cats.length)*10)/10;
+      const cf = basisConfidence(fa.accounting);
+      return { score, raw:`${cats.filter(c=>c.status==="strong").length} strong, ${cats.filter(c=>c.status==="watch").length} watch, ${cats.filter(c=>c.status==="vuln").length} vulnerable of ${cats.length} categories`,
+        detail:"Derived from the four financial health categories." + (cf.level === "Low" ? ` ${cf.note}` : ""),
+        confidence: cf.level === "Unknown" ? "medium" : cf.level.toLowerCase() };
+    },
+  },
+];
+
+// Runs every override and reports what it found, including the gap against the
+// assessed score, which is often the more interesting number.
+const applyOverrides = (fa, areas) => METRIC_OVERRIDES.map(ov => {
+  let out = null;
+  try { out = ov.compute(fa); } catch (e) { out = null; }
+  const area = (areas||AP_AREAS).find(a => a.id === ov.id);
+  if (!out || !area) return { ov, area, applied:false, measured:null, assessed:area?area.score:null };
+  if (out.confidence === "low") return { ov, area, applied:false, measured:out, assessed:area.score, blocked:"low confidence in the underlying data, so the assessed score stands" };
+  return { ov, area, applied:true, measured:out, assessed:area.score, gap:+(out.score - area.score).toFixed(1) };
+});
+// Areas with measured scores substituted where an override applied. Assessed
+// scores are kept on each row so both can be shown together.
+const apAreasMeasured = (fa) => {
+  const res = applyOverrides(fa, AP_AREAS);
+  return AP_AREAS.map(a => { const r = res.find(x => x.ov.id === a.id); return r && r.applied ? { ...a, score:r.measured.score, assessed:a.score, measured:true } : { ...a, assessed:a.score, measured:false }; });
+};
+
 const AP_WEIGHT_LABEL = { constraint:"constraint-weighted", value:"value-weighted", standard:"" };
 const AP_WEIGHT_BOOST = { constraint:1.6, value:1.8, standard:1.0 };
 
 // Priority score: how far the area is from 5, amplified by its weight.
 const apPriorityScore = (a) => (5 - a.score) * AP_WEIGHT_BOOST[a.weight];
-const apRanked = () => [...AP_AREAS].sort((x,y) => apPriorityScore(y) - apPriorityScore(x));
+const apRanked = (areas) => [...(areas||AP_AREAS)].sort((x,y) => apPriorityScore(y) - apPriorityScore(x));
 const apOverall = 44;
 
 // Narrative content per area. Only the ranked-in areas need full detail; the rest
@@ -4393,12 +4670,17 @@ function FarmProfilePage({ profile, setProfile, fa, rd, goFA, goRD, goRisk, goLe
   const { hasData: faHasData, categories: faCategories } = computeFARatios(fa.s3vals);
   const lenderOpps = lenderOpportunities(fa);
 
-  const ranked = apRanked();
+  // Where a measurement exists for a dimension, it replaces the assessed score in
+  // the ranking. The assessed score stays on the row so the gap is visible.
+  const AREAS = apAreasMeasured(fa);
+  const overrides = applyOverrides(fa, AP_AREAS).filter(r => r.measured);
+  const ranked = apRanked(AREAS);
   const top3 = ranked.slice(0,3);
   const area = top3[pri] || top3[0];
   const d = AP_DETAIL[area.id] || AP_FALLBACK;
   const cat = AP_CATS[area.cat];
-  const byScore = [...AP_AREAS].sort((a,b) => a.score - b.score);
+  const byScore = [...AREAS].sort((a,b) => a.score - b.score);
+  const entHHI = enterpriseRevenueHHI(fa);
   const posIdx = byScore.findIndex(a => a.id === area.id);
   const ordinal = ["1st","2nd","3rd","4th","5th","6th","7th","8th","9th","10th","11th","12th"][posIdx];
   const startModule = () => { if (area.module==="fa") goFA(1); else if (area.module==="rd") goRD(1); else if (area.module==="risk") goRisk(1); else if (area.module==="legacy") goLegacy(1); };
@@ -4468,7 +4750,8 @@ function FarmProfilePage({ profile, setProfile, fa, rd, goFA, goRD, goRisk, goLe
           <div style={{ fontSize:10.5, letterSpacing:"0.13em", color:T.fgS, marginBottom:13, textTransform:"uppercase" }}>How this area scored</div>
           {tierRow("Your whole farm business", "— overall MFP score", apOverall, "/ 100", false)}
           {tierRow(cat.label, "— the category this area belongs to, 1 of 4", cat.score, "/ 100", false)}
-          {tierRow(area.label, "— this action area, 1 of 12", area.score.toFixed(1), "/ 5", true)}
+          {tierRow(area.label, area.measured ? "— this action area, 1 of 12 · measured, not assessed" : "— this action area, 1 of 12", area.score.toFixed(1), "/ 5", true)}
+          {area.measured && tierRow("As you assessed it", "— your own rating, kept for comparison", area.assessed.toFixed(1), "/ 5", false)}
           {tierRow("Room to improve", "— distance from this score to 5", (5-area.score).toFixed(1), "pts", false)}
 
           <div style={{ marginTop:15, borderTop:`1px solid ${T.border}`, paddingTop:14 }}>
@@ -4568,10 +4851,15 @@ function FarmProfilePage({ profile, setProfile, fa, rd, goFA, goRD, goRisk, goLe
           <div style={{ background:T.bgAlt, border:`1px solid ${T.border}`, borderRadius:10, padding:"14px 16px" }}>
             <div style={{ display:"flex", alignItems:"center", gap:5, marginBottom:8 }}>
               <span style={{ fontSize:10.5, fontWeight:700, color:T.fgS, textTransform:"uppercase", letterSpacing:"0.05em" }}>Diversification concentration</span>
-              <span title="Computed from your selected enterprises in Financial Analysis plus your selected paths in Revenue Diversification." style={{ fontSize:11, color:T.fgS, cursor:"help" }}>ⓘ</span>
+              <span title={entHHI ? "Effective revenue streams (inverse Herfindahl-Hirschman Index) from the revenue entered against each enterprise in Financial Analysis Stage 2. Scale-free, so it compares across any size of operation." : "A source count until revenue is entered against each enterprise in Financial Analysis Stage 2. A count cannot see concentration."} style={{ fontSize:11, color:T.fgS, cursor:"help" }}>ⓘ</span>
             </div>
-            {divLabel ? (<span style={pillStyle(sourceCount<=1?"vuln":sourceCount<=3?"watch":"strong")}>{divLabel}</span>) : (<div style={{ fontSize:13.5, fontStyle:"italic", color:T.fgS }}>Not scored yet</div>)}
-            {sourceCount>0 && <div style={{ fontSize:11, color:T.fgS, marginTop:6 }}>{sourceCount} income source{sourceCount!==1?"s":""} across FA + RD</div>}
+            {entHHI && entHHI.count >= 2 ? (<>
+              <span style={pillStyle(entHHI.effective>=3.5?"strong":entHHI.effective>=1.8?"watch":"vuln")}>{entHHI.effective.toFixed(2)} effective streams</span>
+              <div style={{ fontSize:11, color:T.fgS, marginTop:6 }}>From {entHHI.count} sources with revenue · largest share {Math.round(entHHI.dominant*100)}%</div>
+            </>) : divLabel ? (<>
+              <span style={pillStyle(sourceCount<=1?"vuln":sourceCount<=3?"watch":"strong")}>{divLabel}</span>
+              <div style={{ fontSize:11, color:T.fgS, marginTop:6 }}>{sourceCount} income source{sourceCount!==1?"s":""} counted · enter revenue by enterprise to measure concentration</div>
+            </>) : (<div style={{ fontSize:13.5, fontStyle:"italic", color:T.fgS }}>Not scored yet</div>)}
           </div>
         </div>
       </div>
@@ -4661,10 +4949,52 @@ function FarmProfilePage({ profile, setProfile, fa, rd, goFA, goRD, goRisk, goLe
         )}
       </div>
 
+      {overrides.length > 0 && (() => {
+        const applied = overrides.filter(r => r.applied);
+        const bigGaps = applied.filter(r => Math.abs(r.gap) >= 1.0);
+        return (
+          <div style={cardStyle({ borderTop:`4px solid ${T.blue}` })}>
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12, gap:12, flexWrap:"wrap" }}>
+              <div style={cardLblStyle({ marginBottom:0 })}>Measured, not assessed</div>
+              <span style={{ fontSize:11.5, color:T.fgS }}>{applied.length} of {overrides.length} dimension{overrides.length===1?"":"s"} now measured</span>
+            </div>
+            <div style={{ fontSize:12.5, color:T.fgM, marginBottom:16, lineHeight:1.55 }}>
+              Where a hard number exists for something the assessment asked about, the number replaces the rating. Your original answer is kept, because the difference between the two is often the more useful finding.
+            </div>
+            {overrides.map(r => (
+              <div key={r.ov.id} style={{ padding:"12px 0", borderBottom:`1px solid ${T.div}` }}>
+                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"baseline", gap:12, flexWrap:"wrap", marginBottom:5 }}>
+                  <span style={{ fontSize:14.5, fontWeight:600, color:T.navy }}>{String(r.ov.dim).padStart(2,"0")} · {r.ov.label}</span>
+                  {r.applied ? (
+                    <span style={{ fontSize:13, color:T.fgM }}>
+                      assessed <b style={{ color:T.fgS }}>{r.assessed.toFixed(1)}</b>
+                      <span style={{ color:T.fgS }}> → </span>
+                      measured <b style={{ color: r.gap < 0 ? T.red : r.gap > 0 ? T.dgreen : T.navy }}>{r.measured.score.toFixed(1)}</b>
+                      {r.gap !== 0 && <span style={{ color:T.fgS }}> ({r.gap > 0 ? "+" : ""}{r.gap})</span>}
+                    </span>
+                  ) : <span style={pillStyle("blank")}>not applied</span>}
+                </div>
+                <div style={{ fontSize:12.5, color:T.fg, marginBottom:3 }}>{r.measured.raw}</div>
+                <div style={{ fontSize:11.5, color:T.fgS, lineHeight:1.5 }}>
+                  {r.ov.metric} · {r.measured.detail}{r.blocked ? ` Not applied: ${r.blocked}.` : ""}
+                </div>
+              </div>
+            ))}
+            {bigGaps.length > 0 && (
+              <div style={{ marginTop:14 }}>
+                <Flag type="warn">
+                  {bigGaps.length === 1 ? "One dimension sits" : `${bigGaps.length} dimensions sit`} a full point or more away from how it was assessed: {bigGaps.map(r=>r.ov.label.toLowerCase()).join(", ")}. That gap is worth a conversation. It usually means either the question was read differently than intended, or the operation changed since the assessment.
+                </Flag>
+              </div>
+            )}
+          </div>
+        );
+      })()}
+
       <div style={cardStyle({ borderTop:`4px solid ${T.navy}` })}>
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:14, gap:12, flexWrap:"wrap" }}>
           <div style={cardLblStyle({ marginBottom:0 })}>MFP assessment scores</div>
-          <span style={{ fontSize:11.5, color:T.fgS }}>Four categories, twelve dimensions</span>
+          <span style={{ fontSize:11.5, color:T.fgS }}>Four categories, twelve dimensions{overrides.some(r=>r.applied) ? " · measured where available" : ""}</span>
         </div>
 
         {/* overall */}
@@ -4695,17 +5025,18 @@ function FarmProfilePage({ profile, setProfile, fa, rd, goFA, goRD, goRisk, goLe
         {Object.entries(AP_CATS).map(([cid,c]) => (
           <div key={cid} style={{ marginBottom:14 }}>
             <div style={{ fontSize:11.5, fontWeight:600, color:T.blue, marginBottom:5 }}>{c.label}</div>
-            {AP_AREAS.filter(a => a.cat===cid).map(a => {
+            {AREAS.filter(a => a.cat===cid).map(a => {
               const st = a.score>=3.5?"strong":a.score>=2.5?"watch":"vuln";
               return (
                 <div key={a.id} style={{ display:"flex", alignItems:"center", gap:12, padding:"6px 0 6px 12px", borderLeft:`2px solid ${T.div}` }}>
                   <span style={{ width:26, fontSize:11, color:T.fgS, flexShrink:0 }}>{String(a.n).padStart(2,"0")}</span>
                   <span style={{ width:200, fontSize:12.5, color:T.fgM, flexShrink:0 }}>{a.label}</span>
-                  <div style={{ flex:1, height:6, background:"#dde1e8", borderRadius:3, overflow:"hidden" }}>
+                  <div style={{ flex:1, height:6, background:"#dde1e8", borderRadius:3, overflow:"hidden", position:"relative" }}>
                     <div style={{ width:`${(a.score/5)*100}%`, height:"100%", background:scColor(st), borderRadius:3 }} />
+                    {a.measured && <div title={`Assessed ${a.assessed.toFixed(1)} / 5`} style={{ position:"absolute", top:-2, bottom:-2, left:`calc(${(a.assessed/5)*100}% - 1px)`, width:2, background:T.navy }} />}
                   </div>
                   <span style={{ width:50, textAlign:"right", fontSize:13, fontWeight:600, color:scColor(st), flexShrink:0 }}>{a.score.toFixed(1)}<span style={{ fontSize:10.5, fontWeight:400, color:T.fgS }}> /5</span></span>
-                  {a.module && <span style={{ ...pillStyle("strong"), flexShrink:0 }}>module</span>}
+                  {a.measured ? <span title={`Assessed ${a.assessed.toFixed(1)} / 5`} style={{ ...pillStyle("info"), flexShrink:0 }}>measured</span> : a.module ? <span style={{ ...pillStyle("strong"), flexShrink:0 }}>module</span> : null}
                 </div>
               );
             })}
