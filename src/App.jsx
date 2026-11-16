@@ -2,6 +2,7 @@ import { Children, Fragment, isValidElement, useState, useMemo, useRef, useEffec
 import { loadSavedWork, syncSavedWork } from "./backend.js";
 import EagleEye from "./EagleEye.jsx";
 import FarmKnowledgeSearch from "./FarmKnowledgeSearch.jsx";
+import { MFP_BLOCKS, MFP_UNCOVERED_BLOCKS, isMFPProfile, validateProfile, importProfile, applyOverrides as applyProfileOverrides, computeBlockScores, exportProfile, noProfileSummary, coverageOf, to100, clamp5 } from "./mfp-profile.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // FONTS  (system stack, matching the MFP action plan design language)
@@ -4460,95 +4461,174 @@ const AP_AREAS = [
 ];
 
 // ═════════════════════════════════════════════════════════════════════════════
-// METRIC OVERRIDES — a measurement beats a self-assessment
+// METRIC OVERRIDES — question-level, against the MFP assessment profile
 // ═════════════════════════════════════════════════════════════════════════════
-// Several MFP dimensions are scored from a conversation. Where a hard number exists
-// for the same thing, the number should win. Three rules: a measurement only
-// overrides when its inputs are actually present; the assessed score is never
-// deleted, because the gap between belief and measurement is itself a finding; and
-// low-confidence data does not get to overrule a conversation.
+// The instrument measures maturity; metrics measure outcome. Of 46 questions only
+// two literally ask for a number (D1, R2) and take a full override. Nine more are
+// bounded by a metric: lifted at most one band, dropped up to two, because a bad
+// metric is stronger evidence than a good one. Everything else is the conversation's
+// alone. The engine that applies these lives in mfp-profile.js; this registry is
+// the part that knows this project's data shapes.
 const band5 = (v, cuts) => { for (const [t,s] of cuts) if (v >= t) return s; return cuts[cuts.length-1][1]; };
 const BOOK_SYSTEM_RECORDS = { paper:1, sheet:2, generic:3, farm:4, service:3 };
+const TRACK_SCORE = { full:5.0, partial:3.5, revOnly:2.0, none:1.0 };
 
-const METRIC_OVERRIDES = [
-  {
-    dim:7, id:"incomediv", label:"Income diversification",
-    metric:"Effective revenue streams (inverse HHI)",
-    compute:(fa) => {
-      const ops = (((fa||{}).ent||{}).list)||[];
-      const shares = ops.map(o=>o.revenue).filter(s => parseFloat(s) > 0);
-      if (ops.length < 2 || shares.length < 2) return null;
-      const h = revenueHHI(shares);
-      if (!h) return null;
-      const score = band5(h.effective, [[4.5,5.0],[3.5,4.3],[2.5,3.5],[1.8,2.5],[1.3,1.5],[0,0.5]]);
-      return { score, raw:`${h.effective.toFixed(2)} effective streams from ${ops.length} named sources`,
-        detail:`HHI ${h.hhi.toFixed(2)}, largest share ${Math.round(h.dominant*100)}%. A count of revenue sources overstates diversification when one dominates; this does not.`,
-        confidence: shares.length === ops.length ? "high" : "medium" };
-    },
-  },
-  {
-    dim:4, id:"workforce", label:"Workforce planning",
-    metric:"Labour efficiency and productivity, against an enterprise-specific target",
-    compute:(fa) => {
-      const r = computeFARatios(fa.s3vals);
-      if (!r.hasData || r.laborEfficiency === null) return null;
-      const { target, basis } = laborTargetFor(fa);
-      const ratio = (r.laborEfficiency/100) / target;
-      const score = band5(1/ratio, [[1.25,4.6],[1.0,3.8],[0.77,2.8],[0.59,1.8],[0,1.0]]);
-      return { score, raw:`Labour at ${r.laborEfficiency.toFixed(1)}% of revenue${r.laborProductivity?`, ${fmt$(r.laborProductivity)} per FTE`:""}`,
-        detail:basis + ". The 10–11% figure in common use is a row-crop number and would flag a well-run orchard or dairy as failing.",
-        confidence: r.fte > 0 ? "high" : "medium" };
-    },
-  },
-  {
-    dim:3, id:"records", label:"Records & data management",
-    metric:"Accounting profile",
-    compute:(fa) => {
-      const ap = fa.accounting||{};
-      if (!ap.basis) return null;
-      let score = BOOK_SYSTEM_RECORDS[ap.system] || 1;
-      if (convReady(ap)) score += 1;
-      if (ap.basis === "accrual") score += 0.5;
-      score = Math.min(5, Math.round(score*10)/10);
-      const sys = (BOOK_SYSTEM.find(s=>s[0]===ap.system)||[])[1] || "system not recorded";
-      return { score, raw:`${sys}${convReady(ap)?", two balance sheets available":""}`,
-        detail:"Measured from what you actually keep and whether accrual conversion is possible, rather than from an impression of how organised the records are.",
-        confidence:"high" };
-    },
-  },
-  {
-    dim:5, id:"finanalysis", label:"Financial analysis",
-    metric:"Whole-farm financial health",
-    compute:(fa) => {
-      const r = computeFARatios(fa.s3vals);
-      if (!r.hasData) return null;
-      const cats = (r.categories||[]).filter(c=>c.status!=="blank");
-      if (!cats.length) return null;
-      const pts = { strong:5, watch:3, vuln:1 };
-      const score = Math.round((cats.reduce((s,c)=>s+pts[c.status],0)/cats.length)*10)/10;
-      const cf = basisConfidence(fa.accounting);
-      return { score, raw:`${cats.filter(c=>c.status==="strong").length} strong, ${cats.filter(c=>c.status==="watch").length} watch, ${cats.filter(c=>c.status==="vuln").length} vulnerable of ${cats.length} categories`,
-        detail:"Derived from the four financial health categories." + (cf.level === "Low" ? ` ${cf.note}` : ""),
-        confidence: cf.level === "Unknown" ? "medium" : cf.level.toLowerCase() };
-    },
-  },
+// Shared inputs for every override, computed once per run.
+const mfpContext = (fa, rd, mfp) => ({ fa:fa||{}, rd:rd||{}, mfp:mfp||null, ratios:computeFARatios(((fa||{}).s3vals)||{}) });
+const lowAccounting = (fa) => basisConfidence((fa||{}).accounting).level === "Low";
+
+// D1 — the question asks the farmer to estimate a share that can be computed exactly.
+const computeD1 = ({ fa, mfp }) => {
+  const ops = (((fa||{}).ent||{}).list)||[];
+  const entShares = ops.map(o=>parseFloat(o.revenue)).filter(v=>v>0);
+  let shares, n, confidence, from;
+  if (ops.length >= 2 && entShares.length >= 2) {
+    shares = entShares; n = ops.length; from = "your enterprise revenue";
+    confidence = entShares.length === ops.length ? "high" : "medium";
+  } else {
+    const alloc = Object.values((mfp && mfp.revenueAllocation) || {}).map(v=>parseFloat(v)).filter(v=>v>0);
+    if (alloc.length < 2) return null;
+    shares = alloc; n = alloc.length; from = "the revenue allocation recorded in the assessment"; confidence = "medium";
+  }
+  const h = revenueHHI(shares);
+  if (!h) return null;
+  const score = band5(h.effective, [[4.5,5.0],[3.5,4.3],[2.5,3.5],[1.8,2.5],[1.3,1.6],[0,1.0]]);
+  return { score, raw:`${h.effective.toFixed(2)} effective streams from ${n} sources`,
+    detail:`Measured from ${from}, not self-reported. HHI ${h.hhi.toFixed(2)}, largest share ${Math.round(h.dominant*100)}%.`, confidence };
+};
+
+// R2 — the anchors are the accounting profile already captured in Stage 1.
+const computeR2 = ({ fa }) => {
+  const ap = (fa||{}).accounting||{};
+  if (!ap.system || !ap.basis) return null;
+  let base = BOOK_SYSTEM_RECORDS[ap.system] || 1;
+  if (convReady(ap)) base += 1;
+  if (ap.basis === "accrual") base += 0.5;
+  const sys = (BOOK_SYSTEM.find(s=>s[0]===ap.system)||[])[1] || ap.system;
+  return { score:clamp5(base), raw:`${sys}${convReady(ap)?", two balance sheets available":""}`,
+    detail:"Measured from what you actually keep and whether accrual conversion is possible, rather than from an impression of how organised the records are.", confidence:"high" };
+};
+
+// W1, W2 — labour against an enterprise-specific target. The common 11% figure is
+// a row-crop number; against it a well-run orchard at 24.8% would score 1.0.
+const computeW = ({ fa, ratios }) => {
+  if (!ratios.hasData || ratios.laborEfficiency === null) return null;
+  const { target, basis } = laborTargetFor(fa);
+  const inv = target / (ratios.laborEfficiency/100);
+  const score = band5(inv, [[1.25,4.6],[1.0,3.8],[0.77,2.8],[0.59,1.8],[0,1.0]]);
+  return { score, raw:`Labour at ${ratios.laborEfficiency.toFixed(1)}% of revenue${ratios.laborProductivity?`, ${fmt$(ratios.laborProductivity)} per FTE`:""}`,
+    detail:`${inv >= 1 ? "Within" : "Above"} the ${basis}.`,
+    confidence: lowAccounting(fa) ? "low" : ratios.fte > 0 ? "high" : "medium" };
+};
+
+// R4 — the four conversion-readiness checks.
+const computeR4 = ({ fa }) => {
+  const conv = ((fa||{}).accounting||{}).conv || {};
+  const answered = Object.values(conv).filter(v => v === "yes" || v === "no");
+  if (!answered.length) return null;
+  const yes = answered.filter(v=>v==="yes").length;
+  return { score: yes === 4 ? 4.5 : yes >= 2 ? 3.0 : 2.0, raw:`${yes} of ${CONVERSION_CHECKS.length} conversion-readiness checks in place`,
+    detail:"Balance sheets at both ends of the year, matched to the fiscal year, with receivable, payable, inventory and prepaid detail.", confidence:"high" };
+};
+
+// D3 — the worst tracking level, not the mean. A farm cannot claim it evaluates
+// every stream when one is untracked.
+const computeD3 = ({ fa }) => {
+  const ops = (((fa||{}).ent||{}).list)||[];
+  const levels = ops.map(o => o.tracking).filter(t => TRACK_SCORE[t] !== undefined);
+  if (!levels.length) return null;
+  const worst = levels.reduce((w,t) => TRACK_SCORE[t] < TRACK_SCORE[w] ? t : w, levels[0]);
+  const label = ((FINANCIAL_TRACKING.find(x=>x[0]===worst)||[])[1] || worst).toLowerCase();
+  return { score:TRACK_SCORE[worst], raw:`Weakest enterprise tracking: ${label}`,
+    detail:`The lowest tracking level across ${ops.length} enterprise${ops.length===1?"":"s"} sets the score, not the average.`, confidence:"high" };
+};
+
+// A1–A4 — applied at block level; outcome evidence, so never above medium confidence.
+// The machinery cost bands are general figures awaiting a sourced regional benchmark.
+const computeA = ({ fa, ratios }) => {
+  const at = ratios.assetTurnover, mpa = ratios.machCostPerAcre;
+  if (at == null || mpa == null) return null;
+  const atScore = at >= 40 ? 4.5 : at >= 30 ? 3.5 : at >= 20 ? 2.5 : 1.5;
+  const machScore = mpa <= 120 ? 4.5 : mpa <= 160 ? 3.5 : mpa <= 220 ? 2.5 : 1.5;
+  return { score:(atScore+machScore)/2, raw:`Asset turnover ${at.toFixed(0)}%, machinery cost ${fmt$(mpa)} per acre`,
+    detail:"Outcome evidence rather than process evidence, so it is held at medium confidence and applied to the whole block.",
+    confidence: lowAccounting(fa) ? "low" : "medium" };
+};
+
+// F2 — what the farmer said their ratios were, against what the books compute.
+// Not knowing a ratio is itself the data point.
+const statedValue = (fh, keys) => { for (const k of keys) { const v = fh[k]; if (v !== undefined && v !== null && v !== "") return v; } return undefined; };
+const computeF2 = ({ mfp, ratios }) => {
+  const fh = (mfp && mfp.financialHealth) || {};
+  const pairs = [
+    { label:"current ratio", stated:statedValue(fh, ["currentRatio","current_ratio"]), computed:ratios.currentRatio, norm:v=>v, fmt:v=>v.toFixed(2) },
+    { label:"debt-to-asset", stated:statedValue(fh, ["debtToAsset","debt_to_asset","debtToAssetRatio"]), computed:ratios.debtToAsset, norm:v=>v<=1?v*100:v, fmt:v=>`${v.toFixed(0)}%` },
+  ].filter(p => p.stated !== undefined);
+  if (!pairs.length) return null;
+  const scores = [], parts = [];
+  for (const p of pairs) {
+    if (p.stated === "not-tracked") { scores.push(1.0); parts.push(`${p.label} not tracked`); continue; }
+    const s = parseFloat(p.stated);
+    if (!Number.isFinite(s) || !(Math.abs(p.computed) > 0)) continue;
+    const v = p.norm(s), err = Math.abs(v - p.computed)/Math.abs(p.computed);
+    scores.push(err <= 0.15 ? 4.5 : err <= 0.35 ? 3.0 : 1.5);
+    parts.push(`${p.label} stated ${p.fmt(v)} vs ${p.fmt(p.computed)} computed, ${Math.round(err*100)}% off`);
+  }
+  if (!scores.length) return null;
+  return { score:scores.reduce((a,b)=>a+b,0)/scores.length, raw:parts.join("; "),
+    detail:"Stated during the assessment, compared with the value computed from your financial data. Within 15% counts as known, because farmers round.", confidence:"high" };
+};
+
+const MFP_QUESTION_OVERRIDES = [
+  { questionId:"D1", type:"full",    source:"effectiveRevenueStreams",     label:"Revenue concentration", compute:computeD1 },
+  { questionId:"R2", type:"full",    source:"accountingProfile",           label:"Financial records", compute:computeR2 },
+  { questionId:"W1", type:"partial", source:"laborEfficiency",             group:"workforce", groupLabel:"Workforce planning", compute:computeW },
+  { questionId:"W2", type:"partial", source:"laborEfficiency",             group:"workforce", groupLabel:"Workforce planning", compute:computeW },
+  { questionId:"R4", type:"partial", source:"conversionReadiness",         label:"Timeliness and accuracy of financials", compute:computeR4 },
+  { questionId:"D3", type:"partial", source:"enterpriseTracking",          label:"Performance evaluation per stream", compute:computeD3 },
+  { questionId:"A1", type:"partial", source:"assetTurnoverMachineryCost",  group:"adoption", groupLabel:"Adoption, efficiency and decision analytics", compute:computeA },
+  { questionId:"A2", type:"partial", source:"assetTurnoverMachineryCost",  group:"adoption", groupLabel:"Adoption, efficiency and decision analytics", compute:computeA },
+  { questionId:"A3", type:"partial", source:"assetTurnoverMachineryCost",  group:"adoption", groupLabel:"Adoption, efficiency and decision analytics", compute:computeA },
+  { questionId:"A4", type:"partial", source:"assetTurnoverMachineryCost",  group:"adoption", groupLabel:"Adoption, efficiency and decision analytics", compute:computeA },
+  { questionId:"F2", type:"partial", source:"statedVsComputedRatios",      label:"Monitoring key ratios", compute:computeF2 },
 ];
+const MFP_COVERAGE = coverageOf(MFP_QUESTION_OVERRIDES);
 
-// Runs every override and reports what it found, including the gap against the
-// assessed score, which is often the more interesting number.
-const applyOverrides = (fa, areas) => METRIC_OVERRIDES.map(ov => {
-  let out = null;
-  try { out = ov.compute(fa); } catch (e) { out = null; }
-  const area = (areas||AP_AREAS).find(a => a.id === ov.id);
-  if (!out || !area) return { ov, area, applied:false, measured:null, assessed:area?area.score:null };
-  if (out.confidence === "low") return { ov, area, applied:false, measured:out, assessed:area.score, blocked:"low confidence in the underlying data, so the assessed score stands" };
-  return { ov, area, applied:true, measured:out, assessed:area.score, gap:+(out.score - area.score).toFixed(1) };
+// With a profile loaded, the twelve assessment blocks are the twelve action areas.
+// Block 1 has no counterpart in the sample areas and gets its own id.
+const BLOCK_AREA = { 2:"workforce", 3:"records", 4:"market", 5:"incomediv", 6:"adoption", 7:"succession", 8:"knowledge", 9:"riskprot", 10:"vision", 11:"finanalysis", 12:"advantage" };
+const BLOCK_CAT = { 1:"fundamentals", 2:"fundamentals", 3:"fundamentals", 4:"growth", 5:"growth", 6:"production", 7:"legacy", 8:"legacy", 9:"production", 10:"fundamentals", 11:"growth", 12:"fundamentals" };
+const apAreasFromProfile = (scored) => MFP_BLOCKS.map(b => {
+  const mapped = AP_AREAS.find(a => a.id === BLOCK_AREA[b.n]);
+  const bs = scored.blocks[String(b.n)];
+  const score = bs.mean5 == null ? 1 : bs.mean5;
+  return { n:b.n, block:b.n, id:mapped ? mapped.id : "orgstructure", label:b.short, cat:BLOCK_CAT[b.n], weight:mapped ? mapped.weight : "standard", module:mapped ? mapped.module : null,
+    score, assessed:bs.assessedMean5 == null ? score : bs.assessedMean5, measured:bs.overridden, badge:bs.badge };
 });
-// Areas with measured scores substituted where an override applied. Assessed
-// scores are kept on each row so both can be shown together.
-const apAreasMeasured = (fa) => {
-  const res = applyOverrides(fa, AP_AREAS);
-  return AP_AREAS.map(a => { const r = res.find(x => x.ov.id === a.id); return r && r.applied ? { ...a, score:r.measured.score, assessed:a.score, measured:true } : { ...a, assessed:a.score, measured:false }; });
+const apCatsFromAreas = (areas) => Object.fromEntries(Object.entries(AP_CATS).map(([cid,c]) => {
+  const rs = areas.filter(a => a.cat === cid);
+  return [cid, { ...c, score: rs.length ? to100(rs.reduce((s,a)=>s+a.score,0)/rs.length) : c.score }];
+}));
+const apAreasSample = () => AP_AREAS.map(a => ({ ...a, assessed:a.score, measured:false, badge:null }));
+
+// Reads a Maximum Farm Potential profile file. A v1 assessment profile is validated
+// whole and rejected whole; anything else falls back to the loose field mapping.
+const readMFPProfileFile = (parsed) => {
+  if (isMFPProfile(parsed)) {
+    const { profile, error } = importProfile(parsed);
+    if (error) return { fields:null, error:`That assessment profile was rejected: ${error}` };
+    return { fields:{ ...(profileFromMFPExport(parsed) || {}), mfpProfile:profile }, error:null };
+  }
+  const fields = profileFromMFPExport(parsed);
+  return fields ? { fields, error:null } : { fields:null, error:"No recognizable farm profile fields were found in that file." };
+};
+const downloadJson = (obj, name) => {
+  const blob = new Blob([JSON.stringify(obj, null, 2)], { type:"application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = name;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url), 1000);
 };
 
 const AP_WEIGHT_LABEL = { constraint:"constraint-weighted", value:"value-weighted", standard:"" };
@@ -4663,22 +4743,264 @@ const FinancialHealthStrip = ({ fa }) => {
   );
 };
 
+// Provenance badge per question. Every displayed score carries one.
+const BADGE_PILL = { assessed:"blank", measured:"info", adjusted:"watch", "metric blocked":"blank", "not scored":"blank" };
+const BADGE_HELP = {
+  assessed:"From the conversation only",
+  measured:"Full override; the conversation score was not used",
+  adjusted:"Partial override; the assessment moved by the metric",
+  "metric blocked":"A metric exists but confidence was too low to apply",
+  "not scored":"No profile, and no full override available",
+};
+const ProvenanceBadge = ({ badge }) => <span title={BADGE_HELP[badge]} style={{ ...pillStyle(BADGE_PILL[badge] || "blank"), flexShrink:0 }}>{badge}</span>;
+
+// Upload control shared by both assessment states. Validation is whole-file: a
+// profile with a missing block or a 0 score is refused, never partially imported.
+const ProfileFileButton = ({ label, onFields, onError, variant="primary" }) => {
+  const ref = useRef(null);
+  const handle = (e) => {
+    const f = e.target.files && e.target.files[0];
+    e.target.value = "";
+    if (!f) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      let parsed;
+      try { parsed = JSON.parse(reader.result); } catch { onError("That file could not be read as JSON."); return; }
+      const { fields, error } = readMFPProfileFile(parsed);
+      if (error) { onError(error); return; }
+      onFields(fields);
+    };
+    reader.onerror = () => onError("That file could not be read.");
+    reader.readAsText(f);
+  };
+  return (<>
+    <button type="button" onClick={() => ref.current && ref.current.click()} style={{ ...btnStyle(variant), fontSize:13, padding:"8px 16px", minHeight:38 }}>{label}</button>
+    <input ref={ref} type="file" accept=".json,application/json" onChange={handle} style={{ display:"none" }} aria-label={label} />
+  </>);
+};
+
+// No profile uploaded: the modules still generate metrics, and this is what the
+// farmer sees. Full overrides score; partials show the raw metric and nothing else;
+// the rest is listed as needing the assessment. No base score is ever invented.
+function NoProfileView({ summary, onFields, onError }) {
+  const { scored, indicated, uncovered, coverage } = summary;
+  return (<>
+    <div style={cardStyle({ borderTop:`4px solid ${T.navy}` })}>
+      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", gap:12, flexWrap:"wrap", marginBottom:12 }}>
+        <div style={cardLblStyle({ marginBottom:0 })}>No assessment profile loaded</div>
+        <ProfileFileButton label="Upload MFP assessment profile" onFields={onFields} onError={onError} />
+      </div>
+      <p style={{ fontSize:13.5, color:T.fgM, margin:0, lineHeight:1.6 }}>
+        The MFP Conversational Assessment Guide scores {coverage.total} questions across {coverage.blocksTotal} business blocks on a 1–5 maturity scale. Until that profile is uploaded, the only scores on this page are the ones your module data can produce on its own. Nothing below is assumed or defaulted.
+      </p>
+    </div>
+
+    <div style={cardStyle()}>
+      <div style={cardLblStyle()}>What your numbers can score</div>
+      {scored.length ? scored.map(s => (
+        <div key={s.questionId} style={{ padding:"12px 0", borderBottom:`1px solid ${T.div}` }}>
+          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"baseline", gap:12, flexWrap:"wrap", marginBottom:4 }}>
+            <span style={{ fontSize:14.5, fontWeight:600, color:T.navy }}>{s.label} <span style={{ fontSize:11.5, fontWeight:400, color:T.fgS }}>· {s.questionId} · Block {s.block.n}</span></span>
+            <span style={{ display:"flex", alignItems:"baseline", gap:10 }}>
+              <span style={{ fontSize:18, fontWeight:600, color:T.navy }}>{s.score100}<span style={{ fontSize:11.5, fontWeight:400, color:T.fgS }}> / 100</span></span>
+              <ProvenanceBadge badge="measured" />
+            </span>
+          </div>
+          <div style={{ fontSize:12.5, color:T.fg, marginBottom:3 }}>{s.raw}</div>
+          <div style={{ fontSize:11.5, color:T.fgS, lineHeight:1.5 }}>{s.detail}</div>
+        </div>
+      )) : <div style={{ fontSize:13.5, fontStyle:"italic", color:T.fgS }}>Nothing yet. Revenue concentration scores once two or more enterprises have revenue in Financial Analysis Stage 2; financial records score once the accounting basis and system are set in Stage 1.</div>}
+    </div>
+
+    <div style={cardStyle()}>
+      <div style={cardLblStyle()}>What your numbers indicate but cannot score</div>
+      {indicated.length ? indicated.map(s => (
+        <div key={s.group} style={{ padding:"12px 0", borderBottom:`1px solid ${T.div}` }}>
+          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"baseline", gap:12, flexWrap:"wrap", marginBottom:4 }}>
+            <span style={{ fontSize:14.5, fontWeight:600, color:T.navy }}>{s.label} <span style={{ fontSize:11.5, fontWeight:400, color:T.fgS }}>· Block {s.block.n}</span></span>
+            <ProvenanceBadge badge="not scored" />
+          </div>
+          <div style={{ fontSize:12.5, color:T.fg, marginBottom:3 }}>{s.raw}</div>
+          <div style={{ fontSize:11.5, color:T.fgS, lineHeight:1.5 }}>{s.detail} This would adjust an assessment score. Without one, it stands as an observation rather than a rating.</div>
+        </div>
+      )) : <div style={{ fontSize:13.5, fontStyle:"italic", color:T.fgS }}>Nothing yet. Labour, enterprise tracking, conversion readiness and asset turnover indicators appear as the Financial Analysis module fills in.</div>}
+    </div>
+
+    <div style={cardStyle()}>
+      <div style={cardLblStyle()}>What the assessment would add</div>
+      <p style={{ fontSize:12.5, color:T.fgM, margin:"0 0 12px", lineHeight:1.55 }}>No financial metric bears on these blocks. Each one also feeds a module, which is the context for judging whether the assessment is worth the time.</p>
+      <div style={{ overflowX:"auto" }}>
+        <table style={{ width:"100%", borderCollapse:"collapse", fontSize:12.5 }}>
+          <thead><tr>{["Block","Covers","What depends on it"].map(h => <th key={h} style={{ textAlign:"left", padding:"8px 10px", background:T.bgAlt, color:T.fgM, fontSize:11, letterSpacing:"0.08em", textTransform:"uppercase", whiteSpace:"nowrap" }}>{h}</th>)}</tr></thead>
+          <tbody>{uncovered.map(u => {
+            const b = MFP_BLOCKS.find(x => x.n === u.n);
+            return <tr key={u.n}>
+              <td style={{ padding:"9px 10px", borderTop:`1px solid ${T.div}`, whiteSpace:"nowrap", fontWeight:600, color:T.navy }}>{u.n} · {b.short}</td>
+              <td style={{ padding:"9px 10px", borderTop:`1px solid ${T.div}`, color:T.fgM }}>{u.covers}</td>
+              <td style={{ padding:"9px 10px", borderTop:`1px solid ${T.div}`, color:T.fgM }}>{u.dependsOn}</td>
+            </tr>;
+          })}</tbody>
+        </table>
+      </div>
+    </div>
+
+    <Flag type="info">
+      Your module data can score {coverage.full} of {coverage.total} questions directly and indicate another {coverage.partial}. The remaining {coverage.none} need the conversational assessment, which covers {coverage.blocksUncovered} of the {coverage.blocksTotal} business blocks entirely on its own.
+    </Flag>
+  </>);
+}
+
+// Profile loaded: twelve blocks from effective scores, every question carrying its
+// provenance, assessed and measured side by side with the gap visible.
+function AssessmentProfileView({ mfp, scored, coverage, onFields, onError, onExport, onRemove }) {
+  const [openBlock, setOpenBlock] = useState(null);
+  const overrides = Object.entries(mfp.overrides || {});
+  const applied = overrides.filter(([,o]) => typeof o.applied === "number");
+  const blocked = overrides.filter(([,o]) => o.blocked);
+  const bigGaps = applied.filter(([,o]) => typeof o.assessed === "number" && Math.abs(o.applied - o.assessed) >= 1.0);
+  const when = mfp.assessment && mfp.assessment.date ? new Date(mfp.assessment.date).toLocaleDateString() : "date not recorded";
+  const method = { "officer-interview":"officer interview", "ai-guided":"AI-guided", "self-serve":"self-serve" }[(mfp.assessment||{}).method] || (mfp.assessment||{}).method || "method not recorded";
+  const st5 = (s) => s>=3.5?"strong":s>=2.5?"watch":"vuln";
+  return (<>
+    <div style={cardStyle({ borderTop:`4px solid ${T.navy}` })}>
+      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", gap:12, flexWrap:"wrap", marginBottom:14 }}>
+        <div>
+          <div style={cardLblStyle({ marginBottom:6 })}>Assessment profile</div>
+          <div style={{ fontSize:16, fontWeight:600, color:T.navy }}>{(mfp.farm && mfp.farm.name) || "Unnamed farm"}</div>
+          <div style={{ fontSize:12, color:T.fgS, marginTop:2 }}>Assessed {when} · {method}{mfp.assessment && mfp.assessment.interviewer ? ` · ${mfp.assessment.interviewer}` : ""}{mfp.lastMetricUpdate ? ` · metrics applied ${relTime(mfp.lastMetricUpdate)}` : ""}</div>
+        </div>
+        <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
+          <button type="button" onClick={onExport} style={{ ...btnStyle("outline"), fontSize:13, padding:"8px 16px", minHeight:38 }}>Export profile</button>
+          <ProfileFileButton label="Replace profile" variant="outline" onFields={onFields} onError={onError} />
+          <button type="button" onClick={onRemove} style={{ ...btnStyle("ghost"), fontSize:13, padding:"8px 14px", minHeight:38 }}>Remove</button>
+        </div>
+      </div>
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(160px,1fr))", gap:12 }}>
+        {[
+          ["Overall", scored.overall == null ? "—" : scored.overall, "/ 100", "mean of twelve block scores"],
+          ["Measured", overrides.filter(([,o]) => o.type==="full" && typeof o.applied==="number").length, `of ${coverage.full}`, "full overrides applied"],
+          ["Adjusted", overrides.filter(([,o]) => o.type==="partial" && typeof o.applied==="number").length, `of ${coverage.partial}`, "partial overrides applied"],
+          ["Assessed only", coverage.total - applied.length, `of ${coverage.total}`, "questions from the conversation alone"],
+        ].map(([l,v,u,n]) => (
+          <div key={l} style={{ background:T.bgAlt, borderRadius:8, padding:"12px 14px" }}>
+            <div style={{ fontSize:10.5, fontWeight:600, color:T.fgS, textTransform:"uppercase", letterSpacing:"0.05em", marginBottom:4 }}>{l}</div>
+            <div style={{ fontSize:22, fontWeight:600, color:T.navy }}>{v}<span style={{ fontSize:11.5, fontWeight:400, color:T.fgS }}> {u}</span></div>
+            <div style={{ fontSize:11, color:T.fgS, marginTop:2 }}>{n}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+
+    <div style={cardStyle()}>
+      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", gap:12, flexWrap:"wrap", marginBottom:6 }}>
+        <div style={cardLblStyle({ marginBottom:0 })}>Twelve blocks</div>
+        <span style={{ fontSize:11.5, color:T.fgS }}>Block score is the mean of its effective question scores. Tick marks show the assessed mean where a metric moved it.</span>
+      </div>
+      {MFP_BLOCKS.map(b => {
+        const bs = scored.blocks[String(b.n)];
+        const open = openBlock === b.n;
+        const st = bs.mean5 == null ? "blank" : st5(bs.mean5);
+        return (
+          <div key={b.n} style={{ borderBottom:`1px solid ${T.div}` }}>
+            <button type="button" onClick={() => setOpenBlock(open ? null : b.n)} aria-expanded={open} style={{ display:"flex", alignItems:"center", gap:12, width:"100%", padding:"10px 0", background:"none", border:"none", cursor:"pointer", font:"inherit", textAlign:"left" }}>
+              <span style={{ width:26, fontSize:11, color:T.fgS, flexShrink:0 }}>{String(b.n).padStart(2,"0")}</span>
+              <span style={{ width:210, fontSize:13, color:T.fg, fontWeight:500, flexShrink:0 }}>{b.short}</span>
+              <div style={{ flex:1, height:6, background:"#dde1e8", borderRadius:3, overflow:"visible", position:"relative" }}>
+                <div style={{ width:`${((bs.mean5||1)-1)/4*100}%`, height:"100%", background:scColor(st), borderRadius:3 }} />
+                {bs.overridden && bs.assessedMean5 != null && <div title={`Assessed ${bs.assessedMean5.toFixed(1)} / 5`} style={{ position:"absolute", top:-3, bottom:-3, left:`calc(${(bs.assessedMean5-1)/4*100}% - 1px)`, width:2, background:T.navy }} />}
+              </div>
+              <span style={{ width:56, textAlign:"right", fontSize:13, fontWeight:600, color:scColor(st), flexShrink:0 }}>{bs.mean5 == null ? "—" : bs.mean5.toFixed(1)}<span style={{ fontSize:10.5, fontWeight:400, color:T.fgS }}> /5</span></span>
+              <span style={{ width:60, textAlign:"right", fontSize:12, color:T.fgM, flexShrink:0 }}>{bs.score100 == null ? "—" : bs.score100}<span style={{ fontSize:10.5, color:T.fgS }}> /100</span></span>
+              <span style={{ width:84, display:"flex", justifyContent:"flex-end", flexShrink:0 }}>{bs.badge ? <ProvenanceBadge badge={bs.badge} /> : <span style={{ fontSize:11, color:T.fgS }}>{open ? "hide" : "show"}</span>}</span>
+            </button>
+            {open && (
+              <div style={{ padding:"4px 0 12px 38px" }}>
+                <div style={{ fontSize:11.5, color:T.fgS, marginBottom:8 }}>{b.label}</div>
+                {bs.questions.map(q => (
+                  <div key={q.id} style={{ padding:"8px 0", borderTop:`1px dashed ${T.border}` }}>
+                    <div style={{ display:"flex", alignItems:"baseline", gap:12, flexWrap:"wrap" }}>
+                      <span style={{ width:28, fontSize:11, color:T.fgS, flexShrink:0 }}>{q.id}</span>
+                      <span style={{ flex:1, minWidth:160, fontSize:13, color:T.fgM }}>{q.label}</span>
+                      <span style={{ fontSize:13, color:T.fgM, whiteSpace:"nowrap" }}>
+                        {q.override && typeof q.override.applied === "number" ? (<>
+                          assessed <b style={{ color:T.fgS }}>{q.assessed == null ? "—" : q.assessed.toFixed(1)}</b>
+                          <span style={{ color:T.fgS }}> → </span>
+                          {q.badge === "measured" ? "measured" : "applied"} <b style={{ color: q.assessed == null ? T.navy : q.applied < q.assessed ? T.red : q.applied > q.assessed ? T.dgreen : T.navy }}>{q.applied.toFixed(1)}</b>
+                          {q.assessed != null && q.applied !== q.assessed && <span style={{ color:T.fgS }}> ({q.applied > q.assessed ? "+" : ""}{(q.applied - q.assessed).toFixed(1)})</span>}
+                          {q.badge === "adjusted" && q.override.metric !== q.applied && <span style={{ color:T.fgS, fontSize:11.5 }}> · metric {q.override.metric.toFixed(1)}</span>}
+                        </>) : (<b style={{ color:T.navy }}>{q.applied == null ? "—" : q.applied.toFixed(1)}</b>)}
+                        <span style={{ fontSize:10.5, color:T.fgS }}> /5</span>
+                      </span>
+                      <ProvenanceBadge badge={q.badge} />
+                    </div>
+                    {q.override && (
+                      <div style={{ marginTop:4, paddingLeft:40 }}>
+                        <div style={{ fontSize:12.5, color:T.fg }}>{q.override.raw}</div>
+                        <div style={{ fontSize:11.5, color:T.fgS, lineHeight:1.5 }}>{q.override.detail}{q.override.blocked ? ` Not applied: ${q.override.blocked}; the assessed score stands.` : ` Confidence ${q.override.confidence}.`}</div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        );
+      })}
+      <div style={{ display:"flex", gap:14, flexWrap:"wrap", marginTop:12 }}>
+        {Object.keys(BADGE_HELP).filter(k => k !== "not scored").map(k => <span key={k} style={{ display:"flex", alignItems:"center", gap:6, fontSize:11.5, color:T.fgS }}><ProvenanceBadge badge={k} /> {BADGE_HELP[k]}</span>)}
+      </div>
+    </div>
+
+    {bigGaps.length > 0 && (
+      <Flag type="warn">
+        {bigGaps.length === 1 ? "One question sits" : `${bigGaps.length} questions sit`} a full point or more from how {bigGaps.length === 1 ? "it was" : "they were"} assessed: {bigGaps.map(([q,o]) => `${q} (${o.assessed.toFixed(1)} → ${o.applied.toFixed(1)})`).join(", ")}. That gap is worth a conversation. It usually means the question was read differently than intended, or the operation changed since the assessment.
+      </Flag>
+    )}
+    {blocked.length > 0 && (
+      <Flag type="info">
+        {blocked.map(([q]) => q).join(", ")}: a metric exists but the accounting confidence is too low to let it move the score. The assessed score stands until Financial Analysis Stage 1 records balance sheets or fewer tax-timing distortions.
+      </Flag>
+    )}
+    <Flag type="info">
+      Metrics cover {coverage.full + coverage.partial} of {coverage.total} questions in {coverage.blocksCovered} of {coverage.blocksTotal} blocks: {coverage.full} measured outright, {coverage.partial} bounded. The other {coverage.none} are the conversation's alone, and the assessed scores above are never overwritten. Export writes the audit trail back into the same file so it re-imports and recomputes cleanly.
+    </Flag>
+  </>);
+}
+
 function FarmProfilePage({ profile, setProfile, fa, rd, goFA, goRD, goRisk, goLegacy }) {
   const set = (field) => (e) => setProfile(s => ({ ...s, [field]: e.target.value }));
   const [pri, setPri] = useState(0);
   const [view, setView] = useState("glance");
+  const [profileErr, setProfileErr] = useState("");
   const { hasData: faHasData, categories: faCategories } = computeFARatios(fa.s3vals);
   const lenderOpps = lenderOpportunities(fa);
 
-  // Where a measurement exists for a dimension, it replaces the assessed score in
-  // the ranking. The assessed score stays on the row so the gap is visible.
-  const AREAS = apAreasMeasured(fa);
-  const overrides = applyOverrides(fa, AP_AREAS).filter(r => r.measured);
+  // The uploaded assessment profile, with this run's metric overrides applied on
+  // top. `blocks` is never mutated; the effective score is overrides[q].applied
+  // when present, otherwise the assessed value.
+  const mfpRaw = isMFPProfile(profile.mfpProfile) ? profile.mfpProfile : null;
+  const ctx = mfpContext(fa, rd, mfpRaw);
+  const mfp = mfpRaw ? applyProfileOverrides(mfpRaw, MFP_QUESTION_OVERRIDES, ctx) : null;
+  const scored = mfp ? computeBlockScores(mfp) : null;
+  const noProfile = mfp ? null : noProfileSummary(MFP_QUESTION_OVERRIDES, ctx);
+  const onProfileFields = (fields) => { setProfileErr(""); setProfile(s => ({ ...s, ...fields })); setView("assessment"); };
+  const onProfileRemove = () => { if (window.confirm("Remove the uploaded assessment profile? Module data and the rest of the farm profile stay intact.")) setProfile(s => { const rest = { ...s }; delete rest.mfpProfile; return rest; }); };
+  const onProfileExport = () => {
+    const out = exportProfile(mfpRaw, MFP_QUESTION_OVERRIDES, ctx);
+    const safe = String((mfpRaw.farm && mfpRaw.farm.name) || "farm").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,40) || "farm";
+    downloadJson(out, `mfp-profile-${safe}-${new Date().toISOString().slice(0,10)}.json`);
+  };
+
+  // With a profile, the twelve blocks are the twelve areas and category and overall
+  // scores follow from them. Without one, the sample areas stand in for the demo.
+  const AREAS = scored ? apAreasFromProfile(scored) : apAreasSample();
+  const CATS = scored ? apCatsFromAreas(AREAS) : AP_CATS;
+  const overall = scored && scored.overall != null ? scored.overall : apOverall;
   const ranked = apRanked(AREAS);
   const top3 = ranked.slice(0,3);
   const area = top3[pri] || top3[0];
   const d = AP_DETAIL[area.id] || AP_FALLBACK;
-  const cat = AP_CATS[area.cat];
+  const cat = CATS[area.cat];
   const byScore = [...AREAS].sort((a,b) => a.score - b.score);
   const entHHI = enterpriseRevenueHHI(fa);
   const posIdx = byScore.findIndex(a => a.id === area.id);
@@ -4706,17 +5028,23 @@ function FarmProfilePage({ profile, setProfile, fa, rd, goFA, goRD, goRisk, goLe
 
   return (
     <div>
-      <Head eyebrow="Farm business profile" title={view==="actions" ? "Three priorities, drawn from twelve areas" : "Business at a glance"} sub={view==="actions" ? "Each card shows how the area scored, what your assessment and the market found there, and what to do first. Work them in order, the first one unlocks the others." : "The operating picture behind the priorities: what the farm is, what it is trying to become, and where its financial health currently sits."} />
+      <Head eyebrow="Farm business profile" title={view==="actions" ? "Three priorities, drawn from twelve areas" : view==="assessment" ? (mfp ? "Assessed and measured, side by side" : "What your numbers can and cannot score") : "Business at a glance"} sub={view==="actions" ? "Each card shows how the area scored, what your assessment and the market found there, and what to do first. Work them in order, the first one unlocks the others." : view==="assessment" ? (mfp ? "The 46-question conversational assessment, with a hard number applied wherever one exists for the same thing. Your assessed scores are kept; the gap between them and the measurement is the finding." : "The modules generate metrics on their own. A few questions in the assessment can be scored from them outright; more can only be bounded; most need the conversation.") : "The operating picture behind the priorities: what the farm is, what it is trying to become, and where its financial health currently sits."} />
 
       {/* view tabs */}
       <div style={{ display:"flex", gap:8, borderBottom:`1px solid ${T.border}`, marginBottom:20 }}>
-        {[["glance","Business at a glance"],["actions","Priority actions"]].map(([k,lab]) => {
+        {[["glance","Business at a glance"],["actions","Priority actions"],["assessment", mfp ? "Assessment" : "Assessment · none loaded"]].map(([k,lab]) => {
           const on = view===k;
           return (
             <button key={k} onClick={()=>setView(k)} style={{ background:"none", border:"none", borderBottom:`2px solid ${on?T.navy:"transparent"}`, padding:"9px 4px", marginBottom:-1, cursor:"pointer", font:"inherit", fontSize:14, fontWeight:on?600:500, color:on?T.navy:T.fgS, marginRight:14 }}>{lab}</button>
           );
         })}
       </div>
+
+      {profileErr && <Flag type="danger">{profileErr}</Flag>}
+
+      {view==="assessment" && (mfp
+        ? <AssessmentProfileView mfp={mfp} scored={scored} coverage={MFP_COVERAGE} onFields={onProfileFields} onError={setProfileErr} onExport={onProfileExport} onRemove={onProfileRemove} />
+        : <NoProfileView summary={noProfile} onFields={onProfileFields} onError={setProfileErr} />)}
 
       {view==="actions" && (<>
 
@@ -4728,7 +5056,7 @@ function FarmProfilePage({ profile, setProfile, fa, rd, goFA, goRD, goRisk, goLe
             <button key={a.id} onClick={()=>setPri(j)} style={{ background:"#fff", border:`1px solid ${T.border}`, borderTop:`3px solid ${on?T.navy:"#d8dce3"}`, borderRadius:"0 0 8px 8px", padding:"13px 15px", cursor:"pointer", textAlign:"left", font:"inherit", transition:"border-color .15s" }}>
               <div style={{ fontSize:10, letterSpacing:"0.12em", fontWeight:600, color:on?T.navy:T.fgS }}>PRIORITY {j+1}</div>
               <div style={{ fontSize:14, fontWeight:600, margin:"4px 0 3px", color:T.fg }}>{a.label}</div>
-              <div style={{ fontSize:11.5, color:T.fgS }}>{a.score.toFixed(1)} / 5 · {AP_CATS[a.cat].label}</div>
+              <div style={{ fontSize:11.5, color:T.fgS }}>{a.score.toFixed(1)} / 5 · {CATS[a.cat].label}</div>
               {a.module && <span style={{ ...pillStyle("strong"), marginTop:5 }}>module</span>}
             </button>
           );
@@ -4748,10 +5076,10 @@ function FarmProfilePage({ profile, setProfile, fa, rd, goFA, goRD, goRisk, goLe
         {/* scores */}
         <div style={{ background:T.bgAlt, borderRadius:8, padding:"16px 18px", marginBottom:20 }}>
           <div style={{ fontSize:10.5, letterSpacing:"0.13em", color:T.fgS, marginBottom:13, textTransform:"uppercase" }}>How this area scored</div>
-          {tierRow("Your whole farm business", "— overall MFP score", apOverall, "/ 100", false)}
+          {tierRow("Your whole farm business", mfp ? "— overall MFP score, from your assessment profile" : "— overall MFP score (sample until a profile is loaded)", overall, "/ 100", false)}
           {tierRow(cat.label, "— the category this area belongs to, 1 of 4", cat.score, "/ 100", false)}
-          {tierRow(area.label, area.measured ? "— this action area, 1 of 12 · measured, not assessed" : "— this action area, 1 of 12", area.score.toFixed(1), "/ 5", true)}
-          {area.measured && tierRow("As you assessed it", "— your own rating, kept for comparison", area.assessed.toFixed(1), "/ 5", false)}
+          {tierRow(area.label, area.measured ? `— this action area, 1 of 12 · ${area.badge === "measured" ? "measured" : "adjusted"} by a metric` : "— this action area, 1 of 12", area.score.toFixed(1), "/ 5", true)}
+          {area.measured && area.assessed !== area.score && tierRow("As you assessed it", "— your own rating, kept for comparison", area.assessed.toFixed(1), "/ 5", false)}
           {tierRow("Room to improve", "— distance from this score to 5", (5-area.score).toFixed(1), "pts", false)}
 
           <div style={{ marginTop:15, borderTop:`1px solid ${T.border}`, paddingTop:14 }}>
@@ -4949,64 +5277,66 @@ function FarmProfilePage({ profile, setProfile, fa, rd, goFA, goRD, goRisk, goLe
         )}
       </div>
 
-      {overrides.length > 0 && (() => {
-        const applied = overrides.filter(r => r.applied);
-        const bigGaps = applied.filter(r => Math.abs(r.gap) >= 1.0);
+      {mfp ? (() => {
+        const applied = Object.entries(mfp.overrides || {}).filter(([,o]) => typeof o.applied === "number");
+        const bigGaps = applied.filter(([,o]) => typeof o.assessed === "number" && Math.abs(o.applied - o.assessed) >= 1.0);
         return (
           <div style={cardStyle({ borderTop:`4px solid ${T.blue}` })}>
             <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12, gap:12, flexWrap:"wrap" }}>
               <div style={cardLblStyle({ marginBottom:0 })}>Measured, not assessed</div>
-              <span style={{ fontSize:11.5, color:T.fgS }}>{applied.length} of {overrides.length} dimension{overrides.length===1?"":"s"} now measured</span>
+              <button type="button" onClick={()=>setView("assessment")} style={{ ...btnStyle("outline"), fontSize:11.5, padding:"6px 14px", minHeight:32 }}>Open the assessment →</button>
             </div>
-            <div style={{ fontSize:12.5, color:T.fgM, marginBottom:16, lineHeight:1.55 }}>
-              Where a hard number exists for something the assessment asked about, the number replaces the rating. Your original answer is kept, because the difference between the two is often the more useful finding.
+            <div style={{ fontSize:12.5, color:T.fgM, marginBottom:applied.length?12:0, lineHeight:1.55 }}>
+              {applied.length
+                ? `${applied.length} of ${MFP_COVERAGE.total} questions carry a metric from your module data. Where the question literally asks for a number the metric replaces the rating; elsewhere it can lift the rating by one band or drop it by two. Your assessed scores are kept throughout.`
+                : "A profile is loaded but no module data yet touches a question. Metrics appear as Financial Analysis fills in: enterprise revenue, the accounting profile, labour, tracking and the balance sheet."}
             </div>
-            {overrides.map(r => (
-              <div key={r.ov.id} style={{ padding:"12px 0", borderBottom:`1px solid ${T.div}` }}>
-                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"baseline", gap:12, flexWrap:"wrap", marginBottom:5 }}>
-                  <span style={{ fontSize:14.5, fontWeight:600, color:T.navy }}>{String(r.ov.dim).padStart(2,"0")} · {r.ov.label}</span>
-                  {r.applied ? (
-                    <span style={{ fontSize:13, color:T.fgM }}>
-                      assessed <b style={{ color:T.fgS }}>{r.assessed.toFixed(1)}</b>
-                      <span style={{ color:T.fgS }}> → </span>
-                      measured <b style={{ color: r.gap < 0 ? T.red : r.gap > 0 ? T.dgreen : T.navy }}>{r.measured.score.toFixed(1)}</b>
-                      {r.gap !== 0 && <span style={{ color:T.fgS }}> ({r.gap > 0 ? "+" : ""}{r.gap})</span>}
-                    </span>
-                  ) : <span style={pillStyle("blank")}>not applied</span>}
-                </div>
-                <div style={{ fontSize:12.5, color:T.fg, marginBottom:3 }}>{r.measured.raw}</div>
-                <div style={{ fontSize:11.5, color:T.fgS, lineHeight:1.5 }}>
-                  {r.ov.metric} · {r.measured.detail}{r.blocked ? ` Not applied: ${r.blocked}.` : ""}
-                </div>
+            {applied.map(([q,o]) => (
+              <div key={q} style={{ display:"flex", justifyContent:"space-between", alignItems:"baseline", gap:12, flexWrap:"wrap", padding:"8px 0", borderBottom:`1px solid ${T.div}` }}>
+                <span style={{ fontSize:13.5, color:T.navy }}><b style={{ fontWeight:600 }}>{q}</b> <span style={{ color:T.fgM }}>{o.raw}</span></span>
+                <span style={{ fontSize:13, color:T.fgM, display:"flex", alignItems:"baseline", gap:10 }}>
+                  <span>{o.assessed == null ? "—" : o.assessed.toFixed(1)} <span style={{ color:T.fgS }}>→</span> <b style={{ color: o.assessed == null ? T.navy : o.applied < o.assessed ? T.red : o.applied > o.assessed ? T.dgreen : T.navy }}>{o.applied.toFixed(1)}</b></span>
+                  <ProvenanceBadge badge={o.type === "full" ? "measured" : "adjusted"} />
+                </span>
               </div>
             ))}
             {bigGaps.length > 0 && (
               <div style={{ marginTop:14 }}>
                 <Flag type="warn">
-                  {bigGaps.length === 1 ? "One dimension sits" : `${bigGaps.length} dimensions sit`} a full point or more away from how it was assessed: {bigGaps.map(r=>r.ov.label.toLowerCase()).join(", ")}. That gap is worth a conversation. It usually means either the question was read differently than intended, or the operation changed since the assessment.
+                  {bigGaps.length === 1 ? "One question sits" : `${bigGaps.length} questions sit`} a full point or more from how {bigGaps.length === 1 ? "it was" : "they were"} assessed: {bigGaps.map(([q]) => q).join(", ")}. That gap is worth a conversation.
                 </Flag>
               </div>
             )}
           </div>
         );
-      })()}
+      })() : (
+        <div style={cardStyle({ borderTop:`4px solid ${T.blue}` })}>
+          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10, gap:12, flexWrap:"wrap" }}>
+            <div style={cardLblStyle({ marginBottom:0 })}>No assessment profile loaded</div>
+            <button type="button" onClick={()=>setView("assessment")} style={{ ...btnStyle("outline"), fontSize:11.5, padding:"6px 14px", minHeight:32 }}>See what your numbers can score →</button>
+          </div>
+          <div style={{ fontSize:12.5, color:T.fgM, lineHeight:1.55 }}>
+            The scores below are sample figures. Upload the MFP assessment profile to replace them with your own {MFP_COVERAGE.total}-question assessment, with module metrics applied where they bear on a question{noProfile && noProfile.scored.length ? ` — ${noProfile.scored.length} question${noProfile.scored.length===1?"":"s"} can already be scored from your data` : ""}.
+          </div>
+        </div>
+      )}
 
       <div style={cardStyle({ borderTop:`4px solid ${T.navy}` })}>
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:14, gap:12, flexWrap:"wrap" }}>
           <div style={cardLblStyle({ marginBottom:0 })}>MFP assessment scores</div>
-          <span style={{ fontSize:11.5, color:T.fgS }}>Four categories, twelve dimensions{overrides.some(r=>r.applied) ? " · measured where available" : ""}</span>
+          <span style={{ fontSize:11.5, color:T.fgS }}>{mfp ? "Four categories, twelve blocks · metrics applied where available" : "Four categories, twelve dimensions · sample until a profile is loaded"}</span>
         </div>
 
         {/* overall */}
         <div style={{ display:"flex", alignItems:"baseline", justifyContent:"space-between", gap:14, background:T.bgAlt, borderRadius:8, padding:"14px 18px", marginBottom:16 }}>
-          <span style={{ fontSize:13.5, color:T.fgM }}><b style={{ color:T.fg, fontWeight:600 }}>Your whole farm business</b> <span style={{ color:T.fgS, fontSize:12 }}>— overall MFP score</span></span>
-          <span style={{ fontSize:28, fontWeight:600, color:T.navy, whiteSpace:"nowrap" }}>{apOverall}<span style={{ fontSize:13, fontWeight:400, color:T.fgS }}> / 100</span></span>
+          <span style={{ fontSize:13.5, color:T.fgM }}><b style={{ color:T.fg, fontWeight:600 }}>Your whole farm business</b> <span style={{ color:T.fgS, fontSize:12 }}>— overall MFP score{mfp ? ", mean of twelve block scores" : ""}</span></span>
+          <span style={{ fontSize:28, fontWeight:600, color:T.navy, whiteSpace:"nowrap" }}>{overall}<span style={{ fontSize:13, fontWeight:400, color:T.fgS }}> / 100</span></span>
         </div>
 
         {/* four categories */}
         <div style={{ fontSize:11, letterSpacing:"0.13em", color:T.fgS, textTransform:"uppercase", marginBottom:10 }}>Category scores</div>
         <div style={{ marginBottom:20 }}>
-          {Object.entries(AP_CATS).map(([cid,c]) => {
+          {Object.entries(CATS).map(([cid,c]) => {
             const st = c.score>=67?"strong":c.score>=34?"watch":"vuln";
             return (
               <div key={cid} style={{ display:"flex", alignItems:"center", gap:14, padding:"9px 0", borderBottom:`1px dashed ${T.border}` }}>
@@ -5021,8 +5351,8 @@ function FarmProfilePage({ profile, setProfile, fa, rd, goFA, goRD, goRisk, goLe
         </div>
 
         {/* twelve dimensions, grouped by category */}
-        <div style={{ fontSize:11, letterSpacing:"0.13em", color:T.fgS, textTransform:"uppercase", marginBottom:10 }}>Dimension index scores</div>
-        {Object.entries(AP_CATS).map(([cid,c]) => (
+        <div style={{ fontSize:11, letterSpacing:"0.13em", color:T.fgS, textTransform:"uppercase", marginBottom:10 }}>{mfp ? "Block scores" : "Dimension index scores"}</div>
+        {Object.entries(CATS).map(([cid,c]) => (
           <div key={cid} style={{ marginBottom:14 }}>
             <div style={{ fontSize:11.5, fontWeight:600, color:T.blue, marginBottom:5 }}>{c.label}</div>
             {AREAS.filter(a => a.cat===cid).map(a => {
@@ -5033,10 +5363,10 @@ function FarmProfilePage({ profile, setProfile, fa, rd, goFA, goRD, goRisk, goLe
                   <span style={{ width:200, fontSize:12.5, color:T.fgM, flexShrink:0 }}>{a.label}</span>
                   <div style={{ flex:1, height:6, background:"#dde1e8", borderRadius:3, overflow:"hidden", position:"relative" }}>
                     <div style={{ width:`${(a.score/5)*100}%`, height:"100%", background:scColor(st), borderRadius:3 }} />
-                    {a.measured && <div title={`Assessed ${a.assessed.toFixed(1)} / 5`} style={{ position:"absolute", top:-2, bottom:-2, left:`calc(${(a.assessed/5)*100}% - 1px)`, width:2, background:T.navy }} />}
+                    {a.measured && a.assessed !== a.score && <div title={`Assessed ${a.assessed.toFixed(1)} / 5`} style={{ position:"absolute", top:-2, bottom:-2, left:`calc(${(a.assessed/5)*100}% - 1px)`, width:2, background:T.navy }} />}
                   </div>
                   <span style={{ width:50, textAlign:"right", fontSize:13, fontWeight:600, color:scColor(st), flexShrink:0 }}>{a.score.toFixed(1)}<span style={{ fontSize:10.5, fontWeight:400, color:T.fgS }}> /5</span></span>
-                  {a.measured ? <span title={`Assessed ${a.assessed.toFixed(1)} / 5`} style={{ ...pillStyle("info"), flexShrink:0 }}>measured</span> : a.module ? <span style={{ ...pillStyle("strong"), flexShrink:0 }}>module</span> : null}
+                  {a.measured ? <span title={`Assessed ${a.assessed.toFixed(1)} / 5`}><ProvenanceBadge badge={a.badge || "adjusted"} /></span> : mfp ? <ProvenanceBadge badge="assessed" /> : a.module ? <span style={{ ...pillStyle("strong"), flexShrink:0 }}>module</span> : null}
                 </div>
               );
             })}
@@ -7772,16 +8102,19 @@ const profileFromMFPExport = (raw) => {
     productionMix: value("productionMix", "production", "commodities", "enterprises", "farmType"),
     ventures: value("ventures", "diversification", "otherIncome", "businesses"),
     grossIncome: value("grossIncome", "revenue", "grossRevenue", "financials.grossIncome", "financial.grossRevenue"),
-    nearTerm: value("nearTerm", "nearTermObjectives", "objectives.nearTerm", "goals.shortTerm"),
-    longTerm: value("longTerm", "longTermObjectives", "objectives.longTerm", "goals.longTerm"),
-    advantage: value("advantage", "competitiveAdvantage", "strengths", "strategy.advantage"),
-    values: value("values", "coreValues", "familyValues", "strategy.values"),
+    nearTerm: value("nearTerm", "nearTermObjectives", "openEnded.nearTermObjectives", "objectives.nearTerm", "goals.shortTerm"),
+    longTerm: value("longTerm", "longTermObjectives", "openEnded.longTermObjectives", "objectives.longTerm", "goals.longTerm"),
+    advantage: value("advantage", "competitiveAdvantage", "openEnded.competitiveAdvantage", "strengths", "strategy.advantage"),
+    values: value("values", "coreValues", "openEnded.coreValues", "familyValues", "strategy.values"),
     swotStrengths: value("swotStrengths", "swot.strengths", "strengths"),
     swotWeaknesses: value("swotWeaknesses", "swot.weaknesses", "weaknesses"),
     swotOpportunities: value("swotOpportunities", "swot.opportunities", "opportunities"),
     swotThreats: value("swotThreats", "swot.threats", "threats"),
   };
   const populated = Object.fromEntries(Object.entries(profile).filter(([, v]) => v));
+  // A valid v1 assessment profile travels with the text fields so every import
+  // path picks it up. An invalid one is left out entirely rather than half-loaded.
+  if (isMFPProfile(raw) && !validateProfile(raw)) populated.mfpProfile = importProfile(raw).profile;
   return Object.keys(populated).length ? populated : null;
 };
 
@@ -7853,11 +8186,14 @@ function DataControls({ state, savedAt, storageOk, onImport, onImportProfile, on
     let parsed = null;
     try { parsed = JSON.parse(text); }
     catch (x) { setErr("That profile file could not be read as JSON."); return; }
-    const profile = profileFromMFPExport(parsed);
-    if (!profile) { setErr("No recognizable farm profile fields were found in that file."); return; }
-    if (!window.confirm("Import this Maximum Farm Potential profile? Matching profile fields will be replaced; your module answers will stay intact.")) return;
+    const { fields: profile, error } = readMFPProfileFile(parsed);
+    if (error) { setErr(error); return; }
+    const isAssessment = !!profile.mfpProfile;
+    if (!window.confirm(isAssessment
+      ? "Import this MFP assessment profile? It replaces any assessment profile already loaded; metric overrides are recomputed from your current module data. Your module answers stay intact."
+      : "Import this Maximum Farm Potential profile? Matching profile fields will be replaced; your module answers will stay intact.")) return;
     onImportProfile(profile);
-    setProfileStatus(`${Object.keys(profile).length} profile fields imported`);
+    setProfileStatus(isAssessment ? "Assessment profile imported, 46 questions in 12 blocks" : `${Object.keys(profile).length} profile fields imported`);
     setProfileJson("");
     setProfileImportOpen(false);
     setOpen(false);
@@ -8514,3 +8850,4 @@ else if (isRD) { if (rd.stage<rdTotal) goRD(rd.stage+1); else goLegacy(1); }
     </div>
   );
 }
+
