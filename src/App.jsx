@@ -2,6 +2,7 @@ import { Children, Fragment, isValidElement, useState, useMemo, useRef, useEffec
 import { loadSavedWork, syncSavedWork } from "./backend.js";
 import EagleEye from "./EagleEye.jsx";
 import FarmKnowledgeSearch from "./FarmKnowledgeSearch.jsx";
+import { MFP_BLOCKS, MFP_UNCOVERED_BLOCKS, isMFPProfile, validateProfile, importProfile, applyOverrides as applyProfileOverrides, computeBlockScores, exportProfile, noProfileSummary, coverageOf, to100, clamp5 } from "./mfp-profile.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // FONTS  (system stack, matching the MFP action plan design language)
@@ -272,6 +273,263 @@ const csvToRows = (text) => {
   }
   if (field !== "" || row.length) { row.push(field); rows.push(row); }
   return rows.map(r => r.map(v => v.trim())).filter(r => r.some(v => v !== ""));
+};
+// Inflow/outflow totals from a raw header+rows table. Handles a single signed Amount
+// column or separate Debit/Credit (Withdrawal/Deposit) columns; dates give the span.
+const parseMoney = (v) => { const s = String(v ?? "").trim(); if (!s) return null; const neg = /^\(.*\)$/.test(s) || /^-/.test(s) || /-$/.test(s); const n = Number(s.replace(/[^0-9.]/g, "")); return Number.isFinite(n) && s.replace(/[^0-9]/g, "") !== "" ? (neg ? -n : n) : null; };
+// Three layouts are recognised: a signed Amount column (bank export), Debit/Credit pairs
+// (bank export), or a budget: line items down the side with a Total/Budget/Annual column
+// or a column per month, income and expense told apart by a Type column, a section
+// heading row ("INCOME", "EXPENSES"), or the line-item wording. Subtotal rows are skipped.
+const MONTH_HEADER = /^(jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*\.?(\s*'?\d{2,4})?$/i;
+const INCOME_WORDS = /income|revenue|sales|receipt|proceeds|payment(s)? received|gov(ernment|t)\.? pay|crop insurance|custom work income|patronage|rent(al)? income|dividend/i;
+const EXPENSE_WORDS = /expense|cost|input|seed|fertili[sz]er|chemical|fuel|repair|labor|labour|rent|lease|interest|insurance|deprec|utilit|supplies|feed|vet|custom hire|principal|tax|living|withdraw/i;
+const SUBTOTAL_ROW = /^(total|sub-?total|net|gross margin|balance|cash (flow|position)|beginning|ending|surplus|deficit|difference)/i;
+const HEADER_WORDS = /total|budget|annual|amount|debit|credit|withdrawal|deposit|date|category|item|description|memo|type|account|plan|actual|^(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)/i;
+// Spreadsheet exports often put a title and blank lines above the real header row. Use the
+// first row that reads like headers (keywords, several cells, no money values); fall back to row 0.
+const DATE_LIKE = /^\d{1,2}[/.-]\d{1,2}([/.-]\d{2,4})?$|^\d{4}-\d{2}-\d{2}/;
+// A cell holds a money value when it parses as a number, carries a digit, and is neither a
+// date nor a word (so "Jan 1 2025" and "FY2026" are labels, not amounts).
+const isMoneyCell = (c) => { const s = String(c ?? "").trim(); return !!s && parseMoney(s) !== null && /\d/.test(s) && !/[a-z]/i.test(s) && !DATE_LIKE.test(s); };
+const findHeaderRow = (table) => {
+  const limit = Math.min(table.length, 12);
+  for (let i = 0; i < limit; i++) {
+    const cells = (table[i] || []).map(c => String(c ?? "").trim());
+    const filled = cells.filter(Boolean);
+    if (filled.length < 2) continue;
+    const numeric = filled.filter(c => isMoneyCell(c) && !/^\d{4}$/.test(c)).length;
+    if (numeric > 0) continue;
+    if (filled.some(c => HEADER_WORDS.test(c))) return i;
+    const next = (table[i + 1] || []).map(c => String(c ?? "").trim());
+    if (next.some(isMoneyCell)) return i;
+  }
+  return 0;
+};
+const readFinancialCsv = (text, name) => {
+  const table = csvToRows(String(text || ""));
+  const headerRow = findHeaderRow(table);
+  const headers = table[headerRow] || [];
+  const rows = table.slice(headerRow + 1).filter(r => r.some(c => String(c ?? "").trim()));
+  return { name, headers, rows, headerRow, importedAt:new Date().toISOString(), error:rows.length ? null : "No rows found under the header line. The file needs a header row with one line item or transaction per line below it." };
+};
+const BUDGET_IMPORT_MAP = { committed:"outflow", receipts:"inflow", annualExpenses:"outflow", annualIncome:"inflow" };
+// Writes import totals into the budget fields named in keys and marks them "import" so a
+// later hand edit can take them back. Budget layouts also carry their line items.
+const applyImportToBudget = (s, summary, keys, fileName) => {
+  const cur = s.budget || {}; const next = { ...cur }; const nextSources = { ...(cur.sources || {}) };
+  keys.forEach(k => { next[k] = String(Math.round(summary[BUDGET_IMPORT_MAP[k]])); nextSources[k] = "import"; });
+  if (summary.layout === "budget" && (keys.includes("annualIncome") || keys.includes("annualExpenses"))) { next.annualLines = summary.lines; next.annualSource = fileName || cur.annualSource || null; }
+  return { ...s, budget:{ ...next, sources:nextSources } };
+};
+// Fill whichever budget fields are still empty (or were themselves filled by an earlier
+// import). Returns the new state plus which keys were filled, for the caller's message.
+const absorbCsvIntoFA = (s, tx) => {
+  const balance = tx.error ? null : parseBalanceSheet(tx);
+  if (balance) {
+    const applied = applyToS3(s, balanceSheetToS3(balance, "end"), `balance:${tx.name}`);
+    return { state:applied.state, summary:{ layout:"balance", amountCol:balance.columns[0], headers:tx.headers, inflow:0, outflow:0, lines:[] }, filled:applied.filled, balance };
+  }
+  let next = { ...s, transactions:tx };
+  const summary = summarizeTransactions(tx);
+  let filled = [];
+  let ratioFilled = [];
+  if (summary.amountCol) {
+    const cur = s.budget || {};
+    const candidates = summary.layout === "budget" ? ["annualIncome", "annualExpenses", "committed", "receipts"] : ["committed", "receipts"];
+    filled = candidates.filter(k => !String(cur[k] || "").trim() || (cur.sources || {})[k] === "import");
+    if (filled.length) next = applyImportToBudget(next, summary, filled, tx.name);
+    if (summary.layout === "budget") { const applied = applyToS3(next, budgetToS3(summary.lines), `budget:${tx.name}`); next = applied.state; ratioFilled = applied.filled; }
+  }
+  return { state:next, summary, filled, ratioFilled };
+};
+const summarizeTransactions = (tx) => {
+  const out = { inflow:0, outflow:0, net:0, amountCol:null, span:null, layout:null, headers:[], lines:[] };
+  if (!tx || !Array.isArray(tx.rows) || !tx.rows.length) return out;
+  const headers = (tx.headers || []).map(h => String(h || "").trim());
+  out.headers = headers.filter(Boolean);
+  const findCol = (re) => headers.findIndex(h => re.test(h));
+  const amountIdx = findCol(/^(amount|amt|net|transaction amount|value)$/i) >= 0 ? findCol(/^(amount|amt|net|transaction amount|value)$/i) : findCol(/amount/i);
+  const debitIdx = findCol(/debit|withdrawal|paid out|money out|outflow/i);
+  const creditIdx = findCol(/credit|deposit|paid in|money in|inflow/i);
+  const dateIdx = findCol(/date|posted/i);
+  if (amountIdx >= 0) {
+    out.layout = "signed"; out.amountCol = headers[amountIdx];
+    tx.rows.forEach(r => { const v = parseMoney(r[amountIdx]); if (v === null) return; if (v >= 0) out.inflow += v; else out.outflow += -v; });
+  } else if (debitIdx >= 0 || creditIdx >= 0) {
+    out.layout = "split"; out.amountCol = [headers[debitIdx], headers[creditIdx]].filter(Boolean).join(" / ");
+    tx.rows.forEach(r => { const d = debitIdx >= 0 ? parseMoney(r[debitIdx]) : null; const c = creditIdx >= 0 ? parseMoney(r[creditIdx]) : null; if (d !== null) out.outflow += Math.abs(d); if (c !== null) out.inflow += Math.abs(c); });
+  } else {
+    let totalIdx = findCol(/^(total|annual|year(ly)?|budget(ed)?|plan(ned)?|projected|fy ?\d{2,4}|\d{4})\b/i) >= 0 ? findCol(/^(total|annual|year(ly)?|budget(ed)?|plan(ned)?|projected|fy ?\d{2,4}|\d{4})\b/i) : findCol(/total|budget/i);
+    const monthIdx = headers.map((h, i) => MONTH_HEADER.test(h) ? i : -1).filter(i => i >= 0);
+    const typeIdx = findCol(/^(type|kind|class|category type|in ?\/ ?out|direction|flow)$/i);
+    const isMoneyCol = (i) => { const cells = tx.rows.map(r => String(r[i] ?? "").trim()).filter(Boolean); return cells.length >= 2 && cells.filter(isMoneyCell).length / cells.length >= 0.7; };
+    if (totalIdx >= 0 && !isMoneyCol(totalIdx)) totalIdx = -1;
+    if (totalIdx < 0 && !monthIdx.length) {
+      // Unnamed or oddly named money column: take the right-most column that holds money.
+      const width = Math.max(headers.length, ...tx.rows.map(r => r.length));
+      for (let i = width - 1; i >= 0; i--) { if (isMoneyCol(i)) { totalIdx = i; out.amountCol = headers[i] || `column ${i + 1}`; break; } }
+    }
+    const labelIdx = headers.findIndex((h, i) => i !== typeIdx && i !== totalIdx && !monthIdx.includes(i));
+    if (totalIdx >= 0 || monthIdx.length) {
+      out.layout = "budget";
+      out.amountCol = totalIdx >= 0 ? (headers[totalIdx] || out.amountCol || `column ${totalIdx + 1}`) : `${monthIdx.length} month columns`;
+      let section = null;
+      tx.rows.forEach(r => {
+        const label = String(r[labelIdx] ?? "").trim();
+        const value = totalIdx >= 0 ? parseMoney(r[totalIdx]) : monthIdx.reduce((s, i) => { const v = parseMoney(r[i]); return v === null ? s : (s ?? 0) + v; }, null);
+        if (value === null) { if (INCOME_WORDS.test(label) && !EXPENSE_WORDS.test(label)) section = "in"; else if (EXPENSE_WORDS.test(label)) section = "out"; return; }
+        if (!label || SUBTOTAL_ROW.test(label)) return;
+        const typeText = typeIdx >= 0 ? String(r[typeIdx] ?? "") : "";
+        let dir = typeIdx >= 0 && typeText ? (INCOME_WORDS.test(typeText) || /^(in|inflow|\+)$/i.test(typeText.trim()) ? "in" : "out")
+          : section || (INCOME_WORDS.test(label) && !EXPENSE_WORDS.test(label) ? "in" : "out");
+        if (value < 0) dir = dir === "in" ? "out" : "in";
+        if (dir === "in") out.inflow += Math.abs(value); else out.outflow += Math.abs(value);
+        out.lines.push({ label, amount:Math.abs(value), dir });
+      });
+      if (!out.lines.length) { out.layout = null; out.amountCol = null; }
+    }
+  }
+  out.net = out.inflow - out.outflow;
+  if (dateIdx >= 0) {
+    const ts = tx.rows.map(r => Date.parse(r[dateIdx])).filter(Number.isFinite);
+    if (ts.length) { const f = d => new Date(d).toLocaleDateString(undefined, { month:"short", year:"numeric" }); const a = f(Math.min(...ts)), b = f(Math.max(...ts)); out.span = a === b ? a : `${a} – ${b}`; }
+  }
+  return out;
+};
+
+// ── Balance sheet → ratio deep dive ─────────────────────────────────────────────
+// Reads a lender-style net worth statement: section headings (current assets, long-term
+// liabilities…), line items, and totals, with one value column (a single snapshot) or two
+// (beginning and end of year). Output keys match the s3vals ids computeFARatios reads.
+const moneyColumnsOf = (rows, headers) => {
+  const width = Math.max(headers.length, ...rows.map(r => r.length), 0);
+  const cols = [];
+  for (let i = 0; i < width; i++) {
+    const cells = rows.map(r => String(r[i] ?? "").trim()).filter(Boolean);
+    const money = cells.filter(isMoneyCell);
+    if (cells.length >= 2 && money.length / cells.length >= 0.6) cols.push(i);
+  }
+  return cols;
+};
+const BS_SECTION = [
+  { re:/^(total\s+)?current\s+(farm\s+)?assets?\b/i, id:"curA" }, { re:/^(total\s+)?(intermediate|non-?current|long-?term|fixed|capital)\s+(farm\s+)?assets?\b/i, id:"ltA" },
+  { re:/^(total\s+)?current\s+(farm\s+)?liabilit/i, id:"curL" }, { re:/^(total\s+)?(intermediate|non-?current|long-?term)\s+(farm\s+)?(liabilit|debt)/i, id:"ltL" },
+  { re:/^(total\s+)?(farm\s+)?assets?\b/i, id:"assets" }, { re:/^(total\s+)?(farm\s+)?liabilit/i, id:"liab" },
+];
+const BS_ITEM = [
+  { re:/receivable/i, key:"ar", side:"a" }, { re:/prepaid/i, key:"prepaid", side:"a" }, { re:/growing crop|crop in (the )?ground|investment in (growing )?crops?/i, key:"growingCrop", side:"a" },
+  { re:/feeder|purchased (market )?livestock|feed (held )?for resale/i, key:"feederInv", side:"a" }, { re:/market livestock|livestock (inventory|held for sale)|raised livestock/i, key:"livestockInv", side:"a" },
+  { re:/(crop|grain|hay|forage|corn|soybean|wheat)s?\b.*(inventor|on hand|in (the )?bin|in storage|held)|(inventor).*(crop|grain|hay)/i, key:"cropInv", side:"a" },
+  { re:/accrued interest|interest (payable|accrued|owed)/i, key:"accrInt", side:"l" }, { re:/deferred|unearned/i, key:"deferredRev", side:"l" },
+  { re:/accrued|accrual|(wages|taxes|rent) (payable|owed|due)/i, key:"otherAccr", side:"l" }, { re:/accounts payable|\bpayables?\b(?!.*notes)|open account|bills? (unpaid|owed)/i, key:"ap", side:"l" },
+];
+const parseBalanceSheet = (tx) => {
+  const headers = (tx.headers || []).map(h => String(h ?? "").trim());
+  const rows = tx.rows || [];
+  const labelOf = r => r.map(c => String(c ?? "").trim()).find(c => c && parseMoney(c) === null) || "";
+  const text = rows.map(labelOf).join(" | ");
+  if (!/asset/i.test(text) || !/liabilit|debt|loan|payable/i.test(text)) return null;
+  const cols = moneyColumnsOf(rows, headers);
+  if (!cols.length) return null;
+  const headerSays = (i, re) => re.test(headers[i] || "");
+  let beginCol = null, endCol = null, singleCol = null;
+  if (cols.length >= 2) {
+    const b = cols.find(i => headerSays(i, /begin|open|start|jan|prior|previous|last/i)), e = cols.find(i => headerSays(i, /end|clos|dec|current|this|final/i));
+    if (b !== undefined && e !== undefined && b !== e) { beginCol = b; endCol = e; }
+    else { beginCol = cols[0]; endCol = cols[1]; }
+  } else singleCol = cols[0];
+  const blank = () => ({ totals:{}, sections:{ curA:0, ltA:0, curL:0, ltL:0, otherA:0, otherL:0 }, items:{}, lines:0 });
+  const snaps = { begin:blank(), end:blank(), single:blank() };
+  let section = null;
+  rows.forEach(r => {
+    const label = labelOf(r); if (!label) return;
+    const vals = { begin:beginCol !== null ? parseMoney(r[beginCol]) : null, end:endCol !== null ? parseMoney(r[endCol]) : null, single:singleCol !== null ? parseMoney(r[singleCol]) : null };
+    const hasValue = Object.values(vals).some(v => v !== null && !Number.isNaN(v));
+    const isTotal = /^total\b/i.test(label);
+    const lower = label.toLowerCase();
+    if (/net worth|equity|owner'?s? capital|liabilities (and|&|\+) (net worth|equity)/i.test(lower)) return;
+    const sec = BS_SECTION.find(s => s.re.test(label));
+    if (sec && !isTotal && !hasValue) { section = sec.id; return; }
+    if (sec && !isTotal && hasValue && /^(current|intermediate|non-?current|long-?term|fixed|capital)/i.test(label) && !BS_ITEM.some(it => it.re.test(label))) { section = sec.id; }
+    if (isTotal && sec) { Object.entries(vals).forEach(([k, v]) => { if (v !== null && !Number.isNaN(v)) snaps[k].totals[sec.id] = Math.abs(v); }); return; }
+    if (isTotal || !hasValue) return;
+    const item = BS_ITEM.find(it => it.re.test(label));
+    Object.entries(vals).forEach(([k, v]) => {
+      if (v === null || Number.isNaN(v)) return;
+      const snap = snaps[k]; snap.lines++;
+      const amt = Math.abs(v);
+      if (item) snap.items[item.key] = (snap.items[item.key] || 0) + amt;
+      const bucket = section || (item ? (item.side === "a" ? "curA" : "curL") : null);
+      if (bucket) snap.sections[bucket] += amt;
+    });
+  });
+  const resolve = (snap) => {
+    const t = snap.totals, s = snap.sections;
+    const curA = t.curA ?? (s.curA || null), ltA = t.ltA ?? (s.ltA || null), curL = t.curL ?? (s.curL || null), ltL = t.ltL ?? (s.ltL || null);
+    const assets = t.assets ?? ((curA || ltA) ? (curA || 0) + (ltA || 0) : null);
+    const liab = t.liab ?? ((curL || ltL) ? (curL || 0) + (ltL || 0) : null);
+    return { currentAssets:curA, currentLiab:curL, totalAssets:assets, totalLiab:liab, items:snap.items, lines:snap.lines };
+  };
+  const out = { name:tx.name, columns:cols.map(i => headers[i] || `column ${i + 1}`), twoColumn:singleCol === null, begin:null, end:null, single:null };
+  if (singleCol !== null) out.single = resolve(snaps.single); else { out.begin = resolve(snaps.begin); out.end = resolve(snaps.end); }
+  const any = [out.single, out.begin, out.end].some(sn => sn && (sn.totalAssets || sn.totalLiab || sn.currentAssets || sn.currentLiab));
+  return any ? out : null;
+};
+const ACCRUAL_KEYS = ["ar", "cropInv", "livestockInv", "feederInv", "deferredRev", "ap", "accrInt", "otherAccr", "prepaid", "growingCrop"];
+// Turns a parsed balance sheet into s3vals fields. A single-column sheet is applied as the
+// snapshot the caller chooses ("end" by default, which is what liquidity ratios use).
+const balanceSheetToS3 = (bs, snapshot = "end") => {
+  const patch = {};
+  const put = (key, v) => { if (v !== null && v !== undefined && !Number.isNaN(v)) patch[key] = String(Math.round(v)); };
+  const applySnap = (sn, which) => {
+    if (!sn) return;
+    put(`${which}Assets`, sn.totalAssets); put(`${which}Liab`, sn.totalLiab);
+    if (which === "end") { put("currentAssets", sn.currentAssets); put("currentLiab", sn.currentLiab); }
+    ACCRUAL_KEYS.forEach(k => { if (sn.items[k] !== undefined) put(`${k}${which === "begin" ? "Begin" : "End"}`, sn.items[k]); });
+  };
+  if (bs.twoColumn) { applySnap(bs.begin, "begin"); applySnap(bs.end, "end"); }
+  else applySnap(bs.single, snapshot === "begin" ? "begin" : "end");
+  return patch;
+};
+
+// ── Operating budget → financial inputs ──────────────────────────────────────
+// Sorts budget line items into the Schedule F style inputs the ratio engine needs. Debt
+// principal, family living and income taxes are budgeted cash outflows but not operating
+// expenses, so they are lifted out of opex and placed in their own fields.
+const BUDGET_LINE_RULES = [
+  { re:/depreciation/i, key:"depr" }, { re:/\binterest\b/i, key:"interest" }, { re:/principal|loan payment|debt (service|payment)|term (loan|debt)/i, key:"principal" },
+  { re:/family living|living (expense|draw|withdrawal)|owner'?s? draw|personal|household/i, key:"livingWithdrawals" }, { re:/income tax|self[- ]employment tax|fed(eral)? tax|state tax/i, key:"incomeTaxes" },
+  { re:/capital (purchase|expenditure)|equipment purchase|machinery purchase|land purchase|down payment/i, key:"capital" },
+];
+const INPUT_COST_RE = /\bseed\b|fertil|lime\b|chem|herbicide|pesticide|insecticide|fungicide|fuel|diesel|gas(oline)?|\boil\b|lubric|crop insurance|drying|\bfeed\b|veterinar|\bvet\b|medicine|breeding fee|semen/i;
+const RENT_RE = /cash rent|land rent|\brent\b|lease(?!.*equipment)|pasture rent/i;
+const budgetToS3 = (lines) => {
+  const sums = { gross:0, opex:0, inputs:0, rent:0, depr:0, interest:0, principal:0, livingWithdrawals:0, incomeTaxes:0 };
+  (lines || []).forEach(line => {
+    const amt = Math.abs(Number(line.amount) || 0); if (!amt) return;
+    if (line.dir === "in") { sums.gross += amt; return; }
+    const rule = BUDGET_LINE_RULES.find(r => r.re.test(line.label || ""));
+    if (rule) { if (rule.key !== "capital") sums[rule.key] += amt; return; }
+    sums.opex += amt;
+    if (INPUT_COST_RE.test(line.label || "")) sums.inputs += amt;
+    if (RENT_RE.test(line.label || "")) sums.rent += amt;
+  });
+  const patch = {};
+  Object.entries(sums).forEach(([k, v]) => { if (v > 0) patch[k] = String(Math.round(v)); });
+  return patch;
+};
+// Writes imported values into s3vals, skipping fields a person typed by hand, and records
+// where each value came from so the form can show it and a later edit can take it back.
+const applyToS3 = (s, patch, source) => {
+  const cur = s.s3vals || {}; const src = { ...(s.s3src || {}) }; const next = { ...cur }; const filled = [];
+  Object.entries(patch).forEach(([k, v]) => {
+    const value = String(cur[k] ?? "").trim();
+    const hand = value && !src[k] && value !== GENERIC_FARM_FINANCIALS[k];
+    if (hand) return;
+    next[k] = v; src[k] = source; filled.push(k);
+  });
+  return { state:{ ...s, s3vals:next, s3src:src }, filled };
 };
 const parseFinancialCsv = (text) => {
   const rows = csvToRows(text);
@@ -645,7 +903,18 @@ function FA1Registry({ fa, setFA }) {
   return <div>
     <Head eyebrow="Financial Analysis · Stage 2" title="Build your enterprise registry" sub="Your operation does not have to fit a fixed list. Name each enterprise, describe how well it is tracked, and choose an allocation basis that reflects what actually causes shared costs." />
     <div style={cardStyle()}><div style={cardLblStyle()}>Add your enterprises</div><div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>{FINANCIAL_ENT_KINDS.map(([id,label])=><button key={id} type="button" onClick={()=>add(id)} style={btnStyle("outline")}>+ {label}</button>)}</div>{!list.length&&<Flag type="info">Start with the enterprises that have their own revenue stream or use meaningful amounts of shared equipment, labor, land, or overhead.</Flag>}</div>
-    {list.map((e,i)=><div key={e.id} style={cardStyle()}><div style={{ display:"flex", justifyContent:"space-between", gap:12, alignItems:"center", marginBottom:12 }}><input aria-label="Enterprise name" value={e.name} onChange={ev=>setRow(e.id,{name:ev.target.value})} style={inputStyle({ fontSize:17, fontWeight:700, maxWidth:420 })} /><button type="button" onClick={()=>update({list:list.filter(x=>x.id!==e.id)})} style={btnStyle("ghost")}>Remove</button></div><div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))", gap:14 }}><label style={labelStyle}>What kind of enterprise?<select value={e.kind} onChange={ev=>{const k=FINANCIAL_ENT_KINDS.find(x=>x[0]===ev.target.value);setRow(e.id,{kind:k[0],unit:k[2]})}} style={inputStyle()}>{FINANCIAL_ENT_KINDS.map(([id,label])=><option key={id} value={id}>{label}</option>)}</select></label><label style={labelStyle}>How well are costs tracked?<select value={e.tracking||"none"} onChange={ev=>setRow(e.id,{tracking:ev.target.value})} style={inputStyle()}>{FINANCIAL_TRACKING.map(([id,label])=><option key={id} value={id}>{label}</option>)}</select></label></div></div>)}
+    {list.map((e,i)=><div key={e.id} style={cardStyle()}><div style={{ display:"flex", justifyContent:"space-between", gap:12, alignItems:"center", marginBottom:12 }}><input aria-label="Enterprise name" value={e.name} onChange={ev=>setRow(e.id,{name:ev.target.value})} style={inputStyle({ fontSize:17, fontWeight:700, maxWidth:420 })} /><button type="button" onClick={()=>update({list:list.filter(x=>x.id!==e.id)})} style={btnStyle("ghost")}>Remove</button></div><div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))", gap:14 }}><label style={labelStyle}>What kind of enterprise?<select value={e.kind} onChange={ev=>{const k=FINANCIAL_ENT_KINDS.find(x=>x[0]===ev.target.value);setRow(e.id,{kind:k[0],unit:k[2]})}} style={inputStyle()}>{FINANCIAL_ENT_KINDS.map(([id,label])=><option key={id} value={id}>{label}</option>)}</select></label><label style={labelStyle}>How well are costs tracked?<select value={e.tracking||"none"} onChange={ev=>setRow(e.id,{tracking:ev.target.value})} style={inputStyle()}>{FINANCIAL_TRACKING.map(([id,label])=><option key={id} value={id}>{label}</option>)}</select></label><label style={labelStyle}>Annual gross revenue<div style={{ display:"flex", alignItems:"center", gap:6 }}><span style={{ fontSize:13, color:T.fgS }}>$</span><input type="number" value={e.revenue||""} onChange={ev=>setRow(e.id,{revenue:ev.target.value})} placeholder="Most farms know what each thing sold for" style={inputStyle()} /></div></label></div></div>)}
+    {(() => {
+      const h = enterpriseRevenueHHI(fa);
+      if (!h || list.length < 2) return null;
+      const pct = (n) => `${Math.round(n*100)}%`;
+      const st = h.effective >= 3.5 ? "strong" : h.effective >= 1.8 ? "watch" : "vuln";
+      return <div style={cardStyle({ borderTop:`4px solid ${T.blue}` })}><div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", gap:12, flexWrap:"wrap", marginBottom:10 }}><div style={cardLblStyle({ marginBottom:0 })}>Effective revenue streams</div><span style={pillStyle(st)}>{h.effective.toFixed(2)} effective from {list.length} named</span></div>
+        <div style={{ display:"flex", gap:26, flexWrap:"wrap", marginBottom:10 }}>
+          {[["Named enterprises", String(list.length)],["With revenue entered", String(h.count)],["Largest share", pct(h.dominant)],["Concentration (HHI)", h.hhi.toFixed(2)],["Effective streams", h.effective.toFixed(2)]].map(([l,val],k)=><div key={k}><div style={{ fontSize:11, color:T.fgS, marginBottom:3 }}>{l}</div><div style={{ fontSize:17, fontWeight:600, color:T.navy }}>{val}</div></div>)}
+        </div>
+        <p style={{ fontSize:12.5, color:T.fgM, margin:0, lineHeight:1.6 }}>A count of revenue sources cannot see concentration: five streams split 80 / 5 / 5 / 5 / 5 are 1.54 effective streams, barely more diversified than a single enterprise. The effective count is scale-free, so it compares across any size of operation, and it is the figure that measures your Income diversification dimension on the Farm Profile.{h.count < list.length && ` ${list.length - h.count} enterprise${list.length - h.count === 1 ? " has" : "s have"} no revenue entered yet and ${list.length - h.count === 1 ? "is" : "are"} not in the figure.`}</p></div>;
+    })()}
     <div style={cardStyle()}><div style={cardLblStyle()}>Shared expense allocation policy</div><p style={{ margin:"0 0 14px", color:T.fgM, fontSize:13 }}>When an expense belongs to more than one enterprise, use the driver that best reflects what caused the cost. Revenue share is available, but is usually the weakest explanation for equipment and labor costs.</p>{FINANCIAL_ALLOCATIONS.map(([id,label])=><label key={id} style={{ display:"flex", alignItems:"center", gap:10, padding:"9px 0", borderBottom:`1px solid ${T.div}`, fontSize:13 }}><input type="radio" name="defaultAllocation" checked={(ent.defaultAllocation||"none")===id} onChange={()=>update({defaultAllocation:id})} /> <span style={{ fontWeight:600 }}>{label}</span><span style={{ color:T.fgS, fontSize:12 }}>{id==="hours"?"Best for equipment, fuel, and repairs":id==="labor"?"Best for wages and benefits":id==="revenue"?"Use only for general overhead":""}</span></label>)}</div>
     {list.length>0&&<div style={cardStyle({ background:T.blueL, borderColor:"#c8d9e8" })}><strong>{list.length} enterprise{list.length===1?"":"s"} defined.</strong><div style={{ color:T.fgM, fontSize:13, marginTop:4 }}>The next stages will keep direct costs separate, make shared allocations visible, and show confidence levels when an enterprise does not have enough tracking detail.</div></div>}
   </div>;
@@ -709,6 +978,14 @@ function FA2({ fa, setFA }) {
 const faStR = (val,sv2,vv,lb) => val===null?"blank":(lb?(val<=sv2?"strong":val>=vv?"vuln":"watch"):(val>=sv2?"strong":val<=vv?"vuln":"watch"));
 const faFP = n => n===null?"—":Math.round(n)+"%";
 const faFD = n => n===null?"—":n.toFixed(2)+"x";
+// Capitalisation rate for the imputed charge on owned land in the economic total
+// expense ratio. Defensible for the Midwest; other regions need their own figure.
+const FA_LAND_CAP_RATE = 0.03;
+const FA_TIER = {
+  1: { label:"Tier 1", short:"T1", desc:"Compares directly across almost any farm. A fixed threshold is defensible." },
+  2: { label:"Tier 2", short:"T2", desc:"Needs a peer class before it means anything: enterprise type, scale band, tenure mix, region." },
+  3: { label:"Tier 3", short:"T3", desc:"Needs normalising, not just a peer group. The denominator is structural rather than operational." },
+};
 // FFSC (Farm Financial Standards Council) accrual adjustments — the specific
 // balance-sheet-driven corrections that convert Schedule F cash-basis income into the
 // accrual-adjusted figure lenders and FINBIN/ARMS benchmarks actually use. Cash-basis
@@ -772,21 +1049,62 @@ const computeFARatios = (s3) => {
   const debtToAsset = endAssets > 0 ? (gv("endLiab")/endAssets)*100 : null;
   const equityRatio = debtToAsset === null ? null : 100 - debtToAsset;
 
+  // ── Comparability layer ───────────────────────────────────────────────────
+  // A fixed threshold assumes every farm is the same kind of business. Land tenure
+  // is the biggest distortion: two identically run operations can show an operating
+  // expense ratio of 67% or 98% purely on whether they own or rent the ground.
+  const landValue = gv("landValue"), machineryValue = gv("machineryValue");
+  const laborCost = gv("laborCost"), ownerLabor = gv("ownerLaborValue"), fte = gv("fte");
+  const hasNormInputs = landValue > 0 || machineryValue > 0 || laborCost > 0 || ownerLabor > 0 || fte > 0;
+  const effGross = hasAccrualData ? accrualGross : gross;
+  const effOpex = hasAccrualData ? accrualOpex : opex;
+
+  // Operating asset turnover strips land out of the denominator, so a farm that owns
+  // its ground and one that rents return the same figure.
+  const opAssets = avgAssets - landValue;
+  const opAssetTurnover = hasData && avgAssets > 0 && opAssets > 0 ? (effGross / opAssets) * 100 : null;
+
+  // Economic total expense ratio charges owned land at a capitalisation rate and
+  // unpaid operator/family labour at market. Below 1.00 is a true economic profit.
+  // 3% is defensible for the Midwest and should be revisited for other regions.
+  const impliedLandCharge = landValue * FA_LAND_CAP_RATE;
+  const econTotalExpense = hasData && (landValue > 0 || ownerLabor > 0)
+    ? (effOpex + impliedLandCharge + ownerLabor + depr + interest) / effGross : null;
+
+  // Labour: the only financial measures of human capital in the standard set.
+  const totalLabor = laborCost + ownerLabor;
+  const laborEfficiency = hasData && totalLabor > 0 ? (totalLabor / effGross) * 100 : null;
+  const laborProductivity = hasData && fte > 0 ? effGross / fte : null;
+  const laborCostPerAcre = hasData && totalLabor > 0 ? totalLabor / acres : null;
+
+  // Machinery
+  const machCostPerAcre = hasData && (depr > 0 || gv("repairs") > 0 || gv("fuelOil") > 0) ? (depr + gv("repairs") + gv("fuelOil")) / acres : null;
+  const machInvestPerAcre = hasData && machineryValue > 0 ? machineryValue / acres : null;
+
+  // Tenure mix sets the peer class this farm belongs in.
+  const ownedShare = avgAssets > 0 && hasNormInputs ? Math.min(100, (landValue / avgAssets) * 100) : null;
+  const tenureClass = ownedShare === null ? null
+    : ownedShare >= 55 ? "owner-heavy" : ownedShare >= 20 ? "mixed tenure" : "renter-heavy";
+
+  // Tier 1 compares directly across almost any farm, so a fixed threshold is
+  // defensible. Tier 2 needs a peer class (enterprise type, scale, tenure, region).
+  // Tier 3 has a structural denominator and needs normalising, not just a peer group.
   const ratios = [
-    {key:"oer",cat:"efficiency",label:"Operating expense ratio",val:faFP(oer),status:faStR(oer,65,80,true),bench:"Strong < 65%"},
-    {key:"ipa",cat:"efficiency",label:"Input cost per acre",val:fmt$(ipa)+"/ac",status:faStR(ipa,478,535,true),bench:"Strong < $478"},
-    {key:"assetTurnover",cat:"efficiency",label:"Asset turnover ratio",val:faFP(assetTurnover),status:faStR(assetTurnover,40,20,false),bench:"Strong > 40%"},
-    {key:"grpa",cat:"efficiency",label:"Gross revenue per acre",val:fmt$(grpa)+"/ac",status:faStR(grpa,951,800,false),bench:"Strong > $951"},
-    {key:"currentRatio",cat:"liquidity",label:"Current ratio",val:currentRatio===null?"—":currentRatio.toFixed(2)+"x",status:faStR(currentRatio,2.0,1.0,false),bench:"Strong > 2.0x"},
-    {key:"workingCapital",cat:"liquidity",label:"Working capital",val:fmt$(workingCapital),status:workingCapital===null?"blank":workingCapital>0?"strong":"vuln",bench:"Positive covers a short year"},
-    {key:"wcToRevenue",cat:"liquidity",label:"Working capital to revenue",val:faFP(wcToRevenue),status:faStR(wcToRevenue,25,10,false),bench:"Strong > 25%"},
-    {key:"debtToAsset",cat:"solvency",label:"Debt-to-asset ratio",val:faFP(debtToAsset),status:faStR(debtToAsset,30,60,true),bench:"Strong < 30%"},
-    {key:"equityRatio",cat:"solvency",label:"Equity ratio",val:faFP(equityRatio),status:faStR(equityRatio,70,40,false),bench:"Strong > 70%"},
-    {key:"dscr",cat:"solvency",label:"Debt service coverage",val:faFD(dscr),status:faStR(dscr,1.25,1.0,false),bench:"Strong > 1.25x"},
-    ...(hasAccrualData ? [{key:"nfifo",cat:"growth",label:"Net farm income from operations",val:fmt$(nfifo),status:nfifo===null?"blank":nfifo>=0?"strong":"vuln",bench:"Accrual-adjusted operating trend"}] : []),
-    {key:"nfi",cat:"growth",label:hasAccrualData?"Net farm income (incl. capital gains/losses)":"Net farm income",val:fmt$(nfi),status:nfi===null?"blank":nfi>=0?"strong":"vuln",bench:"Positive covers full cost"},
-    {key:"sgr",cat:"growth",label:"Sustainable growth rate",val:faFP(sgr),status:faStR(sgr,10,0,false),bench:"Strong > 10%"},
-    {key:"nrpa",cat:"growth",label:"Net return per acre",val:fmt$(nrpa)+"/ac",status:faStR(nrpa,150,50,false),bench:"Strong > $150"},
+    {key:"oer",cat:"efficiency",tier:2,label:"Operating expense ratio",val:faFP(oer),status:faStR(oer,65,80,true),bench:"Strong < 65%"},
+    {key:"ipa",cat:"efficiency",tier:2,label:"Input cost per acre",val:fmt$(ipa)+"/ac",status:faStR(ipa,478,535,true),bench:"Strong < $478"},
+    {key:"assetTurnover",cat:"efficiency",tier:3,label:"Asset turnover ratio",val:faFP(assetTurnover),status:faStR(assetTurnover,40,20,false),bench:"Strong > 40%"},
+    {key:"grpa",cat:"efficiency",tier:2,label:"Gross revenue per acre",val:fmt$(grpa)+"/ac",status:faStR(grpa,951,800,false),bench:"Strong > $951"},
+    {key:"currentRatio",cat:"liquidity",tier:1,label:"Current ratio",val:currentRatio===null?"—":currentRatio.toFixed(2)+"x",status:faStR(currentRatio,2.0,1.0,false),bench:"Strong > 2.0x"},
+    {key:"workingCapital",cat:"liquidity",tier:1,label:"Working capital",val:fmt$(workingCapital),status:workingCapital===null?"blank":workingCapital>0?"strong":"vuln",bench:"Positive covers a short year"},
+    {key:"wcToRevenue",cat:"liquidity",tier:1,label:"Working capital to revenue",val:faFP(wcToRevenue),status:faStR(wcToRevenue,25,10,false),bench:"Strong > 25%"},
+    {key:"debtToAsset",cat:"solvency",tier:2,label:"Debt-to-asset ratio",val:faFP(debtToAsset),status:faStR(debtToAsset,30,60,true),bench:"Strong < 30%"},
+    {key:"equityRatio",cat:"solvency",tier:2,label:"Equity ratio",val:faFP(equityRatio),status:faStR(equityRatio,70,40,false),bench:"Strong > 70%"},
+    {key:"dscr",cat:"solvency",tier:1,label:"Debt service coverage",val:faFD(dscr),status:faStR(dscr,1.25,1.0,false),bench:"Strong > 1.25x"},
+    ...(hasAccrualData ? [{key:"nfifo",cat:"growth",tier:2,label:"Net farm income from operations",val:fmt$(nfifo),status:nfifo===null?"blank":nfifo>=0?"strong":"vuln",bench:"Accrual-adjusted operating trend"}] : []),
+    {key:"nfi",cat:"growth",tier:2,label:hasAccrualData?"Net farm income (incl. capital gains/losses)":"Net farm income",val:fmt$(nfi),status:nfi===null?"blank":nfi>=0?"strong":"vuln",bench:"Positive covers full cost"},
+    {key:"econTotalExpense",cat:"growth",tier:1,label:"Economic total expense ratio",val:econTotalExpense===null?"—":econTotalExpense.toFixed(2),status:faStR(econTotalExpense,1.0,1.15,true),bench:"Below 1.00 is an economic profit"},
+    {key:"sgr",cat:"growth",tier:3,label:"Sustainable growth rate",val:faFP(sgr),status:faStR(sgr,10,0,false),bench:"Strong > 10%"},
+    {key:"nrpa",cat:"growth",tier:2,label:"Net return per acre",val:fmt$(nrpa)+"/ac",status:faStR(nrpa,150,50,false),bench:"Strong > $150"},
   ];
 
   // Roll the ratios up into the four financial health categories. A category takes
@@ -808,11 +1126,55 @@ const computeFARatios = (s3) => {
   });
 
   return { hasData, hasAccrualData, oer, ipa, grpa, nrpa, nfi, nfifo, dscr, assetTurnover, sgr,
+           hasNormInputs, opAssetTurnover, econTotalExpense, impliedLandCharge, laborEfficiency, laborProductivity, laborCostPerAcre,
+           machCostPerAcre, machInvestPerAcre, ownedShare, tenureClass, landValue, totalLabor, fte,
            currentRatio, workingCapital, wcToRevenue, debtToAsset, equityRatio,
            accrualGross, accrualOpex, ratios, categories };
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
+// Revenue concentration. HHI is scale-free, so unlike a count of revenue sources it
+// compares across any size of operation without a peer class. Its inverse, the
+// effective number of revenue streams, is the form a farmer can read: five sources
+// split 80/5/5/5/5 is 1.54 effective streams, barely more than a single enterprise.
+const revenueHHI = (shares) => {
+  const vals = (shares||[]).map(s=>parseFloat(s)||0).filter(v=>v>0);
+  const tot = vals.reduce((a,b)=>a+b,0);
+  if (tot <= 0 || vals.length === 0) return null;
+  const hhi = vals.reduce((a,v)=>a+Math.pow(v/tot,2),0);
+  return { hhi, effective: 1/hhi, count: vals.length, dominant: Math.max(...vals)/tot };
+};
+const enterpriseRevenueHHI = (fa) => revenueHHI(((((fa||{}).ent||{}).list)||[]).map(e=>e.revenue));
+
+// Labour targets differ enormously by enterprise. The 10–11% figure in common use is
+// a row-crop number; applied to an orchard it flags a well-run operation as failing.
+const LABOR_TARGETS = {
+  grain:0.11, forage:0.11, specialty:0.28, perennial:0.30,
+  dairy:0.20, beef:0.15, swine:0.15, poultry:0.15,
+  service:0.35, storage:0.15, land:0.05, other:0.15,
+};
+const laborTargetFor = (fa) => {
+  const list = (((fa||{}).ent||{}).list)||[];
+  if (!list.length) return { target:0.15, basis:"15% general target; add enterprises in Stage 2 to set one from your enterprise mix" };
+  const t = Math.max(...list.map(e => LABOR_TARGETS[e.kind] ?? 0.15));
+  const kind = list.find(e => (LABOR_TARGETS[e.kind] ?? 0.15) === t);
+  const label = (FINANCIAL_ENT_KINDS.find(k => k[0] === (kind ? kind.kind : "other")) || FINANCIAL_ENT_KINDS[FINANCIAL_ENT_KINDS.length-1])[1];
+  return { target:t, basis:`${Math.round(t*100)}% target, set by your ${label.toLowerCase()} enterprise` };
+};
+
+// Accounting profile helpers shared by the ratio deep dive and the overrides.
+// Conversion is possible only with a balance sheet at both ends of the year.
+const convReady = (ap) => { const p = ap||{}; if (p.basis === "accrual") return true; const c = p.conv||{}; return c[0] === "yes" && c[1] === "yes"; };
+const basisConfidence = (ap) => {
+  const p = ap||{};
+  if (!p.basis) return { level:"Unknown", note:"Accounting basis not recorded in Stage 1." };
+  if (p.basis === "accrual") return { level:"High", note:"Accrual figures already reflect when income was earned and costs incurred." };
+  const dist = Object.values(p.distortions||{}).filter(v => v === "yes").length;
+  if (convReady(p)) return { level:"Medium", note:"Cash basis, but two balance sheets make an accrual conversion possible." };
+  if (dist >= 2) return { level:"Low", note:`Cash basis with ${dist} tax-timing distortions recorded and no balance sheets to correct them.` };
+  return { level:"Medium", note:"Cash basis without a conversion path; treat profitability ratios as indicative." };
+};
+
+// ───────��─────────────────────────────────────────────────────────────────────
 // FA STAGE 3 — Document upload & AI-assisted extraction (placeholder / demo)
 // ─────────────────────────────────────────────────────────────────────────────
 // This UI is fully built and clickable end-to-end, but the actual scan step below
@@ -924,12 +1286,113 @@ function DocumentScanUpload({ fa, setFA }) {
   );
 }
 
+const S3_LABELS = { gross:"Gross farm income", opex:"Operating expenses", inputs:"Input costs", rent:"Land rent", depr:"Depreciation", interest:"Interest", principal:"Principal payments", livingWithdrawals:"Family living", incomeTaxes:"Income taxes", currentAssets:"Current assets", currentLiab:"Current liabilities", beginAssets:"Beginning assets", beginLiab:"Beginning liabilities", endAssets:"Ending assets", endLiab:"Ending liabilities" };
+const describeS3Source = (src) => { if (!src) return null; const [kind, ...rest] = String(src).split(":"); const name = rest.join(":"); return kind === "balance" ? `From balance sheet · ${name}` : kind === "budget" ? `From operating budget · ${name}` : `From ${name}`; };
+// Lets the ratio page take a balance sheet straight from a CSV, reuse a document already
+// stored in Stage 3, and lift the Stage 4 operating budget into the financial inputs.
+function RatioRecordsImport({ fa, setFA }) {
+  const [result, setResult] = useState(null);
+  const [busy, setBusy] = useState(null);
+  const [lastSheet, setLastSheet] = useState(null);
+  const docs = (fa.documents || []).filter(d => /\.csv$/i.test(d.name || "") && d.pathname);
+  const budgetLines = fa.budget?.annualLines || [];
+  const budgetPatch = budgetLines.length ? budgetToS3(budgetLines) : {};
+  const budgetName = fa.budget?.annualSource || "Stage 4 budget";
+  const budgetApplied = fa.s3budgetApplied === budgetName;
+
+  useEffect(() => {
+    if (!budgetLines.length || budgetApplied) return;
+    setFA(s => ({ ...applyToS3(s, budgetToS3(s.budget?.annualLines || []), `budget:${budgetName}`).state, s3budgetApplied:budgetName }));
+  }, [budgetLines.length, budgetApplied, budgetName, setFA]);
+
+  const applySheet = (bs, snapshot, label) => {
+    setFA(s => applyToS3(s, balanceSheetToS3(bs, snapshot), `balance:${bs.name}`).state);
+    setLastSheet({ bs, snapshot });
+    const sn = bs.twoColumn ? bs.end : bs.single;
+    const bits = [sn?.totalAssets ? `assets ${fmt$(sn.totalAssets)}` : null, sn?.totalLiab ? `liabilities ${fmt$(sn.totalLiab)}` : null, sn?.currentAssets ? `current assets ${fmt$(sn.currentAssets)}` : null, sn?.currentLiab ? `current liabilities ${fmt$(sn.currentLiab)}` : null].filter(Boolean).join(", ");
+    setResult({ type:"ok", text:`${label}: read as a balance sheet${bs.twoColumn ? " with beginning and end-of-year columns" : snapshot === "begin" ? " applied as the beginning-of-year snapshot" : " applied as the end-of-year snapshot"} (${bits}). Values in the Balance sheet snapshot tab now carry a "From balance sheet" label; anything you had typed by hand was left alone.` });
+  };
+  const readTx = (tx, label) => {
+    if (tx.error) { setResult({ type:"warn", text:`${label}: ${tx.error}` }); return; }
+    const bs = parseBalanceSheet(tx);
+    if (bs) { applySheet(bs, "end", label); return; }
+    const summary = summarizeTransactions(tx);
+    if (summary.layout === "budget") {
+      setFA(s => ({ ...applyToS3(s, budgetToS3(summary.lines), `budget:${tx.name}`).state, s3budgetApplied:tx.name }));
+      setResult({ type:"ok", text:`${label}: read as an operating budget (income ${fmt$(summary.inflow)}, expenses ${fmt$(summary.outflow)}) and sorted into the Financial inputs tab.` });
+      return;
+    }
+    setResult({ type:"warn", text:`${label}: could not be read as a balance sheet. It needs line items with asset and liability labels and a value column; columns found were ${tx.headers.length ? tx.headers.map(h => `“${h}”`).join(", ") : "empty"}.` });
+  };
+  const onUpload = e => {
+    const file = e.target.files?.[0]; e.target.value = ""; if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => readTx(readFinancialCsv(reader.result, file.name), file.name);
+    reader.onerror = () => setResult({ type:"warn", text:`${file.name} could not be read. Try exporting it again as CSV.` });
+    reader.readAsText(file);
+  };
+  const useStored = async doc => {
+    setBusy(doc.id); setResult(null);
+    try {
+      const response = await fetch(`/api/document-content?pathname=${encodeURIComponent(doc.pathname)}`, { credentials:"include", headers:{ "X-MFP-Record": recordId() } });
+      const payload = await response.json().catch(() => null);
+      if (!response.ok || typeof payload?.text !== "string") throw new Error(payload?.error || `Could not read ${doc.name} from storage.`);
+      readTx(readFinancialCsv(payload.text, doc.name), doc.name);
+    } catch (error) {
+      setResult({ type:"warn", text:error.message || `Could not read ${doc.name} from storage.` });
+    }
+    setBusy(null);
+  };
+  const budgetSummary = Object.entries(budgetPatch).map(([k, v]) => `${S3_LABELS[k] || k} ${fmt$(Number(v))}`).join(" · ");
+  return (
+    <div style={cardStyle({ borderTop:`4px solid ${T.blue}` })}>
+      <div style={cardLblStyle()}>Bring in your records</div>
+      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16 }}>
+        <div>
+          <label style={labelStyle}>Upload a balance sheet</label>
+          <span style={{ fontSize:11, color:T.fgS, marginBottom:6, display:"block", fontStyle:"italic" }}>CSV from your lender or spreadsheet. One value column is applied as the end-of-year snapshot; two columns fill beginning and end of year.</span>
+          <input type="file" accept=".csv,text/csv,text/plain" onChange={onUpload} style={{ width:"100%", padding:10, border:`1px dashed ${T.blue}`, borderRadius:8, background:T.blueL }} />
+          {lastSheet && !lastSheet.bs.twoColumn && <button type="button" onClick={() => applySheet(lastSheet.bs, lastSheet.snapshot === "begin" ? "end" : "begin", lastSheet.bs.name)} style={{ ...btnStyle("outline"), fontSize:11.5, padding:"6px 12px", marginTop:8 }}>{lastSheet.snapshot === "begin" ? "Apply as end-of-year instead" : "Apply as beginning-of-year instead"}</button>}
+        </div>
+        <div>
+          <label style={labelStyle}>Use a stored document</label>
+          <span style={{ fontSize:11, color:T.fgS, marginBottom:6, display:"block", fontStyle:"italic" }}>CSV files uploaded in Stage 3 are kept with this analysis and can be read into the ratio inputs here.</span>
+          {docs.length === 0 ? <div style={{ fontSize:12.5, color:T.fgM, background:T.bgAlt, borderRadius:8, padding:"10px 12px" }}>No stored CSV documents yet. Upload one here, or add it in Stage 3 and come back.</div>
+            : docs.map(doc => <div key={doc.id} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", gap:10, padding:"8px 0", borderBottom:`1px solid ${T.div}` }}><div style={{ minWidth:0 }}><div style={{ fontSize:12.5, fontWeight:600, color:T.navy, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{doc.name}</div><div style={{ fontSize:11, color:T.fgS }}>{Math.max(1, Math.round((doc.size || 0) / 1024))} KB</div></div><button type="button" onClick={() => useStored(doc)} disabled={busy === doc.id} style={{ ...btnStyle("outline"), fontSize:11.5, padding:"6px 12px", whiteSpace:"nowrap" }}>{busy === doc.id ? "Reading…" : "Read into ratios"}</button></div>)}
+        </div>
+      </div>
+      <div style={{ marginTop:14, background:T.bgAlt, borderRadius:8, padding:"10px 12px", fontSize:12.5, color:T.fgM, lineHeight:1.5 }}>
+        {budgetLines.length ? <><strong style={{ color:T.navy }}>Operating budget ({budgetName}).</strong> {budgetSummary}. Sorted into the Financial inputs tab; principal, family living and income taxes are kept out of operating expenses.</> : <><strong style={{ color:T.navy }}>Operating budget.</strong> Import a budget in Stage 4 (or Stage 3) and its income and expense lines will fill the Financial inputs tab here.</>}
+      </div>
+      {result && <div style={{ marginTop:12 }}><Flag type={result.type === "ok" ? "info" : "warn"}>{result.text}</Flag></div>}
+    </div>
+  );
+}
+
 function FA3({ fa, setFA }) {
   const s3 = fa.s3vals;
-  const v = id => s3[id]||""; const sv = (id,val) => setFA(s=>({...s,s3vals:{...s.s3vals,[id]:val}}));
-  const { hasData, hasAccrualData, nfi, nfifo, oer, dscr, assetTurnover, sgr, ratios: RATIOS } = computeFARatios(s3);
+  const src = fa.s3src || {};
+  const v = id => s3[id]||""; const sv = (id,val) => setFA(s=>{ const nextSrc = { ...(s.s3src||{}) }; delete nextSrc[id]; return {...s,s3vals:{...s.s3vals,[id]:val}, s3src:nextSrc}; });
+  const fieldNote = id => { const from = describeS3Source(src[id]); if (from) return <span style={{ fontSize:10.5, color:T.dgreen, display:"block", marginTop:4, fontWeight:600 }}>{from}</span>; if (v(id) && v(id) === GENERIC_FARM_FINANCIALS[id]) return <span style={{ fontSize:10.5, color:T.fgS, display:"block", marginTop:4, fontStyle:"italic" }}>Example value — replace with your own or import a record above</span>; return null; };
+  const R = computeFARatios(s3);
+  const { hasData, hasAccrualData, nfi, nfifo, oer, dscr, assetTurnover, sgr, ratios: RATIOS } = R;
   const [showAccrual, setShowAccrual] = useState(hasAccrualData);
   const [ratioTab, setRatioTab] = useState("balance");
+  const entList = ((fa.ent||{}).list)||[];
+  const entKinds = [...new Set(entList.map(e => (FINANCIAL_ENT_KINDS.find(k => k[0] === e.kind) || [])[1]).filter(Boolean))];
+  const peerClassKnown = R.tenureClass !== null && entKinds.length > 0;
+  const conf = basisConfidence(fa.accounting);
+  // Needed to make ratios comparable across farms. These separate performance from
+  // balance sheet structure, which is what a fixed benchmark cannot do.
+  const NORM_INPUTS = [
+    {id:"landValue",label:"Market value of owned farmland",sub:"The land portion of your total assets. Enter 0 if you rent everything.",pre:"$"},
+    {id:"machineryValue",label:"Market value of machinery and equipment",sub:"What the line would sell for, not book value",pre:"$"},
+    {id:"laborCost",label:"Hired labor cost",sub:"Wages, payroll taxes and benefits for everyone you pay",pre:"$"},
+    {id:"ownerLaborValue",label:"Value of unpaid operator and family labor",sub:"What you would have to pay someone to do the work you and your family do unpaid",pre:"$"},
+    {id:"fte",label:"Full-time equivalent workers",sub:"Including yourself. Two half-time people count as one."},
+    {id:"repairs",label:"Machinery repairs and parts",sub:"Schedule F line 25",pre:"$"},
+    {id:"fuelOil",label:"Fuel and oil",sub:"Schedule F line 17",pre:"$"},
+  ];
   const INPUTS = [{id:"gross",label:"Gross farm income",sub:"Total farm revenue for the year",pre:"$"},{id:"opex",label:"Total operating expenses",sub:"Cash operating costs, before depreciation and interest",pre:"$"},{id:"inputs",label:"Input costs (seed, fert, chem, fuel)",sub:"Estimate if not tracked separately",pre:"$"},{id:"rent",label:"Land rent paid",sub:"Cash rent paid to landlords",pre:"$"},{id:"depr",label:"Depreciation",sub:"From your tax return or accountant",pre:"$"},{id:"interest",label:"Interest paid",sub:"From loan statements",pre:"$"},{id:"acres",label:"Total acres farmed",sub:"Owned + rented",suf:"ac"},{id:"principal",label:"Annual principal payments",sub:"From loan statements",pre:"$"}];
   const BS_INPUTS = [{id:"currentAssets",label:"Current farm assets",sub:"Cash, receivables, inventory, prepaid, anything convertible within 12 months",pre:"$"},{id:"currentLiab",label:"Current farm liabilities",sub:"Operating line, payables, accrued interest, principal due within 12 months",pre:"$"},{id:"beginAssets",label:"Beginning-of-year total farm assets",sub:"From your lender's balance sheet or net worth statement",pre:"$"},{id:"beginLiab",label:"Beginning-of-year total farm liabilities",sub:"Loan balances as of January 1",pre:"$"},{id:"endAssets",label:"End-of-year total farm assets",sub:"From your lender's balance sheet or net worth statement",pre:"$"},{id:"endLiab",label:"End-of-year total farm liabilities",sub:"Loan balances as of December 31",pre:"$"},{id:"livingWithdrawals",label:"Family living withdrawals",sub:"Cash taken out for household expenses",pre:"$"},{id:"incomeTaxes",label:"Income taxes paid",sub:"From your tax return or accountant",pre:"$"}];
   const ACCRUAL_ITEMS = [
@@ -947,6 +1410,7 @@ function FA3({ fa, setFA }) {
   return (
     <div>
       <Head eyebrow="Financial Analysis · Stage 6" title="Ratio deep dive" sub="Enter your financial data — from your MFP Financial Data Worksheet, your own records, or your best estimate. Ratios calculate automatically as you type." showFinancialVisual={false} /><div style={{ display:"flex", gap:8, flexWrap:"wrap", borderBottom:`1px solid ${T.border}`, marginBottom:20 }}><button type="button" onClick={()=>setRatioTab("balance")} style={{ ...btnStyle(ratioTab==="balance"?"primary":"outline"), borderRadius:8, marginBottom:8 }}>Balance sheet snapshot</button><button type="button" onClick={()=>setRatioTab("scorecard")} style={{ ...btnStyle(ratioTab==="scorecard"?"primary":"outline"), borderRadius:8, marginBottom:8 }}>Ratio scorecard</button><button type="button" onClick={()=>setRatioTab("inputs")} style={{ ...btnStyle(ratioTab==="inputs"?"primary":"outline"), borderRadius:8, marginBottom:8 }}>Financial inputs & accrual</button></div>
+      <RatioRecordsImport fa={fa} setFA={setFA} />
           <div style={{ display:ratioTab==="inputs"?"block":"none" }}>{/* financial inputs and accrual adjustments */}<div style={cardStyle()}>
         <div style={cardLblStyle()}>Financial data</div>
         <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16 }}>
@@ -959,6 +1423,7 @@ function FA3({ fa, setFA }) {
                 <input type="number" style={inputStyle()} placeholder="Enter value" value={v(f.id)} onChange={e=>sv(f.id,e.target.value)} />
                 {f.suf && <span style={{ fontSize:13, color:T.fgS }}>{f.suf}</span>}
               </div>
+              {fieldNote(f.id)}
             </div>
           ))}
         </div>
@@ -975,9 +1440,54 @@ function FA3({ fa, setFA }) {
                 {f.pre && <span style={{ fontSize:13, color:T.fgS }}>{f.pre}</span>}
                 <input type="number" style={inputStyle()} placeholder="Enter value" value={v(f.id)} onChange={e=>sv(f.id,e.target.value)} />
               </div>
+              {fieldNote(f.id)}
             </div>
           ))}
         </div>
+      </div>
+      <div style={{ ...cardStyle({ borderTop:`4px solid ${T.blue}` }), display:ratioTab==="balance"?"block":"none" }}>
+        <div style={cardLblStyle()}>What makes your ratios comparable to another farm</div>
+        <div style={{ fontSize:12.5, color:T.fgM, marginBottom:4, lineHeight:1.55 }}>
+          Two operations with identical crops, yields and management can show an operating expense ratio of 67% or 98% depending on whether they own their ground or rent it. Neither is better run. Any benchmark that compares both against the same threshold is measuring balance sheet structure and calling it performance.
+        </div>
+        <div style={{ fontSize:12.5, color:T.fgM, marginBottom:16, lineHeight:1.55 }}>
+          These figures separate performance from structure. Land value and unpaid labour unlock the two normalised measures; labour cost and FTEs are the only financial measures of human capital in the standard set.
+        </div>
+        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16 }}>
+          {NORM_INPUTS.map(f => (
+            <div key={f.id}>
+              <label style={labelStyle}>{f.label}</label>
+              <span style={{ fontSize:11, color:T.fgS, marginBottom:6, display:"block", fontStyle:"italic" }}>{f.sub}</span>
+              <div style={{ display:"flex", alignItems:"center", gap:6 }}>
+                {f.pre && <span style={{ fontSize:13, color:T.fgS }}>{f.pre}</span>}
+                <input type="number" style={inputStyle()} placeholder="Enter value" value={v(f.id)} onChange={e=>sv(f.id,e.target.value)} />
+              </div>
+              {fieldNote(f.id)}
+            </div>
+          ))}
+        </div>
+        {hasData && R.hasNormInputs && (
+          <div style={{ marginTop:16, background:T.bgAlt, borderRadius:8, padding:"13px 16px" }}>
+            <div style={{ fontSize:10.5, letterSpacing:"0.13em", textTransform:"uppercase", color:T.fgS, marginBottom:10 }}>Your comparison class</div>
+            <div style={{ display:"flex", gap:26, flexWrap:"wrap" }}>
+              {[["Tenure", R.tenureClass || "—"],
+                ["Enterprise type", entKinds.length ? entKinds.join(", ") : "not recorded"],
+                ["Land as share of assets", R.ownedShare===null?"—":Math.round(R.ownedShare)+"%"],
+                ["Asset turnover · raw", R.assetTurnover===null?"—":Math.round(R.assetTurnover)+"%"],
+                ["Asset turnover · land excluded", R.opAssetTurnover===null?"—":Math.round(R.opAssetTurnover)+"%"],
+                ["Economic total expense", R.econTotalExpense===null?"—":R.econTotalExpense.toFixed(2)],
+                ["Labour efficiency", R.laborEfficiency===null?"—":R.laborEfficiency.toFixed(1)+"%"],
+                ["Revenue per FTE", R.laborProductivity===null?"—":fmt$(R.laborProductivity)]].map(([l,val],k)=>(
+                <div key={k}><div style={{ fontSize:11, color:T.fgS, marginBottom:3 }}>{l}</div>
+                <div style={{ fontSize:17, fontWeight:600, color:T.navy, textTransform:k===0?"capitalize":"none" }}>{val}</div></div>
+              ))}
+            </div>
+            <p style={{ fontSize:12, color:T.fgM, margin:"11px 0 0", lineHeight:1.6 }}>
+              Operating asset turnover strips land out, so it compares directly against a farm with the opposite tenure. Economic total expense charges owned land at {Math.round(FA_LAND_CAP_RATE*100)}% and your own unpaid labour at market; below 1.00 is a true economic profit, and most farms sit above it.
+              {R.laborEfficiency!==null && ` Labour target for your enterprise mix: ${laborTargetFor(fa).basis}.`}
+            </p>
+          </div>
+        )}
       </div>
       <div style={cardStyle()}>
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:showAccrual?14:0 }}>
@@ -1010,25 +1520,47 @@ function FA3({ fa, setFA }) {
           </>
         )}
       </div>
-      {hasData && (
+      {(
         <div style={{ ...cardStyle({ borderTop:`4px solid ${T.green}` }), display:ratioTab==="scorecard"?"block":"none" }}>
           <div style={cardLblStyle()}>Ratio scorecard{hasAccrualData && <span style={{ ...pillStyle("info"), marginLeft:10, fontSize:10 }}>Accrual-adjusted</span>}</div>
-          <div style={{ display:"grid", gridTemplateColumns:"1fr 100px 160px", gap:8, background:T.bgAlt, borderRadius:6, padding:"8px 12px", marginBottom:4 }}>
-            {["Ratio","Your value","Benchmark"].map((hh,i)=>(<div key={i} style={{ fontSize:11, fontWeight:700, color:T.fgS, textTransform:"uppercase", letterSpacing:"0.05em", textAlign:i===1?"right":"left" }}>{hh}</div>))}
-          </div>
-          {RATIOS.map((r,i) => (
-            <div key={i} style={{ display:"grid", gridTemplateColumns:"1fr 100px 160px", gap:8, padding:"10px 12px", borderBottom:`1px solid ${T.div}`, alignItems:"center" }}>
-              <div style={{ fontSize:13 }}>{r.label}</div>
-              <div style={{ fontSize:18, fontWeight:800, color:scColor(r.status), textAlign:"right" }}>{r.val}</div>
-              <div style={{ fontSize:11.5, color:T.fgS }}>{r.bench}</div>
+          {!hasData && <div style={{ marginBottom:12 }}><Flag type="info">Liquidity and solvency ratios calculate from the balance sheet alone. Efficiency and growth ratios also need {[!(parseFloat(s3.gross)>0) && "gross farm income", !(parseFloat(s3.opex)>0) && "operating expenses", !(parseFloat(s3.acres)>0) && "total acres farmed"].filter(Boolean).join(", ")} in the Financial inputs tab.</Flag></div>}
+          {hasData && !peerClassKnown && (
+            <div style={{ marginBottom:12 }}>
+              <Flag type="warn">
+                <b>Tier 2 and 3 labels below are not yet comparable.</b> Only Tier 1 ratios can honestly be read against a fixed strong / watch / vulnerable label. The rest need a peer class, and yours is incomplete: {[R.tenureClass===null && "enter owned land value in the Balance sheet tab to set your tenure class", entKinds.length===0 && "add your enterprises in Stage 2 to set your enterprise type"].filter(Boolean).join("; ")}. Until then, treat those labels as a row-crop, mixed-tenure reading rather than a verdict.
+              </Flag>
             </div>
-          ))}
+          )}
+          {hasData && peerClassKnown && (
+            <div style={{ marginBottom:12 }}>
+              <Flag type="info">Tier 2 labels are read against a <b>{R.tenureClass}, {entKinds.join(" / ").toLowerCase()}</b> peer class. Tier 3 ratios carry a structural denominator; the land-excluded and economic versions in the Balance sheet tab are the comparable forms.</Flag>
+            </div>
+          )}
+          <div style={{ display:"grid", gridTemplateColumns:"1fr 54px 100px 160px", gap:8, background:T.bgAlt, borderRadius:6, padding:"8px 12px", marginBottom:4 }}>
+            {["Ratio","Tier","Your value","Benchmark"].map((hh,i)=>(<div key={i} style={{ fontSize:11, fontWeight:700, color:T.fgS, textTransform:"uppercase", letterSpacing:"0.05em", textAlign:i===2?"right":i===1?"center":"left" }}>{hh}</div>))}
+          </div>
+          {RATIOS.map((r,i) => {
+            const qualified = r.tier !== 1 && r.status !== "blank";
+            return (
+              <div key={i} style={{ display:"grid", gridTemplateColumns:"1fr 54px 100px 160px", gap:8, padding:"10px 12px", borderBottom:`1px solid ${T.div}`, alignItems:"center" }}>
+                <div style={{ fontSize:13 }}>{r.label}</div>
+                <div style={{ textAlign:"center" }} title={FA_TIER[r.tier].desc}><span style={{ ...pillStyle(r.tier===1?"strong":r.tier===2?"info":"blank"), letterSpacing:"0.06em" }}>{FA_TIER[r.tier].short}</span></div>
+                <div style={{ fontSize:18, fontWeight:800, color:qualified && !peerClassKnown ? T.fgM : scColor(r.status), textAlign:"right" }}>{r.val}</div>
+                <div style={{ fontSize:11.5, color:T.fgS }}>{r.bench}{qualified && <span style={{ display:"block", fontSize:10.5, fontStyle:"italic" }}>{r.tier===3?"needs normalising":peerClassKnown?"within peer class":"peer class pending"}</span>}</div>
+              </div>
+            );
+          })}
+          <div style={{ display:"flex", gap:16, flexWrap:"wrap", marginTop:12, fontSize:11.5, color:T.fgS, lineHeight:1.5 }}>
+            {[1,2,3].map(t => <div key={t} style={{ flex:"1 1 200px" }}><b style={{ color:T.fgM }}>{FA_TIER[t].label}.</b> {FA_TIER[t].desc}</div>)}
+          </div>
           <div style={{ marginTop:14 }}>
             {nfi!==null && nfi<0 && <Flag type="danger">Net farm income is negative — depreciation and interest are eroding equity.</Flag>}
-            {oer!==null && oer>80 && <Flag type="danger">OER above 80% — operating costs consume more than 80 cents of every revenue dollar.</Flag>}
+            {nfi!==null && nfi>=0 && R.econTotalExpense!==null && R.econTotalExpense>1 && <Flag type="warn">Cash net farm income is positive, but the economic total expense ratio is {R.econTotalExpense.toFixed(2)}. Once owned land and your own labour are charged at market, this operation is not earning a return on them. That is a precise way into a conversation that is otherwise difficult to open.</Flag>}
+            {oer!==null && oer>80 && <Flag type={peerClassKnown && R.tenureClass==="renter-heavy" ? "warn" : "danger"}>OER above 80% — operating costs consume more than 80 cents of every revenue dollar.{R.tenureClass==="renter-heavy" && " Rent sits in operating cost, so a renter-heavy operation runs structurally higher here; compare against renters, not owners."}</Flag>}
             {dscr!==null && dscr<1 && <Flag type="danger">DSCR below 1.0x — net income does not cover debt service. Contact your Farm Credit advisor.</Flag>}
-            {sgr!==null && sgr<0 && <Flag type="danger">Sustainable growth rate is negative — the farm is drawing down equity to cover living expenses and taxes, not building it.</Flag>}
-            {assetTurnover!==null && assetTurnover<20 && <Flag type="warn">Asset turnover below 20% — a large asset base relative to the revenue it generates. Common for land-heavy operations, but worth understanding why.</Flag>}
+            {sgr!==null && sgr<0 && <Flag type="danger">Sustainable growth rate is negative — the farm is drawing down equity to cover living expenses and taxes, not building it.{R.tenureClass==="renter-heavy" && " On a thin equity base this ratio swings violently; read it alongside debt service coverage."}</Flag>}
+            {assetTurnover!==null && assetTurnover<20 && <Flag type="warn">Asset turnover below 20% — a large asset base relative to the revenue it generates.{R.opAssetTurnover!==null ? ` With land excluded it is ${Math.round(R.opAssetTurnover)}%, which is the figure to compare against another farm.` : " Common for land-heavy operations; enter owned land value to see the land-excluded figure."}</Flag>}
+            {conf.level==="Low" && <Flag type="warn">Accounting profile is low confidence: {conf.note} Profitability ratios here are indicative, and will not override your assessed Financial analysis score.</Flag>}
           </div>
         </div>
       )}
@@ -3282,7 +3814,7 @@ function RD3({ rd, setRData, fa, goFA }) {
 
 // ──────────────────────────────────────────────────────────────────────────
 // RD STAGE 4 — Opportunity mapping
-// ─────────────────────────────────────────────────────────────────────────────
+// ───────────────────────────────────────────���─────────────────────────────────
 const GROWTH_TIER_LABEL = { 1:"Tier 1 · Fastest structural growth", 2:"Tier 2 · Strong growth", 3:"Tier 3 · Steady & selective" };
 const GROWTH_TIER_COLOR = { 1:T.dgreen, 2:T.blue, 3:T.tan };
 
@@ -3928,12 +4460,183 @@ const AP_AREAS = [
   { n:12, id:"succession", label:"Succession & transition",      cat:"legacy",       score:2.6, weight:"constraint", module:"legacy" },
 ];
 
+// ═════════════════════════════════════════════════════════════════════════════
+// METRIC OVERRIDES — question-level, against the MFP assessment profile
+// ═════════════════════════════════════════════════════════════════════════════
+// The instrument measures maturity; metrics measure outcome. Of 46 questions only
+// two literally ask for a number (D1, R2) and take a full override. Nine more are
+// bounded by a metric: lifted at most one band, dropped up to two, because a bad
+// metric is stronger evidence than a good one. Everything else is the conversation's
+// alone. The engine that applies these lives in mfp-profile.js; this registry is
+// the part that knows this project's data shapes.
+const band5 = (v, cuts) => { for (const [t,s] of cuts) if (v >= t) return s; return cuts[cuts.length-1][1]; };
+const BOOK_SYSTEM_RECORDS = { paper:1, sheet:2, generic:3, farm:4, service:3 };
+const TRACK_SCORE = { full:5.0, partial:3.5, revOnly:2.0, none:1.0 };
+
+// Shared inputs for every override, computed once per run.
+const mfpContext = (fa, rd, mfp) => ({ fa:fa||{}, rd:rd||{}, mfp:mfp||null, ratios:computeFARatios(((fa||{}).s3vals)||{}) });
+const lowAccounting = (fa) => basisConfidence((fa||{}).accounting).level === "Low";
+
+// D1 — the question asks the farmer to estimate a share that can be computed exactly.
+const computeD1 = ({ fa, mfp }) => {
+  const ops = (((fa||{}).ent||{}).list)||[];
+  const entShares = ops.map(o=>parseFloat(o.revenue)).filter(v=>v>0);
+  let shares, n, confidence, from;
+  if (ops.length >= 2 && entShares.length >= 2) {
+    shares = entShares; n = ops.length; from = "your enterprise revenue";
+    confidence = entShares.length === ops.length ? "high" : "medium";
+  } else {
+    const alloc = Object.values((mfp && mfp.revenueAllocation) || {}).map(v=>parseFloat(v)).filter(v=>v>0);
+    if (alloc.length < 2) return null;
+    shares = alloc; n = alloc.length; from = "the revenue allocation recorded in the assessment"; confidence = "medium";
+  }
+  const h = revenueHHI(shares);
+  if (!h) return null;
+  const score = band5(h.effective, [[4.5,5.0],[3.5,4.3],[2.5,3.5],[1.8,2.5],[1.3,1.6],[0,1.0]]);
+  return { score, raw:`${h.effective.toFixed(2)} effective streams from ${n} sources`,
+    detail:`Measured from ${from}, not self-reported. HHI ${h.hhi.toFixed(2)}, largest share ${Math.round(h.dominant*100)}%.`, confidence };
+};
+
+// R2 — the anchors are the accounting profile already captured in Stage 1.
+const computeR2 = ({ fa }) => {
+  const ap = (fa||{}).accounting||{};
+  if (!ap.system || !ap.basis) return null;
+  let base = BOOK_SYSTEM_RECORDS[ap.system] || 1;
+  if (convReady(ap)) base += 1;
+  if (ap.basis === "accrual") base += 0.5;
+  const sys = (BOOK_SYSTEM.find(s=>s[0]===ap.system)||[])[1] || ap.system;
+  return { score:clamp5(base), raw:`${sys}${convReady(ap)?", two balance sheets available":""}`,
+    detail:"Measured from what you actually keep and whether accrual conversion is possible, rather than from an impression of how organised the records are.", confidence:"high" };
+};
+
+// W1, W2 — labour against an enterprise-specific target. The common 11% figure is
+// a row-crop number; against it a well-run orchard at 24.8% would score 1.0.
+const computeW = ({ fa, ratios }) => {
+  if (!ratios.hasData || ratios.laborEfficiency === null) return null;
+  const { target, basis } = laborTargetFor(fa);
+  const inv = target / (ratios.laborEfficiency/100);
+  const score = band5(inv, [[1.25,4.6],[1.0,3.8],[0.77,2.8],[0.59,1.8],[0,1.0]]);
+  return { score, raw:`Labour at ${ratios.laborEfficiency.toFixed(1)}% of revenue${ratios.laborProductivity?`, ${fmt$(ratios.laborProductivity)} per FTE`:""}`,
+    detail:`${inv >= 1 ? "Within" : "Above"} the ${basis}.`,
+    confidence: lowAccounting(fa) ? "low" : ratios.fte > 0 ? "high" : "medium" };
+};
+
+// R4 — the four conversion-readiness checks.
+const computeR4 = ({ fa }) => {
+  const conv = ((fa||{}).accounting||{}).conv || {};
+  const answered = Object.values(conv).filter(v => v === "yes" || v === "no");
+  if (!answered.length) return null;
+  const yes = answered.filter(v=>v==="yes").length;
+  return { score: yes === 4 ? 4.5 : yes >= 2 ? 3.0 : 2.0, raw:`${yes} of ${CONVERSION_CHECKS.length} conversion-readiness checks in place`,
+    detail:"Balance sheets at both ends of the year, matched to the fiscal year, with receivable, payable, inventory and prepaid detail.", confidence:"high" };
+};
+
+// D3 — the worst tracking level, not the mean. A farm cannot claim it evaluates
+// every stream when one is untracked.
+const computeD3 = ({ fa }) => {
+  const ops = (((fa||{}).ent||{}).list)||[];
+  const levels = ops.map(o => o.tracking).filter(t => TRACK_SCORE[t] !== undefined);
+  if (!levels.length) return null;
+  const worst = levels.reduce((w,t) => TRACK_SCORE[t] < TRACK_SCORE[w] ? t : w, levels[0]);
+  const label = ((FINANCIAL_TRACKING.find(x=>x[0]===worst)||[])[1] || worst).toLowerCase();
+  return { score:TRACK_SCORE[worst], raw:`Weakest enterprise tracking: ${label}`,
+    detail:`The lowest tracking level across ${ops.length} enterprise${ops.length===1?"":"s"} sets the score, not the average.`, confidence:"high" };
+};
+
+// A1–A4 — applied at block level; outcome evidence, so never above medium confidence.
+// The machinery cost bands are general figures awaiting a sourced regional benchmark.
+const computeA = ({ fa, ratios }) => {
+  const at = ratios.assetTurnover, mpa = ratios.machCostPerAcre;
+  if (at == null || mpa == null) return null;
+  const atScore = at >= 40 ? 4.5 : at >= 30 ? 3.5 : at >= 20 ? 2.5 : 1.5;
+  const machScore = mpa <= 120 ? 4.5 : mpa <= 160 ? 3.5 : mpa <= 220 ? 2.5 : 1.5;
+  return { score:(atScore+machScore)/2, raw:`Asset turnover ${at.toFixed(0)}%, machinery cost ${fmt$(mpa)} per acre`,
+    detail:"Outcome evidence rather than process evidence, so it is held at medium confidence and applied to the whole block.",
+    confidence: lowAccounting(fa) ? "low" : "medium" };
+};
+
+// F2 — what the farmer said their ratios were, against what the books compute.
+// Not knowing a ratio is itself the data point.
+const statedValue = (fh, keys) => { for (const k of keys) { const v = fh[k]; if (v !== undefined && v !== null && v !== "") return v; } return undefined; };
+const computeF2 = ({ mfp, ratios }) => {
+  const fh = (mfp && mfp.financialHealth) || {};
+  const pairs = [
+    { label:"current ratio", stated:statedValue(fh, ["currentRatio","current_ratio"]), computed:ratios.currentRatio, norm:v=>v, fmt:v=>v.toFixed(2) },
+    { label:"debt-to-asset", stated:statedValue(fh, ["debtToAsset","debt_to_asset","debtToAssetRatio"]), computed:ratios.debtToAsset, norm:v=>v<=1?v*100:v, fmt:v=>`${v.toFixed(0)}%` },
+  ].filter(p => p.stated !== undefined);
+  if (!pairs.length) return null;
+  const scores = [], parts = [];
+  for (const p of pairs) {
+    if (p.stated === "not-tracked") { scores.push(1.0); parts.push(`${p.label} not tracked`); continue; }
+    const s = parseFloat(p.stated);
+    if (!Number.isFinite(s) || !(Math.abs(p.computed) > 0)) continue;
+    const v = p.norm(s), err = Math.abs(v - p.computed)/Math.abs(p.computed);
+    scores.push(err <= 0.15 ? 4.5 : err <= 0.35 ? 3.0 : 1.5);
+    parts.push(`${p.label} stated ${p.fmt(v)} vs ${p.fmt(p.computed)} computed, ${Math.round(err*100)}% off`);
+  }
+  if (!scores.length) return null;
+  return { score:scores.reduce((a,b)=>a+b,0)/scores.length, raw:parts.join("; "),
+    detail:"Stated during the assessment, compared with the value computed from your financial data. Within 15% counts as known, because farmers round.", confidence:"high" };
+};
+
+const MFP_QUESTION_OVERRIDES = [
+  { questionId:"D1", type:"full",    source:"effectiveRevenueStreams",     label:"Revenue concentration", compute:computeD1 },
+  { questionId:"R2", type:"full",    source:"accountingProfile",           label:"Financial records", compute:computeR2 },
+  { questionId:"W1", type:"partial", source:"laborEfficiency",             group:"workforce", groupLabel:"Workforce planning", compute:computeW },
+  { questionId:"W2", type:"partial", source:"laborEfficiency",             group:"workforce", groupLabel:"Workforce planning", compute:computeW },
+  { questionId:"R4", type:"partial", source:"conversionReadiness",         label:"Timeliness and accuracy of financials", compute:computeR4 },
+  { questionId:"D3", type:"partial", source:"enterpriseTracking",          label:"Performance evaluation per stream", compute:computeD3 },
+  { questionId:"A1", type:"partial", source:"assetTurnoverMachineryCost",  group:"adoption", groupLabel:"Adoption, efficiency and decision analytics", compute:computeA },
+  { questionId:"A2", type:"partial", source:"assetTurnoverMachineryCost",  group:"adoption", groupLabel:"Adoption, efficiency and decision analytics", compute:computeA },
+  { questionId:"A3", type:"partial", source:"assetTurnoverMachineryCost",  group:"adoption", groupLabel:"Adoption, efficiency and decision analytics", compute:computeA },
+  { questionId:"A4", type:"partial", source:"assetTurnoverMachineryCost",  group:"adoption", groupLabel:"Adoption, efficiency and decision analytics", compute:computeA },
+  { questionId:"F2", type:"partial", source:"statedVsComputedRatios",      label:"Monitoring key ratios", compute:computeF2 },
+];
+const MFP_COVERAGE = coverageOf(MFP_QUESTION_OVERRIDES);
+
+// With a profile loaded, the twelve assessment blocks are the twelve action areas.
+// Block 1 has no counterpart in the sample areas and gets its own id.
+const BLOCK_AREA = { 2:"workforce", 3:"records", 4:"market", 5:"incomediv", 6:"adoption", 7:"succession", 8:"knowledge", 9:"riskprot", 10:"vision", 11:"finanalysis", 12:"advantage" };
+const BLOCK_CAT = { 1:"fundamentals", 2:"fundamentals", 3:"fundamentals", 4:"growth", 5:"growth", 6:"production", 7:"legacy", 8:"legacy", 9:"production", 10:"fundamentals", 11:"growth", 12:"fundamentals" };
+const apAreasFromProfile = (scored) => MFP_BLOCKS.map(b => {
+  const mapped = AP_AREAS.find(a => a.id === BLOCK_AREA[b.n]);
+  const bs = scored.blocks[String(b.n)];
+  const score = bs.mean5 == null ? 1 : bs.mean5;
+  return { n:b.n, block:b.n, id:mapped ? mapped.id : "orgstructure", label:b.short, cat:BLOCK_CAT[b.n], weight:mapped ? mapped.weight : "standard", module:mapped ? mapped.module : null,
+    score, assessed:bs.assessedMean5 == null ? score : bs.assessedMean5, measured:bs.overridden, badge:bs.badge };
+});
+const apCatsFromAreas = (areas) => Object.fromEntries(Object.entries(AP_CATS).map(([cid,c]) => {
+  const rs = areas.filter(a => a.cat === cid);
+  return [cid, { ...c, score: rs.length ? to100(rs.reduce((s,a)=>s+a.score,0)/rs.length) : c.score }];
+}));
+const apAreasSample = () => AP_AREAS.map(a => ({ ...a, assessed:a.score, measured:false, badge:null }));
+
+// Reads a Maximum Farm Potential profile file. A v1 assessment profile is validated
+// whole and rejected whole; anything else falls back to the loose field mapping.
+const readMFPProfileFile = (parsed) => {
+  if (isMFPProfile(parsed)) {
+    const { profile, error } = importProfile(parsed);
+    if (error) return { fields:null, error:`That assessment profile was rejected: ${error}` };
+    return { fields:{ ...(profileFromMFPExport(parsed) || {}), mfpProfile:profile }, error:null };
+  }
+  const fields = profileFromMFPExport(parsed);
+  return fields ? { fields, error:null } : { fields:null, error:"No recognizable farm profile fields were found in that file." };
+};
+const downloadJson = (obj, name) => {
+  const blob = new Blob([JSON.stringify(obj, null, 2)], { type:"application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = name;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url), 1000);
+};
+
 const AP_WEIGHT_LABEL = { constraint:"constraint-weighted", value:"value-weighted", standard:"" };
 const AP_WEIGHT_BOOST = { constraint:1.6, value:1.8, standard:1.0 };
 
 // Priority score: how far the area is from 5, amplified by its weight.
 const apPriorityScore = (a) => (5 - a.score) * AP_WEIGHT_BOOST[a.weight];
-const apRanked = () => [...AP_AREAS].sort((x,y) => apPriorityScore(y) - apPriorityScore(x));
+const apRanked = (areas) => [...(areas||AP_AREAS)].sort((x,y) => apPriorityScore(y) - apPriorityScore(x));
 const apOverall = 44;
 
 // Narrative content per area. Only the ranked-in areas need full detail; the rest
@@ -4040,19 +4743,266 @@ const FinancialHealthStrip = ({ fa }) => {
   );
 };
 
+// Provenance badge per question. Every displayed score carries one.
+const BADGE_PILL = { assessed:"blank", measured:"info", adjusted:"watch", "metric blocked":"blank", "not scored":"blank" };
+const BADGE_HELP = {
+  assessed:"From the conversation only",
+  measured:"Full override; the conversation score was not used",
+  adjusted:"Partial override; the assessment moved by the metric",
+  "metric blocked":"A metric exists but confidence was too low to apply",
+  "not scored":"No profile, and no full override available",
+};
+const ProvenanceBadge = ({ badge }) => <span title={BADGE_HELP[badge]} style={{ ...pillStyle(BADGE_PILL[badge] || "blank"), flexShrink:0 }}>{badge}</span>;
+
+// Upload control shared by both assessment states. Validation is whole-file: a
+// profile with a missing block or a 0 score is refused, never partially imported.
+const ProfileFileButton = ({ label, onFields, onError, variant="primary" }) => {
+  const ref = useRef(null);
+  const handle = (e) => {
+    const f = e.target.files && e.target.files[0];
+    e.target.value = "";
+    if (!f) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      let parsed;
+      try { parsed = JSON.parse(reader.result); } catch { onError("That file could not be read as JSON."); return; }
+      const { fields, error } = readMFPProfileFile(parsed);
+      if (error) { onError(error); return; }
+      onFields(fields);
+    };
+    reader.onerror = () => onError("That file could not be read.");
+    reader.readAsText(f);
+  };
+  return (<>
+    <button type="button" onClick={() => ref.current && ref.current.click()} style={{ ...btnStyle(variant), fontSize:13, padding:"8px 16px", minHeight:38 }}>{label}</button>
+    <input ref={ref} type="file" accept=".json,application/json" onChange={handle} style={{ display:"none" }} aria-label={label} />
+  </>);
+};
+
+// No profile uploaded: the modules still generate metrics, and this is what the
+// farmer sees. Full overrides score; partials show the raw metric and nothing else;
+// the rest is listed as needing the assessment. No base score is ever invented.
+function NoProfileView({ summary, onFields, onError }) {
+  const { scored, indicated, uncovered, coverage } = summary;
+  return (<>
+    <div style={cardStyle({ borderTop:`4px solid ${T.navy}` })}>
+      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", gap:12, flexWrap:"wrap", marginBottom:12 }}>
+        <div style={cardLblStyle({ marginBottom:0 })}>No assessment profile loaded</div>
+        <ProfileFileButton label="Upload MFP assessment profile" onFields={onFields} onError={onError} />
+      </div>
+      <p style={{ fontSize:13.5, color:T.fgM, margin:0, lineHeight:1.6 }}>
+        The MFP Conversational Assessment Guide scores {coverage.total} questions across {coverage.blocksTotal} business blocks on a 1–5 maturity scale. Until that profile is uploaded, the only scores on this page are the ones your module data can produce on its own. Nothing below is assumed or defaulted.
+      </p>
+    </div>
+
+    <div style={cardStyle()}>
+      <div style={cardLblStyle()}>What your numbers can score</div>
+      {scored.length ? scored.map(s => (
+        <div key={s.questionId} style={{ padding:"12px 0", borderBottom:`1px solid ${T.div}` }}>
+          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"baseline", gap:12, flexWrap:"wrap", marginBottom:4 }}>
+            <span style={{ fontSize:14.5, fontWeight:600, color:T.navy }}>{s.label} <span style={{ fontSize:11.5, fontWeight:400, color:T.fgS }}>· {s.questionId} · Block {s.block.n}</span></span>
+            <span style={{ display:"flex", alignItems:"baseline", gap:10 }}>
+              <span style={{ fontSize:18, fontWeight:600, color:T.navy }}>{s.score100}<span style={{ fontSize:11.5, fontWeight:400, color:T.fgS }}> / 100</span></span>
+              <ProvenanceBadge badge="measured" />
+            </span>
+          </div>
+          <div style={{ fontSize:12.5, color:T.fg, marginBottom:3 }}>{s.raw}</div>
+          <div style={{ fontSize:11.5, color:T.fgS, lineHeight:1.5 }}>{s.detail}</div>
+        </div>
+      )) : <div style={{ fontSize:13.5, fontStyle:"italic", color:T.fgS }}>Nothing yet. Revenue concentration scores once two or more enterprises have revenue in Financial Analysis Stage 2; financial records score once the accounting basis and system are set in Stage 1.</div>}
+    </div>
+
+    <div style={cardStyle()}>
+      <div style={cardLblStyle()}>What your numbers indicate but cannot score</div>
+      {indicated.length ? indicated.map(s => (
+        <div key={s.group} style={{ padding:"12px 0", borderBottom:`1px solid ${T.div}` }}>
+          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"baseline", gap:12, flexWrap:"wrap", marginBottom:4 }}>
+            <span style={{ fontSize:14.5, fontWeight:600, color:T.navy }}>{s.label} <span style={{ fontSize:11.5, fontWeight:400, color:T.fgS }}>· Block {s.block.n}</span></span>
+            <ProvenanceBadge badge="not scored" />
+          </div>
+          <div style={{ fontSize:12.5, color:T.fg, marginBottom:3 }}>{s.raw}</div>
+          <div style={{ fontSize:11.5, color:T.fgS, lineHeight:1.5 }}>{s.detail} This would adjust an assessment score. Without one, it stands as an observation rather than a rating.</div>
+        </div>
+      )) : <div style={{ fontSize:13.5, fontStyle:"italic", color:T.fgS }}>Nothing yet. Labour, enterprise tracking, conversion readiness and asset turnover indicators appear as the Financial Analysis module fills in.</div>}
+    </div>
+
+    <div style={cardStyle()}>
+      <div style={cardLblStyle()}>What the assessment would add</div>
+      <p style={{ fontSize:12.5, color:T.fgM, margin:"0 0 12px", lineHeight:1.55 }}>No financial metric bears on these blocks. Each one also feeds a module, which is the context for judging whether the assessment is worth the time.</p>
+      <div style={{ overflowX:"auto" }}>
+        <table style={{ width:"100%", borderCollapse:"collapse", fontSize:12.5 }}>
+          <thead><tr>{["Block","Covers","What depends on it"].map(h => <th key={h} style={{ textAlign:"left", padding:"8px 10px", background:T.bgAlt, color:T.fgM, fontSize:11, letterSpacing:"0.08em", textTransform:"uppercase", whiteSpace:"nowrap" }}>{h}</th>)}</tr></thead>
+          <tbody>{uncovered.map(u => {
+            const b = MFP_BLOCKS.find(x => x.n === u.n);
+            return <tr key={u.n}>
+              <td style={{ padding:"9px 10px", borderTop:`1px solid ${T.div}`, whiteSpace:"nowrap", fontWeight:600, color:T.navy }}>{u.n} · {b.short}</td>
+              <td style={{ padding:"9px 10px", borderTop:`1px solid ${T.div}`, color:T.fgM }}>{u.covers}</td>
+              <td style={{ padding:"9px 10px", borderTop:`1px solid ${T.div}`, color:T.fgM }}>{u.dependsOn}</td>
+            </tr>;
+          })}</tbody>
+        </table>
+      </div>
+    </div>
+
+    <Flag type="info">
+      Your module data can score {coverage.full} of {coverage.total} questions directly and indicate another {coverage.partial}. The remaining {coverage.none} need the conversational assessment, which covers {coverage.blocksUncovered} of the {coverage.blocksTotal} business blocks entirely on its own.
+    </Flag>
+  </>);
+}
+
+// Profile loaded: twelve blocks from effective scores, every question carrying its
+// provenance, assessed and measured side by side with the gap visible.
+function AssessmentProfileView({ mfp, scored, coverage, onFields, onError, onExport, onRemove }) {
+  const [openBlock, setOpenBlock] = useState(null);
+  const overrides = Object.entries(mfp.overrides || {});
+  const applied = overrides.filter(([,o]) => typeof o.applied === "number");
+  const blocked = overrides.filter(([,o]) => o.blocked);
+  const bigGaps = applied.filter(([,o]) => typeof o.assessed === "number" && Math.abs(o.applied - o.assessed) >= 1.0);
+  const when = mfp.assessment && mfp.assessment.date ? new Date(mfp.assessment.date).toLocaleDateString() : "date not recorded";
+  const method = { "officer-interview":"officer interview", "ai-guided":"AI-guided", "self-serve":"self-serve" }[(mfp.assessment||{}).method] || (mfp.assessment||{}).method || "method not recorded";
+  const st5 = (s) => s>=3.5?"strong":s>=2.5?"watch":"vuln";
+  return (<>
+    <div style={cardStyle({ borderTop:`4px solid ${T.navy}` })}>
+      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", gap:12, flexWrap:"wrap", marginBottom:14 }}>
+        <div>
+          <div style={cardLblStyle({ marginBottom:6 })}>Assessment profile</div>
+          <div style={{ fontSize:16, fontWeight:600, color:T.navy }}>{(mfp.farm && mfp.farm.name) || "Unnamed farm"}</div>
+          <div style={{ fontSize:12, color:T.fgS, marginTop:2 }}>Assessed {when} · {method}{mfp.assessment && mfp.assessment.interviewer ? ` · ${mfp.assessment.interviewer}` : ""}{mfp.lastMetricUpdate ? ` · metrics applied ${relTime(mfp.lastMetricUpdate)}` : ""}</div>
+        </div>
+        <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
+          <button type="button" onClick={onExport} style={{ ...btnStyle("outline"), fontSize:13, padding:"8px 16px", minHeight:38 }}>Export profile</button>
+          <ProfileFileButton label="Replace profile" variant="outline" onFields={onFields} onError={onError} />
+          <button type="button" onClick={onRemove} style={{ ...btnStyle("ghost"), fontSize:13, padding:"8px 14px", minHeight:38 }}>Remove</button>
+        </div>
+      </div>
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(160px,1fr))", gap:12 }}>
+        {[
+          ["Overall", scored.overall == null ? "—" : scored.overall, "/ 100", "mean of twelve block scores"],
+          ["Measured", overrides.filter(([,o]) => o.type==="full" && typeof o.applied==="number").length, `of ${coverage.full}`, "full overrides applied"],
+          ["Adjusted", overrides.filter(([,o]) => o.type==="partial" && typeof o.applied==="number").length, `of ${coverage.partial}`, "partial overrides applied"],
+          ["Assessed only", coverage.total - applied.length, `of ${coverage.total}`, "questions from the conversation alone"],
+        ].map(([l,v,u,n]) => (
+          <div key={l} style={{ background:T.bgAlt, borderRadius:8, padding:"12px 14px" }}>
+            <div style={{ fontSize:10.5, fontWeight:600, color:T.fgS, textTransform:"uppercase", letterSpacing:"0.05em", marginBottom:4 }}>{l}</div>
+            <div style={{ fontSize:22, fontWeight:600, color:T.navy }}>{v}<span style={{ fontSize:11.5, fontWeight:400, color:T.fgS }}> {u}</span></div>
+            <div style={{ fontSize:11, color:T.fgS, marginTop:2 }}>{n}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+
+    <div style={cardStyle()}>
+      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", gap:12, flexWrap:"wrap", marginBottom:6 }}>
+        <div style={cardLblStyle({ marginBottom:0 })}>Twelve blocks</div>
+        <span style={{ fontSize:11.5, color:T.fgS }}>Block score is the mean of its effective question scores. Tick marks show the assessed mean where a metric moved it.</span>
+      </div>
+      {MFP_BLOCKS.map(b => {
+        const bs = scored.blocks[String(b.n)];
+        const open = openBlock === b.n;
+        const st = bs.mean5 == null ? "blank" : st5(bs.mean5);
+        return (
+          <div key={b.n} style={{ borderBottom:`1px solid ${T.div}` }}>
+            <button type="button" onClick={() => setOpenBlock(open ? null : b.n)} aria-expanded={open} style={{ display:"flex", alignItems:"center", gap:12, width:"100%", padding:"10px 0", background:"none", border:"none", cursor:"pointer", font:"inherit", textAlign:"left" }}>
+              <span style={{ width:26, fontSize:11, color:T.fgS, flexShrink:0 }}>{String(b.n).padStart(2,"0")}</span>
+              <span style={{ width:210, fontSize:13, color:T.fg, fontWeight:500, flexShrink:0 }}>{b.short}</span>
+              <div style={{ flex:1, height:6, background:"#dde1e8", borderRadius:3, overflow:"visible", position:"relative" }}>
+                <div style={{ width:`${((bs.mean5||1)-1)/4*100}%`, height:"100%", background:scColor(st), borderRadius:3 }} />
+                {bs.overridden && bs.assessedMean5 != null && <div title={`Assessed ${bs.assessedMean5.toFixed(1)} / 5`} style={{ position:"absolute", top:-3, bottom:-3, left:`calc(${(bs.assessedMean5-1)/4*100}% - 1px)`, width:2, background:T.navy }} />}
+              </div>
+              <span style={{ width:56, textAlign:"right", fontSize:13, fontWeight:600, color:scColor(st), flexShrink:0 }}>{bs.mean5 == null ? "—" : bs.mean5.toFixed(1)}<span style={{ fontSize:10.5, fontWeight:400, color:T.fgS }}> /5</span></span>
+              <span style={{ width:60, textAlign:"right", fontSize:12, color:T.fgM, flexShrink:0 }}>{bs.score100 == null ? "—" : bs.score100}<span style={{ fontSize:10.5, color:T.fgS }}> /100</span></span>
+              <span style={{ width:84, display:"flex", justifyContent:"flex-end", flexShrink:0 }}>{bs.badge ? <ProvenanceBadge badge={bs.badge} /> : <span style={{ fontSize:11, color:T.fgS }}>{open ? "hide" : "show"}</span>}</span>
+            </button>
+            {open && (
+              <div style={{ padding:"4px 0 12px 38px" }}>
+                <div style={{ fontSize:11.5, color:T.fgS, marginBottom:8 }}>{b.label}</div>
+                {bs.questions.map(q => (
+                  <div key={q.id} style={{ padding:"8px 0", borderTop:`1px dashed ${T.border}` }}>
+                    <div style={{ display:"flex", alignItems:"baseline", gap:12, flexWrap:"wrap" }}>
+                      <span style={{ width:28, fontSize:11, color:T.fgS, flexShrink:0 }}>{q.id}</span>
+                      <span style={{ flex:1, minWidth:160, fontSize:13, color:T.fgM }}>{q.label}</span>
+                      <span style={{ fontSize:13, color:T.fgM, whiteSpace:"nowrap" }}>
+                        {q.override && typeof q.override.applied === "number" ? (<>
+                          assessed <b style={{ color:T.fgS }}>{q.assessed == null ? "—" : q.assessed.toFixed(1)}</b>
+                          <span style={{ color:T.fgS }}> → </span>
+                          {q.badge === "measured" ? "measured" : "applied"} <b style={{ color: q.assessed == null ? T.navy : q.applied < q.assessed ? T.red : q.applied > q.assessed ? T.dgreen : T.navy }}>{q.applied.toFixed(1)}</b>
+                          {q.assessed != null && q.applied !== q.assessed && <span style={{ color:T.fgS }}> ({q.applied > q.assessed ? "+" : ""}{(q.applied - q.assessed).toFixed(1)})</span>}
+                          {q.badge === "adjusted" && q.override.metric !== q.applied && <span style={{ color:T.fgS, fontSize:11.5 }}> · metric {q.override.metric.toFixed(1)}</span>}
+                        </>) : (<b style={{ color:T.navy }}>{q.applied == null ? "—" : q.applied.toFixed(1)}</b>)}
+                        <span style={{ fontSize:10.5, color:T.fgS }}> /5</span>
+                      </span>
+                      <ProvenanceBadge badge={q.badge} />
+                    </div>
+                    {q.override && (
+                      <div style={{ marginTop:4, paddingLeft:40 }}>
+                        <div style={{ fontSize:12.5, color:T.fg }}>{q.override.raw}</div>
+                        <div style={{ fontSize:11.5, color:T.fgS, lineHeight:1.5 }}>{q.override.detail}{q.override.blocked ? ` Not applied: ${q.override.blocked}; the assessed score stands.` : ` Confidence ${q.override.confidence}.`}</div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        );
+      })}
+      <div style={{ display:"flex", gap:14, flexWrap:"wrap", marginTop:12 }}>
+        {Object.keys(BADGE_HELP).filter(k => k !== "not scored").map(k => <span key={k} style={{ display:"flex", alignItems:"center", gap:6, fontSize:11.5, color:T.fgS }}><ProvenanceBadge badge={k} /> {BADGE_HELP[k]}</span>)}
+      </div>
+    </div>
+
+    {bigGaps.length > 0 && (
+      <Flag type="warn">
+        {bigGaps.length === 1 ? "One question sits" : `${bigGaps.length} questions sit`} a full point or more from how {bigGaps.length === 1 ? "it was" : "they were"} assessed: {bigGaps.map(([q,o]) => `${q} (${o.assessed.toFixed(1)} → ${o.applied.toFixed(1)})`).join(", ")}. That gap is worth a conversation. It usually means the question was read differently than intended, or the operation changed since the assessment.
+      </Flag>
+    )}
+    {blocked.length > 0 && (
+      <Flag type="info">
+        {blocked.map(([q]) => q).join(", ")}: a metric exists but the accounting confidence is too low to let it move the score. The assessed score stands until Financial Analysis Stage 1 records balance sheets or fewer tax-timing distortions.
+      </Flag>
+    )}
+    <Flag type="info">
+      Metrics cover {coverage.full + coverage.partial} of {coverage.total} questions in {coverage.blocksCovered} of {coverage.blocksTotal} blocks: {coverage.full} measured outright, {coverage.partial} bounded. The other {coverage.none} are the conversation's alone, and the assessed scores above are never overwritten. Export writes the audit trail back into the same file so it re-imports and recomputes cleanly.
+    </Flag>
+  </>);
+}
+
 function FarmProfilePage({ profile, setProfile, fa, rd, goFA, goRD, goRisk, goLegacy }) {
   const set = (field) => (e) => setProfile(s => ({ ...s, [field]: e.target.value }));
   const [pri, setPri] = useState(0);
   const [view, setView] = useState("glance");
+  const [profileErr, setProfileErr] = useState("");
   const { hasData: faHasData, categories: faCategories } = computeFARatios(fa.s3vals);
   const lenderOpps = lenderOpportunities(fa);
 
-  const ranked = apRanked();
+  // The uploaded assessment profile, with this run's metric overrides applied on
+  // top. `blocks` is never mutated; the effective score is overrides[q].applied
+  // when present, otherwise the assessed value.
+  const mfpRaw = isMFPProfile(profile.mfpProfile) ? profile.mfpProfile : null;
+  const ctx = mfpContext(fa, rd, mfpRaw);
+  const mfp = mfpRaw ? applyProfileOverrides(mfpRaw, MFP_QUESTION_OVERRIDES, ctx) : null;
+  const scored = mfp ? computeBlockScores(mfp) : null;
+  const noProfile = mfp ? null : noProfileSummary(MFP_QUESTION_OVERRIDES, ctx);
+  const onProfileFields = (fields) => { setProfileErr(""); setProfile(s => ({ ...s, ...fields })); setView("assessment"); };
+  const onProfileRemove = () => { if (window.confirm("Remove the uploaded assessment profile? Module data and the rest of the farm profile stay intact.")) setProfile(s => { const rest = { ...s }; delete rest.mfpProfile; return rest; }); };
+  const onProfileExport = () => {
+    const out = exportProfile(mfpRaw, MFP_QUESTION_OVERRIDES, ctx);
+    const safe = String((mfpRaw.farm && mfpRaw.farm.name) || "farm").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,40) || "farm";
+    downloadJson(out, `mfp-profile-${safe}-${new Date().toISOString().slice(0,10)}.json`);
+  };
+
+  // With a profile, the twelve blocks are the twelve areas and category and overall
+  // scores follow from them. Without one, the sample areas stand in for the demo.
+  const AREAS = scored ? apAreasFromProfile(scored) : apAreasSample();
+  const CATS = scored ? apCatsFromAreas(AREAS) : AP_CATS;
+  const overall = scored && scored.overall != null ? scored.overall : apOverall;
+  const ranked = apRanked(AREAS);
   const top3 = ranked.slice(0,3);
   const area = top3[pri] || top3[0];
   const d = AP_DETAIL[area.id] || AP_FALLBACK;
-  const cat = AP_CATS[area.cat];
-  const byScore = [...AP_AREAS].sort((a,b) => a.score - b.score);
+  const cat = CATS[area.cat];
+  const byScore = [...AREAS].sort((a,b) => a.score - b.score);
+  const entHHI = enterpriseRevenueHHI(fa);
   const posIdx = byScore.findIndex(a => a.id === area.id);
   const ordinal = ["1st","2nd","3rd","4th","5th","6th","7th","8th","9th","10th","11th","12th"][posIdx];
   const startModule = () => { if (area.module==="fa") goFA(1); else if (area.module==="rd") goRD(1); else if (area.module==="risk") goRisk(1); else if (area.module==="legacy") goLegacy(1); };
@@ -4078,17 +5028,23 @@ function FarmProfilePage({ profile, setProfile, fa, rd, goFA, goRD, goRisk, goLe
 
   return (
     <div>
-      <Head eyebrow="Farm business profile" title={view==="actions" ? "Three priorities, drawn from twelve areas" : "Business at a glance"} sub={view==="actions" ? "Each card shows how the area scored, what your assessment and the market found there, and what to do first. Work them in order, the first one unlocks the others." : "The operating picture behind the priorities: what the farm is, what it is trying to become, and where its financial health currently sits."} />
+      <Head eyebrow="Farm business profile" title={view==="actions" ? "Three priorities, drawn from twelve areas" : view==="assessment" ? (mfp ? "Assessed and measured, side by side" : "What your numbers can and cannot score") : "Business at a glance"} sub={view==="actions" ? "Each card shows how the area scored, what your assessment and the market found there, and what to do first. Work them in order, the first one unlocks the others." : view==="assessment" ? (mfp ? "The 46-question conversational assessment, with a hard number applied wherever one exists for the same thing. Your assessed scores are kept; the gap between them and the measurement is the finding." : "The modules generate metrics on their own. A few questions in the assessment can be scored from them outright; more can only be bounded; most need the conversation.") : "The operating picture behind the priorities: what the farm is, what it is trying to become, and where its financial health currently sits."} />
 
       {/* view tabs */}
       <div style={{ display:"flex", gap:8, borderBottom:`1px solid ${T.border}`, marginBottom:20 }}>
-        {[["glance","Business at a glance"],["actions","Priority actions"]].map(([k,lab]) => {
+        {[["glance","Business at a glance"],["actions","Priority actions"],["assessment", mfp ? "Assessment" : "Assessment · none loaded"]].map(([k,lab]) => {
           const on = view===k;
           return (
             <button key={k} onClick={()=>setView(k)} style={{ background:"none", border:"none", borderBottom:`2px solid ${on?T.navy:"transparent"}`, padding:"9px 4px", marginBottom:-1, cursor:"pointer", font:"inherit", fontSize:14, fontWeight:on?600:500, color:on?T.navy:T.fgS, marginRight:14 }}>{lab}</button>
           );
         })}
       </div>
+
+      {profileErr && <Flag type="danger">{profileErr}</Flag>}
+
+      {view==="assessment" && (mfp
+        ? <AssessmentProfileView mfp={mfp} scored={scored} coverage={MFP_COVERAGE} onFields={onProfileFields} onError={setProfileErr} onExport={onProfileExport} onRemove={onProfileRemove} />
+        : <NoProfileView summary={noProfile} onFields={onProfileFields} onError={setProfileErr} />)}
 
       {view==="actions" && (<>
 
@@ -4100,7 +5056,7 @@ function FarmProfilePage({ profile, setProfile, fa, rd, goFA, goRD, goRisk, goLe
             <button key={a.id} onClick={()=>setPri(j)} style={{ background:"#fff", border:`1px solid ${T.border}`, borderTop:`3px solid ${on?T.navy:"#d8dce3"}`, borderRadius:"0 0 8px 8px", padding:"13px 15px", cursor:"pointer", textAlign:"left", font:"inherit", transition:"border-color .15s" }}>
               <div style={{ fontSize:10, letterSpacing:"0.12em", fontWeight:600, color:on?T.navy:T.fgS }}>PRIORITY {j+1}</div>
               <div style={{ fontSize:14, fontWeight:600, margin:"4px 0 3px", color:T.fg }}>{a.label}</div>
-              <div style={{ fontSize:11.5, color:T.fgS }}>{a.score.toFixed(1)} / 5 · {AP_CATS[a.cat].label}</div>
+              <div style={{ fontSize:11.5, color:T.fgS }}>{a.score.toFixed(1)} / 5 · {CATS[a.cat].label}</div>
               {a.module && <span style={{ ...pillStyle("strong"), marginTop:5 }}>module</span>}
             </button>
           );
@@ -4120,9 +5076,10 @@ function FarmProfilePage({ profile, setProfile, fa, rd, goFA, goRD, goRisk, goLe
         {/* scores */}
         <div style={{ background:T.bgAlt, borderRadius:8, padding:"16px 18px", marginBottom:20 }}>
           <div style={{ fontSize:10.5, letterSpacing:"0.13em", color:T.fgS, marginBottom:13, textTransform:"uppercase" }}>How this area scored</div>
-          {tierRow("Your whole farm business", "— overall MFP score", apOverall, "/ 100", false)}
+          {tierRow("Your whole farm business", mfp ? "— overall MFP score, from your assessment profile" : "— overall MFP score (sample until a profile is loaded)", overall, "/ 100", false)}
           {tierRow(cat.label, "— the category this area belongs to, 1 of 4", cat.score, "/ 100", false)}
-          {tierRow(area.label, "— this action area, 1 of 12", area.score.toFixed(1), "/ 5", true)}
+          {tierRow(area.label, area.measured ? `— this action area, 1 of 12 · ${area.badge === "measured" ? "measured" : "adjusted"} by a metric` : "— this action area, 1 of 12", area.score.toFixed(1), "/ 5", true)}
+          {area.measured && area.assessed !== area.score && tierRow("As you assessed it", "— your own rating, kept for comparison", area.assessed.toFixed(1), "/ 5", false)}
           {tierRow("Room to improve", "— distance from this score to 5", (5-area.score).toFixed(1), "pts", false)}
 
           <div style={{ marginTop:15, borderTop:`1px solid ${T.border}`, paddingTop:14 }}>
@@ -4222,10 +5179,15 @@ function FarmProfilePage({ profile, setProfile, fa, rd, goFA, goRD, goRisk, goLe
           <div style={{ background:T.bgAlt, border:`1px solid ${T.border}`, borderRadius:10, padding:"14px 16px" }}>
             <div style={{ display:"flex", alignItems:"center", gap:5, marginBottom:8 }}>
               <span style={{ fontSize:10.5, fontWeight:700, color:T.fgS, textTransform:"uppercase", letterSpacing:"0.05em" }}>Diversification concentration</span>
-              <span title="Computed from your selected enterprises in Financial Analysis plus your selected paths in Revenue Diversification." style={{ fontSize:11, color:T.fgS, cursor:"help" }}>ⓘ</span>
+              <span title={entHHI ? "Effective revenue streams (inverse Herfindahl-Hirschman Index) from the revenue entered against each enterprise in Financial Analysis Stage 2. Scale-free, so it compares across any size of operation." : "A source count until revenue is entered against each enterprise in Financial Analysis Stage 2. A count cannot see concentration."} style={{ fontSize:11, color:T.fgS, cursor:"help" }}>ⓘ</span>
             </div>
-            {divLabel ? (<span style={pillStyle(sourceCount<=1?"vuln":sourceCount<=3?"watch":"strong")}>{divLabel}</span>) : (<div style={{ fontSize:13.5, fontStyle:"italic", color:T.fgS }}>Not scored yet</div>)}
-            {sourceCount>0 && <div style={{ fontSize:11, color:T.fgS, marginTop:6 }}>{sourceCount} income source{sourceCount!==1?"s":""} across FA + RD</div>}
+            {entHHI && entHHI.count >= 2 ? (<>
+              <span style={pillStyle(entHHI.effective>=3.5?"strong":entHHI.effective>=1.8?"watch":"vuln")}>{entHHI.effective.toFixed(2)} effective streams</span>
+              <div style={{ fontSize:11, color:T.fgS, marginTop:6 }}>From {entHHI.count} sources with revenue · largest share {Math.round(entHHI.dominant*100)}%</div>
+            </>) : divLabel ? (<>
+              <span style={pillStyle(sourceCount<=1?"vuln":sourceCount<=3?"watch":"strong")}>{divLabel}</span>
+              <div style={{ fontSize:11, color:T.fgS, marginTop:6 }}>{sourceCount} income source{sourceCount!==1?"s":""} counted · enter revenue by enterprise to measure concentration</div>
+            </>) : (<div style={{ fontSize:13.5, fontStyle:"italic", color:T.fgS }}>Not scored yet</div>)}
           </div>
         </div>
       </div>
@@ -4315,22 +5277,66 @@ function FarmProfilePage({ profile, setProfile, fa, rd, goFA, goRD, goRisk, goLe
         )}
       </div>
 
+      {mfp ? (() => {
+        const applied = Object.entries(mfp.overrides || {}).filter(([,o]) => typeof o.applied === "number");
+        const bigGaps = applied.filter(([,o]) => typeof o.assessed === "number" && Math.abs(o.applied - o.assessed) >= 1.0);
+        return (
+          <div style={cardStyle({ borderTop:`4px solid ${T.blue}` })}>
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12, gap:12, flexWrap:"wrap" }}>
+              <div style={cardLblStyle({ marginBottom:0 })}>Measured, not assessed</div>
+              <button type="button" onClick={()=>setView("assessment")} style={{ ...btnStyle("outline"), fontSize:11.5, padding:"6px 14px", minHeight:32 }}>Open the assessment →</button>
+            </div>
+            <div style={{ fontSize:12.5, color:T.fgM, marginBottom:applied.length?12:0, lineHeight:1.55 }}>
+              {applied.length
+                ? `${applied.length} of ${MFP_COVERAGE.total} questions carry a metric from your module data. Where the question literally asks for a number the metric replaces the rating; elsewhere it can lift the rating by one band or drop it by two. Your assessed scores are kept throughout.`
+                : "A profile is loaded but no module data yet touches a question. Metrics appear as Financial Analysis fills in: enterprise revenue, the accounting profile, labour, tracking and the balance sheet."}
+            </div>
+            {applied.map(([q,o]) => (
+              <div key={q} style={{ display:"flex", justifyContent:"space-between", alignItems:"baseline", gap:12, flexWrap:"wrap", padding:"8px 0", borderBottom:`1px solid ${T.div}` }}>
+                <span style={{ fontSize:13.5, color:T.navy }}><b style={{ fontWeight:600 }}>{q}</b> <span style={{ color:T.fgM }}>{o.raw}</span></span>
+                <span style={{ fontSize:13, color:T.fgM, display:"flex", alignItems:"baseline", gap:10 }}>
+                  <span>{o.assessed == null ? "—" : o.assessed.toFixed(1)} <span style={{ color:T.fgS }}>→</span> <b style={{ color: o.assessed == null ? T.navy : o.applied < o.assessed ? T.red : o.applied > o.assessed ? T.dgreen : T.navy }}>{o.applied.toFixed(1)}</b></span>
+                  <ProvenanceBadge badge={o.type === "full" ? "measured" : "adjusted"} />
+                </span>
+              </div>
+            ))}
+            {bigGaps.length > 0 && (
+              <div style={{ marginTop:14 }}>
+                <Flag type="warn">
+                  {bigGaps.length === 1 ? "One question sits" : `${bigGaps.length} questions sit`} a full point or more from how {bigGaps.length === 1 ? "it was" : "they were"} assessed: {bigGaps.map(([q]) => q).join(", ")}. That gap is worth a conversation.
+                </Flag>
+              </div>
+            )}
+          </div>
+        );
+      })() : (
+        <div style={cardStyle({ borderTop:`4px solid ${T.blue}` })}>
+          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10, gap:12, flexWrap:"wrap" }}>
+            <div style={cardLblStyle({ marginBottom:0 })}>No assessment profile loaded</div>
+            <button type="button" onClick={()=>setView("assessment")} style={{ ...btnStyle("outline"), fontSize:11.5, padding:"6px 14px", minHeight:32 }}>See what your numbers can score →</button>
+          </div>
+          <div style={{ fontSize:12.5, color:T.fgM, lineHeight:1.55 }}>
+            The scores below are sample figures. Upload the MFP assessment profile to replace them with your own {MFP_COVERAGE.total}-question assessment, with module metrics applied where they bear on a question{noProfile && noProfile.scored.length ? ` — ${noProfile.scored.length} question${noProfile.scored.length===1?"":"s"} can already be scored from your data` : ""}.
+          </div>
+        </div>
+      )}
+
       <div style={cardStyle({ borderTop:`4px solid ${T.navy}` })}>
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:14, gap:12, flexWrap:"wrap" }}>
           <div style={cardLblStyle({ marginBottom:0 })}>MFP assessment scores</div>
-          <span style={{ fontSize:11.5, color:T.fgS }}>Four categories, twelve dimensions</span>
+          <span style={{ fontSize:11.5, color:T.fgS }}>{mfp ? "Four categories, twelve blocks · metrics applied where available" : "Four categories, twelve dimensions · sample until a profile is loaded"}</span>
         </div>
 
         {/* overall */}
         <div style={{ display:"flex", alignItems:"baseline", justifyContent:"space-between", gap:14, background:T.bgAlt, borderRadius:8, padding:"14px 18px", marginBottom:16 }}>
-          <span style={{ fontSize:13.5, color:T.fgM }}><b style={{ color:T.fg, fontWeight:600 }}>Your whole farm business</b> <span style={{ color:T.fgS, fontSize:12 }}>— overall MFP score</span></span>
-          <span style={{ fontSize:28, fontWeight:600, color:T.navy, whiteSpace:"nowrap" }}>{apOverall}<span style={{ fontSize:13, fontWeight:400, color:T.fgS }}> / 100</span></span>
+          <span style={{ fontSize:13.5, color:T.fgM }}><b style={{ color:T.fg, fontWeight:600 }}>Your whole farm business</b> <span style={{ color:T.fgS, fontSize:12 }}>— overall MFP score{mfp ? ", mean of twelve block scores" : ""}</span></span>
+          <span style={{ fontSize:28, fontWeight:600, color:T.navy, whiteSpace:"nowrap" }}>{overall}<span style={{ fontSize:13, fontWeight:400, color:T.fgS }}> / 100</span></span>
         </div>
 
         {/* four categories */}
         <div style={{ fontSize:11, letterSpacing:"0.13em", color:T.fgS, textTransform:"uppercase", marginBottom:10 }}>Category scores</div>
         <div style={{ marginBottom:20 }}>
-          {Object.entries(AP_CATS).map(([cid,c]) => {
+          {Object.entries(CATS).map(([cid,c]) => {
             const st = c.score>=67?"strong":c.score>=34?"watch":"vuln";
             return (
               <div key={cid} style={{ display:"flex", alignItems:"center", gap:14, padding:"9px 0", borderBottom:`1px dashed ${T.border}` }}>
@@ -4345,21 +5351,22 @@ function FarmProfilePage({ profile, setProfile, fa, rd, goFA, goRD, goRisk, goLe
         </div>
 
         {/* twelve dimensions, grouped by category */}
-        <div style={{ fontSize:11, letterSpacing:"0.13em", color:T.fgS, textTransform:"uppercase", marginBottom:10 }}>Dimension index scores</div>
-        {Object.entries(AP_CATS).map(([cid,c]) => (
+        <div style={{ fontSize:11, letterSpacing:"0.13em", color:T.fgS, textTransform:"uppercase", marginBottom:10 }}>{mfp ? "Block scores" : "Dimension index scores"}</div>
+        {Object.entries(CATS).map(([cid,c]) => (
           <div key={cid} style={{ marginBottom:14 }}>
             <div style={{ fontSize:11.5, fontWeight:600, color:T.blue, marginBottom:5 }}>{c.label}</div>
-            {AP_AREAS.filter(a => a.cat===cid).map(a => {
+            {AREAS.filter(a => a.cat===cid).map(a => {
               const st = a.score>=3.5?"strong":a.score>=2.5?"watch":"vuln";
               return (
                 <div key={a.id} style={{ display:"flex", alignItems:"center", gap:12, padding:"6px 0 6px 12px", borderLeft:`2px solid ${T.div}` }}>
                   <span style={{ width:26, fontSize:11, color:T.fgS, flexShrink:0 }}>{String(a.n).padStart(2,"0")}</span>
                   <span style={{ width:200, fontSize:12.5, color:T.fgM, flexShrink:0 }}>{a.label}</span>
-                  <div style={{ flex:1, height:6, background:"#dde1e8", borderRadius:3, overflow:"hidden" }}>
+                  <div style={{ flex:1, height:6, background:"#dde1e8", borderRadius:3, overflow:"hidden", position:"relative" }}>
                     <div style={{ width:`${(a.score/5)*100}%`, height:"100%", background:scColor(st), borderRadius:3 }} />
+                    {a.measured && a.assessed !== a.score && <div title={`Assessed ${a.assessed.toFixed(1)} / 5`} style={{ position:"absolute", top:-2, bottom:-2, left:`calc(${(a.assessed/5)*100}% - 1px)`, width:2, background:T.navy }} />}
                   </div>
                   <span style={{ width:50, textAlign:"right", fontSize:13, fontWeight:600, color:scColor(st), flexShrink:0 }}>{a.score.toFixed(1)}<span style={{ fontSize:10.5, fontWeight:400, color:T.fgS }}> /5</span></span>
-                  {a.module && <span style={{ ...pillStyle("strong"), flexShrink:0 }}>module</span>}
+                  {a.measured ? <span title={`Assessed ${a.assessed.toFixed(1)} / 5`}><ProvenanceBadge badge={a.badge || "adjusted"} /></span> : mfp ? <ProvenanceBadge badge="assessed" /> : a.module ? <span style={{ ...pillStyle("strong"), flexShrink:0 }}>module</span> : null}
                 </div>
               );
             })}
@@ -5575,7 +6582,7 @@ function LEG12({ leg, setLegData, profile }) {
 }
 
 
-// ══════��═══��══════════════════════════════════════════════════─═══─══─═════─═
+// ══════��═══��══════════════════════════════════════════════════─══��─══─═════─═
 // SUCCESSOR TRACK
 // ════════════════════─════─══════─═════════─══════════════════════════════════
 // Written to the successor, not about them. Their entry point is not "help plan a
@@ -7012,6 +8019,20 @@ const loadRecord = () => {
 
 const clearRecord = () => { try { window.localStorage.removeItem(MFP_STORE_KEY); } catch(e){} };
 
+// Anonymous id that namespaces uploaded documents for this browser's record
+// until the operation signs in. Survives clearRecord so documents stay findable.
+const MFP_RECORD_ID_KEY = "mfp.recordId";
+const recordId = () => {
+  try {
+    let id = window.localStorage.getItem(MFP_RECORD_ID_KEY);
+    if (!id) {
+      id = (window.crypto?.randomUUID ? window.crypto.randomUUID() : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`);
+      window.localStorage.setItem(MFP_RECORD_ID_KEY, id);
+    }
+    return id;
+  } catch (e) { return `session-${Date.now().toString(36)}`; }
+};
+
 const FA_DEFAULT = { stage:1, accounting:{}, enterprises:[], goals:{}, wholeFarm:{}, ratioVals:{}, s3vals:{}, s4bench:{}, s5:{}, actionChecked:{} };
 const RD_DEFAULT = { stage:1, data:{} };
 const RISK_DEFAULT = { stage:1, answers:{} };
@@ -7081,16 +8102,19 @@ const profileFromMFPExport = (raw) => {
     productionMix: value("productionMix", "production", "commodities", "enterprises", "farmType"),
     ventures: value("ventures", "diversification", "otherIncome", "businesses"),
     grossIncome: value("grossIncome", "revenue", "grossRevenue", "financials.grossIncome", "financial.grossRevenue"),
-    nearTerm: value("nearTerm", "nearTermObjectives", "objectives.nearTerm", "goals.shortTerm"),
-    longTerm: value("longTerm", "longTermObjectives", "objectives.longTerm", "goals.longTerm"),
-    advantage: value("advantage", "competitiveAdvantage", "strengths", "strategy.advantage"),
-    values: value("values", "coreValues", "familyValues", "strategy.values"),
+    nearTerm: value("nearTerm", "nearTermObjectives", "openEnded.nearTermObjectives", "objectives.nearTerm", "goals.shortTerm"),
+    longTerm: value("longTerm", "longTermObjectives", "openEnded.longTermObjectives", "objectives.longTerm", "goals.longTerm"),
+    advantage: value("advantage", "competitiveAdvantage", "openEnded.competitiveAdvantage", "strengths", "strategy.advantage"),
+    values: value("values", "coreValues", "openEnded.coreValues", "familyValues", "strategy.values"),
     swotStrengths: value("swotStrengths", "swot.strengths", "strengths"),
     swotWeaknesses: value("swotWeaknesses", "swot.weaknesses", "weaknesses"),
     swotOpportunities: value("swotOpportunities", "swot.opportunities", "opportunities"),
     swotThreats: value("swotThreats", "swot.threats", "threats"),
   };
   const populated = Object.fromEntries(Object.entries(profile).filter(([, v]) => v));
+  // A valid v1 assessment profile travels with the text fields so every import
+  // path picks it up. An invalid one is left out entirely rather than half-loaded.
+  if (isMFPProfile(raw) && !validateProfile(raw)) populated.mfpProfile = importProfile(raw).profile;
   return Object.keys(populated).length ? populated : null;
 };
 
@@ -7162,11 +8186,14 @@ function DataControls({ state, savedAt, storageOk, onImport, onImportProfile, on
     let parsed = null;
     try { parsed = JSON.parse(text); }
     catch (x) { setErr("That profile file could not be read as JSON."); return; }
-    const profile = profileFromMFPExport(parsed);
-    if (!profile) { setErr("No recognizable farm profile fields were found in that file."); return; }
-    if (!window.confirm("Import this Maximum Farm Potential profile? Matching profile fields will be replaced; your module answers will stay intact.")) return;
+    const { fields: profile, error } = readMFPProfileFile(parsed);
+    if (error) { setErr(error); return; }
+    const isAssessment = !!profile.mfpProfile;
+    if (!window.confirm(isAssessment
+      ? "Import this MFP assessment profile? It replaces any assessment profile already loaded; metric overrides are recomputed from your current module data. Your module answers stay intact."
+      : "Import this Maximum Farm Potential profile? Matching profile fields will be replaced; your module answers will stay intact.")) return;
     onImportProfile(profile);
-    setProfileStatus(`${Object.keys(profile).length} profile fields imported`);
+    setProfileStatus(isAssessment ? "Assessment profile imported, 46 questions in 12 blocks" : `${Object.keys(profile).length} profile fields imported`);
     setProfileJson("");
     setProfileImportOpen(false);
     setOpen(false);
@@ -7446,17 +8473,90 @@ else if (isRD) { if (rd.stage<rdTotal) goRD(rd.stage+1); else goLegacy(1); }
   function FADocuments({ fa, setFA }) {
     const docs = fa.documents || [];
     const [uploading, setUploading] = useState(false);
-    const addDocs = async (files) => { const selected=Array.from(files||[]); if(!selected.length) return; setUploading(true); try { const uploaded=await Promise.all(selected.map(async file => { const bytes=new Uint8Array(await file.arrayBuffer()); let binary=""; for(let i=0;i<bytes.length;i+=0x8000) binary+=String.fromCharCode(...bytes.subarray(i,i+0x8000)); const response=await fetch("/api/upload-documents",{ method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ name:file.name, size:file.size, type:file.type, data:btoa(binary) }) }); if(!response.ok) throw new Error("Upload failed"); const stored=await response.json(); return { id:`doc-${Date.now()}-${file.name}`, ...stored, status:"Stored and ready for review" }; })); setFA(s=>({ ...s, documents:[...(s.documents||[]), ...uploaded] })); } catch(error) { console.error("[mfp] document upload failed",error); window.alert("The document could not be stored. Please try again."); } finally { setUploading(false); } };
+    const [uploadErrors, setUploadErrors] = useState([]);
+    const MAX_DOC_MB = 4;
+    // Raw bytes with metadata in headers: a base64 JSON body inflates the file by a third
+    // and runs into the 4.5 MB function body limit well before the advertised cap.
+    const uploadOne = async (file) => {
+      if (file.size > MAX_DOC_MB * 1024 * 1024) return { error:`${file.name} is ${(file.size/1024/1024).toFixed(1)} MB. Files must be ${MAX_DOC_MB} MB or smaller.` };
+      try {
+        const response = await fetch("/api/upload-documents", { method:"POST", credentials:"include", headers:{ "Content-Type": file.type || "application/octet-stream", "X-MFP-Filename": encodeURIComponent(file.name), "X-MFP-Record": recordId() }, body:file });
+        const text = await response.text();
+        let payload = null; try { payload = JSON.parse(text); } catch (e) { payload = null; }
+        if (!response.ok || !payload?.pathname) {
+          const reason = payload?.error || (response.status === 404 || /<!doctype html/i.test(text) ? "The upload service is not running on this server." : `Upload failed (HTTP ${response.status}).`);
+          return { error:`${file.name}: ${reason}` };
+        }
+        return { doc:{ id:`doc-${Date.now()}-${file.name}`, ...payload, status:"Stored and ready for review" } };
+      } catch (error) {
+        console.error("[mfp] document upload failed", error);
+        return { error:`${file.name}: could not reach the upload service. Check your connection and try again.` };
+      }
+    };
+    const isCsv = file => /\.csv$/i.test(file.name) || /csv/i.test(file.type || "");
+    const describeImport = ({ summary, filled, ratioFilled, balance }) => {
+      if (balance) {
+        const sn = balance.twoColumn ? balance.end : balance.single;
+        const bits = [sn?.totalAssets ? `assets $${Math.round(sn.totalAssets).toLocaleString()}` : null, sn?.totalLiab ? `liabilities $${Math.round(sn.totalLiab).toLocaleString()}` : null].filter(Boolean).join(", ");
+        return `Read as a balance sheet${balance.twoColumn ? " with beginning and end-of-year columns" : ""} (${bits || "totals not found"}). ${filled.length ? `${filled.length} balance sheet inputs filled in the Ratio deep dive.` : "Ratio deep dive already had hand-entered balance sheet figures, so nothing was overwritten."}`;
+      }
+      if (!summary.amountCol) return `Stored. No figures recognised: columns found were ${summary.headers.length ? summary.headers.map(h => `“${h}”`).join(", ") : "empty"}.`;
+      const kind = summary.layout === "budget" ? "budget" : "transaction export";
+      const totals = summary.layout === "budget" ? `income $${Math.round(summary.inflow).toLocaleString()}, expenses $${Math.round(summary.outflow).toLocaleString()}` : `in $${Math.round(summary.inflow).toLocaleString()}, out $${Math.round(summary.outflow).toLocaleString()}`;
+      const target = filled.includes("annualIncome") || filled.includes("annualExpenses") ? "Annual operating budget and working capital filled in Stage 4." : filled.length ? "Working capital filled in Stage 4." : "Stage 4 already had hand-entered figures, so nothing was overwritten; use the buttons there to replace them.";
+      const ratio = ratioFilled?.length ? ` ${ratioFilled.length} financial inputs filled in the Ratio deep dive.` : "";
+      return `Read as a ${kind} (${totals}). ${target}${ratio}`;
+    };
+    // CSVs are read in the browser as well as stored, so a budget or bank export dropped here
+    // populates Stage 4 even if the storage call fails.
+    const addDocs = async (files, input) => {
+      const selected = Array.from(files || []); if (!selected.length) return;
+      setUploading(true); setUploadErrors([]);
+      const parsed = await Promise.all(selected.map(async file => isCsv(file) ? readFinancialCsv(await file.text().catch(() => ""), file.name) : null));
+      const results = await Promise.all(selected.map(uploadOne));
+      const errors = results.map((r, i) => r.error ? (parsed[i] && !parsed[i].error ? `${r.error} The figures were still read into Stage 4.` : r.error) : null).filter(Boolean);
+      setFA(s => {
+        let state = s; const docs = [];
+        results.forEach((r, i) => {
+          const tx = parsed[i];
+          let status = r.doc?.status;
+          if (tx) {
+            if (tx.error) status = `Stored. ${tx.error}`;
+            else { const absorbed = absorbCsvIntoFA(state, tx); state = absorbed.state; status = describeImport(absorbed); }
+          }
+          if (r.doc) docs.push({ ...r.doc, status });
+        });
+        return docs.length ? { ...state, documents:[...(state.documents||[]), ...docs] } : state;
+      });
+      setUploadErrors(errors);
+      setUploading(false);
+      if (input) input.value = "";
+    };
     const remove = id => setFA(s => ({ ...s, documents:(s.documents||[]).filter(doc=>doc.id!==id) }));
-    return <div><Head eyebrow="Financial Analysis · Stage 4" title="Upload your documents" sub="Bring the records you trust; we will keep source and assumption visible." /><div style={cardStyle({ borderTop:`4px solid ${T.blue}` })}><div style={cardLblStyle()}>Choose files to review</div><p style={{ color:T.fgM, fontSize:13.5, lineHeight:1.6, marginTop:0 }}>Upload statements, enterprise reports, tax summaries, budgets, or CSV exports. PDF, CSV, XLS, XLSX, and common image files are supported.</p><input type="file" multiple accept=".pdf,.csv,.xls,.xlsx,.png,.jpg,.jpeg" onChange={e=>addDocs(e.target.files)} disabled={uploading} style={{ width:"100%", padding:16, border:`1px dashed ${T.blue}`, borderRadius:8, background:T.blueL }} /><div style={{ marginTop:10, color:T.fgS, fontSize:12 }}>{uploading?"Storing documents securely…":"Documents are stored privately and remain associated with this analysis."}</div></div>{docs.length===0?<div style={cardStyle({ background:T.bgAlt })}><div style={{ color:T.fgM, fontSize:13.5 }}>No documents uploaded yet. You can continue with estimates, or add the records you trust most.</div></div>:<div style={cardStyle()}><div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}><div style={cardLblStyle()}>Documents in this analysis</div><span style={{ fontSize:12, color:T.fgS }}>{docs.length} file{docs.length===1?"":"s"}</span></div>{docs.map(doc=><div key={doc.id} style={{ display:"flex", justifyContent:"space-between", gap:12, alignItems:"center", padding:"11px 0", borderBottom:`1px solid ${T.div}` }}><div><strong style={{ color:T.navy, fontSize:13 }}>{doc.name}</strong><div style={{ color:T.fgS, fontSize:12, marginTop:3 }}>{doc.type} · {Math.max(1,Math.round(doc.size/1024))} KB · {doc.status}</div></div><button type="button" onClick={()=>remove(doc.id)} style={btnStyle("ghost")}>Remove</button></div>)}</div>}<div style={cardStyle({ background:T.blueL, borderColor:"#c8d9e8" })}><strong>Review before using</strong><p style={{ margin:"5px 0 0", color:T.fgM, fontSize:13, lineHeight:1.5 }}>A document can be accurate and still use a different period, allocation method, or accounting basis. The next steps keep source and assumption visible.</p></div></div>;
+    return <div><Head eyebrow="Financial Analysis · Stage 3" title="Upload your documents" sub="Bring the records you trust; we will keep source and assumption visible." /><div style={cardStyle({ borderTop:`4px solid ${T.blue}` })}><div style={cardLblStyle()}>Choose files to review</div><p style={{ color:T.fgM, fontSize:13.5, lineHeight:1.6, marginTop:0 }}>Upload statements, enterprise reports, tax summaries, budgets, or CSV exports. PDF, CSV, XLS, XLSX, and common image files up to {MAX_DOC_MB} MB each are supported.</p><input type="file" multiple accept=".pdf,.csv,.xls,.xlsx,.png,.jpg,.jpeg" onChange={e=>addDocs(e.target.files, e.target)} disabled={uploading} style={{ width:"100%", padding:16, border:`1px dashed ${T.blue}`, borderRadius:8, background:T.blueL }} /><div style={{ marginTop:10, color:T.fgS, fontSize:12 }}>{uploading?"Storing documents securely…":"Documents are stored privately and remain associated with this analysis."}</div>{uploadErrors.length>0 && <div style={{ marginTop:12 }}><Flag type="warn"><strong>Not stored.</strong>{uploadErrors.map((m,i)=><div key={i} style={{ marginTop:4 }}>{m}</div>)}</Flag></div>}</div>{docs.length===0?<div style={cardStyle({ background:T.bgAlt })}><div style={{ color:T.fgM, fontSize:13.5 }}>No documents uploaded yet. You can continue with estimates, or add the records you trust most.</div></div>:<div style={cardStyle()}><div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}><div style={cardLblStyle()}>Documents in this analysis</div><span style={{ fontSize:12, color:T.fgS }}>{docs.length} file{docs.length===1?"":"s"}</span></div>{docs.map(doc=><div key={doc.id} style={{ display:"flex", justifyContent:"space-between", gap:12, alignItems:"center", padding:"11px 0", borderBottom:`1px solid ${T.div}` }}><div><strong style={{ color:T.navy, fontSize:13 }}>{doc.name}</strong><div style={{ color:T.fgS, fontSize:12, marginTop:3 }}>{doc.type} · {Math.max(1,Math.round(doc.size/1024))} KB · {doc.status}</div></div><button type="button" onClick={()=>remove(doc.id)} style={btnStyle("ghost")}>Remove</button></div>)}</div>}<div style={cardStyle({ background:T.blueL, borderColor:"#c8d9e8" })}><strong>Review before using</strong><p style={{ margin:"5px 0 0", color:T.fgM, fontSize:13, lineHeight:1.5 }}>A document can be accurate and still use a different period, allocation method, or accounting basis. The next steps keep source and assumption visible.</p></div></div>;
   }
   function FABudget({ fa, setFA }) {
     const [budgetTab, setBudgetTab] = useState("annual");
     const [annualBasis, setAnnualBasis] = useState("cash");
-    const b=fa.budget||{}; const set=(key,value)=>setFA(s=>({...s,budget:{...(s.budget||{}),[key]:value}})); const n=k=>Number(b[k])||0; const importCSV=e=>{ const file=e.target.files?.[0]; e.target.value=""; if(!file) return; const reader=new FileReader(); reader.onload=()=>{ const lines=String(reader.result||"").split(/\\r?\\n/).filter(Boolean); const rows=lines.map(line=>line.split(",").map(cell=>cell.trim().replace(/^\"|\"$/g,""))); setFA(s=>({...s,transactions:{name:file.name,headers:rows[0]||[],rows:rows.slice(1),importedAt:new Date().toISOString()}})); }; reader.readAsText(file); }; const available=n("cash")+n("line")-n("committed")-n("debt"); const gap=Math.max(0,-available); const fields=[["cash","Cash available today","0"],["line","Available operating line","0"],["committed","Committed bills and inputs","0"],["debt","Debt service due before next receipts","0"],["receipts","Expected receipts before next major payment","0"]];
-    const annualRows = [["Revenue", Number(b.receipts)||0], ["Operating expenses", (Number(b.committed)||0)+(Number(b.debt)||0)], ["Net operating cash", (Number(b.receipts)||0)-(Number(b.committed)||0)-(Number(b.debt)||0)]];
-    const accrualRows = [["Revenue earned", Number(b.receipts)||0], ["Expenses incurred", (Number(b.committed)||0)+(Number(b.debt)||0)], ["Net farm income", (Number(b.receipts)||0)-(Number(b.committed)||0)-(Number(b.debt)||0)]];
-    return <div><Head eyebrow="Financial Analysis · Stage 5" title="Budgeting and working capital" sub="Separate profit from timing: what arrives, what is committed, and what remains available." showFinancialVisual={false} /><div style={{ display:"flex", gap:8, flexWrap:"wrap", borderBottom:`1px solid ${T.border}`, marginBottom:20 }}><button type="button" onClick={()=>setBudgetTab("annual")} style={{ ...btnStyle(budgetTab==="annual"?"primary":"outline"), borderRadius:8, marginBottom:8 }}>Annual operating budget</button><button type="button" onClick={()=>setBudgetTab("working")} style={{ ...btnStyle(budgetTab==="working"?"primary":"outline"), borderRadius:8, marginBottom:8 }}>Working capital</button></div><div style={{ display:budgetTab==="annual"?"block":"none" }}><div style={cardStyle({ borderTop:`4px solid ${T.blue}` })}><div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", gap:12, flexWrap:"wrap" }}><div><div style={cardLblStyle()}>Annual operating budget</div><p style={{ margin:"4px 0 0", color:T.fgM, fontSize:13, lineHeight:1.5 }}>Plan the year in the same cash and accrual views used by Legacy Acres.</p></div><div style={{ display:"flex", gap:6 }}><button type="button" onClick={()=>setAnnualBasis("cash")} style={btnStyle(annualBasis==="cash"?"primary":"outline")}>Cash view</button><button type="button" onClick={()=>setAnnualBasis("accrual")} style={btnStyle(annualBasis==="accrual"?"primary":"outline")}>Accrual view</button></div></div><div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(210px,1fr))", gap:12, marginTop:18 }}>{(annualBasis==="cash"?annualRows:accrualRows).map(([label,value],i)=><div key={label} style={{ padding:16, borderRadius:10, background:i===2?T.greenL:T.bgAlt, border:`1px solid ${i===2?T.green:T.border}` }}><div style={{ fontSize:11, color:T.fgS, textTransform:"uppercase", letterSpacing:".06em", fontWeight:700 }}>{label}</div><div style={{ marginTop:8, fontSize:25, color:i===2?T.green:T.navy, fontWeight:800 }}>${value.toLocaleString()}</div><div style={{ marginTop:5, fontSize:12, color:T.fgS }}>{annualBasis==="cash"?"Timing based on money received and paid":"Economic activity earned or incurred during the year"}</div></div>)}</div><div style={{ marginTop:18, padding:14, background:T.blueL, borderRadius:10, color:T.fgM, fontSize:13, lineHeight:1.55 }}><strong>{annualBasis==="cash"?"Cash view:" : "Accrual view:"}</strong> {annualBasis==="cash"?"Shows liquidity and when receipts and payments move through the operation.":"Shows the operating result after matching revenue and expenses to the period they belong to, regardless of payment timing."}</div></div></div><div style={{ display:budgetTab==="working"?"block":"none" }}><img src="/financial-analysis-dashboard.png" alt="Financial analysis dashboard connecting cash flow, budgets, working capital, and benchmarking" style={{ width:"100%", maxHeight:140, objectFit:"cover", borderRadius:16, marginBottom:22, opacity:.85 }} /><div style={cardStyle({ borderTop:`4px solid ${T.green}` })}><div style={cardLblStyle()}>Import ongoing transactions</div><p style={{ color:T.fgM, fontSize:13, lineHeight:1.5, marginTop:0 }}>Bring in a bank or accounting CSV to support the budget and working-capital view. The imported rows stay available in this analysis session.</p><input type="file" accept=".csv,text/csv" onChange={importCSV} style={{ width:"100%", padding:14, border:`1px dashed ${T.green}`, borderRadius:8, background:T.greenL }} />{fa.transactions?.rows?.length ? <div style={{ marginTop:10, color:T.green, fontSize:12 }}>{fa.transactions.name} · {fa.transactions.rows.length} rows imported</div> : <div style={{ marginTop:10, color:T.fgS, fontSize:12 }}>No CSV imported yet.</div>}</div><div style={cardStyle()}><div style={cardLblStyle()}>Near-term cash position</div><div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(190px,1fr))", gap:12 }}>{fields.map(([key,label,placeholder])=><label key={key} style={labelStyle}>{label}<input type="number" min="0" step="100" placeholder={placeholder} value={b[key]||""} onChange={e=>set(key,e.target.value)} style={inputStyle()} /></label>)}</div></div><div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))", gap:14 }}><div style={cardStyle({ borderTop:`4px solid ${available>=0?T.green:T.red}`, marginBottom:0 })}><div style={cardLblStyle()}>Working capital before receipts</div><div style={{ fontSize:30, fontWeight:800, color:available>=0?T.green:T.red }}>{available<0?"-":""}${Math.abs(available).toLocaleString()}</div><div style={{ color:T.fgM, fontSize:13, marginTop:5 }}>{available>=0?"Positive room after committed obligations.":`Potential shortfall of $${gap.toLocaleString()} before the next receipts.`}</div></div><div style={cardStyle({ borderTop:`4px solid ${T.blue}`, marginBottom:0 })}><div style={cardLblStyle()}>Receipts to plan against</div><div style={{ fontSize:30, fontWeight:800, color:T.blue }}>${n("receipts").toLocaleString()}</div><div style={{ color:T.fgM, fontSize:13, marginTop:5 }}>Use confirmed timing where possible; estimates should be labeled.</div></div></div><div style={cardStyle({ background:T.blueL, borderColor:"#c8d9e8" })}><strong>What this is for</strong><p style={{ margin:"5px 0 0", color:T.fgM, fontSize:13, lineHeight:1.5 }}>This is a planning screen, not a borrowing recommendation. It highlights when to ask your accountant, lender, or advisor to review timing, terms, and contingency options.</p></div></div>
+    const b=fa.budget||{}; const sources=b.sources||{};
+    // A hand edit owns the field again: drop the "from import" marker for that key.
+    const set=(key,value)=>setFA(s=>{ const cur=s.budget||{}; const nextSources={...(cur.sources||{})}; delete nextSources[key]; return {...s,budget:{...cur,[key]:value,sources:nextSources}}; });
+    const n=k=>Number(b[k])||0;
+    // Money out becomes committed bills, money in becomes expected receipts. Applied on
+    // import only where the field is still empty; the buttons replace on purpose.
+    const applyImport=(summary, keys, s, fileName)=>applyImportToBudget(s, summary, keys, fileName);
+    const importCSV=e=>{ const file=e.target.files?.[0]; e.target.value=""; if(!file) return; const reader=new FileReader(); reader.onload=()=>{ const tx=readFinancialCsv(reader.result, file.name); setFA(s=>absorbCsvIntoFA(s, tx).state); }; reader.onerror=()=>setFA(s=>({...s,transactions:{name:file.name,headers:[],rows:[],importedAt:new Date().toISOString(),error:"That file could not be read."}})); reader.readAsText(file); };
+    const txSummary=summarizeTransactions(fa.transactions);
+    const useImport=(keys)=>setFA(s=>applyImport(txSummary,keys,s,fa.transactions?.name));
+    const hasAnnual=String(b.annualIncome||"").trim()!==""||String(b.annualExpenses||"").trim()!=="";
+    const annualIncome=hasAnnual?n("annualIncome"):n("receipts");
+    const annualExpenses=hasAnnual?n("annualExpenses"):n("committed")+n("debt");
+    const annualLines=Array.isArray(b.annualLines)?b.annualLines:[]; const available=n("cash")+n("line")-n("committed")-n("debt"); const gap=Math.max(0,-available); const fields=[["cash","Cash available today","0"],["line","Available operating line","0"],["committed","Committed bills and inputs","0"],["debt","Debt service due before next receipts","0"],["receipts","Expected receipts before next major payment","0"]];
+    const annualRows = [["Revenue", annualIncome], ["Operating expenses", annualExpenses], ["Net operating cash", annualIncome-annualExpenses]];
+    const accrualRows = [["Revenue earned", annualIncome], ["Expenses incurred", annualExpenses], ["Net farm income", annualIncome-annualExpenses]];
+    return <div><Head eyebrow="Financial Analysis · Stage 4" title="Budgeting and working capital" sub="Separate profit from timing: what arrives, what is committed, and what remains available." showFinancialVisual={false} /><div style={{ display:"flex", gap:8, flexWrap:"wrap", borderBottom:`1px solid ${T.border}`, marginBottom:20 }}><button type="button" onClick={()=>setBudgetTab("annual")} style={{ ...btnStyle(budgetTab==="annual"?"primary":"outline"), borderRadius:8, marginBottom:8 }}>Annual operating budget</button><button type="button" onClick={()=>setBudgetTab("working")} style={{ ...btnStyle(budgetTab==="working"?"primary":"outline"), borderRadius:8, marginBottom:8 }}>Working capital</button></div><div style={{ display:budgetTab==="annual"?"block":"none" }}><div style={cardStyle({ borderTop:`4px solid ${T.blue}` })}><div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", gap:12, flexWrap:"wrap" }}><div><div style={cardLblStyle()}>Annual operating budget</div><p style={{ margin:"4px 0 0", color:T.fgM, fontSize:13, lineHeight:1.5 }}>Plan the year in the same cash and accrual views used by Legacy Acres.</p></div><div style={{ display:"flex", gap:6 }}><button type="button" onClick={()=>setAnnualBasis("cash")} style={btnStyle(annualBasis==="cash"?"primary":"outline")}>Cash view</button><button type="button" onClick={()=>setAnnualBasis("accrual")} style={btnStyle(annualBasis==="accrual"?"primary":"outline")}>Accrual view</button></div></div><div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(210px,1fr))", gap:12, marginTop:18 }}>{(annualBasis==="cash"?annualRows:accrualRows).map(([label,value],i)=><div key={label} style={{ padding:16, borderRadius:10, background:i===2?T.greenL:T.bgAlt, border:`1px solid ${i===2?T.green:T.border}` }}><div style={{ fontSize:11, color:T.fgS, textTransform:"uppercase", letterSpacing:".06em", fontWeight:700 }}>{label}</div><div style={{ marginTop:8, fontSize:25, color:i===2?T.green:T.navy, fontWeight:800 }}>${value.toLocaleString()}</div><div style={{ marginTop:5, fontSize:12, color:T.fgS }}>{annualBasis==="cash"?"Timing based on money received and paid":"Economic activity earned or incurred during the year"}</div></div>)}</div>{!hasAnnual && <div style={{ marginTop:12, fontSize:12.5, color:T.fgS, fontStyle:"italic" }}>Showing working-capital figures as a stand-in. Import a budget CSV or enter annual totals below to see the year.</div>}<div style={{ marginTop:18, padding:14, background:T.blueL, borderRadius:10, color:T.fgM, fontSize:13, lineHeight:1.55 }}><strong>{annualBasis==="cash"?"Cash view:" : "Accrual view:"}</strong> {annualBasis==="cash"?"Shows liquidity and when receipts and payments move through the operation.":"Shows the operating result after matching revenue and expenses to the period they belong to, regardless of payment timing."}</div></div>
+      <div style={cardStyle({ borderTop:`4px solid ${T.green}` })}><div style={cardLblStyle()}>Bring in your operating budget</div><p style={{ color:T.fgM, fontSize:13, lineHeight:1.5, marginTop:0 }}>Upload the budget as CSV: line items down the side with a Total, Budget or Annual column, or one column per month. Income and expenses can be separate sections, a Type column, or just the line-item names.</p><input type="file" accept=".csv,text/csv" onChange={importCSV} style={{ width:"100%", padding:14, border:`1px dashed ${T.green}`, borderRadius:8, background:T.greenL }} />{fa.transactions?.error ? <div style={{ marginTop:12 }}><Flag type="warn"><strong>{fa.transactions.name}</strong>: {fa.transactions.error}</Flag></div> : fa.transactions?.rows?.length ? <div style={{ marginTop:10, fontSize:12.5, color:T.fgM }}>{txSummary.layout==="budget" ? <>Read <b>{fa.transactions.name}</b> as a budget: income <b style={{ color:T.green }}>${Math.round(txSummary.inflow).toLocaleString()}</b>, expenses <b style={{ color:T.red }}>${Math.round(txSummary.outflow).toLocaleString()}</b>, {txSummary.lines.length} line items.{!(sources.annualIncome==="import"&&sources.annualExpenses==="import") && <button type="button" onClick={()=>useImport(["annualIncome","annualExpenses"])} style={{ ...btnStyle("outline"), fontSize:12, padding:"6px 12px", marginLeft:10 }}>Use as annual operating budget</button>}</> : txSummary.amountCol ? <><b>{fa.transactions.name}</b> looks like a bank or transaction export, not a budget. Its totals are in the Working capital tab; use them here only if they cover a full year.<button type="button" onClick={()=>useImport(["annualIncome","annualExpenses"])} style={{ ...btnStyle("outline"), fontSize:12, padding:"6px 12px", marginLeft:10 }}>Use totals anyway</button></> : <>Could not tell which column holds the money in <b>{fa.transactions.name}</b>. Columns found: {txSummary.headers.map(h=>`“${h}”`).join(", ")}.</>}</div> : <div style={{ marginTop:10, color:T.fgS, fontSize:12 }}>No budget imported yet.</div>}</div>
+      <div style={cardStyle()}><div style={cardLblStyle()}>Annual totals</div><div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))", gap:12 }}>{[["annualIncome","Annual income (revenue)"],["annualExpenses","Annual operating expenses"]].map(([key,label])=><label key={key} style={labelStyle}>{label}{sources[key]==="import" && <span style={{ marginLeft:6, fontSize:10.5, fontWeight:700, color:T.green, textTransform:"uppercase", letterSpacing:".04em" }}>From import</span>}<input type="number" min="0" step="1000" placeholder="0" value={b[key]||""} onChange={e=>set(key,e.target.value)} style={inputStyle(sources[key]==="import"?{ borderColor:T.green, background:T.greenL }:undefined)} /></label>)}</div>{b.annualSource && annualLines.length>0 && <div style={{ marginTop:16 }}><div style={{ display:"flex", justifyContent:"space-between", alignItems:"baseline", gap:10, flexWrap:"wrap" }}><div style={{ fontSize:12.5, fontWeight:700, color:T.navy }}>Line items from {b.annualSource}</div><span style={{ fontSize:11.5, color:T.fgS }}>{annualLines.length} lines · subtotal rows skipped</span></div><div style={{ marginTop:8, maxHeight:320, overflowY:"auto", border:`1px solid ${T.border}`, borderRadius:8 }}>{["in","out"].map(dir=>{ const rows=annualLines.filter(l=>l.dir===dir); if(!rows.length) return null; return <div key={dir}><div style={{ padding:"7px 12px", fontSize:11, fontWeight:700, textTransform:"uppercase", letterSpacing:".06em", color:dir==="in"?T.green:T.red, background:T.bgAlt }}>{dir==="in"?"Income":"Expenses"}</div>{rows.map((l,i)=><div key={i} style={{ display:"flex", justifyContent:"space-between", gap:12, padding:"7px 12px", borderTop:`1px solid ${T.div}`, fontSize:12.5 }}><span style={{ color:T.fg, minWidth:0, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{l.label}</span><span style={{ fontVariantNumeric:"tabular-nums", color:T.navy, fontWeight:600, flexShrink:0 }}>${Math.round(l.amount).toLocaleString()}</span></div>)}</div>; })}</div></div>}</div></div><div style={{ display:budgetTab==="working"?"block":"none" }}><img src="/financial-analysis-dashboard.png" alt="Financial analysis dashboard connecting cash flow, budgets, working capital, and benchmarking" style={{ width:"100%", maxHeight:140, objectFit:"cover", borderRadius:16, marginBottom:22, opacity:.85 }} /><div style={cardStyle({ borderTop:`4px solid ${T.green}` })}><div style={cardLblStyle()}>Import ongoing transactions</div><p style={{ color:T.fgM, fontSize:13, lineHeight:1.5, marginTop:0 }}>Bring in a bank or accounting CSV to support the budget and working-capital view. The imported rows stay available in this analysis session.</p><input type="file" accept=".csv,text/csv" onChange={importCSV} style={{ width:"100%", padding:14, border:`1px dashed ${T.green}`, borderRadius:8, background:T.greenL }} />{fa.transactions?.error ? <div style={{ marginTop:12 }}><Flag type="warn"><strong>{fa.transactions.name}</strong>: {fa.transactions.error}</Flag></div> : fa.transactions?.rows?.length ? <div style={{ marginTop:10 }}><div style={{ color:T.green, fontSize:12, fontWeight:600 }}>{fa.transactions.name} · {fa.transactions.rows.length} rows imported{txSummary.span ? ` · ${txSummary.span}` : ""}</div>{txSummary.amountCol ? <div style={{ display:"flex", gap:18, flexWrap:"wrap", marginTop:8, fontSize:12.5, color:T.fgM }}><span>{txSummary.layout==="budget"?"Budgeted income":"Money in"} <b style={{ color:T.green }}>${Math.round(txSummary.inflow).toLocaleString()}</b></span><span>{txSummary.layout==="budget"?"Budgeted expenses":"Money out"} <b style={{ color:T.red }}>${Math.round(txSummary.outflow).toLocaleString()}</b></span><span>Net <b style={{ color:T.navy }}>{txSummary.net<0?"-":""}${Math.abs(Math.round(txSummary.net)).toLocaleString()}</b></span><span style={{ color:T.fgS }}>{txSummary.layout==="budget"?`read as a budget, line items by “${txSummary.amountCol}”`:`from the “${txSummary.amountCol}” column`}</span></div> : <div style={{ marginTop:6, fontSize:12, color:T.fgS }}>Could not tell which column holds the money. Bank exports need an Amount or Debit/Credit column; budgets need a Total, Budget or Annual column, or one column per month. Columns found: {txSummary.headers.length ? txSummary.headers.map(h=>`“${h}”`).join(", ") : "none"}.</div>}{txSummary.amountCol && <div style={{ display:"flex", gap:8, flexWrap:"wrap", alignItems:"center", marginTop:10 }}><button type="button" onClick={()=>useImport(["committed"])} style={{ ...btnStyle("outline"), fontSize:12, padding:"6px 12px" }}>{txSummary.layout==="budget"?"Use budgeted expenses as committed bills":"Use money out as committed bills"}</button><button type="button" onClick={()=>useImport(["receipts"])} style={{ ...btnStyle("outline"), fontSize:12, padding:"6px 12px" }}>{txSummary.layout==="budget"?"Use budgeted income as expected receipts":"Use money in as expected receipts"}</button>{txSummary.layout==="budget" && <button type="button" onClick={()=>{ useImport(["annualIncome","annualExpenses"]); setBudgetTab("annual"); }} style={{ ...btnStyle("outline"), fontSize:12, padding:"6px 12px" }}>Use as annual operating budget</button>}<span style={{ fontSize:11.5, color:T.fgS }}>{sources.committed==="import"||sources.receipts==="import" ? "Filled from this file. Editing a field by hand keeps your figure." : "Replaces what is in the field now."}</span></div>}</div> : <div style={{ marginTop:10, color:T.fgS, fontSize:12 }}>No CSV imported yet.</div>}</div><div style={cardStyle()}><div style={cardLblStyle()}>Near-term cash position</div><div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(190px,1fr))", gap:12 }}>{fields.map(([key,label,placeholder])=><label key={key} style={labelStyle}>{label}{sources[key]==="import" && <span style={{ marginLeft:6, fontSize:10.5, fontWeight:700, color:T.green, textTransform:"uppercase", letterSpacing:".04em" }}>From import</span>}<input type="number" min="0" step="100" placeholder={placeholder} value={b[key]||""} onChange={e=>set(key,e.target.value)} style={inputStyle(sources[key]==="import"?{ borderColor:T.green, background:T.greenL }:undefined)} /></label>)}</div></div><div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))", gap:14 }}><div style={cardStyle({ borderTop:`4px solid ${available>=0?T.green:T.red}`, marginBottom:0 })}><div style={cardLblStyle()}>Working capital before receipts</div><div style={{ fontSize:30, fontWeight:800, color:available>=0?T.green:T.red }}>{available<0?"-":""}${Math.abs(available).toLocaleString()}</div><div style={{ color:T.fgM, fontSize:13, marginTop:5 }}>{available>=0?"Positive room after committed obligations.":`Potential shortfall of $${gap.toLocaleString()} before the next receipts.`}</div></div><div style={cardStyle({ borderTop:`4px solid ${T.blue}`, marginBottom:0 })}><div style={cardLblStyle()}>Receipts to plan against</div><div style={{ fontSize:30, fontWeight:800, color:T.blue }}>${n("receipts").toLocaleString()}</div><div style={{ color:T.fgM, fontSize:13, marginTop:5 }}>Use confirmed timing where possible; estimates should be labeled.</div></div></div><div style={cardStyle({ background:T.blueL, borderColor:"#c8d9e8" })}><strong>What this is for</strong><p style={{ margin:"5px 0 0", color:T.fgM, fontSize:13, lineHeight:1.5 }}>This is a planning screen, not a borrowing recommendation. It highlights when to ask your accountant, lender, or advisor to review timing, terms, and contingency options.</p></div></div>
 </div>
   }
   const FA_BODY = [
@@ -7750,3 +8850,4 @@ else if (isRD) { if (rd.stage<rdTotal) goRD(rd.stage+1); else goLegacy(1); }
     </div>
   );
 }
+
