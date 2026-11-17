@@ -11,6 +11,27 @@ export const PEER_CLASSES = PEER.classes;
 export const PEER_SCALE_BANDS = PEER.scaleBands;
 export const PEER_METRICS = PEER.metrics;
 
+// Real figures from the Idealyst MFP Benchmarking Survey (n=300) that the peer
+// dataset is calibrated to. Top-box shares say how many surveyed farms clear each
+// fixed Tier 1 threshold; block means are the survey's 1–5 readiness averages.
+export const SURVEY = PEER.survey;
+export const SURVEY_CITATION = `${SURVEY.source}`;
+
+// "29% of 300 surveyed farms" for a ratio key the survey covers, else null. The
+// survey's expense ratio counts depreciation and interest, which the app's OER
+// does not, so that one is labelled as the total expense ratio.
+export const surveyShareText = (ratioKey) => {
+  const tb = SURVEY.topBox[ratioKey];
+  if (!tb) return null;
+  const what = ratioKey === "oer" ? "total expense ratio < 80%" : tb.measure;
+  return `${tb.total}% of ${SURVEY.n} surveyed farms at ${what}`;
+};
+
+export const surveyBlockMean = (blockNumber) => {
+  const v = SURVEY.blockMeans[String(blockNumber)];
+  return typeof v === "number" ? v : null;
+};
+
 // Financial Analysis records enterprises under two vocabularies: the Stage 1 list
 // (fa.enterprises) and the Stage 2 registry (fa.ent.list[].kind). Both collapse to
 // the three archetypes the dataset was built from.

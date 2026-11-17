@@ -3,7 +3,7 @@ import { loadSavedWork, syncSavedWork } from "./backend.js";
 import EagleEye from "./EagleEye.jsx";
 import FarmKnowledgeSearch from "./FarmKnowledgeSearch.jsx";
 import { MFP_BLOCKS, MFP_UNCOVERED_BLOCKS, isMFPProfile, validateProfile, importProfile, applyOverrides as applyProfileOverrides, computeBlockScores, exportProfile, noProfileSummary, coverageOf, to100, clamp5 } from "./mfp-profile.js";
-import { peerClassOf, peerKindOf, peerBand, peerBenchText } from "./peer-class.js";
+import { peerClassOf, peerKindOf, peerBand, peerBenchText, surveyShareText, surveyBlockMean, SURVEY } from "./peer-class.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // FONTS  (system stack, matching the MFP action plan design language)
@@ -1151,6 +1151,9 @@ const computeFARatios = (s3, ctx = {}) => {
     {key:"sgr",cat:"growth",tier:3,label:"Sustainable growth rate",val:faFP(sgr),status:faStR(sgr,10,0,false),bench:"Strong > 10%"},
     {key:"nrpa",cat:"growth",tier:2,label:"Net return per acre",val:fmt$(nrpa)+"/ac",status:faStR(nrpa,150,50,false),bench:"Strong > $150"},
   ];
+  // Where the survey asked about a ratio, carry the share of real farms clearing
+  // its fixed threshold so the benchmark reads against a population, not a rule.
+  ratios.forEach(r => { r.survey = surveyShareText(r.key); });
 
   // Roll the ratios up into the four financial health categories. A category takes
   // the weakest status among its scored ratios, so one vulnerable ratio is never
@@ -1583,6 +1586,9 @@ function FA3({ fa, setFA }) {
               Operating asset turnover strips land out, so it compares directly against a farm with the opposite tenure. Economic total expense charges owned land at {Math.round(FA_LAND_CAP_RATE*100)}% and your own unpaid labour at market; below 1.00 is a true economic profit, and most farms sit above it.
               {R.laborEfficiency!==null && ` Labour target for your enterprise mix: ${laborTargetFor(fa).basis}.`}
             </p>
+            <p style={{ fontSize:11.5, color:T.fgS, margin:"8px 0 0", lineHeight:1.6 }}>
+              Peer classes are calibrated to the {SURVEY.source}: liquidity, leverage, expense and turnover shares of the generated classes are held near the survey&apos;s, and the lines under each benchmark quote the survey directly.
+            </p>
           </div>
         )}
       </div>
@@ -1693,7 +1699,7 @@ function FA3({ fa, setFA }) {
                   <div style={{ fontSize:13 }}>{r.label}</div>
                   <div style={{ textAlign:"center" }} title={FA_TIER[r.tier].desc}><span style={{ ...pillStyle(r.tier===1?"strong":r.tier===2?"info":"blank"), letterSpacing:"0.06em" }}>{FA_TIER[r.tier].short}</span></div>
                   <div style={{ fontSize:18, fontWeight:800, color:qualified && !peerClassKnown && !r.peer ? T.fgM : scColor(r.status), textAlign:"right" }}>{r.val}</div>
-                  <div style={{ fontSize:11.5, color:T.fgS }}>{r.bench}{qualified && <span style={{ display:"block", fontSize:10.5, fontStyle:"italic" }}>{r.peer && r.peer.better != null ? `better than ${r.peer.better}% of ${peerClassKnown ? "your class" : "the assumed class"}` : r.tier===3?"needs normalising":"fixed threshold"}</span>}</div>
+                  <div style={{ fontSize:11.5, color:T.fgS }}>{r.bench}{qualified && <span style={{ display:"block", fontSize:10.5, fontStyle:"italic" }}>{r.peer && r.peer.better != null ? `better than ${r.peer.better}% of ${peerClassKnown ? "your class" : "the assumed class"}` : r.tier===3?"needs normalising":"fixed threshold"}</span>}{r.survey && <span style={{ display:"block", fontSize:10.5, color:T.fgM }}>{r.survey}</span>}</div>
                 </div>
               );
             };
@@ -5142,12 +5148,13 @@ function AssessmentProfileView({ mfp, scored, coverage, onFields, onError, onExp
     <div style={cardStyle()}>
       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", gap:12, flexWrap:"wrap", marginBottom:6 }}>
         <div style={cardLblStyle({ marginBottom:0 })}>Twelve blocks</div>
-        <span style={{ fontSize:11.5, color:T.fgS }}>Block score is the mean of its effective question scores. Tick marks show the assessed mean where a metric moved it.</span>
+        <span style={{ fontSize:11.5, color:T.fgS }}>Block score is the mean of its effective question scores. Dark ticks show the assessed mean where a metric moved it; hollow ticks show the survey mean ({SURVEY.n} farms).</span>
       </div>
       {MFP_BLOCKS.map(b => {
         const bs = scored.blocks[String(b.n)];
         const open = openBlock === b.n;
         const st = bs.mean5 == null ? "blank" : st5(bs.mean5);
+        const sm = surveyBlockMean(b.n);
         return (
           <div key={b.n} style={{ borderBottom:`1px solid ${T.div}` }}>
             <button type="button" onClick={() => setOpenBlock(open ? null : b.n)} aria-expanded={open} style={{ display:"flex", alignItems:"center", gap:12, width:"100%", padding:"10px 0", background:"none", border:"none", cursor:"pointer", font:"inherit", textAlign:"left" }}>
@@ -5156,8 +5163,10 @@ function AssessmentProfileView({ mfp, scored, coverage, onFields, onError, onExp
               <div style={{ flex:1, height:6, background:"#dde1e8", borderRadius:3, overflow:"visible", position:"relative" }}>
                 <div style={{ width:`${((bs.mean5||1)-1)/4*100}%`, height:"100%", background:scColor(st), borderRadius:3 }} />
                 {bs.overridden && bs.assessedMean5 != null && <div title={`Assessed ${bs.assessedMean5.toFixed(1)} / 5`} style={{ position:"absolute", top:-3, bottom:-3, left:`calc(${(bs.assessedMean5-1)/4*100}% - 1px)`, width:2, background:T.navy }} />}
+                {sm != null && <div title={`Survey mean ${sm.toFixed(2)} / 5 (${SURVEY.n} farms)`} style={{ position:"absolute", top:-3, bottom:-3, left:`calc(${(sm-1)/4*100}% - 2px)`, width:2, border:`1px solid ${T.fgM}`, background:T.bg, boxSizing:"content-box" }} />}
               </div>
               <span style={{ width:56, textAlign:"right", fontSize:13, fontWeight:600, color:scColor(st), flexShrink:0 }}>{bs.mean5 == null ? "—" : bs.mean5.toFixed(1)}<span style={{ fontSize:10.5, fontWeight:400, color:T.fgS }}> /5</span></span>
+              <span style={{ width:64, textAlign:"right", fontSize:11, color:T.fgS, flexShrink:0 }} title="Survey mean">{sm == null ? "" : `survey ${sm.toFixed(1)}`}</span>
               <span style={{ width:60, textAlign:"right", fontSize:12, color:T.fgM, flexShrink:0 }}>{bs.score100 == null ? "—" : bs.score100}<span style={{ fontSize:10.5, color:T.fgS }}> /100</span></span>
               <span style={{ width:84, display:"flex", justifyContent:"flex-end", flexShrink:0 }}>{bs.badge ? <ProvenanceBadge badge={bs.badge} /> : <span style={{ fontSize:11, color:T.fgS }}>{open ? "hide" : "show"}</span>}</span>
             </button>
