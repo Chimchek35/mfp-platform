@@ -1744,22 +1744,43 @@ function FA3({ fa, setFA }) {
 // FA STAGE 4 — Peer benchmarking
 // ─────────────────────────────────────────────────────────────────────────────
 function FA4({ fa, setFA }) {
-  const b = fa.s4bench;
-  const v = id => b[id]||""; const sv = (id,val) => setFA(s=>({...s,s4bench:{...s.s4bench,[id]:val}})); const gv = id => parseFloat(b[id]);
+  const b = fa.s4bench || {};
+  // The ratio deep dive already computes every figure this stage compares, so those
+  // values flow in automatically. A figure typed here overrides the computed one.
+  const R = computeFARatios(fa.s3vals || {});
+  const round = (x, d) => (x === null || x === undefined || !Number.isFinite(x)) ? null : Number(x.toFixed(d));
+  const derived = { oer: round(R.oer, 1), ipa: round(R.ipa, 0), grpa: round(R.grpa, 0), nrpa: round(R.nrpa, 0), dscr: round(R.dscr, 2), acres: parseFloat(fa.s3vals?.acres) > 0 ? parseFloat(fa.s3vals.acres) : null };
+  const v = id => b[id]||""; const sv = (id,val) => setFA(s=>({...s,s4bench:{...(s.s4bench||{}),[id]:val}}));
+  const gv = id => { const manual = parseFloat(b[id]); if (!isNaN(manual)) return manual; return derived[id] === null ? NaN : derived[id]; };
+  const srcOf = id => !isNaN(parseFloat(b[id])) ? "manual" : derived[id] !== null ? "derived" : "none";
+  const derivedCount = Object.keys(derived).filter(k => srcOf(k) === "derived").length;
   const B = [{key:"oer",label:"OER",unit:"%",avg:72,top:65,bot:85,lb:true},{key:"ipa",label:"Input cost/ac",unit:"$/ac",avg:507,top:478,bot:580,lb:true},{key:"grpa",label:"Gross revenue/ac",unit:"$/ac",avg:951,top:1017,bot:800,lb:false},{key:"nrpa",label:"Net return/ac",unit:"$/ac",avg:95,top:210,bot:20,lb:false},{key:"dscr",label:"DSCR",unit:"x",avg:1.10,top:1.40,bot:0.85,lb:false}];
   const clf = (bb,val) => { if(isNaN(val)) return "blank"; return bb.lb ? (val<=bb.top?"strong":val<=bb.avg?"watch":"vuln") : (val>=bb.top?"strong":val>=bb.avg?"watch":"vuln"); };
   const acres = gv("acres");
   const gaps = (!isNaN(acres)&&acres>0) ? B.filter(bb=>{const val=gv(bb.key);if(isNaN(val))return false;return bb.lb?val>bb.top:val<bb.top;}).map(bb=>{const val=gv(bb.key);return{label:bb.label,toTop:bb.lb?Math.round((val-bb.top)*acres):Math.round((bb.top-val)*acres)};}).filter(g=>g.toTop>0) : [];
   const pillLabel = { strong:"Top quartile", watch:"Peer avg", vuln:"Below avg", blank:"Enter value" };
   const unitSuf = bb => bb.unit==="%"?"%":bb.unit==="x"?"x":"";
+  const srcBadge = id => { const s = srcOf(id); if (s === "none") return null; return <span style={{ marginLeft:6, fontSize:10, fontWeight:700, color:s==="derived"?T.green:T.blue, textTransform:"uppercase", letterSpacing:".04em" }}>{s==="derived" ? "From ratios" : "Your figure"}</span>; };
+  // Plain render helper, not a component, so inputs keep focus while typing.
+  const renderField = (id, label, unit, placeholder) => (
+    <div key={id}>
+      <label style={labelStyle}>{label}{unit ? ` (${unit})` : ""}{srcBadge(id)}</label>
+      <input type="number" style={inputStyle()} placeholder={derived[id] !== null ? `${derived[id]} from ratio deep dive` : placeholder} value={v(id)} onChange={e=>sv(id,e.target.value)} />
+      {srcOf(id)==="manual" && derived[id] !== null && <button type="button" onClick={()=>sv(id,"")} style={{ background:"none", border:"none", padding:0, marginTop:4, fontSize:11, color:T.blue, cursor:"pointer", textDecoration:"underline" }}>Use computed {derived[id]}{unit==="%"?"%":unit==="x"?"x":""}</button>}
+    </div>
+  );
   return (
     <div>
-      <Head eyebrow="Financial Analysis · Stage 7" title="Peer benchmarking" sub="Compeer Financial and IFBA 2023–24 data. Mid-size row crop, $500K–$5M revenue, Midwest region." />
+      <Head eyebrow="Financial Analysis · Stage 6" title="Peer benchmarking" sub="Compeer Financial and IFBA 2023–24 data. Mid-size row crop, $500K–$5M revenue, Midwest region." />
+      {derivedCount === 0 && !R.hasData && (
+        <div style={{ marginBottom:16 }}><Flag type="info">Nothing to benchmark yet. Enter gross farm income, operating expenses and acres in the Stage 5 <b>Financial inputs</b> tab and these figures fill in on their own, or type them below.</Flag></div>
+      )}
       <div style={cardStyle()}>
-        <div style={cardLblStyle()}>Enter your values</div>
+        <div style={cardLblStyle()}>Your values</div>
+        <div style={{ fontSize:12.5, color:T.fgM, marginBottom:14, lineHeight:1.5 }}>{R.hasData ? "Pulled from your Stage 5 ratio deep dive. Type over any figure to use a different number, for example a lender's calculation." : "Fill the Stage 5 inputs to have these computed, or enter them directly."}</div>
         <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:14 }}>
-          {B.map(bb => (<div key={bb.key}><label style={labelStyle}>{bb.label} ({bb.unit})</label><input type="number" style={inputStyle()} placeholder={`e.g. ${bb.avg}`} value={v(bb.key)} onChange={e=>sv(bb.key,e.target.value)} /></div>))}
-          <div><label style={labelStyle}>Acres farmed</label><input type="number" style={inputStyle()} placeholder="e.g. 1200" value={v("acres")} onChange={e=>sv("acres",e.target.value)} /></div>
+          {B.map(bb => renderField(bb.key, bb.label, bb.unit, `e.g. ${bb.avg}`))}
+          {renderField("acres", "Acres farmed", "", "e.g. 1200")}
         </div>
       </div>
       <div style={cardStyle()}>
@@ -8898,7 +8919,7 @@ else if (isRD) { if (rd.stage<rdTotal) goRD(rd.stage+1); else goLegacy(1); }
         : isRisk
           ? "Risk is not a failure to eliminate. It is the weather, markets, health, people, and surprises you plan around so one hard season does not decide everything."
           : "Legacy is about people and a workable handoff, not just assets. We will make room for difficult conversations and practical next steps.";
-  const flowLabels = isVis ? ["Capabilities","Values","Rules","Statement","Profile","Document"] : isFA ? ["Books","Enterprises","Goals","Records","Cash flow","Benchmarking","Scorecard"] : [];
+  const flowLabels = isVis ? ["Capabilities","Values","Rules","Statement","Profile","Document"] : isFA ? ["Books","Enterprises","Records","Budget","Ratios","Benchmarking"] : [];
   const visStepRanges = [[1,2],[3,4],[5,8],[9,9],[10,10],[11,11]];
   const stageVisual = flowLabels.length ? <div aria-label={`${moduleName} progress map`} style={{ display:"flex", alignItems:"center", gap:0, marginBottom:26, padding:"14px 18px", background:T.bgAlt, borderRadius:16, border:`1px solid ${T.div}`, overflowX:"auto" }}>{flowLabels.map((label,i)=>{ const n=Math.min(i+1, total); const [from,to]=isVis ? visStepRanges[i] : [n,n]; const active=stage>=from && stage<=to; const done=stage>to; return <Fragment key={label}><div style={{ minWidth:78, display:"flex", flexDirection:"column", alignItems:"center", gap:6, color:active?T.navy:done?T.green:T.fgS }}><div style={{ width:28, height:28, borderRadius:"50%", display:"grid", placeItems:"center", background:active?T.blue:done?T.green:"#fff", color:active||done?"#fff":T.fgS, fontSize:11, fontWeight:800, border:`1px solid ${active?T.blue:done?T.green:T.border}` }}>{done?<IconCheckSm size={12}/>:i+1}</div><span style={{ fontSize:10.5, fontWeight:active?750:550, whiteSpace:"nowrap" }}>{label}</span></div>{i<flowLabels.length-1&&<div style={{ minWidth:18, height:2, background:i+1<stage?T.green:T.border, marginBottom:22 }} />}</Fragment>})}</div> : null;
   const stageCard = (
