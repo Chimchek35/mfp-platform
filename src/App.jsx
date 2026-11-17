@@ -3591,10 +3591,27 @@ function RD1({ rd, setRData, fa, profile }) {
   const profileFarmType = profileFarmTypes[0] || profile?.farmType || "";
   const profileRevenueTier = profile?.revTier || "";
   const profileBusinessStage = profile?.bizStage || profile?.businessStage || "";
-  const financialRevenue = Number(fa?.s3vals?.grossRevenue || fa?.s3vals?.grossFarmRevenue || 0);
+  // FA stores gross farm income under `gross`; the Strategic Vision profile keeps a
+  // free-text gross income. Either one is enough to place the farm in a revenue tier.
+  const parseMoney = (v) => { const n = parseFloat(String(v ?? "").replace(/[^0-9.]/g, "")); return Number.isFinite(n) ? n : 0; };
+  const financialRevenue = parseMoney(fa?.s3vals?.gross) || parseMoney(profile?.grossIncome);
   const financialRevenueTier = financialRevenue >= 5000000 ? "$5M+" : financialRevenue >= 2000000 ? "$2M – $5M" : financialRevenue >= 500000 ? "$500K – $2M" : financialRevenue > 0 ? "< $500K" : "";
   const profileSwot = [profile?.swotStrengths && `Strengths: ${profile.swotStrengths}`, profile?.swotWeaknesses && `Weaknesses: ${profile.swotWeaknesses}`, profile?.swotOpportunities && `Opportunities: ${profile.swotOpportunities}`, profile?.swotThreats && `Threats: ${profile.swotThreats}`].filter(Boolean).join("\n");
-  useEffect(() => { const patch={}; if(profileFarmTypes.length || fa?.enterprises?.length) { patch.farmTypes=profileFarmTypes.length ? profileFarmTypes : [({ grain:"Row crop (grain)", dairy:"Dairy", beef:"Beef cattle", hogs:"Hogs", broilers:"Broilers", layers:"Layers", mixed:"Mixed" }[fa.enterprises[0]] || "")].filter(Boolean); patch.farmType=patch.farmTypes[0] || ""; } if(financialRevenueTier) patch.revTier=financialRevenueTier; if(profileBusinessStage) patch.bizStage=profileBusinessStage; if(profileSwot) patch.swot=profileSwot; const score=faScoreOf(fa); if(Number.isFinite(score)) patch.mfpScore=score; if(Object.keys(patch).length) setRData(s=>({ ...s, data:{ ...(s.data||{}), baseline:{ ...(s.data?.baseline||{}), ...patch } } })); }, [profileFarmTypes.join("|"), profileFarmType, profileRevenueTier, profileBusinessStage, profileSwot, financialRevenueTier, fa]);
+  // Carry upstream answers into the baseline, but only into fields the farmer has not
+  // already filled here so their edits on this screen survive re-renders.
+  useEffect(() => {
+    setRData(s => {
+      const cur = s.baseline || {}; const patch = {};
+      const hasTypes = (cur.farmTypes||[]).length > 0 || !!cur.farmType;
+      if (!hasTypes && (profileFarmTypes.length || fa?.enterprises?.length)) { patch.farmTypes = profileFarmTypes.length ? profileFarmTypes : [({ grain:"Row crop (grain)", dairy:"Dairy", beef:"Beef cattle", hogs:"Hogs", broilers:"Broilers", layers:"Layers", mixed:"Mixed" }[fa.enterprises[0]] || "")].filter(Boolean); patch.farmType = patch.farmTypes[0] || ""; }
+      const tier = financialRevenueTier || profileRevenueTier;
+      if (tier && !cur.revTier) patch.revTier = tier;
+      if (profileBusinessStage && !cur.bizStage) patch.bizStage = profileBusinessStage;
+      if (profileSwot && !cur.swot) patch.swot = profileSwot;
+      const score = faScoreOf(fa); if (Number.isFinite(score) && !cur.mfpScore) patch.mfpScore = score;
+      return Object.keys(patch).length ? { ...s, baseline:{ ...cur, ...patch } } : s;
+    });
+  }, [profileFarmTypes.join("|"), profileFarmType, profileRevenueTier, profileBusinessStage, profileSwot, financialRevenueTier, fa]);
   const set = (f,v) => setRData(s => ({ ...s, baseline:{ ...(s.baseline||{}), [f]:v } }));
   const inheritedTypes = Array.isArray(profile?.farmTypes) ? profile.farmTypes : String(profile?.productionMix||"").split(/,|;|\n/).map(v=>v.trim()).filter(Boolean);
   const farmTypes = [...new Set((b.farmTypes||((b.farmType||"")?[b.farmType]:[])).concat(inheritedTypes))];
@@ -3612,7 +3629,10 @@ function RD1({ rd, setRData, fa, profile }) {
         <div style={cardLblStyle()}>Farm profile — confirm or update</div>
         <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:14 }}>
   <div><label style={labelStyle}>Farm types</label><div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8 }}>{FARM.map(type=><label key={type} style={{ display:"flex", alignItems:"center", gap:8, padding:"9px 10px", border:`1px solid ${farmTypes.includes(type)?T.blue:T.border}`, borderRadius:8, background:farmTypes.includes(type)?T.blueL:"#fff", cursor:"pointer", fontSize:12.5 }}><input type="checkbox" checked={farmTypes.includes(type)} onChange={()=>toggleFarmType(type)} />{type}</label>)}</div></div>
-  <div><label style={labelStyle}>Revenue tier</label><div style={{ padding:"11px 12px", border:`1px solid ${T.border}`, borderRadius:8, background:T.bgAlt, color:T.fgM, fontSize:13 }}>{b.revTier||"Calculated after Financial Analysis"}</div></div>
+  <div>
+    <SelField label="Revenue tier" k="revTier" opts={TIERS} val={b.revTier||""} />
+    <div style={{ fontSize:11.5, color:T.fgS, marginTop:6, lineHeight:1.5 }}>{financialRevenueTier ? <>Placed from gross farm income of <b>{"$" + Math.round(financialRevenue).toLocaleString()}</b> in {parseMoney(fa?.s3vals?.gross) ? "Financial Analysis" : "your Strategic Vision profile"}. Change it if that figure is not representative.</> : "Financial Analysis has no gross farm income yet, so pick the tier that fits your typical year. It sets the peer group below and is required to continue."}</div>
+  </div>
           <SelField label="Business stage" k="bizStage" opts={STAGES} val={b.bizStage||""} />
                 </div>
       </div>
@@ -8680,14 +8700,15 @@ export default function App() {
   const pct = isFA ? faPct : isRD ? rdPct : isLeg ? legPct : isVis ? visPct : riskPct;
   const rdUnlocked = vis.stage >= visTotal && fa.stage >= faTotal;
 
-  const canAdvance = useMemo(() => {
-    if (isFA) return true;
-    if (isRD) { const d = rd.data, g = d.goals2||{}, leverItems = d.leverItems||{}, b = d.baseline||{}, sel = d.selectedOpps||[];
-      if (!rdUnlocked) return false;
-      if (!b.revTier) return false;
-      return true; }
-    return true;
-  }, [isFA, isRD, fa, rd, rdUnlocked]);
+  // Empty string means the stage can advance; otherwise it is the reason shown beside the Next button.
+  const advanceBlock = useMemo(() => {
+    if (isRD) {
+      if (!rdUnlocked) return "Finish Strategic Vision and Financial Analysis first.";
+      if (!(rd.data.baseline||{}).revTier) return "Choose a revenue tier to continue.";
+    }
+    return "";
+  }, [isRD, rd, rdUnlocked]);
+  const canAdvance = advanceBlock === "";
 
   const faScore = faScoreOf(fa);
   const faTier = faTierOf(fa);
@@ -9095,7 +9116,10 @@ else if (isRD) { if (rd.stage<rdTotal) goRD(rd.stage+1); else goLegacy(1); }
             {!riskConvoActive && !legCompareActive && (
               <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", paddingTop:22, borderTop:`1px solid ${T.border}`, marginTop:26 }}>
                 <button onClick={onBack} style={{ ...btnStyle("outline"), opacity:backDisabled?0.4:1, pointerEvents:backDisabled?"none":"auto" }}>{backLabel}</button>
-                <button onClick={onNext} style={{ ...btnStyle("primary"), opacity:canAdvance?1:0.4, pointerEvents:canAdvance?"auto":"none" }}>{nextLabel}</button>
+                <div style={{ display:"flex", alignItems:"center", gap:12 }}>
+                  {!canAdvance && <span style={{ fontSize:12, color:T.fgM }}>{advanceBlock}</span>}
+                  <button onClick={onNext} aria-disabled={!canAdvance} style={{ ...btnStyle("primary"), opacity:canAdvance?1:0.4, pointerEvents:canAdvance?"auto":"none" }}>{nextLabel}</button>
+                </div>
               </div>
             )}
           </div>
