@@ -3,6 +3,7 @@ import { loadSavedWork, syncSavedWork } from "./backend.js";
 import EagleEye from "./EagleEye.jsx";
 import FarmKnowledgeSearch from "./FarmKnowledgeSearch.jsx";
 import { MFP_BLOCKS, MFP_UNCOVERED_BLOCKS, isMFPProfile, validateProfile, importProfile, applyOverrides as applyProfileOverrides, computeBlockScores, exportProfile, noProfileSummary, coverageOf, to100, clamp5 } from "./mfp-profile.js";
+import { peerClassOf, peerKindOf, peerBand, peerBenchText } from "./peer-class.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // FONTS  (system stack, matching the MFP action plan design language)
@@ -653,7 +654,7 @@ const OPPS = [
   { id:"beefOnDairy", label:"Beef-on-dairy breeding program", category:"Financial capital", cluster:"Livestock-Specific Ventures", growthTier:2, sizeFit:["mid","large"], desc:"Breed a share of the dairy herd to beef genetics — crossbred calves sell at a significant premium over straight dairy calves.", time:"9–15 months", capital:"$5K–$15K (semen + sorting)", fit:{asset:50,trust:30,risk:75}, reg:1, seasonal:2, entSpecific:"dairy" , effort:3, liquidity:3 },
   { id:"breeding", label:"Breeding stock sales", category:"Human capital", cluster:"Livestock-Specific Ventures", growthTier:3, sizeFit:["small","mid"], desc:"Market high-quality breeding animals to other farmers, building on recognized genetics or bloodlines.", time:"12–24 months", capital:"$5K–$20K", fit:{asset:55,trust:70,risk:40}, reg:2, seasonal:2 , effort:3, liquidity:2 },
   { id:"crpGrazing", label:"CRP land grazing access", category:"Assets", cluster:"Livestock-Specific Ventures", growthTier:3, sizeFit:["small","mid"], desc:"Expand grazing capacity onto enrolled Conservation Reserve Program acres. This depends on pending legislation — the bipartisan Thune-Klobuchar CRP Improvement Act would ease grazing access rules, but it has not passed as of mid-2026. Track its status before building a plan around it.", time:"Uncertain — depends on legislative timeline", capital:"$0–$5K (fencing, water access)", fit:{asset:60,trust:25,risk:50}, reg:3, seasonal:2, entSpecific:"beef", effort:2, liquidity:2, policyPrograms:[{name:"CRP Improvement Act (Thune-Klobuchar, bipartisan)",agency:"U.S. Senate Committee on Agriculture, Nutrition and Forestry",note:"Reintroduced legislation that would improve grazing access on CRP acres and expand enrollment flexibility. Status as of mid-2026: introduced, not enacted — part of a broader Farm Bill negotiation that has stalled repeatedly since the 2018 Farm Bill. Confirm current status with your FSA office before counting on expanded access."}] },
-  { id:"addBeefHerd", label:"Add a beef cow-calf herd", category:"Assets", cluster:"On-Farm Production Diversification", growthTier:3, sizeFit:["small","mid"], desc:"Convert marginal ground, crop residue, and underutilized land into a new cow-calf enterprise — a natural complement for row-crop or dairy operations that don't currently run cattle, rather than a side business layered on top of what you already do.", time:"12–24 months to positive cash flow", capital:"$15K–$60K (herd, fencing, water access)", fit:{asset:65,trust:40,risk:45}, reg:2, seasonal:2, entExclude:["beef"], effort:4, liquidity:2 },
+  { id:"addBeefHerd", label:"Add a beef cow-calf herd", category:"Assets", cluster:"On-Farm Production Diversification", growthTier:3, sizeFit:["small","mid"], desc:"Convert marginal ground, crop residue, and underutilized land into a new cow-calf enterprise — a natural complement for row-crop or dairy operations that don't currently run cattle, rather than a side business layered on top of what you already do.", time:"12–24 months to positive cash flow", capital:"$15K���$60K (herd, fencing, water access)", fit:{asset:65,trust:40,risk:45}, reg:2, seasonal:2, entExclude:["beef"], effort:4, liquidity:2 },
   { id:"growFeedCrops", label:"Grow your own livestock feed", category:"Financial capital", cluster:"On-Farm Production Diversification", growthTier:3, sizeFit:["small","mid","large"], desc:"Convert purchased-feed dependency into home-grown corn, hay, or forage acres — reduces feed cost volatility and captures margin currently going to your grain supplier. The natural complement for a beef or dairy operation that doesn't currently grow its own grain.", time:"One growing season to first harvest", capital:"$10K–$40K (equipment access, seed, inputs)", fit:{asset:55,trust:20,risk:70}, reg:1, seasonal:4, entRelevant:["beef","dairy"], entExclude:["grain"], effort:4, liquidity:3 },
   { id:"vegetableCrops", label:"Vegetable & produce production", category:"Human capital", cluster:"On-Farm Production Diversification", growthTier:3, sizeFit:["small","mid"], desc:"Diversify into vegetables or produce on a pilot scale — a market garden, hoop house, or small acreage. Whether this makes sense at all depends heavily on your specific region, soil type, and access to water and direct markets; confirm suitability with your local extension office before committing capital.", time:"6–12 months to first harvest", capital:"$5K–$30K (seed, irrigation, hoop house)", fit:{asset:30,trust:70,risk:35}, reg:3, seasonal:3, effort:5, liquidity:3 },
   { id:"perennialCrops", label:"Perennial crops (orchard, vineyard, agroforestry)", category:"Assets", cluster:"On-Farm Production Diversification", growthTier:3, sizeFit:["small","mid"], desc:"Establish an orchard, vineyard, or agroforestry planting on suitable acres. This is the longest-horizon production option in this library — most perennials take 3–7 years to reach meaningful harvest — and suitability is entirely dependent on your region's soil, climate, and water access. A soil test and extension consultation should come before any planting decision.", time:"3–7 years to meaningful harvest", capital:"$15K–$75K (establishment costs)", fit:{asset:45,trust:40,risk:55}, reg:2, seasonal:2, effort:4, liquidity:1 },
@@ -995,7 +996,11 @@ const FA_TIER = {
 // balance sheet snapshots, not one. This is fully optional and additive: if a farmer
 // hasn't filled in any of these line items, every adjustment defaults to zero and the
 // engine produces exactly the same cash-basis numbers as before.
-const computeFARatios = (s3) => {
+// `ctx` carries what the income statement cannot: the peer kind (from the enterprise
+// registry) and the capacity counts (idle weeks, storage, idle ground). Callers that
+// only have s3vals still get every ratio; Tier 2/3 labels then fall back to fixed
+// thresholds and the capacity family reads as not entered.
+const computeFARatios = (s3, ctx = {}) => {
   const gv = id => parseFloat(s3?.[id])||0;
   const gross=gv("gross"), opex=gv("opex"), inputs=gv("inputs"), depr=gv("depr"), interest=gv("interest"), acres=gv("acres"), principal=gv("principal");
   const beginAssets=gv("beginAssets"), beginLiab=gv("beginLiab"), endAssets=gv("endAssets"), livingWithdrawals=gv("livingWithdrawals"), incomeTaxes=gv("incomeTaxes");
@@ -1077,27 +1082,67 @@ const computeFARatios = (s3) => {
   const laborProductivity = hasData && fte > 0 ? effGross / fte : null;
   const laborCostPerAcre = hasData && totalLabor > 0 ? totalLabor / acres : null;
 
-  // Machinery
+  // ── Asset utilisation: three families that must not be averaged together ──
+  // Intensity asks how much capital sits under each acre; turnover asks how hard
+  // that capital works; capacity asks how many weeks it sits still. A farm can be
+  // heavy on all three or light on all three, and the pair intensity × capacity is
+  // what tells Revenue Diversification whether to push asset monetisation at all.
+  const rent = gv("rent");
   const machCostPerAcre = hasData && (depr > 0 || gv("repairs") > 0 || gv("fuelOil") > 0) ? (depr + gv("repairs") + gv("fuelOil")) / acres : null;
   const machInvestPerAcre = hasData && machineryValue > 0 ? machineryValue / acres : null;
+  // Cash rent plus owned ground charged at the cap rate, so owners and renters carry
+  // the same economic land cost and the figure converges across tenure.
+  const landCostPctRevenue = hasData && (rent > 0 || landValue > 0) ? (rent + impliedLandCharge) / effGross * 100 : null;
+  const revPerMachDollar = hasData && machineryValue > 0 ? effGross / machineryValue : null;
 
   // Tenure mix sets the peer class this farm belongs in.
   const ownedShare = avgAssets > 0 && hasNormInputs ? Math.min(100, (landValue / avgAssets) * 100) : null;
   const tenureClass = ownedShare === null ? null
     : ownedShare >= 55 ? "owner-heavy" : ownedShare >= 20 ? "mixed tenure" : "renter-heavy";
+  const peerClass = peerClassOf({ kind: ctx.kind || null, acres, tenureClass });
+
+  // Capacity counts come from Financial Analysis (with Revenue Diversification's
+  // older location as a fallback, merged by the caller).
+  const capacity = ctx.capacity ? capacityAssets({ assets: ctx.capacity }, acres) : { score:null, rows:[], hasInputs:false, raw:{} };
+
+  // Tier 2/3 ratios take their label from the peer class when the class carries that
+  // metric; the fixed threshold remains the fallback and the displayed benchmark.
+  const fmtPct = x => Math.round(x) + "%", fmtUsd = x => fmt$(x), fmtX = x => x.toFixed(2) + "x";
+  const peerRow = (metricKey, v, fixedStatus, fixedBench, fmt) => {
+    const band = peerBand(v, metricKey, peerClass);
+    return { status: band && band.status ? band.status : fixedStatus, bench: band ? peerBenchText(metricKey, peerClass, fmt) : fixedBench, peer: band || null, fixedBench };
+  };
+  const pOer = peerRow("oer", oer, faStR(oer,65,80,true), "Strong < 65%", fmtPct);
+  const pAT = peerRow("assetTurnover", assetTurnover, faStR(assetTurnover,40,20,false), "Strong > 40%", fmtPct);
+  const pGrpa = peerRow("grossPerAcre", grpa, faStR(grpa,951,800,false), "Strong > $951", fmtUsd);
+  const pDA = peerRow("debtToAsset", debtToAsset, faStR(debtToAsset,30,60,true), "Strong < 30%", fmtPct);
+  const pMachInv = peerRow("machInvPerAcre", machInvestPerAcre, faStR(machInvestPerAcre,500,800,true), "Typical ≈ $650/ac", fmtUsd);
+  const pMachCost = peerRow("machCostPerAcre", machCostPerAcre, faStR(machCostPerAcre,120,190,true), "Typical ≈ $150/ac", fmtUsd);
+  const pLandCost = peerRow("landCostPctRevenue", landCostPctRevenue, faStR(landCostPctRevenue,23,35,true), "Strong < 23%", fmtPct);
+  const pOpAT = peerRow("opAssetTurnover", opAssetTurnover, faStR(opAssetTurnover,110,75,false), "Strong > 110%", fmtPct);
+  const pRevMach = peerRow("revPerMachDollar", revPerMachDollar, faStR(revPerMachDollar,2.0,1.2,false), "Strong > 2.0x", fmtX);
+  // Idle capacity is not a solvency risk, so it never reads "vulnerable": a well-used
+  // line is strong and anything else is a conversation worth having.
+  const capacityStatus = capacity.score === null ? "blank" : capacity.score < 35 ? "strong" : "watch";
 
   // Tier 1 compares directly across almost any farm, so a fixed threshold is
   // defensible. Tier 2 needs a peer class (enterprise type, scale, tenure, region).
   // Tier 3 has a structural denominator and needs normalising, not just a peer group.
   const ratios = [
-    {key:"oer",cat:"efficiency",tier:2,label:"Operating expense ratio",val:faFP(oer),status:faStR(oer,65,80,true),bench:"Strong < 65%"},
+    {key:"oer",cat:"efficiency",tier:2,label:"Operating expense ratio",val:faFP(oer),...pOer},
     {key:"ipa",cat:"efficiency",tier:2,label:"Input cost per acre",val:fmt$(ipa)+"/ac",status:faStR(ipa,478,535,true),bench:"Strong < $478"},
-    {key:"assetTurnover",cat:"efficiency",tier:3,label:"Asset turnover ratio",val:faFP(assetTurnover),status:faStR(assetTurnover,40,20,false),bench:"Strong > 40%"},
-    {key:"grpa",cat:"efficiency",tier:2,label:"Gross revenue per acre",val:fmt$(grpa)+"/ac",status:faStR(grpa,951,800,false),bench:"Strong > $951"},
+    {key:"assetTurnover",cat:"efficiency",tier:3,label:"Asset turnover ratio",val:faFP(assetTurnover),...pAT},
+    {key:"grpa",cat:"efficiency",tier:2,label:"Gross revenue per acre",val:fmt$(grpa)+"/ac",...pGrpa},
+    {key:"machInvPerAcre",cat:"efficiency",group:"intensity",tier:2,label:"Machinery investment per acre",val:machInvestPerAcre===null?"—":fmt$(machInvestPerAcre)+"/ac",...pMachInv},
+    {key:"machCostPerAcre",cat:"efficiency",group:"intensity",tier:2,label:"Machinery cost per acre",val:machCostPerAcre===null?"—":fmt$(machCostPerAcre)+"/ac",...pMachCost},
+    {key:"landCostPctRevenue",cat:"efficiency",group:"intensity",tier:2,label:"Land cost as share of revenue",val:faFP(landCostPctRevenue),...pLandCost},
+    {key:"opAssetTurnover",cat:"efficiency",group:"turnover",tier:3,label:"Operating asset turnover (land excluded)",val:faFP(opAssetTurnover),...pOpAT},
+    {key:"revPerMachDollar",cat:"efficiency",group:"turnover",tier:3,label:"Revenue per machinery dollar",val:revPerMachDollar===null?"—":fmtX(revPerMachDollar),...pRevMach},
+    {key:"idleCapacity",cat:"efficiency",group:"capacity",tier:1,label:"Idle capacity",val:capacity.score===null?"—":`${capacity.score}/100`,status:capacityStatus,bench:capacity.raw.equipmentIdleWeeks!=null?`${Math.round(capacity.raw.equipmentIdleWeeks)} idle weeks · ${peerBenchText("idleWeeks", peerClass, x=>Math.round(x)+" wk")||"peer median unavailable"}`:"Enter capacity counts below"},
     {key:"currentRatio",cat:"liquidity",tier:1,label:"Current ratio",val:currentRatio===null?"—":currentRatio.toFixed(2)+"x",status:faStR(currentRatio,2.0,1.0,false),bench:"Strong > 2.0x"},
     {key:"workingCapital",cat:"liquidity",tier:1,label:"Working capital",val:fmt$(workingCapital),status:workingCapital===null?"blank":workingCapital>0?"strong":"vuln",bench:"Positive covers a short year"},
     {key:"wcToRevenue",cat:"liquidity",tier:1,label:"Working capital to revenue",val:faFP(wcToRevenue),status:faStR(wcToRevenue,25,10,false),bench:"Strong > 25%"},
-    {key:"debtToAsset",cat:"solvency",tier:2,label:"Debt-to-asset ratio",val:faFP(debtToAsset),status:faStR(debtToAsset,30,60,true),bench:"Strong < 30%"},
+    {key:"debtToAsset",cat:"solvency",tier:2,label:"Debt-to-asset ratio",val:faFP(debtToAsset),...pDA},
     {key:"equityRatio",cat:"solvency",tier:2,label:"Equity ratio",val:faFP(equityRatio),status:faStR(equityRatio,70,40,false),bench:"Strong > 70%"},
     {key:"dscr",cat:"solvency",tier:1,label:"Debt service coverage",val:faFD(dscr),status:faStR(dscr,1.25,1.0,false),bench:"Strong > 1.25x"},
     ...(hasAccrualData ? [{key:"nfifo",cat:"growth",tier:2,label:"Net farm income from operations",val:fmt$(nfifo),status:nfifo===null?"blank":nfifo>=0?"strong":"vuln",bench:"Accrual-adjusted operating trend"}] : []),
@@ -1117,20 +1162,63 @@ const computeFARatios = (s3) => {
     { id:"growth", label:"Sustainable growth", desc:"Whether the operation earns enough to grow without new debt" },
     { id:"efficiency", label:"Efficiency", desc:"How much output the operation gets from what it puts in" },
   ];
+  // Idle capacity is informational in the roll-up: it is an opportunity signal for
+  // Revenue Diversification, not a weakness in how the farm is run.
   const categories = CATS.map(c => {
     const rs = ratios.filter(r => r.cat === c.id);
-    const scored = rs.filter(r => r.status !== "blank");
+    const scored = rs.filter(r => r.status !== "blank" && r.group !== "capacity");
     let status = "blank";
     if (scored.length) status = scored.reduce((w,r) => rank[r.status] < rank[w] ? r.status : w, "strong");
     return { ...c, ratios: rs, status, scored: scored.length, total: rs.length };
   });
 
+  // The reading crosses intensity with capacity. Intensity uses the peer band on
+  // machinery investment per acre (fixed $500/$800 cut-offs when the class is unknown);
+  // capacity uses the Assets lever score. Turnover is deliberately not in the cross:
+  // a land-heavy owner has low turnover with nothing idle, and pushing custom work at
+  // that farm would be wrong.
+  const intensityLevel = machInvestPerAcre === null ? null
+    : pMachInv.peer ? (pMachInv.peer.status === "vuln" ? "heavy" : pMachInv.peer.status === "strong" ? "lean" : "typical")
+    : machInvestPerAcre >= 800 ? "heavy" : machInvestPerAcre <= 500 ? "lean" : "typical";
+  const capacityLevel = capacity.score === null ? null : capacity.score >= 55 ? "idle" : capacity.score < 35 ? "used" : "some";
+  const READINGS = {
+    "heavy|idle": { id:"overEquippedIdle", label:"Over-equipped and idle", assetMult:1.25, pushAssets:true,
+      text:"More machinery per acre than peers, and it sits still for a meaningful part of the year. Asset monetisation is the right move: custom field work, trucking, storage and facility leasing put capital you already own to work without buying anything." },
+    "heavy|used": { id:"capitalHeavyWorking", label:"Capital-heavy but working", assetMult:0.9, pushAssets:false,
+      text:"Heavy on machinery per acre, but the line is busy. The turnover gap, if there is one, comes from land or price rather than idle iron, so asset paths would compete with the core operation for the same weeks." },
+    "lean|idle": { id:"leanIdle", label:"Lean but idle", assetMult:1.15, pushAssets:true,
+      text:"A light machinery line with open weeks. Putting it to work is a low-cost opportunity, though a bigger service business may need equipment the farm does not yet own." },
+    "lean|used": { id:"leanUsed", label:"Lean and fully used", assetMult:0.85, pushAssets:false,
+      text:"Little machinery per acre and little of it idle. Any new path needs capital, so the Financial capital lever decides what is realistic here." },
+  };
+  const readingKey = intensityLevel && capacityLevel && intensityLevel !== "typical" && capacityLevel !== "some" ? `${intensityLevel}|${capacityLevel}` : null;
+  const reading = readingKey ? { ...READINGS[readingKey], intensityLevel, capacityLevel }
+    : intensityLevel && capacityLevel ? { id:"typical", label:"Typical for the class", assetMult:1.0, pushAssets:capacityLevel === "idle", intensityLevel, capacityLevel,
+        text:"Machinery per acre and idle time both sit in the middle of the peer class. Asset paths rank on their own merits here; nothing about the asset base argues for or against them." }
+    : null;
+  const assetUtilization = {
+    intensity: ratios.filter(r => r.group === "intensity"),
+    turnover: ratios.filter(r => r.group === "turnover"),
+    capacity,
+    capacityRow: ratios.find(r => r.key === "idleCapacity"),
+    reading,
+    missing: [machInvestPerAcre === null && "machinery value", capacity.score === null && "capacity counts"].filter(Boolean),
+  };
+
   return { hasData, hasAccrualData, oer, ipa, grpa, nrpa, nfi, nfifo, dscr, assetTurnover, sgr,
            hasNormInputs, opAssetTurnover, econTotalExpense, impliedLandCharge, laborEfficiency, laborProductivity, laborCostPerAcre,
-           machCostPerAcre, machInvestPerAcre, ownedShare, tenureClass, landValue, totalLabor, fte,
+           machCostPerAcre, machInvestPerAcre, landCostPctRevenue, revPerMachDollar, ownedShare, tenureClass, landValue, machineryValue, totalLabor, fte,
            currentRatio, workingCapital, wcToRevenue, debtToAsset, equityRatio,
-           accrualGross, accrualOpex, ratios, categories };
+           accrualGross, accrualOpex, effGross, opAssets, ratios, categories, peerClass, assetUtilization };
 };
+
+// Capacity counts live in Financial Analysis; Revenue Diversification's older
+// location is read as a fallback so nothing already entered is lost.
+const capacityAssetsOf = (fa, rdData) => ({ ...EMPTY_CAPACITY.assets, ...(((rdData||{}).capacity||{}).assets||{}), ...((fa||{}).capacity||{}) });
+// The full ratio set for a farm, with the peer kind from the enterprise registry and
+// the merged capacity counts. Prefer this over computeFARatios(fa.s3vals) whenever
+// the whole fa object is at hand.
+const faRatiosOf = (fa, rdData) => computeFARatios(((fa||{}).s3vals)||{}, { kind: peerKindOf(fa), capacity: capacityAssetsOf(fa, rdData) });
 
 // Revenue concentration. HHI is scale-free, so unlike a count of revenue sources it
 // compares across any size of operation without a peer class. Its inverse, the
@@ -1374,13 +1462,21 @@ function FA3({ fa, setFA }) {
   const src = fa.s3src || {};
   const v = id => s3[id]||""; const sv = (id,val) => setFA(s=>{ const nextSrc = { ...(s.s3src||{}) }; delete nextSrc[id]; return {...s,s3vals:{...s.s3vals,[id]:val}, s3src:nextSrc}; });
   const fieldNote = id => { const from = describeS3Source(src[id]); if (from) return <span style={{ fontSize:10.5, color:T.dgreen, display:"block", marginTop:4, fontWeight:600 }}>{from}</span>; if (v(id) && v(id) === GENERIC_FARM_FINANCIALS[id]) return <span style={{ fontSize:10.5, color:T.fgS, display:"block", marginTop:4, fontStyle:"italic" }}>Example value — replace with your own or import a record above</span>; return null; };
-  const R = computeFARatios(s3);
-  const { hasData, hasAccrualData, nfi, nfifo, oer, dscr, assetTurnover, sgr, ratios: RATIOS } = R;
+  const R = faRatiosOf(fa);
+  const { hasData, hasAccrualData, nfi, nfifo, oer, dscr, assetTurnover, sgr, ratios: RATIOS, peerClass, assetUtilization: AU } = R;
   const [showAccrual, setShowAccrual] = useState(hasAccrualData);
   const [ratioTab, setRatioTab] = useState("balance");
   const entList = ((fa.ent||{}).list)||[];
   const entKinds = [...new Set(entList.map(e => (FINANCIAL_ENT_KINDS.find(k => k[0] === e.kind) || [])[1]).filter(Boolean))];
-  const peerClassKnown = R.tenureClass !== null && entKinds.length > 0;
+  const peerClassKnown = peerClass.known;
+  const capA = capacityAssetsOf(fa);
+  const setCapA = (key, value) => setFA(s => ({ ...s, capacity:{ ...(s.capacity||{}), [key]:value } }));
+  const coreRatios = RATIOS.filter(r => !r.group);
+  const UTIL_GROUPS = [
+    ["intensity", "Intensity", "How much capital sits under each acre. Tier 2: a dairy and a row-crop farm have different sane figures, so these read against your peer class."],
+    ["turnover", "Turnover", "How hard that capital works. Tier 3: the denominator is structural, so land is excluded and the figure is read within tenure."],
+    ["capacity", "Capacity", "How many weeks it sits still. Tier 1: idle weeks are idle weeks on any farm. This row is informational and does not move the Efficiency roll-up."],
+  ];
   const conf = basisConfidence(fa.accounting);
   // Needed to make ratios comparable across farms. These separate performance from
   // balance sheet structure, which is what a fixed benchmark cannot do.
@@ -1469,6 +1565,7 @@ function FA3({ fa, setFA }) {
         {hasData && R.hasNormInputs && (
           <div style={{ marginTop:16, background:T.bgAlt, borderRadius:8, padding:"13px 16px" }}>
             <div style={{ fontSize:10.5, letterSpacing:"0.13em", textTransform:"uppercase", color:T.fgS, marginBottom:10 }}>Your comparison class</div>
+            <div style={{ fontSize:13, fontWeight:700, color:T.navy, marginBottom:10 }}>{peerClass.label}<span style={{ fontWeight:500, color:T.fgS }}> · {peerClass.n.toLocaleString()} farms in class{peerClass.scaleLabel ? ` · ${peerClass.scaleLabel}` : ""}</span></div>
             <div style={{ display:"flex", gap:26, flexWrap:"wrap" }}>
               {[["Tenure", R.tenureClass || "—"],
                 ["Enterprise type", entKinds.length ? entKinds.join(", ") : "not recorded"],
@@ -1487,6 +1584,55 @@ function FA3({ fa, setFA }) {
               {R.laborEfficiency!==null && ` Labour target for your enterprise mix: ${laborTargetFor(fa).basis}.`}
             </p>
           </div>
+        )}
+      </div>
+      <div style={{ ...cardStyle({ borderTop:`4px solid ${T.dgreen}` }), display:ratioTab==="balance"?"block":"none" }}>
+        <div style={cardLblStyle()}>Asset utilisation</div>
+        <div style={{ fontSize:12.5, color:T.fgM, marginBottom:14, lineHeight:1.55 }}>
+          Three questions that must not be averaged into one. <b>Intensity</b>: how much capital sits under each acre. <b>Turnover</b>: how hard it works. <b>Capacity</b>: how many weeks it sits still. The intensity and turnover rows come from the figures above; capacity needs the counts below, which are shared with the Revenue Diversification Assets lever.
+        </div>
+        <div style={{ display:"flex", gap:10, flexWrap:"wrap", marginBottom:6 }}>
+          {[["hasStorableCrop","We grow a storable crop (grain, beans, hay)"],["ownsTrucks","We own trucks or trailers"]].map(([k,label]) => { const on = capA[k] !== false; return <label key={k} style={{ display:"flex", alignItems:"center", gap:8, fontSize:12.5, color:T.navy, cursor:"pointer", padding:"8px 12px", border:`1px solid ${T.border}`, borderRadius:8, background:on?T.greenL:"#fff" }}><input type="checkbox" checked={on} onChange={e=>setCapA(k,e.target.checked)} />{label}</label>; })}
+        </div>
+        {capA.hasStorableCrop !== false && (
+          <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(240px,1fr))", gap:"0 16px" }}>
+            <CountField label="How many bushels of on-farm storage do you have?" unit="bu" value={capA.storageCapacityBu ?? null} onChange={v=>setCapA("storageCapacityBu",v)} />
+            <CountField label="In a typical year, how many bushels do you produce?" unit="bu" value={capA.typicalProductionBu ?? null} onChange={v=>setCapA("typicalProductionBu",v)} />
+          </div>
+        )}
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(240px,1fr))", gap:"0 16px" }}>
+          <CountField label="In a typical year, how many weeks is your main equipment set not in use?" unit="weeks" max={52} value={capA.equipmentIdleWeeks ?? null} onChange={v=>setCapA("equipmentIdleWeeks",v)} />
+          <CountField label="How many acres are marginal, idle, or in a low-return use?" unit="acres" hint={parseFloat(s3.acres) > 0 ? `Compared against the ${Math.round(parseFloat(s3.acres)).toLocaleString()} total acres entered above.` : "Needs total acres in the Financial inputs tab; until then this question is excluded, not scored zero."} value={capA.marginalAcres ?? null} onChange={v=>setCapA("marginalAcres",v)} />
+          <CountField label="Roughly how many square feet of building space is not in active use?" unit="sq ft" value={capA.unusedBuildingSqFt ?? null} onChange={v=>setCapA("unusedBuildingSqFt",v)} />
+          {capA.ownsTrucks !== false && <CountField label="How many weeks a year are your trucks not hauling?" unit="weeks" max={52} value={capA.truckIdleWeeks ?? null} onChange={v=>setCapA("truckIdleWeeks",v)} />}
+        </div>
+        {hasData && (
+          <div style={{ marginTop:16, display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(220px,1fr))", gap:12 }}>
+            {UTIL_GROUPS.map(([g, label, desc]) => {
+              const rows = RATIOS.filter(r => r.group === g);
+              return (
+                <div key={g} style={{ border:`1px solid ${T.border}`, borderRadius:8, overflow:"hidden" }}>
+                  <div style={{ padding:"8px 12px", background:T.bgAlt }}><div style={{ fontSize:11, fontWeight:700, color:T.fgS, textTransform:"uppercase", letterSpacing:"0.06em" }}>{label}</div><div style={{ fontSize:11, color:T.fgS, lineHeight:1.45, marginTop:2 }}>{desc}</div></div>
+                  {rows.map(r => (
+                    <div key={r.key} style={{ display:"flex", justifyContent:"space-between", alignItems:"baseline", gap:8, padding:"7px 12px", borderTop:`1px solid ${T.border}` }}>
+                      <div style={{ minWidth:0 }}><div style={{ fontSize:12, color:T.fgM }}>{r.label}</div>{r.peer && r.peer.better != null && <div style={{ fontSize:10.5, color:T.fgS }}>better than {r.peer.better}% of class</div>}</div>
+                      <span style={{ fontSize:14, fontWeight:800, color:scColor(r.status), whiteSpace:"nowrap" }}>{r.val}</span>
+                    </div>
+                  ))}
+                </div>
+              );
+            })}
+          </div>
+        )}
+        {hasData && AU.reading && (
+          <div style={{ marginTop:14, background:T.bgAlt, borderRadius:8, padding:"13px 16px" }}>
+            <div style={{ fontSize:10.5, letterSpacing:"0.13em", textTransform:"uppercase", color:T.fgS, marginBottom:6 }}>Reading · intensity × capacity</div>
+            <div style={{ fontSize:15, fontWeight:700, color:T.navy, marginBottom:4 }}>{AU.reading.label}</div>
+            <p style={{ fontSize:12.5, color:T.fgM, margin:0, lineHeight:1.6 }}>{AU.reading.text} {AU.reading.assetMult !== 1 && <>Asset-fit paths in Revenue Diversification rank at <b>{AU.reading.assetMult.toFixed(2)}×</b> because of it.</>}</p>
+          </div>
+        )}
+        {hasData && !AU.reading && (
+          <div style={{ marginTop:14 }}><Flag type="info">The reading needs {AU.missing.length ? AU.missing.join(" and ") : "both machinery intensity and at least one capacity count"}. Until then Revenue Diversification ranks asset paths on the Assets lever alone.</Flag></div>
         )}
       </div>
       <div style={cardStyle()}>
@@ -1527,29 +1673,49 @@ function FA3({ fa, setFA }) {
           {hasData && !peerClassKnown && (
             <div style={{ marginBottom:12 }}>
               <Flag type="warn">
-                <b>Tier 2 and 3 labels below are not yet comparable.</b> Only Tier 1 ratios can honestly be read against a fixed strong / watch / vulnerable label. The rest need a peer class, and yours is incomplete: {[R.tenureClass===null && "enter owned land value in the Balance sheet tab to set your tenure class", entKinds.length===0 && "add your enterprises in Stage 2 to set your enterprise type"].filter(Boolean).join("; ")}. Until then, treat those labels as a row-crop, mixed-tenure reading rather than a verdict.
+                <b>Tier 2 and 3 labels below are read against an assumed class.</b> Only Tier 1 ratios can honestly be read against a fixed strong / watch / vulnerable label. The rest are read as percentiles within a peer class, and yours is incomplete: {peerClass.missing.map(m => m === "tenure (owned land value)" ? "enter owned land value in the Balance sheet tab to set your tenure class" : m === "enterprise type" ? "add your enterprises in Stage 2 to set your enterprise type" : "enter total acres to set your scale band").join("; ")}. Until then they are read against <b>{peerClass.label}</b> rather than your own.
               </Flag>
             </div>
           )}
           {hasData && peerClassKnown && (
             <div style={{ marginBottom:12 }}>
-              <Flag type="info">Tier 2 labels are read against a <b>{R.tenureClass}, {entKinds.join(" / ").toLowerCase()}</b> peer class. Tier 3 ratios carry a structural denominator; the land-excluded and economic versions in the Balance sheet tab are the comparable forms.</Flag>
+              <Flag type="info">Tier 2 and 3 labels are percentiles within a <b>{peerClass.label}</b> peer class of {peerClass.n.toLocaleString()} farms: strong is the top quartile, vulnerable the bottom. Tier 3 ratios carry a structural denominator; the land-excluded and economic versions are the comparable forms.</Flag>
             </div>
           )}
           <div style={{ display:"grid", gridTemplateColumns:"1fr 54px 100px 160px", gap:8, background:T.bgAlt, borderRadius:6, padding:"8px 12px", marginBottom:4 }}>
             {["Ratio","Tier","Your value","Benchmark"].map((hh,i)=>(<div key={i} style={{ fontSize:11, fontWeight:700, color:T.fgS, textTransform:"uppercase", letterSpacing:"0.05em", textAlign:i===2?"right":i===1?"center":"left" }}>{hh}</div>))}
           </div>
-          {RATIOS.map((r,i) => {
-            const qualified = r.tier !== 1 && r.status !== "blank";
+          {(() => {
+            const row = (r, i) => {
+              const qualified = r.tier !== 1 && r.status !== "blank";
+              return (
+                <div key={r.key || i} style={{ display:"grid", gridTemplateColumns:"1fr 54px 100px 160px", gap:8, padding:"10px 12px", borderBottom:`1px solid ${T.div}`, alignItems:"center" }}>
+                  <div style={{ fontSize:13 }}>{r.label}</div>
+                  <div style={{ textAlign:"center" }} title={FA_TIER[r.tier].desc}><span style={{ ...pillStyle(r.tier===1?"strong":r.tier===2?"info":"blank"), letterSpacing:"0.06em" }}>{FA_TIER[r.tier].short}</span></div>
+                  <div style={{ fontSize:18, fontWeight:800, color:qualified && !peerClassKnown && !r.peer ? T.fgM : scColor(r.status), textAlign:"right" }}>{r.val}</div>
+                  <div style={{ fontSize:11.5, color:T.fgS }}>{r.bench}{qualified && <span style={{ display:"block", fontSize:10.5, fontStyle:"italic" }}>{r.peer && r.peer.better != null ? `better than ${r.peer.better}% of ${peerClassKnown ? "your class" : "the assumed class"}` : r.tier===3?"needs normalising":"fixed threshold"}</span>}</div>
+                </div>
+              );
+            };
             return (
-              <div key={i} style={{ display:"grid", gridTemplateColumns:"1fr 54px 100px 160px", gap:8, padding:"10px 12px", borderBottom:`1px solid ${T.div}`, alignItems:"center" }}>
-                <div style={{ fontSize:13 }}>{r.label}</div>
-                <div style={{ textAlign:"center" }} title={FA_TIER[r.tier].desc}><span style={{ ...pillStyle(r.tier===1?"strong":r.tier===2?"info":"blank"), letterSpacing:"0.06em" }}>{FA_TIER[r.tier].short}</span></div>
-                <div style={{ fontSize:18, fontWeight:800, color:qualified && !peerClassKnown ? T.fgM : scColor(r.status), textAlign:"right" }}>{r.val}</div>
-                <div style={{ fontSize:11.5, color:T.fgS }}>{r.bench}{qualified && <span style={{ display:"block", fontSize:10.5, fontStyle:"italic" }}>{r.tier===3?"needs normalising":peerClassKnown?"within peer class":"peer class pending"}</span>}</div>
-              </div>
+              <>
+                {coreRatios.map(row)}
+                <div style={{ display:"flex", alignItems:"baseline", gap:10, padding:"14px 12px 6px" }}>
+                  <span style={{ fontSize:11, fontWeight:700, color:T.fgS, textTransform:"uppercase", letterSpacing:"0.08em" }}>Asset utilisation</span>
+                  <span style={{ fontSize:11, color:T.fgS }}>Efficiency sub-block · intensity, turnover and capacity kept apart</span>
+                </div>
+                {UTIL_GROUPS.map(([g, label]) => {
+                  const rows = RATIOS.filter(r => r.group === g);
+                  return (
+                    <div key={g}>
+                      <div style={{ padding:"6px 12px 2px", fontSize:10.5, fontWeight:700, color:T.fgM, textTransform:"uppercase", letterSpacing:"0.06em" }}>{label}</div>
+                      {rows.map(row)}
+                    </div>
+                  );
+                })}
+              </>
             );
-          })}
+          })()}
           <div style={{ display:"flex", gap:16, flexWrap:"wrap", marginTop:12, fontSize:11.5, color:T.fgS, lineHeight:1.5 }}>
             {[1,2,3].map(t => <div key={t} style={{ flex:"1 1 200px" }}><b style={{ color:T.fgM }}>{FA_TIER[t].label}.</b> {FA_TIER[t].desc}</div>)}
           </div>
@@ -3096,7 +3262,7 @@ const CALENDAR_LEVELS = [
   { v:3, label:"Flat out", help:"No room at all" },
 ];
 const EMPTY_CAPACITY = { assets:{ hasStorableCrop:true, ownsTrucks:true }, calendar:null, behaviour:{}, financial:{} };
-const capacityOf = (d) => { const c = d?.capacity || {}; return { assets:{ ...EMPTY_CAPACITY.assets, ...(c.assets||{}) }, calendar:Array.isArray(c.calendar) && c.calendar.length===12 ? c.calendar : null, behaviour:c.behaviour||{}, financial:c.financial||{} }; };
+const capacityOf = (d, fa) => { const c = d?.capacity || {}; return { assets:capacityAssetsOf(fa, d), calendar:Array.isArray(c.calendar) && c.calendar.length===12 ? c.calendar : null, behaviour:c.behaviour||{}, financial:c.financial||{} }; };
 const numOrNull = (v) => { if (v === null || v === undefined || v === "") return null; const n = Number(v); return Number.isFinite(n) ? n : null; };
 const meanOf = (arr) => { const xs = arr.filter(v => v !== null && v !== undefined); return xs.length ? xs.reduce((s,v)=>s+v,0)/xs.length : null; };
 // bands: [[minInclusive, score], ...] in descending order; `floor` is the score below the lowest band
@@ -3228,9 +3394,10 @@ const capacityHuman = (cap) => {
 // One source of truth for lever scores. A lever is "objective" the moment its inputs
 // exist; otherwise it silently falls back to the slider value (or slider default) so a
 // farm with only slider data behaves exactly as before. Mixed mode is expected.
-const capacityReportOf = (rdData, faS3vals, faEnterprises) => {
+const capacityReportOf = (rdData, fa) => {
   const d = rdData || {};
-  const cap = capacityOf(d);
+  const faS3vals = fa?.s3vals, faEnterprises = fa?.enterprises;
+  const cap = capacityOf(d, fa);
   const sourceCount = new Set(faEnterprises || []).size + (d.selectedOpps || []).length;
   const financial = capacityFinancial(cap, faS3vals, sourceCount);
   const assets = capacityAssets(cap, faS3vals?.acres);
@@ -3241,7 +3408,7 @@ const capacityReportOf = (rdData, faS3vals, faEnterprises) => {
   const a = pick("asset", assets), t = pick("trust", human), r = pick("risk", financial);
   return { financial, assets, human, calendar:cap.calendar, scores:{ asset:a.score, trust:t.score, risk:r.score }, modes:{ asset:a.mode, trust:t.mode, risk:r.mode } };
 };
-const leverScoresOf = (rd, fa) => capacityReportOf(rd?.data, fa?.s3vals, fa?.enterprises).scores;
+const leverScoresOf = (rd, fa) => capacityReportOf(rd?.data, fa).scores;
 const leverPct = (scores, k) => (scores && Number.isFinite(scores[k])) ? scores[k] : 0;
 const leverColor = (scores, k) => leverScoreColor(leverPct(scores, k));
 const LEVER_MODE_LABEL = { objective:"Measured", slider:"Self-rated", default:"Not yet measured" };
@@ -3249,7 +3416,7 @@ const LEVER_MODE_LABEL = { objective:"Measured", slider:"Self-rated", default:"N
 // Derived from the four computed financial health categories rather than a manual
 // self-rating. Falls back to a neutral 3.0 until enough financial data is entered.
 const faScoreOf = (fa) => {
-  const { hasData, categories } = computeFARatios(fa.s3vals);
+  const { hasData, categories } = faRatiosOf(fa);
   if (!hasData) return 3.0;
   const scored = (categories||[]).filter(c => c.status !== "blank");
   if (!scored.length) return 3.0;
@@ -3268,10 +3435,10 @@ const faScoreOf = (fa) => {
 // Each rule reads a specific computed ratio and, when it trips, names a concrete
 // conversation the lender is positioned to bring. Rules are ordered by urgency, and
 // the signal that triggered each one is shown so nothing reads as a generic pitch.
-const lenderOpportunities = (fa) => {
-  const r = computeFARatios(fa.s3vals);
+const lenderOpportunities = (fa, rdData) => {
+  const r = faRatiosOf(fa, rdData);
   if (!r.hasData) return [];
-  const { dscr, currentRatio, debtToAsset, sgr, oer, assetTurnover, nfi, hasAccrualData } = r;
+  const { dscr, currentRatio, debtToAsset, sgr, oer, assetTurnover, opAssetTurnover, nfi, hasAccrualData, assetUtilization } = r;
   const pct = (v) => Math.round(v) + "%";
   const x = (v) => v.toFixed(2) + "x";
   const out = [];
@@ -3314,9 +3481,21 @@ const lenderOpportunities = (fa) => {
     body:"More than eighty cents of every revenue dollar is consumed before depreciation and interest. Financing structure cannot fix a cost problem of this size, but it can buy time while the cost side is addressed.",
     signal:`Signal: operating expense ratio at ${pct(oer)}` });
 
-  if (assetTurnover !== null && assetTurnover < 20) out.push({ kind:"o", tag:"ASSET UTILISATION", title:"A large asset base relative to the revenue it produces",
-    body:"Common for land-heavy operations and not automatically a problem, but worth understanding. Options include putting idle capacity to work through custom services, or reviewing whether every asset still earns its place on the balance sheet.",
-    signal:`Signal: asset turnover ratio at ${pct(assetTurnover)}` });
+  // Raw turnover alone would flag every land-heavy owner. The card fires only when
+  // the land-excluded figure is weak AND something is measurably idle; when turnover
+  // is weak but nothing sits still, the useful conversation is about land or price.
+  const opAT = opAssetTurnover !== null ? opAssetTurnover : assetTurnover;
+  const opATWeak = opAT !== null && (assetUtilization.turnover[0]?.peer ? assetUtilization.turnover[0].peer.status === "vuln" : opAT < (opAssetTurnover !== null ? 75 : 20));
+  const capScore = assetUtilization.capacity.score;
+  if (opATWeak && capScore !== null && capScore >= 55) out.push({ kind:"o", tag:"ASSET UTILISATION", title:"Assets are working below their class and part of the year is idle",
+    body:`${assetUtilization.reading ? assetUtilization.reading.text + " " : ""}Custom services, hauling and storage leasing are the paths that use what is already on the balance sheet; the Revenue Diversification module ranks them against this farm's own calendar.`,
+    signal:`Signal: operating asset turnover ${pct(opAT)}${opAssetTurnover === null ? " (raw; enter owned land value for the land-excluded figure)" : ""}, idle capacity ${capScore}/100` });
+  else if (opATWeak && capScore !== null && capScore < 35) out.push({ kind:"w", tag:"ASSET UTILISATION", title:"Turnover is weak but nothing is idle",
+    body:"The machinery line is busy, so the gap is not idle capacity. It is land that earns less than it costs, price, or yield. Pushing custom work here would compete with the core operation for the same weeks; the productive review is which acres and which assets earn their place.",
+    signal:`Signal: operating asset turnover ${pct(opAT)}, idle capacity ${capScore}/100` });
+  else if (opATWeak && capScore === null) out.push({ kind:"o", tag:"ASSET UTILISATION", title:"Turnover is weak; idle capacity has not been measured",
+    body:"Whether this is an opportunity or a structural fact depends on how many weeks the equipment, storage and ground sit unused. Those counts take two minutes in Financial Analysis and decide which conversation to have.",
+    signal:`Signal: operating asset turnover ${pct(opAT)}; capacity counts not entered` });
 
   if (hasAccrualData) out.push({ kind:"o", tag:"ACCRUAL VIEW", title:"Accrual-adjusted numbers are available for this operation",
     body:"Most farm credit files rely on cash-basis tax figures, which move income between years. This operation has entered the balance sheet detail needed for an accrual-adjusted view, which is the same basis FINBIN and peer benchmarks use. Worth using it in the credit narrative.",
@@ -3326,7 +3505,7 @@ const lenderOpportunities = (fa) => {
 };
 
 const faTierOf = (fa) => {
-  const { hasData, categories } = computeFARatios(fa.s3vals);
+  const { hasData, categories } = faRatiosOf(fa);
   if (!hasData) return "Optimize";
   const g = (categories||[]).find(c => c.id === "growth");
   if (!g || g.status === "blank") return "Optimize";
@@ -3348,13 +3527,22 @@ const faFinancialSignal = (faS3vals) => {
   return { hasData, distress, strong };
 };
 
-const scoredOpps = (rd, faEnterprises, faS3vals) => { const d=rd.data||{}; const g=d.goals2||{}; const b=d.baseline||{}; const capMap={zero:0,low:10000,medium:50000,high:200000}; const capLimit=capMap[g.capitalAppetite]!==undefined?capMap[g.capitalAppetite]:200000;
-  const capacity = capacityReportOf(d, faS3vals, faEnterprises); const lev = capacity.scores; const cal = capacity.calendar;
+// Asset-fit paths are the ones that monetise what the farm already owns. They take
+// their multiplier from the intensity × capacity reading, never from turnover alone.
+const ASSET_FIT_MIN = 60;
+const scoredOpps = (rd, fa) => { const d=rd.data||{}; const g=d.goals2||{}; const b=d.baseline||{}; const capMap={zero:0,low:10000,medium:50000,high:200000}; const capLimit=capMap[g.capitalAppetite]!==undefined?capMap[g.capitalAppetite]:200000;
+  const faEnterprises = fa?.enterprises, faS3vals = fa?.s3vals;
+  const capacity = capacityReportOf(d, fa); const lev = capacity.scores; const cal = capacity.calendar;
   const sizeBucket = sizeBucketFromTier(b.revTier);
   const { distress: faDistress, strong: faStrong } = faFinancialSignal(faS3vals);
+  const reading = faRatiosOf(fa, d).assetUtilization.reading;
   const enterprises = faEnterprises || [];
   const faEnt = enterprises[0] || "";
   return OPPS.map(o => { const a=o.fit.asset/100*leverPct(lev,"asset"), t=o.fit.trust/100*leverPct(lev,"trust"), r=o.fit.risk/100*leverPct(lev,"risk"); let leverMatch=(a+t+r)/3;
+    const assetFit = o.fit.asset >= ASSET_FIT_MIN;
+    const utilMult = assetFit && reading ? reading.assetMult : 1;
+    const utilReason = assetFit && reading && reading.assetMult !== 1 ? `${reading.assetMult > 1 ? "Ranks higher" : "Ranks lower"} because the asset base reads "${reading.label.toLowerCase()}".` : null;
+    leverMatch = leverMatch * utilMult;
     // Seasonal fit: does this path need the months the calendar says are already gone?
     const demandMonths = oppDemandMonths(o);
     const seasonFit = seasonalFit(cal, demandMonths);
@@ -3386,7 +3574,7 @@ const scoredOpps = (rd, faEnterprises, faS3vals) => { const d=rd.data||{}; const
     if (faDistress) faAdj = lowFriction ? 1.25 : (HIGH_CAP_OPPS.includes(o.id) ? 0.4 : 0.85);
     else if (faStrong) faAdj = (HIGH_CAP_OPPS.includes(o.id) || o.growthTier===2) ? 1.15 : 1;
 
-    return { ...o, leverMatch:Math.round(Math.min(100,leverMatch)), capOk, timeOk, sizeMatch, entMatch, isRelevant, isExcluded, skillMatch, faAdj, seasonFit, seasonReason, demandMonths, score:leverMatch*(capOk?1:0.3)*(timeOk?1:0.7)*(entMatch?1:0.1)*faAdj }; }).sort((a,b)=>b.score-a.score); };
+    return { ...o, leverMatch:Math.round(Math.min(100,leverMatch)), capOk, timeOk, sizeMatch, entMatch, isRelevant, isExcluded, skillMatch, faAdj, seasonFit, seasonReason, demandMonths, utilMult, utilReason, score:leverMatch*(capOk?1:0.3)*(timeOk?1:0.7)*(entMatch?1:0.1)*faAdj }; }).sort((a,b)=>b.score-a.score); };
 
 // ───────────────────────────────────────────────────────────────────────
 // RD STAGE 1 — Baseline & readiness
@@ -3708,12 +3896,16 @@ function CommitmentCalendar({ calendar, presetLabel, onCycle, onSet, onPreset, o
   );
 }
 
-function RD3({ rd, setRData, fa, goFA }) {
+function RD3({ rd, setRData, fa, setFA, goFA }) {
   const d = rd.data;
-  const cap = capacityOf(d);
-  const report = capacityReportOf(d, fa.s3vals, fa.enterprises);
+  const cap = capacityOf(d, fa);
+  const report = capacityReportOf(d, fa);
   const { financial, assets, human, scores, modes } = report;
-  const setCap = (section, key, value) => setRData(s => { const c = s.capacity || {}; return { ...s, capacity:{ ...c, [section]:{ ...(c[section]||{}), [key]:value } } }; });
+  // Asset counts are Financial Analysis data (they feed its asset utilisation block),
+  // so edits here write there; the other sections stay in Revenue Diversification.
+  const setCap = (section, key, value) => section === "assets"
+    ? setFA(s => ({ ...s, capacity:{ ...(s.capacity||{}), [key]:value } }))
+    : setRData(s => { const c = s.capacity || {}; return { ...s, capacity:{ ...c, [section]:{ ...(c[section]||{}), [key]:value } } }; });
   // Any hand edit clears the preset marker; applying a preset sets it.
   const setCalendar = (cal, presetId = null) => setRData(s => ({ ...s, capacity:{ ...(s.capacity||{}), calendar:cal, calendarPreset:presetId } }));
   const cycleMonth = (i) => { const cur = cap.calendar || Array(12).fill(0); const next = cur.slice(); next[i] = (next[i] + 1) % 4; setCalendar(next); };
@@ -3743,6 +3935,10 @@ function RD3({ rd, setRData, fa, goFA }) {
 
       <div style={cardStyle({ borderTop:`4px solid ${T.dgreen}` })}>
         <LeverHeader cat="asset" score={scores.asset} mode={modes.asset} />
+        <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:12, flexWrap:"wrap", padding:"10px 14px", background:T.bgAlt, borderRadius:8, marginBottom:10 }}>
+          <span style={{ fontSize:12, color:T.fgM, lineHeight:1.5 }}>These counts are shared with Financial Analysis, where they form the capacity row of the asset utilisation block. Enter them in either place.</span>
+          <button type="button" onClick={()=>goFA(5)} style={{ ...btnStyle("outline"), fontSize:11.5, padding:"6px 14px" }}>See asset utilisation reading →</button>
+        </div>
         <div style={{ display:"flex", gap:10, flexWrap:"wrap", marginBottom:6 }}>
           {[["hasStorableCrop","We grow a storable crop (grain, beans, hay)"],["ownsTrucks","We own trucks or trailers"]].map(([k,label]) => { const on = cap.assets[k] !== false; return <label key={k} style={{ display:"flex", alignItems:"center", gap:8, fontSize:12.5, color:T.navy, cursor:"pointer", padding:"8px 12px", border:`1px solid ${T.border}`, borderRadius:8, background:on?T.greenL:"#fff" }}><input type="checkbox" checked={on} onChange={e=>setCap("assets",k,e.target.checked)} />{label}</label>; })}
         </div>
@@ -3820,10 +4016,10 @@ const GROWTH_TIER_COLOR = { 1:T.dgreen, 2:T.blue, 3:T.tan };
 
 function RD4({ rd, setRData, fa }) {
   const d = rd.data; const selected = d.selectedOpps || []; const b = d.baseline || {};
-  const capacity = capacityReportOf(d, fa.s3vals, fa.enterprises); const lev = capacity.scores;
+  const capacity = capacityReportOf(d, fa); const lev = capacity.scores;
   const [clusterFilter, setClusterFilter] = useState("all");
   const toggle = (id) => setRData(s => { const cur=s.selectedOpps||[]; return { ...s, selectedOpps: cur.includes(id)?cur.filter(x=>x!==id):[...cur,id] }; });
-  const allOpps = scoredOpps(rd, fa.enterprises||[], fa.s3vals);
+  const allOpps = scoredOpps(rd, fa);
   const opps = clusterFilter==="all" ? allOpps : allOpps.filter(o=>o.cluster===clusterFilter);
   const sizeBucket = sizeBucketFromTier(b.revTier);
   const faSignal = faFinancialSignal(fa.s3vals);
@@ -3881,7 +4077,8 @@ function RD4({ rd, setRData, fa }) {
                 {o.offSeason && <span style={{ fontSize:10, fontWeight:700, color:T.blue }}>· Busiest when fields are quiet</span>}
                 {o.seasonFit >= 1.1 && <span style={{ fontSize:10, fontWeight:700, color:T.dgreen }}>· Fits your open months</span>}
               </div>
-              {o.seasonReason && <div style={{ fontSize:11.5, color:T.amberT, lineHeight:1.45, marginBottom:8, padding:"7px 10px", background:T.amberL, borderRadius:6 }}><span style={{ fontWeight:700 }}>Seasonal fit {o.seasonFit.toFixed(2)}×: </span>{o.seasonReason}</div>}
+                {o.seasonReason && <div style={{ fontSize:11.5, color:T.amberT, lineHeight:1.45, marginBottom:8, padding:"7px 10px", background:T.amberL, borderRadius:6 }}><span style={{ fontWeight:700 }}>Seasonal fit {o.seasonFit.toFixed(2)}×: </span>{o.seasonReason}</div>}
+                {o.utilReason && <div style={{ fontSize:11.5, color:o.utilMult>1?T.dgreen:T.amberT, lineHeight:1.45, marginBottom:8, padding:"7px 10px", background:o.utilMult>1?T.greenL:T.amberL, borderRadius:6 }}><span style={{ fontWeight:700 }}>Asset utilisation {o.utilMult.toFixed(2)}×: </span>{o.utilReason}</div>}
               <div style={{ fontSize:12.5, color:T.fgM, lineHeight:1.5, marginBottom:o.demand||o.watch?8:12 }}>{o.desc}</div>
               {o.demand && <div style={{ fontSize:11.5, color:T.navy, lineHeight:1.45, marginBottom:12 }}><span style={{ fontWeight:700 }}>Why demand is open: </span>{o.demand}</div>}
               {o.watch && <div style={{ fontSize:11.5, color:T.amberT, lineHeight:1.45, marginBottom:12 }}><span style={{ fontWeight:700 }}>Watch: </span>{o.watch}</div>}
@@ -4298,10 +4495,11 @@ function RD7({ rd, setRData, fa }) {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // RD STAGE 8 — Action plan
-// ─────────────────────────────────────────────────────────────────────────────
+// ─���───────────────────────────────────────────────────────────────────────────
 function RD8({ rd, fa }) {
   const d = rd.data; const selected = d.selectedOpps || []; const ranked = d.rankedOpps || []; const b = d.baseline || {};
   const lev = leverScoresOf(rd, fa);
+  const R = faRatiosOf(fa, d);
   const sel = selected.map(id => OPPS.find(o=>o.id===id)).filter(Boolean).sort((a,c) => { const ra=(ranked.find(r=>r.id===a.id)||{}).rank||99, rb=(ranked.find(r=>r.id===c.id)||{}).rank||99; return ra-rb; });
   const tierC = { r:{bg:T.redL,c:T.red}, a:{bg:T.amberL,c:T.amberT}, g:{bg:T.greenL,c:T.dgreen} };
   const rankColor = (i) => [T.blue,T.tan,T.dgreen][i] || T.fgS;
@@ -4331,7 +4529,7 @@ function RD8({ rd, fa }) {
           </div>
         );
       })}
-      <EfficiencyValueImpact sel={sel} lev={lev} />
+      <EfficiencyValueImpact sel={sel} lev={lev} ratios={R} />
       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16 }}>
         <div style={cardStyle({ marginBottom:0 })}>
           <div style={cardLblStyle()}>Land-grant advisory resources</div>
@@ -4350,8 +4548,34 @@ function RD8({ rd, fa }) {
 // Step 8 of the diversification process: identify impact to efficiency & value —
 // how the selected paths affect asset utilization, income-stream correlation, and
 // whole-farm risk, not just the standalone economics of each opportunity.
-function EfficiencyValueImpact({ sel, lev }) {
+// Which idle weeks and square feet the selected asset paths absorb, and the operating
+// turnover that implies. Custom work rarely earns what the farm's own crop does per
+// machine-week, so the added revenue is taken at half the farm's own rate and the
+// result is labelled indicative.
+const CUSTOM_WORK_RATE = 0.5;
+const assetProjection = (sel, R) => {
+  const raw = (R && R.assetUtilization && R.assetUtilization.capacity.raw) || {};
+  const idle = raw.equipmentIdleWeeks ?? null, sqft = raw.unusedSqFt ?? null, storage = raw.storageRatio ?? null;
+  const assetPaths = sel.filter(o => o.fit.asset >= ASSET_FIT_MIN);
+  if (!assetPaths.length) return { assetPaths, idle, sqft, storage, weeksAbsorbed:null, sqftAbsorbed:null, usesStorage:false, turnoverNow:R ? R.opAssetTurnover : null, turnoverAfter:null };
+  // Each path works the share of its demand months that its equipment fit implies.
+  const demandWeeks = assetPaths.reduce((s,o) => s + (oppDemandMonths(o).length || 12) * 4.33 * (o.fit.asset/100), 0);
+  const weeksAbsorbed = idle === null ? null : Math.min(idle, Math.round(demandWeeks));
+  const usesBuildings = assetPaths.some(o => /rental|storage|facility|shop|event|meatproc|processing|agritour/i.test(o.id + " " + o.label));
+  const sqftAbsorbed = sqft === null ? null : usesBuildings ? sqft : 0;
+  const usesStorage = assetPaths.some(o => o.id === "storage");
+  let turnoverAfter = null;
+  if (weeksAbsorbed !== null && idle < 52 && R.opAssets > 0 && R.effGross > 0) {
+    const revPerMachineWeek = R.effGross / (52 - idle);
+    turnoverAfter = (R.effGross + revPerMachineWeek * weeksAbsorbed * CUSTOM_WORK_RATE) / R.opAssets * 100;
+  }
+  return { assetPaths, idle, sqft, storage, weeksAbsorbed, sqftAbsorbed, usesStorage, turnoverNow:R.opAssetTurnover, turnoverAfter };
+};
+
+function EfficiencyValueImpact({ sel, lev, ratios }) {
   if (sel.length === 0) return null;
+  const proj = assetProjection(sel, ratios);
+  const reading = ratios && ratios.assetUtilization ? ratios.assetUtilization.reading : null;
   const avgSeasonal = sel.reduce((s,o)=>s+(o.seasonal||3),0)/sel.length;
   const avgReg = sel.reduce((s,o)=>s+(o.reg||3),0)/sel.length;
   const usesAsset = sel.some(o=>o.fit.asset>=60);
@@ -4371,7 +4595,17 @@ function EfficiencyValueImpact({ sel, lev }) {
       <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:12, marginBottom:14 }}>
         <div style={{ background:T.bgAlt, borderRadius:8, padding:"12px 14px" }}>
           <div style={{ fontSize:10.5, fontWeight:700, color:T.fgS, textTransform:"uppercase", letterSpacing:"0.05em", marginBottom:6 }}>Asset utilization</div>
-          <div style={{ fontSize:12.5, color:T.navy, lineHeight:1.5 }}>{usesAsset ? "This plan puts existing land, equipment, or facilities to work rather than requiring new core-farm capital." : "This plan leans more on relationships and expertise than existing physical assets."}</div>
+          {!usesAsset && <div style={{ fontSize:12.5, color:T.navy, lineHeight:1.5 }}>This plan leans on relationships and expertise rather than the existing asset base, so idle weeks and space are unchanged.</div>}
+          {usesAsset && proj.weeksAbsorbed === null && <div style={{ fontSize:12.5, color:T.navy, lineHeight:1.5 }}>{proj.assetPaths.length} selected path{proj.assetPaths.length===1?"":"s"} put existing equipment or facilities to work. Enter idle weeks in Financial Analysis to see how much of the idle year they absorb.</div>}
+          {usesAsset && proj.weeksAbsorbed !== null && (
+            <div style={{ fontSize:12.5, color:T.navy, lineHeight:1.5 }}>
+              <div style={{ display:"flex", alignItems:"baseline", gap:6 }}><span style={{ fontSize:20, fontWeight:800 }}>{proj.weeksAbsorbed}</span><span>of {Math.round(proj.idle)} idle equipment weeks absorbed</span></div>
+              {proj.sqftAbsorbed !== null && proj.sqftAbsorbed > 0 && <div>{Math.round(proj.sqftAbsorbed).toLocaleString()} sq ft of unused space put to use</div>}
+              {proj.usesStorage && proj.storage !== null && <div>Storage at {proj.storage.toFixed(2)}× production opens to third-party grain</div>}
+              {proj.turnoverAfter !== null && proj.turnoverNow !== null && <div style={{ marginTop:4, color:T.fgM }}>Operating asset turnover {Math.round(proj.turnoverNow)}% → about {Math.round(proj.turnoverAfter)}%, indicative at half your own revenue per machine-week.</div>}
+              {reading && <div style={{ marginTop:4, fontSize:11.5, color:T.fgS, fontStyle:"italic" }}>Asset base reads &quot;{reading.label.toLowerCase()}&quot;.</div>}
+            </div>
+          )}
         </div>
         <div style={{ background:T.bgAlt, borderRadius:8, padding:"12px 14px" }}>
           <div style={{ fontSize:10.5, fontWeight:700, color:T.fgS, textTransform:"uppercase", letterSpacing:"0.05em", marginBottom:6 }}>Calendar fit</div>
@@ -4474,7 +4708,7 @@ const BOOK_SYSTEM_RECORDS = { paper:1, sheet:2, generic:3, farm:4, service:3 };
 const TRACK_SCORE = { full:5.0, partial:3.5, revOnly:2.0, none:1.0 };
 
 // Shared inputs for every override, computed once per run.
-const mfpContext = (fa, rd, mfp) => ({ fa:fa||{}, rd:rd||{}, mfp:mfp||null, ratios:computeFARatios(((fa||{}).s3vals)||{}) });
+const mfpContext = (fa, rd, mfp) => ({ fa:fa||{}, rd:rd||{}, mfp:mfp||null, ratios:faRatiosOf(fa||{}, (rd||{}).data) });
 const lowAccounting = (fa) => basisConfidence((fa||{}).accounting).level === "Low";
 
 // D1 — the question asks the farmer to estimate a share that can be computed exactly.
@@ -4544,15 +4778,29 @@ const computeD3 = ({ fa }) => {
 };
 
 // A1–A4 — applied at block level; outcome evidence, so never above medium confidence.
-// The machinery cost bands are general figures awaiting a sourced regional benchmark.
+// Adoption and efficiency decisions show up in the intensity family (what sits under
+// each acre and what it costs to run), so only that family is scored. Turnover is
+// shown as context: it is dominated by tenure and says little about management.
+// Capacity feeds the Revenue Diversification Assets lever, not this block.
+const peerScore5 = (row) => row && row.peer && row.peer.better != null ? band5(row.peer.better, [[85,4.6],[65,3.8],[40,3.0],[20,2.0],[0,1.2]]) : null;
 const computeA = ({ fa, ratios }) => {
-  const at = ratios.assetTurnover, mpa = ratios.machCostPerAcre;
-  if (at == null || mpa == null) return null;
-  const atScore = at >= 40 ? 4.5 : at >= 30 ? 3.5 : at >= 20 ? 2.5 : 1.5;
-  const machScore = mpa <= 120 ? 4.5 : mpa <= 160 ? 3.5 : mpa <= 220 ? 2.5 : 1.5;
-  return { score:(atScore+machScore)/2, raw:`Asset turnover ${at.toFixed(0)}%, machinery cost ${fmt$(mpa)} per acre`,
-    detail:"Outcome evidence rather than process evidence, so it is held at medium confidence and applied to the whole block.",
-    confidence: lowAccounting(fa) ? "low" : "medium" };
+  const rows = ratios.assetUtilization ? ratios.assetUtilization.intensity : [];
+  const scored = rows.map(r => ({ r, s: peerScore5(r) })).filter(x => x.s !== null);
+  const mpa = ratios.machCostPerAcre;
+  if (!scored.length) {
+    // No peer class yet: fall back to the general machinery cost bands.
+    if (mpa == null) return null;
+    const machScore = mpa <= 120 ? 4.5 : mpa <= 160 ? 3.5 : mpa <= 220 ? 2.5 : 1.5;
+    return { score:machScore, raw:`Machinery cost ${fmt$(mpa)} per acre against a general row-crop band`,
+      detail:"Scored on intensity alone. Enter owned land value and machinery value and add enterprises so the figure is read against a peer class.",
+      confidence: lowAccounting(fa) ? "low" : "medium" };
+  }
+  const score = scored.reduce((s,x) => s + x.s, 0) / scored.length;
+  const parts = scored.map(x => `${x.r.label.toLowerCase()} ${x.r.val} (better than ${x.r.peer.better}% of peers)`);
+  const at = ratios.opAssetTurnover !== null ? `operating asset turnover ${Math.round(ratios.opAssetTurnover)}%` : ratios.assetTurnover !== null ? `asset turnover ${Math.round(ratios.assetTurnover)}%` : null;
+  return { score, raw:parts.join("; ") + (at ? `; context: ${at}` : ""),
+    detail:`Intensity read against the ${ratios.peerClass.label} class${ratios.peerClass.known ? "" : " (assumed)"}. Turnover is shown for context only, and idle capacity feeds the Revenue Diversification Assets lever rather than this block.`,
+    confidence: lowAccounting(fa) ? "low" : ratios.peerClass.known ? "medium" : "low" };
 };
 
 // F2 — what the farmer said their ratios were, against what the books compute.
@@ -4586,10 +4834,10 @@ const MFP_QUESTION_OVERRIDES = [
   { questionId:"W2", type:"partial", source:"laborEfficiency",             group:"workforce", groupLabel:"Workforce planning", compute:computeW },
   { questionId:"R4", type:"partial", source:"conversionReadiness",         label:"Timeliness and accuracy of financials", compute:computeR4 },
   { questionId:"D3", type:"partial", source:"enterpriseTracking",          label:"Performance evaluation per stream", compute:computeD3 },
-  { questionId:"A1", type:"partial", source:"assetTurnoverMachineryCost",  group:"adoption", groupLabel:"Adoption, efficiency and decision analytics", compute:computeA },
-  { questionId:"A2", type:"partial", source:"assetTurnoverMachineryCost",  group:"adoption", groupLabel:"Adoption, efficiency and decision analytics", compute:computeA },
-  { questionId:"A3", type:"partial", source:"assetTurnoverMachineryCost",  group:"adoption", groupLabel:"Adoption, efficiency and decision analytics", compute:computeA },
-  { questionId:"A4", type:"partial", source:"assetTurnoverMachineryCost",  group:"adoption", groupLabel:"Adoption, efficiency and decision analytics", compute:computeA },
+  { questionId:"A1", type:"partial", source:"assetIntensityPeerClass",     group:"adoption", groupLabel:"Adoption, efficiency and decision analytics", compute:computeA },
+  { questionId:"A2", type:"partial", source:"assetIntensityPeerClass",     group:"adoption", groupLabel:"Adoption, efficiency and decision analytics", compute:computeA },
+  { questionId:"A3", type:"partial", source:"assetIntensityPeerClass",     group:"adoption", groupLabel:"Adoption, efficiency and decision analytics", compute:computeA },
+  { questionId:"A4", type:"partial", source:"assetIntensityPeerClass",     group:"adoption", groupLabel:"Adoption, efficiency and decision analytics", compute:computeA },
   { questionId:"F2", type:"partial", source:"statedVsComputedRatios",      label:"Monitoring key ratios", compute:computeF2 },
 ];
 const MFP_COVERAGE = coverageOf(MFP_QUESTION_OVERRIDES);
@@ -4726,7 +4974,7 @@ const AP_MODULE_LABEL = { fa:"Financial Analysis", rd:"Revenue Diversification",
 // Compact carry-forward of the four financial health categories, shown inside the
 // modules so the numbers travel with the farmer rather than living only on one page.
 const FinancialHealthStrip = ({ fa }) => {
-  const { hasData, categories } = computeFARatios(fa.s3vals);
+  const { hasData, categories } = faRatiosOf(fa);
   if (!hasData) return null;
   return (
     <div style={{ background:T.bgAlt, border:`1px solid ${T.border}`, borderRadius:8, padding:"11px 14px", marginBottom:16 }}>
@@ -4972,8 +5220,8 @@ function FarmProfilePage({ profile, setProfile, fa, rd, goFA, goRD, goRisk, goLe
   const [pri, setPri] = useState(0);
   const [view, setView] = useState("glance");
   const [profileErr, setProfileErr] = useState("");
-  const { hasData: faHasData, categories: faCategories } = computeFARatios(fa.s3vals);
-  const lenderOpps = lenderOpportunities(fa);
+  const { hasData: faHasData, categories: faCategories } = faRatiosOf(fa, rd?.data);
+  const lenderOpps = lenderOpportunities(fa, rd?.data);
 
   // The uploaded assessment profile, with this run's metric overrides applied on
   // top. `blocks` is never mutated; the effective score is overrides[q].applied
@@ -5556,7 +5804,7 @@ const legRow = (label, children, sub) => {
   );
 };
 
-// ═══════════════════════════════════════════─══════════════─══════════════════
+// ══════���════════════════════════════════════─══════════════─══════════════════
 // LAND VALUATION ─ Phase 1 engine
 // ═════════════════════════════════════════════════════════════════════════════
 // Land class routes to a method rather than one model with adjustments bolted on.
@@ -8564,7 +8812,7 @@ else if (isRD) { if (rd.stage<rdTotal) goRD(rd.stage+1); else goLegacy(1); }
   <FADocuments fa={fa} setFA={setFA} />, <FABudget fa={fa} setFA={setFA} />, <FA3 fa={fa} setFA={setFA} />, <FA4 fa={fa} setFA={setFA} />,
   ];
   const RD_BODY = [
-    <RD1 rd={rd} setRData={setRData} fa={fa} profile={profile} />, <RD2 rd={rd} setRData={setRData} />, <RD3 rd={rd} setRData={setRData} fa={fa} goFA={goFA} />,
+    <RD1 rd={rd} setRData={setRData} fa={fa} profile={profile} />, <RD2 rd={rd} setRData={setRData} />, <RD3 rd={rd} setRData={setRData} fa={fa} setFA={setFA} goFA={goFA} />,
     <RD4 rd={rd} setRData={setRData} fa={fa} />, <RD5 rd={rd} setRData={setRData} />, <RDPolicyEnablers rd={rd} setRData={setRData} />,
     <RD6 rd={rd} setRData={setRData} profile={profile} />, <RD7 rd={rd} setRData={setRData} fa={fa} />, <RD8 rd={rd} fa={fa} />,
   ];
