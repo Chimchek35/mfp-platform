@@ -1378,12 +1378,35 @@ function DocumentScanUpload({ fa, setFA }) {
 }
 
 const S3_LABELS = { gross:"Gross farm income", opex:"Operating expenses", inputs:"Input costs", rent:"Land rent", depr:"Depreciation", interest:"Interest", principal:"Principal payments", livingWithdrawals:"Family living", incomeTaxes:"Income taxes", currentAssets:"Current assets", currentLiab:"Current liabilities", beginAssets:"Beginning assets", beginLiab:"Beginning liabilities", endAssets:"Ending assets", endLiab:"Ending liabilities" };
+const MAX_DOC_MB = 4;
+// Raw bytes with metadata in headers: a base64 JSON body inflates the file by a third
+// and runs into the 4.5 MB function body limit well before the advertised cap.
+const uploadFaDocument = async (file) => {
+  if (file.size > MAX_DOC_MB * 1024 * 1024) return { error:`${file.name} is ${(file.size/1024/1024).toFixed(1)} MB. Files must be ${MAX_DOC_MB} MB or smaller.` };
+  try {
+    const response = await fetch("/api/upload-documents", { method:"POST", credentials:"include", headers:{ "Content-Type": file.type || "application/octet-stream", "X-MFP-Filename": encodeURIComponent(file.name), "X-MFP-Record": recordId() }, body:file });
+    const text = await response.text();
+    let payload = null; try { payload = JSON.parse(text); } catch (e) { payload = null; }
+    if (!response.ok || !payload?.pathname) {
+      const reason = payload?.error || (response.status === 404 || /<!doctype html/i.test(text) ? "The upload service is not running on this server." : `Upload failed (HTTP ${response.status}).`);
+      return { error:`${file.name}: ${reason}` };
+    }
+    return { doc:{ id:`doc-${Date.now()}-${file.name}`, ...payload, status:"Stored and ready for review" } };
+  } catch (error) {
+    console.error("[mfp] document upload failed", error);
+    return { error:`${file.name}: could not reach the upload service. Check your connection and try again.` };
+  }
+};
 const describeS3Source = (src) => { if (!src) return null; const [kind, ...rest] = String(src).split(":"); const name = rest.join(":"); return kind === "balance" ? `From balance sheet · ${name}` : kind === "budget" ? `From operating budget · ${name}` : `From ${name}`; };
 // Lets the ratio page take a balance sheet straight from a CSV, reuse a document already
 // stored in Stage 3, and lift the Stage 4 operating budget into the financial inputs.
 function RatioRecordsImport({ fa, setFA }) {
-  const [result, setResult] = useState(null);
+  // The outcome of the last read lives in the farm record, not component state, so it is
+  // still there after switching tabs, stages or reloading.
+  const result = fa.s3import || null;
+  const setResult = next => setFA(s => ({ ...s, s3import: next ? { ...next, at: new Date().toISOString() } : null }));
   const [busy, setBusy] = useState(null);
+  const [storing, setStoring] = useState(false);
   const [lastSheet, setLastSheet] = useState(null);
   const docs = (fa.documents || []).filter(d => /\.csv$/i.test(d.name || "") && d.pathname);
   const budgetLines = fa.budget?.annualLines || [];
@@ -1401,26 +1424,35 @@ function RatioRecordsImport({ fa, setFA }) {
     setLastSheet({ bs, snapshot });
     const sn = bs.twoColumn ? bs.end : bs.single;
     const bits = [sn?.totalAssets ? `assets ${fmt$(sn.totalAssets)}` : null, sn?.totalLiab ? `liabilities ${fmt$(sn.totalLiab)}` : null, sn?.currentAssets ? `current assets ${fmt$(sn.currentAssets)}` : null, sn?.currentLiab ? `current liabilities ${fmt$(sn.currentLiab)}` : null].filter(Boolean).join(", ");
-    setResult({ type:"ok", text:`${label}: read as a balance sheet${bs.twoColumn ? " with beginning and end-of-year columns" : snapshot === "begin" ? " applied as the beginning-of-year snapshot" : " applied as the end-of-year snapshot"} (${bits}). Values in the Balance sheet snapshot tab now carry a "From balance sheet" label; anything you had typed by hand was left alone.` });
+    setResult({ type:"ok", name:label, text:`${label}: read as a balance sheet${bs.twoColumn ? " with beginning and end-of-year columns" : snapshot === "begin" ? " applied as the beginning-of-year snapshot" : " applied as the end-of-year snapshot"} (${bits}). Values in the Balance sheet snapshot tab now carry a "From balance sheet" label; anything you had typed by hand was left alone.` });
   };
   const readTx = (tx, label) => {
-    if (tx.error) { setResult({ type:"warn", text:`${label}: ${tx.error}` }); return; }
+    if (tx.error) { setResult({ type:"warn", name:label, text:`${label}: ${tx.error}` }); return; }
     const bs = parseBalanceSheet(tx);
     if (bs) { applySheet(bs, "end", label); return; }
     const summary = summarizeTransactions(tx);
     if (summary.layout === "budget") {
       setFA(s => ({ ...applyToS3(s, budgetToS3(summary.lines), `budget:${tx.name}`).state, s3budgetApplied:tx.name }));
-      setResult({ type:"ok", text:`${label}: read as an operating budget (income ${fmt$(summary.inflow)}, expenses ${fmt$(summary.outflow)}) and sorted into the Financial inputs tab.` });
+      setResult({ type:"ok", name:label, text:`${label}: read as an operating budget (income ${fmt$(summary.inflow)}, expenses ${fmt$(summary.outflow)}) and sorted into the Financial inputs tab.` });
       return;
     }
-    setResult({ type:"warn", text:`${label}: could not be read as a balance sheet. It needs line items with asset and liability labels and a value column; columns found were ${tx.headers.length ? tx.headers.map(h => `“${h}”`).join(", ") : "empty"}.` });
+    setResult({ type:"warn", name:label, text:`${label}: could not be read as a balance sheet. It needs line items with asset and liability labels and a value column; columns found were ${tx.headers.length ? tx.headers.map(h => `“${h}”`).join(", ") : "empty"}.` });
   };
-  const onUpload = e => {
+  const onUpload = async e => {
     const file = e.target.files?.[0]; e.target.value = ""; if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => readTx(readFinancialCsv(reader.result, file.name), file.name);
-    reader.onerror = () => setResult({ type:"warn", text:`${file.name} could not be read. Try exporting it again as CSV.` });
-    reader.readAsText(file);
+    setStoring(true);
+    const text = await file.text().catch(() => null);
+    if (text === null) { setResult({ type:"warn", name:file.name, text:`${file.name} could not be read. Try exporting it again as CSV.` }); setStoring(false); return; }
+    readTx(readFinancialCsv(text, file.name), file.name);
+    // Keep the file with the analysis as well, so it shows up under stored documents and
+    // can be re-read later instead of vanishing once the figures are applied.
+    const stored = await uploadFaDocument(file);
+    if (stored.doc) {
+      setFA(s => ({ ...s, documents:[...(s.documents || []).filter(d => d.name !== file.name || !d.pathname), { ...stored.doc, status:"Read into the ratio deep dive" }] }));
+    } else {
+      setFA(s => s.s3import ? { ...s, s3import:{ ...s.s3import, storage:`Figures applied, but the file itself was not kept: ${stored.error}` } } : s);
+    }
+    setStoring(false);
   };
   const useStored = async doc => {
     setBusy(doc.id); setResult(null);
@@ -1430,7 +1462,7 @@ function RatioRecordsImport({ fa, setFA }) {
       if (!response.ok || typeof payload?.text !== "string") throw new Error(payload?.error || `Could not read ${doc.name} from storage.`);
       readTx(readFinancialCsv(payload.text, doc.name), doc.name);
     } catch (error) {
-      setResult({ type:"warn", text:error.message || `Could not read ${doc.name} from storage.` });
+      setResult({ type:"warn", name:doc.name, text:error.message || `Could not read ${doc.name} from storage.` });
     }
     setBusy(null);
   };
@@ -1442,20 +1474,23 @@ function RatioRecordsImport({ fa, setFA }) {
         <div>
           <label style={labelStyle}>Upload a balance sheet</label>
           <span style={{ fontSize:11, color:T.fgS, marginBottom:6, display:"block", fontStyle:"italic" }}>CSV from your lender or spreadsheet. One value column is applied as the end-of-year snapshot; two columns fill beginning and end of year.</span>
-          <input type="file" accept=".csv,text/csv,text/plain" onChange={onUpload} style={{ width:"100%", padding:10, border:`1px dashed ${T.blue}`, borderRadius:8, background:T.blueL }} />
+          <input type="file" accept=".csv,text/csv,text/plain" onChange={onUpload} disabled={storing} aria-describedby="ratio-upload-status" style={{ width:"100%", padding:10, border:`1px dashed ${T.blue}`, borderRadius:8, background:T.blueL }} />
+          <div id="ratio-upload-status" style={{ marginTop:6, fontSize:12, color:storing ? T.fgS : result?.name ? T.dgreen : T.fgS, fontWeight:result?.name ? 600 : 400 }}>
+            {storing ? "Reading and storing…" : result?.name ? <>{result.type === "ok" ? "Read" : "Could not read"} <span style={{ fontWeight:700 }}>{result.name}</span>{result.at ? ` · ${new Date(result.at).toLocaleDateString()}` : ""}</> : "Figures are applied the moment the file is read; the file is also kept under stored documents."}
+          </div>
           {lastSheet && !lastSheet.bs.twoColumn && <button type="button" onClick={() => applySheet(lastSheet.bs, lastSheet.snapshot === "begin" ? "end" : "begin", lastSheet.bs.name)} style={{ ...btnStyle("outline"), fontSize:11.5, padding:"6px 12px", marginTop:8 }}>{lastSheet.snapshot === "begin" ? "Apply as end-of-year instead" : "Apply as beginning-of-year instead"}</button>}
         </div>
         <div>
           <label style={labelStyle}>Use a stored document</label>
           <span style={{ fontSize:11, color:T.fgS, marginBottom:6, display:"block", fontStyle:"italic" }}>CSV files uploaded in Stage 3 are kept with this analysis and can be read into the ratio inputs here.</span>
-          {docs.length === 0 ? <div style={{ fontSize:12.5, color:T.fgM, background:T.bgAlt, borderRadius:8, padding:"10px 12px" }}>No stored CSV documents yet. Upload one here, or add it in Stage 3 and come back.</div>
+          {docs.length === 0 ? <div style={{ fontSize:12.5, color:T.fgM, background:T.bgAlt, borderRadius:8, padding:"10px 12px" }}>No stored CSV documents yet. A balance sheet uploaded on the left is kept here once it has been read, as are CSVs added in Stage 3.</div>
             : docs.map(doc => <div key={doc.id} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", gap:10, padding:"8px 0", borderBottom:`1px solid ${T.div}` }}><div style={{ minWidth:0 }}><div style={{ fontSize:12.5, fontWeight:600, color:T.navy, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{doc.name}</div><div style={{ fontSize:11, color:T.fgS }}>{Math.max(1, Math.round((doc.size || 0) / 1024))} KB</div></div><button type="button" onClick={() => useStored(doc)} disabled={busy === doc.id} style={{ ...btnStyle("outline"), fontSize:11.5, padding:"6px 12px", whiteSpace:"nowrap" }}>{busy === doc.id ? "Reading…" : "Read into ratios"}</button></div>)}
         </div>
       </div>
       <div style={{ marginTop:14, background:T.bgAlt, borderRadius:8, padding:"10px 12px", fontSize:12.5, color:T.fgM, lineHeight:1.5 }}>
         {budgetLines.length ? <><strong style={{ color:T.navy }}>Operating budget ({budgetName}).</strong> {budgetSummary}. Sorted into the Financial inputs tab; principal, family living and income taxes are kept out of operating expenses.</> : <><strong style={{ color:T.navy }}>Operating budget.</strong> Import a budget in Stage 4 (or Stage 3) and its income and expense lines will fill the Financial inputs tab here.</>}
       </div>
-      {result && <div style={{ marginTop:12 }}><Flag type={result.type === "ok" ? "info" : "warn"}>{result.text}</Flag></div>}
+      {result && <div style={{ marginTop:12 }}><Flag type={result.type === "ok" ? "info" : "warn"}>{result.text}{result.storage && <div style={{ marginTop:6 }}>{result.storage}</div>}</Flag></div>}
     </div>
   );
 }
@@ -8773,25 +8808,7 @@ else if (isRD) { if (rd.stage<rdTotal) goRD(rd.stage+1); else goLegacy(1); }
     const docs = fa.documents || [];
     const [uploading, setUploading] = useState(false);
     const [uploadErrors, setUploadErrors] = useState([]);
-    const MAX_DOC_MB = 4;
-    // Raw bytes with metadata in headers: a base64 JSON body inflates the file by a third
-    // and runs into the 4.5 MB function body limit well before the advertised cap.
-    const uploadOne = async (file) => {
-      if (file.size > MAX_DOC_MB * 1024 * 1024) return { error:`${file.name} is ${(file.size/1024/1024).toFixed(1)} MB. Files must be ${MAX_DOC_MB} MB or smaller.` };
-      try {
-        const response = await fetch("/api/upload-documents", { method:"POST", credentials:"include", headers:{ "Content-Type": file.type || "application/octet-stream", "X-MFP-Filename": encodeURIComponent(file.name), "X-MFP-Record": recordId() }, body:file });
-        const text = await response.text();
-        let payload = null; try { payload = JSON.parse(text); } catch (e) { payload = null; }
-        if (!response.ok || !payload?.pathname) {
-          const reason = payload?.error || (response.status === 404 || /<!doctype html/i.test(text) ? "The upload service is not running on this server." : `Upload failed (HTTP ${response.status}).`);
-          return { error:`${file.name}: ${reason}` };
-        }
-        return { doc:{ id:`doc-${Date.now()}-${file.name}`, ...payload, status:"Stored and ready for review" } };
-      } catch (error) {
-        console.error("[mfp] document upload failed", error);
-        return { error:`${file.name}: could not reach the upload service. Check your connection and try again.` };
-      }
-    };
+    const uploadOne = uploadFaDocument;
     const isCsv = file => /\.csv$/i.test(file.name) || /csv/i.test(file.type || "");
     const describeImport = ({ summary, filled, ratioFilled, balance }) => {
       if (balance) {
