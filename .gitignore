@@ -22,3 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# generated synthetic peer dataset (4MB); thresholds are committed in src/peer-thresholds.json
+scripts/peer-data/farms.json
