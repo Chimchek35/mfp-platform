@@ -1381,10 +1381,13 @@ const S3_LABELS = { gross:"Gross farm income", opex:"Operating expenses", inputs
 const MAX_DOC_MB = 4;
 // Raw bytes with metadata in headers: a base64 JSON body inflates the file by a third
 // and runs into the 4.5 MB function body limit well before the advertised cap.
+// The body is always sent as application/octet-stream because Vercel's Node runtime
+// pre-reads the body and only hands it to the function as bytes for that type; a
+// text/csv or application/pdf body arrives as undefined. The real type rides in a header.
 const uploadFaDocument = async (file) => {
   if (file.size > MAX_DOC_MB * 1024 * 1024) return { error:`${file.name} is ${(file.size/1024/1024).toFixed(1)} MB. Files must be ${MAX_DOC_MB} MB or smaller.` };
   try {
-    const response = await fetch("/api/upload-documents", { method:"POST", credentials:"include", headers:{ "Content-Type": file.type || "application/octet-stream", "X-MFP-Filename": encodeURIComponent(file.name), "X-MFP-Record": recordId() }, body:file });
+    const response = await fetch("/api/upload-documents", { method:"POST", credentials:"include", headers:{ "Content-Type": "application/octet-stream", "X-MFP-Content-Type": file.type || "application/octet-stream", "X-MFP-Filename": encodeURIComponent(file.name), "X-MFP-Record": recordId() }, body:file });
     const text = await response.text();
     let payload = null; try { payload = JSON.parse(text); } catch (e) { payload = null; }
     if (!response.ok || !payload?.pathname) {
@@ -3307,7 +3310,7 @@ const leverScoreColor = (score) => score >= 67 ? T.dgreen : score >= 34 ? T.ambe
 
 // ─────────────────────────────────────────────────────────────────────────────
 // OBJECTIVE CAPACITY MEASUREMENT
-// ─────────────────────────────────────────────────────────────────────────────
+// ───────────────────────���─────────────────────────────────────────────────────
 // Replaces the 15 self-rated sliders with measures a peer group can compare like for
 // like: the Financial lever is derived from Financial Analysis ratios plus one question,
 // the Assets lever is built from counts the farmer already knows, and the Human lever
