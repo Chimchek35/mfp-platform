@@ -6222,9 +6222,19 @@ function VIS1({ vis, setVis, profile, setProfile, goProfile }) {
     if (seeded || !profileHasVision) return;
     setVis({ items:[...(vis.items||[]), ...visSeedItems(profile).filter(i => !(vis.items||[]).some(x => x.text === i.text))], seeded:true });
   }, [seeded, profileHasVision]);
+  const pendingScrollId = useRef(null);
+  useEffect(() => {
+    if (!pendingScrollId.current) return;
+    const index = items.findIndex(i => i.id === pendingScrollId.current);
+    if (index < 0) return;
+    pendingScrollId.current = null;
+    const track = carouselRef.current;
+    if (track) track.scrollTo({ left:index * (track.clientWidth + 12), behavior:"smooth" });
+    setActiveAdvantage(index);
+  }, [items.length]);
   const setItem = (id, patch) => setVis({ items: (vis.items || []).map(i => i.id===id ? {...i,...patch} : i) });
-  const add = () => setVis({ items:[...(vis.items || []), { id:"custom-"+Date.now(), kind:"advantage", sourceLabel:"Added here", text:"", tests:{}, verdict:"untested" }], seeded:true });
-  const addDraft = () => { if (!draftAdvantage.trim()) return; setVis({ items:[...(vis.items||[]), { id:"custom-"+Date.now(), kind:"advantage", sourceLabel:"Added here", text:draftAdvantage.trim(), tests:{}, verdict:"untested" }], seeded:true }); setDraftAdvantage(""); };
+  const add = () => { const id = "custom-"+Date.now(); pendingScrollId.current = id; setVis({ items:[...(vis.items || []), { id, kind:"advantage", sourceLabel:"Added here", text:"", tests:{}, verdict:"untested" }], seeded:true }); };
+  const addDraft = () => { if (!draftAdvantage.trim()) return; const id = "custom-"+Date.now(); pendingScrollId.current = id; setVis({ items:[...(vis.items||[]), { id, kind:"advantage", sourceLabel:"Added here", text:draftAdvantage.trim(), tests:{}, verdict:"untested" }], seeded:true }); setDraftAdvantage(""); };
   const remove = (id) => setVis({ items: (vis.items || []).filter(i => i.id!==id) });
   const importProfile = e => { const file=e.target.files?.[0]; e.target.value=""; if(!file) return; const reader=new FileReader(); reader.onload=()=>{ try { const imported=profileFromMFPExport(JSON.parse(reader.result)); if(imported) { setProfile(s=>({ ...s, ...imported })); setVis(s=>({ ...s, items:[...(s.items||[]), ...visSeedItems(imported).filter(i=>!s.items?.some(existing=>existing.text===i.text))], seeded:true })); } } catch { window.alert("That profile file could not be imported."); } }; reader.readAsText(file); };
 
