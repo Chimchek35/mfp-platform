@@ -1,0 +1,138 @@
+/*
+ * Risk Ready scoped reset. Loaded BEFORE frr.css so the unlayered Tailwind utilities that
+ * follow it win ties: every rule here is wrapped in :where() to stay at (0,1,0) specificity,
+ * which still beats the element selectors in index.css.
+ */
+/* Palette lives on the module root so it never collides with the platform's :root variables. */
+.frr-root {
+  color-scheme: light;
+  --navy: #0e1c39;
+  --brand: #0c4477;
+  --green: #358733;
+  --moss: #97bc62;
+  --amber: #c98a2c;
+  --amber-ink: #8a5a12;
+  --red: #b42318;
+  --grey: #858c9a;
+  --tint-green: #f2f6ec;
+  --tint-blue: #eef2f7;
+  --tint-amber: #fdf5e8;
+  --tint-red: #fdf0ef;
+
+  --background: #f6f7f9;
+  --foreground: #181c24;
+  --card: #ffffff;
+  --card-foreground: #181c24;
+  --popover: #ffffff;
+  --popover-foreground: #181c24;
+  --primary: #0c4477;
+  --primary-foreground: #ffffff;
+  --secondary: #eef2f7;
+  --secondary-foreground: #0e1c39;
+  --muted: #eef2f7;
+  --muted-foreground: #5b6271;
+  --accent: #f2f6ec;
+  --accent-foreground: #181c24;
+  --destructive: #b42318;
+  --border: #e2e5ea;
+  --input: #cfd4dc;
+  --ring: #0c4477;
+  --radius: 10px;
+
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.6;
+  letter-spacing: 0;
+  color: var(--foreground);
+  -webkit-text-size-adjust: 100%;
+}
+
+/* Scoped stand-in for preflight. :where() keeps every rule at (0,1,0) so utilities win. */
+.frr-root :where(*, *::before, *::after) {
+  box-sizing: border-box;
+  border-width: 0;
+  border-style: solid;
+  border-color: var(--border);
+  outline-color: color-mix(in oklab, var(--ring) 50%, transparent);
+}
+.frr-root :where(h1, h2, h3, h4, h5, h6, p, ul, ol, dl, dd, figure, blockquote, pre, hr) {
+  margin: 0;
+}
+.frr-root :where(h1, h2, h3, h4, h5, h6) {
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  letter-spacing: inherit;
+  color: inherit;
+}
+.frr-root :where(ul, ol) {
+  list-style: none;
+  padding: 0;
+}
+.frr-root :where(button, input, select, textarea, optgroup) {
+  font: inherit;
+  font-feature-settings: inherit;
+  letter-spacing: inherit;
+  color: inherit;
+  border-radius: 0;
+  background-color: transparent;
+  opacity: 1;
+}
+.frr-root :where(button, [role='button'], input[type='checkbox'], input[type='radio'], select, summary) {
+  cursor: pointer;
+}
+.frr-root :where(button:disabled) {
+  cursor: default;
+}
+.frr-root :where(textarea) {
+  resize: vertical;
+}
+.frr-root :where(input, textarea)::placeholder {
+  color: color-mix(in oklab, currentColor 50%, transparent);
+}
+.frr-root :where(input[type='range'], input[type='checkbox'], input[type='radio']) {
+  accent-color: var(--brand);
+}
+.frr-root :where(img, svg, video, canvas, iframe) {
+  display: block;
+  vertical-align: middle;
+}
+.frr-root :where(img, video) {
+  max-width: 100%;
+  height: auto;
+}
+.frr-root :where(a) {
+  color: inherit;
+  text-decoration: inherit;
+}
+.frr-root :where(table) {
+  border-collapse: collapse;
+  border-color: inherit;
+  text-indent: 0;
+}
+.frr-root :where(hr) {
+  height: 0;
+  color: inherit;
+  border-top-width: 1px;
+}
+.frr-root :where(b, strong) {
+  font-weight: bolder;
+}
+.frr-root :where(small) {
+  font-size: 80%;
+}
+.frr-root :where(code, kbd, samp, pre) {
+  font-family: var(--font-mono);
+  font-size: 1em;
+  display: inline;
+  padding: 0;
+  background: none;
+  border-radius: 0;
+  color: inherit;
+}
+.frr-root :where(summary) {
+  display: list-item;
+}
+.frr-root :where([hidden]:not([hidden='until-found'])) {
+  display: none !important;
+}
