@@ -5956,6 +5956,18 @@ const VIS_STAGES = [
   { n:12, label:"The document" },
 ];
 const VIS_PROFILE_STAGE = 11;
+// Single source of truth for how the 12 Strategic Vision stages group into the
+// six steps shown in the top progress map, the sidebar rail, and the eyebrows.
+const VIS_STEPS = [
+  { label:"Capabilities", sub:"What your farm is built on", from:1, to:3 },
+  { label:"Values", sub:"The principles that guide decisions", from:4, to:6 },
+  { label:"Rules", sub:"Who holds them and where they bind", from:7, to:9 },
+  { label:"Statement", sub:"Your shared strategic direction", from:10, to:10 },
+  { label:"Profile", sub:"The intelligence-ready farm profile", from:11, to:11 },
+  { label:"Document", sub:"Approved vision outputs", from:12, to:12 },
+];
+const visStepIndex = (stage) => Math.max(0, VIS_STEPS.findIndex(s => stage >= s.from && stage <= s.to));
+const visEyebrow = (stage) => `Strategic vision · ${VIS_STEPS[visStepIndex(stage)].label}`;
 
 // The four tests. The first two sort strengths into kinds; none of the outcomes is a fail.
 const VIS_TESTS = [
@@ -6240,7 +6252,7 @@ function VIS1({ vis, setVis, profile, setProfile, goProfile }) {
 
   return (
     <div>
-      <Head eyebrow="Strategic vision · Stage 2" title="Core Competencies and Competitive Advantage" sub="Start with the reason customers, employees, landlords, or partners choose this operation over another." /><SectionSteps><div style={cardStyle({ borderTop:`4px solid ${T.blue}`, marginBottom:18 })}><div style={cardLblStyle()}>Bring existing profile</div><p style={{ color:T.fgM, fontSize:13.5, lineHeight:1.5, marginTop:0 }}>Upload a Maximum Farm Potential JSON export to update the profile fields used across the Strategic Vision categories.</p><input type="file" accept=".json,application/json" onChange={importProfile} /></div>
+      <Head eyebrow={visEyebrow(2)} title="Core Competencies and Competitive Advantage" sub="Start with the reason customers, employees, landlords, or partners choose this operation over another." /><SectionSteps><div style={cardStyle({ borderTop:`4px solid ${T.blue}`, marginBottom:18 })}><div style={cardLblStyle()}>Bring existing profile</div><p style={{ color:T.fgM, fontSize:13.5, lineHeight:1.5, marginTop:0 }}>Upload a Maximum Farm Potential JSON export to update the profile fields used across the Strategic Vision categories.</p><input type="file" accept=".json,application/json" onChange={importProfile} /></div>
       <div data-section-lead="true" style={{ marginBottom:24, padding:"22px 0", borderBottom:`1px solid ${T.div}` }}><div style={cardLblStyle()}>The capability behind the farm</div><p style={{ fontSize:15, color:T.fgM, lineHeight:1.55, margin:0, maxWidth:560 }}>What can this operation do exceptionally well—and what would be difficult for another farm to copy?</p></div>
       {!profileHasVision && (<>
         <Flag type="warn">Your Farm Profile does not have competitive advantage, core values, or objectives filled in yet. You can add items here directly, or fill the profile first.
@@ -6294,7 +6306,7 @@ function VIS1({ vis, setVis, profile, setProfile, goProfile }) {
   const add = () => setVis({ items:[...(vis.items || []), { id:"value-"+Date.now(), kind:"value", sourceLabel:"Added here", text:"", tests:{}, verdict:"untested" }] });
   const seed = () => setVis({ items:[...(vis.items || []), ...(profile.values && !values.length ? [{ id:"profile-value-"+Date.now(), kind:"value", sourceLabel:"Farm Profile", text:profile.values, tests:{}, verdict:"untested" }] : [])], valuesSeeded:true });
   return <div>
-    <Head eyebrow="Strategic vision · Stage 4" title="Core values" sub="Identify the principles that should guide choices when the easiest or most profitable option is not automatically the right one." />
+    <Head eyebrow={visEyebrow(4)} title="Core values" sub="Identify the principles that should guide choices when the easiest or most profitable option is not automatically the right one." />
     <SectionSteps>
     <div style={cardStyle({ borderTop:`4px solid ${T.blue}` })}>
       <div style={cardLblStyle()}>Why this matters</div>
@@ -6419,7 +6431,7 @@ function VIS3({ vis, setVis }) {
   const answered = values.filter(v => ((v.tests||{}).cost||"").trim().length > 10).length;
   return (
     <div>
-      <Head eyebrow="Strategic vision · Stage 6" title="What it has cost you" sub="A value becomes real when it changes a decision." />
+      <Head eyebrow={visEyebrow(6)} title="What it has cost you" sub="A value becomes real when it changes a decision." />
       <SectionSteps>
       {values.length === 0 ? (
         <Flag type="warn">No core values recorded yet. Go back to stage 4 and add at least one core value.</Flag>
@@ -6456,7 +6468,7 @@ function VIS4({ vis, setVis }) {
 
   return (
     <div>
-      <Head eyebrow="Strategic vision �� Stage 7" title="Turn it into rules" sub="This is where a personal vision becomes an organizational one. A value cannot be followed by an employee. A rule can, and more importantly a rule can be cited back at you." />
+      <Head eyebrow={visEyebrow(7)} title="Turn it into rules" sub="This is where a personal vision becomes an organizational one. A value cannot be followed by an employee. A rule can, and more importantly a rule can be cited back at you." />
       <SectionSteps>
       <div style={cardStyle({ borderTop:`4px solid ${T.blue}` })}>
         <div style={cardLblStyle()}>What the conversion looks like</div>
@@ -6523,7 +6535,7 @@ function VIS5({ vis, setVis, goLegacy }) {
   const canState = VIS_HOLDERS.filter(p => h[p.id] === 3);
   return (
     <div>
-      <Head eyebrow="Strategic vision · Stage 8" title="Who holds this" sub="A vision one person holds is a preference. A vision the organization holds is a constraint. The difference is whether anyone else could state it, and whether they could use it to stop something." />
+      <Head eyebrow={visEyebrow(8)} title="Who holds this" sub="A vision one person holds is a preference. A vision the organization holds is a constraint. The difference is whether anyone else could state it, and whether they could use it to stop something." />
       <SectionSteps>
       <div style={cardStyle()}>
         <div style={cardLblStyle()}>Where each person actually stands</div>
@@ -6580,7 +6592,7 @@ function VIS6({ vis, setVis }) {
   const unbound = rules.filter(r => r.statement && (r.binds||[]).length === 0);
   return (
     <div>
-      <Head eyebrow="Strategic vision · Stage 9" title="Where it binds" sub="A vision that does not show up where decisions get made is wall decoration. Mark which decisions each rule actually governs." />
+      <Head eyebrow={visEyebrow(9)} title="Where it binds" sub="A vision that does not show up where decisions get made is wall decoration. Mark which decisions each rule actually governs." />
       <SectionSteps>
       {rules.length === 0 ? (
         <Flag type="warn">No rules yet. Go back to stage 4 and write at least one.</Flag>
@@ -6652,7 +6664,7 @@ function VIS7({ vis, setVis, profile }) {
 
   return (
     <div>
-      <Head eyebrow="Strategic vision · Stage 10" title="The statement" sub="Assembled from your own words rather than rewritten. A farm team can tell instantly when a document was not written by the person who runs the place." />
+      <Head eyebrow={visEyebrow(10)} title="The statement" sub="Assembled from your own words rather than rewritten. A farm team can tell instantly when a document was not written by the person who runs the place." />
 
       <SectionSteps>
       {!vis.assembled && (
@@ -6755,7 +6767,7 @@ function VIS8({ vis, profile }) {
   if (!live.length) {
     return (
       <div>
-        <Head eyebrow="Strategic vision · Stage 12" title="The document" sub="Nothing is approved for publishing yet." />
+        <Head eyebrow={visEyebrow(12)} title="The document" sub="Nothing is approved for publishing yet." />
         <Flag type="warn">Go back to stage 10 and tick "Approved to publish" on the sections you are willing to stand behind in front of your team. Nothing appears here until you do, which is deliberate.</Flag>
         {held.length > 0 && (
           <div style={cardStyle()}>
@@ -6771,7 +6783,7 @@ function VIS8({ vis, profile }) {
 
   return (
     <div>
-      <Head eyebrow="Strategic vision · Stage 12" title="The document" sub="What actually gets handed to the team. Only approved sections appear. Everything diagnostic stays in your working record." />
+      <Head eyebrow={visEyebrow(12)} title="The document" sub="What actually gets handed to the team. Only approved sections appear. Everything diagnostic stays in your working record." />
 
       <div style={{ display:"flex", gap:8, alignItems:"center", borderBottom:`1px solid ${T.border}`, marginBottom:18, flexWrap:"wrap" }}>
         {[["full","The one-pager"],["short","Short form"],["rollout","Rollout guide"]].map(([k,lab]) => {
@@ -7520,12 +7532,12 @@ else if (isRD) { if (rd.stage<rdTotal) goRD(rd.stage+1); else goLegacy(1); }
         : isRisk
           ? "Risk is not a failure to eliminate. It is the weather, markets, health, people, and surprises you plan around so one hard season does not decide everything."
           : "Legacy is about people and a workable handoff, not just assets. We will make room for difficult conversations and practical next steps.";
-  const flowLabels = isVis ? ["Capabilities","Values","Rules","Statement","Profile","Document"] : isFA ? ["Books","Enterprises","Records","Budget","Ratios","Benchmarking"] : [];
-  const visStepRanges = [[1,2],[3,4],[5,8],[9,9],[10,10],[11,11]];
-  const stageVisual = flowLabels.length ? <div aria-label={`${moduleName} progress map`} style={{ display:"flex", alignItems:"center", gap:0, marginBottom:26, padding:"14px 18px", background:T.bgAlt, borderRadius:16, border:`1px solid ${T.div}`, overflowX:"auto" }}>{flowLabels.map((label,i)=>{ const n=Math.min(i+1, total); const [from,to]=isVis ? visStepRanges[i] : [n,n]; const active=stage>=from && stage<=to; const done=stage>to; return <Fragment key={label}><div style={{ minWidth:78, display:"flex", flexDirection:"column", alignItems:"center", gap:6, color:active?T.navy:done?T.green:T.fgS }}><div style={{ width:28, height:28, borderRadius:"50%", display:"grid", placeItems:"center", background:active?T.blue:done?T.green:"#fff", color:active||done?"#fff":T.fgS, fontSize:11, fontWeight:800, border:`1px solid ${active?T.blue:done?T.green:T.border}` }}>{done?<IconCheckSm size={12}/>:i+1}</div><span style={{ fontSize:10.5, fontWeight:active?750:550, whiteSpace:"nowrap" }}>{label}</span></div>{i<flowLabels.length-1&&<div style={{ minWidth:18, height:2, background:i+1<stage?T.green:T.border, marginBottom:22 }} />}</Fragment>})}</div> : null;
+  const flowLabels = isVis ? VIS_STEPS.map(s => s.label) : isFA ? ["Books","Enterprises","Records","Budget","Ratios","Benchmarking"] : [];
+  const visStepRanges = VIS_STEPS.map(s => [s.from, s.to]);
+  const stageVisual = flowLabels.length ? <div aria-label={`${moduleName} progress map`} style={{ display:"flex", alignItems:"center", gap:0, marginBottom:26, padding:"14px 18px", background:T.bgAlt, borderRadius:16, border:`1px solid ${T.div}`, overflowX:"auto" }}>{flowLabels.map((label,i)=>{ const n=Math.min(i+1, total); const [from,to]=isVis ? visStepRanges[i] : [n,n]; const active=stage>=from && stage<=to; const done=stage>to; return <Fragment key={label}><div style={{ minWidth:78, display:"flex", flexDirection:"column", alignItems:"center", gap:6, color:active?T.navy:done?T.green:T.fgS }}><div style={{ width:28, height:28, borderRadius:"50%", display:"grid", placeItems:"center", background:active?T.blue:done?T.green:"#fff", color:active||done?"#fff":T.fgS, fontSize:11, fontWeight:800, border:`1px solid ${active?T.blue:done?T.green:T.border}` }}>{done?<IconCheckSm size={12}/>:i+1}</div><span style={{ fontSize:10.5, fontWeight:active?750:550, whiteSpace:"nowrap" }}>{label}</span></div>{i<flowLabels.length-1&&<div style={{ minWidth:18, height:2, background:done?T.green:T.border, marginBottom:22 }} />}</Fragment>})}</div> : null;
   const stageCard = (
-  <section className={isRisk ? "mfp-risk-stage" : "mfp-stage-card"} aria-label={`${moduleName} question ${stage} of ${total}`}>
-  {isVis && <div style={eyebrowStyle}>Strategic Vision · Stage {stage}</div>}
+  <section className={isRisk ? "mfp-risk-stage" : "mfp-stage-card"} aria-label={isVis ? `${moduleName} step ${visStepIndex(stage)+1} of ${VIS_STEPS.length}` : `${moduleName} question ${stage} of ${total}`}>
+  {isVis && <div style={eyebrowStyle}>Strategic Vision · Step {visStepIndex(stage)+1} of {VIS_STEPS.length}</div>}
   {stageVisual}
   {false && <div style={{ marginBottom:26, borderRadius:16, overflow:"hidden", border:`1px solid ${T.div}`, background:T.bgAlt }}><img src="/strategic-vision-roadmap.png" alt="Strategic vision roadmap from capabilities and values to a statement, profile, and final document" style={{ display:"block", width:"100%", height:150, objectFit:"cover" }} /><div style={{ display:"flex", justifyContent:"space-between", gap:10, padding:"10px 14px", color:T.fgS, fontSize:11.5 }}><span>Build the next decision-ready layer</span><span style={{ color:T.green, fontWeight:700 }}>Stage {stage} of {total}</span></div></div>}
   <div style={{ maxWidth:900, marginBottom:26, color:T.fgS, fontSize:14, lineHeight:1.6 }}>{moduleSupport}</div>
@@ -7687,7 +7699,7 @@ else if (isRD) { if (rd.stage<rdTotal) goRD(rd.stage+1); else goLegacy(1); }
             {isFA ? <>
               {[{ label:"Financial profile", sub:"Accounting, enterprises & goals", start:1, end:2 }, { label:"Document upload", sub:"Source records for review", start:3, end:3 }, { label:"Budget & working capital", sub:"Cash flow and accrual planning", start:4, end:4 }, { label:"Peer benchmarking & ratio scorecard", sub:"Performance context", start:5, end:6 }].map((item,i) => { const active=stage>=item.start&&stage<=item.end; const done=stage>item.end; return <div key={item.label} onClick={()=>goFA(item.start)} style={{ display:"flex", alignItems:"flex-start", gap:11, padding:"13px 16px", cursor:"pointer", background:active?"rgba(123,191,50,0.14)":"transparent", borderLeft:active?`3px solid ${T.green}`:"3px solid transparent" }}><div style={{ width:23, height:23, borderRadius:"50%", flexShrink:0, display:"flex", alignItems:"center", justifyContent:"center", fontSize:11, fontWeight:700, background:done?T.green:active?T.blue:"rgba(255,255,255,0.12)", color:done||active?"#fff":"rgba(255,255,255,0.58)" }}>{done?<IconCheckSm size={11}/>:i+1}</div><div><div style={{ fontSize:12.5, fontWeight:active?700:600, color:active?"#fff":done?T.green:"rgba(255,255,255,0.72)", lineHeight:1.35 }}>{item.label}</div><div style={{ fontSize:10.5, color:"rgba(255,255,255,0.45)", lineHeight:1.35, marginTop:3 }}>{item.sub}</div></div></div>; })}
             </> : isVis ? <>
-              {[{ label:"Core competencies and values", sub:"What your farm is built on", start:1, end:8 }, { label:"The statement", sub:"Your shared strategic direction", start:9, end:9 }, { label:"Profile and SWOT", sub:"The intelligence-ready farm profile", start:10, end:10 }, { label:"The document", sub:"Approved vision outputs", start:11, end:11 }].map((item,i) => { const active=stage>=item.start&&stage<=item.end; const done=stage>item.end; return <div key={item.label} onClick={()=>goVision(item.start)} style={{ display:"flex", alignItems:"flex-start", gap:11, padding:"13px 16px", cursor:"pointer", background:active?"rgba(123,191,50,0.14)":"transparent", borderLeft:active?`3px solid ${T.green}`:"3px solid transparent" }}><div style={{ width:23, height:23, borderRadius:"50%", flexShrink:0, display:"flex", alignItems:"center", justifyContent:"center", fontSize:11, fontWeight:700, background:done?T.green:active?T.blue:"rgba(255,255,255,0.12)", color:done||active?"#fff":"rgba(255,255,255,0.58)" }}>{done?<IconCheckSm size={11}/>:i+1}</div><div><div style={{ fontSize:12.5, fontWeight:active?700:600, color:active?"#fff":done?T.green:"rgba(255,255,255,0.72)", lineHeight:1.35 }}>{item.label}</div><div style={{ fontSize:10.5, color:"rgba(255,255,255,0.45)", lineHeight:1.35, marginTop:3 }}>{item.sub}</div></div></div>; })}
+              {VIS_STEPS.map(s => ({ label:s.label, sub:s.sub, start:s.from, end:s.to })).map((item,i) => { const active=stage>=item.start&&stage<=item.end; const done=stage>item.end; return <div key={item.label} onClick={()=>goVision(item.start)} style={{ display:"flex", alignItems:"flex-start", gap:11, padding:"13px 16px", cursor:"pointer", background:active?"rgba(123,191,50,0.14)":"transparent", borderLeft:active?`3px solid ${T.green}`:"3px solid transparent" }}><div style={{ width:23, height:23, borderRadius:"50%", flexShrink:0, display:"flex", alignItems:"center", justifyContent:"center", fontSize:11, fontWeight:700, background:done?T.green:active?T.blue:"rgba(255,255,255,0.12)", color:done||active?"#fff":"rgba(255,255,255,0.58)" }}>{done?<IconCheckSm size={11}/>:i+1}</div><div><div style={{ fontSize:12.5, fontWeight:active?700:600, color:active?"#fff":done?T.green:"rgba(255,255,255,0.72)", lineHeight:1.35 }}>{item.label}</div><div style={{ fontSize:10.5, color:"rgba(255,255,255,0.45)", lineHeight:1.35, marginTop:3 }}>{item.sub}</div></div></div>; })}
             </> : isRisk ? <RiskReadyRail risk={risk} setRisk={setRisk} profile={profile} fa={fa} /> : stageDefs.map(s => {
               const active = s.n===stage, done = s.n<stage;
               return <div key={s.n} onClick={()=>{ if (s.n<=stage) { isVis?goVision(s.n):isLeg?goLegacy(s.n):isRD?goRD(s.n):goRisk(s.n); } }} style={{ display:"flex", alignItems:"flex-start", gap:11, padding:"10px 16px", cursor:s.n<=stage?"pointer":"default", background:active?"rgba(123,191,50,0.12)":"transparent", borderLeft:active?`3px solid ${T.green}`:"3px solid transparent" }}><div style={{ width:21, height:21, borderRadius:"50%", flexShrink:0, marginTop:1, display:"flex", alignItems:"center", justifyContent:"center", fontSize:11, fontWeight:700, background:done?T.green:active?T.blue:"rgba(255,255,255,0.12)", color:done||active?"#fff":"rgba(255,255,255,0.5)" }}>{done?<IconCheckSm size={11}/>:s.n}</div><div style={{ fontSize:12.5, fontWeight:active?600:400, color:done?T.green:active?"#fff":"rgba(255,255,255,0.65)", lineHeight:1.4 }}>{s.label}</div></div>;
