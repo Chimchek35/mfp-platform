@@ -76,10 +76,14 @@ export function CoachSidebar() {
   )
 }
 
+/**
+ * Rendered through a portal: the platform shell's animated main column acts as the containing
+ * block for `position: fixed`, which would otherwise pin the sheet inside that column.
+ */
 export function CoachSheet() {
   const [open, setOpen] = useState(false)
-  return (
-    <div className="@5xl:hidden print:hidden">
+  return createPortal(
+    <div className="frr-root print:hidden">
       <button
         type="button"
         onClick={() => setOpen(true)}
@@ -104,6 +108,7 @@ export function CoachSheet() {
           </div>
         </div>
       )}
-    </div>
+    </div>,
+    document.body,
   )
 }

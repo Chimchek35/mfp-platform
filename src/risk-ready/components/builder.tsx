@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useStore } from '../lib/store'
+import { cn } from '../lib/utils'
 import { DISCLAIMER } from '../lib/config'
 import { STEPS } from '../lib/steps'
 import { LAST_STEP, STATUS_TEXT, stepStatus, type StepStatus } from '../lib/progress'
@@ -13,6 +14,22 @@ import { RisksStep } from './steps/risks-step'
 import { StrategiesStep } from './steps/strategies-step'
 import { CommunicateStep } from './steps/communicate-step'
 import { PlanStep } from './steps/plan-step'
+
+/** Column width (px) from which the coach docks beside the step instead of opening as a sheet. */
+const DOCK_COACH_AT = 1040
+
+/** Tracks whether `el` is at least `minWidth` wide. The coach sheet is portaled out of the
+ *  module, so a container query cannot reach it; a ResizeObserver on the root can. */
+function useIsWide(el: HTMLElement | null, minWidth: number) {
+  const [wide, setWide] = useState(false)
+  useEffect(() => {
+    if (!el) return
+    const ro = new ResizeObserver(([entry]) => setWide(entry.contentRect.width >= minWidth))
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [el, minWidth])
+  return wide
+}
 
 /**
  * Step list rendered inside the platform's dark left rail. Styled inline to match the other
@@ -175,11 +192,13 @@ export function Builder() {
   const meta = STEPS[step]
   const showCoach = step > 0 && step < LAST_STEP
   const prefillNotice = state.seededFrom === 'mfp' && !state.visited.includes(2)
+  const [rootEl, setRootEl] = useState<HTMLDivElement | null>(null)
+  const docked = useIsWide(rootEl, DOCK_COACH_AT)
 
   return (
-    <div className="frr-root @container flex flex-col gap-6">
+    <div ref={setRootEl} className="frr-root flex flex-col gap-6">
       <div className="flex gap-8">
-        <main id="frr-main" className="flex min-w-0 flex-1 flex-col gap-6 pb-24 @5xl:pb-6 print:pb-0">
+        <main id="frr-main" className={cn('flex min-w-0 flex-1 flex-col gap-6 print:pb-0', docked ? 'pb-6' : 'pb-24')}>
           {step > 0 && (
             <div className="flex flex-col gap-3 print:hidden">
               <p className="text-sm text-muted-foreground">
@@ -197,9 +216,9 @@ export function Builder() {
           <StepBody step={step} />
           <Pager />
         </main>
-        {showCoach && <CoachSidebar />}
+        {showCoach && docked && <CoachSidebar />}
       </div>
-      {showCoach && <CoachSheet />}
+      {showCoach && !docked && <CoachSheet />}
       <footer className="border-t border-border pt-4 print:hidden">
         <p className="text-xs leading-relaxed text-muted-foreground">{DISCLAIMER}</p>
       </footer>
