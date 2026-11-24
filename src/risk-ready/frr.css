@@ -1,0 +1,118 @@
+/*
+ * Risk Ready (Farm Risk Ready Plan Builder) styles.
+ *
+ * The rest of the platform is styled inline and with unlayered rules in index.css, so
+ * Tailwind is pulled in WITHOUT preflight and WITHOUT the utilities layer: unlayered
+ * utilities beat index.css element rules on specificity. The scoped reset lives in
+ * frr-reset.css and is imported before this file so utilities win ties with it.
+ */
+@layer theme;
+@import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/utilities.css';
+
+@theme inline {
+  --font-sans: 'Geist', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-navy: var(--navy);
+  --color-brand: var(--brand);
+  --color-blue: var(--brand);
+  --color-green: var(--green);
+  --color-moss: var(--moss);
+  --color-amber: var(--amber);
+  --color-amber-ink: var(--amber-ink);
+  --color-red: var(--red);
+  --color-grey: var(--grey);
+  --color-tint-green: var(--tint-green);
+  --color-tint-blue: var(--tint-blue);
+  --color-tint-amber: var(--tint-amber);
+  --color-tint-red: var(--tint-red);
+
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 10px;
+  --radius-xl: 12px;
+}
+
+/* The platform shell gives every button a 42px floor (.mfp-root button). Inside the module
+ * that floor only applies where a Tailwind min-h-* utility has not already chosen a height. */
+.mfp-root .frr-root :where(button:not([class*='min-h-'])) {
+  min-height: 0;
+}
+/* Shell headings are forced to 700 with tight tracking; let utilities set them in the module. */
+.mfp-root .frr-root :where(h1, h2, h3, h4):not([class*='font-']) {
+  font-weight: inherit;
+  letter-spacing: inherit;
+  line-height: inherit;
+}
+
+/* The platform shell scrolls inside a fixed-height frame, so printing the plan needs the
+ * frame opened up and the chrome hidden. */
+@media print {
+  @page {
+    margin: 14mm;
+  }
+  html,
+  body,
+  #root {
+    height: auto !important;
+    overflow: visible !important;
+    background: #ffffff !important;
+  }
+  .mfp-root,
+  .mfp-flow-main,
+  .mfp-flow-main > * {
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    display: block !important;
+  }
+  .mfp-flow-header,
+  .mfp-flow-rail {
+    display: none !important;
+  }
+  .frr-root {
+    font-size: 11pt;
+    color: #000;
+  }
+  .print-avoid-break,
+  .plan-row,
+  .plan-section > ul > li,
+  table tr {
+    break-inside: avoid;
+  }
+  .plan-section h3 {
+    break-after: avoid;
+  }
+  .plan-doc {
+    color: #000;
+  }
+  .print-break-before {
+    break-before: page;
+  }
+  .frr-root a[href^='http']::after {
+    content: ' (' attr(href) ')';
+    font-size: 8pt;
+    color: #5b6271;
+    word-break: break-all;
+  }
+}
