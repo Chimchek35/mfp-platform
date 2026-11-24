@@ -7675,8 +7675,8 @@ else if (isRD) { if (rd.stage<rdTotal) goRD(rd.stage+1); else goLegacy(1); }
         {/* Rail */}
         <aside className="mfp-flow-rail" style={{ width:240, background:"#0b5577", borderRight:`1px solid #062f4b`, display:"flex", flexDirection:"column", flexShrink:0, overflowY:"auto" }}>
           <div style={{ padding:"22px 18px 14px" }}>
-<div style={{ fontWeight:700, fontSize:11, letterSpacing:"0.16em", textTransform:"uppercase", color:T.blue, display:"flex", alignItems:"center", gap:7, marginBottom:4 }}>{isVis?"Strategic Vision":isFA?"Financial Analysis":isLeg?"Legacy":isRD?"Revenue Diversification":"Risk Ready"}</div>
-  <div style={{ fontSize:12, color:T.fgM }}>{isVis?`${visTotal}-stage planning`:isFA?"7-stage analysis":isLeg?`${legTotal}-stage transition plan`:isRD?"9-stage planning":`${riskTotal}-step plan builder`}</div>
+<div style={{ fontWeight:700, fontSize:11, letterSpacing:"0.16em", textTransform:"uppercase", color:T.blue, display:"flex", alignItems:"center", gap:7, marginBottom:isVis?0:4 }}>{isVis?"Strategic Vision":isFA?"Financial Analysis":isLeg?"Legacy":isRD?"Revenue Diversification":"Risk Ready"}</div>
+  {!isVis && <div style={{ fontSize:12, color:T.fgM }}>{isFA?"7-stage analysis":isLeg?`${legTotal}-stage transition plan`:isRD?"9-stage planning":`${riskTotal}-step plan builder`}</div>}
           </div>
           <div style={{ height:1, background:"rgba(255,255,255,0.09)", margin:"0 0 8px" }} />
           <div style={{ padding:"10px 12px 12px" }}>
