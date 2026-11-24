@@ -6241,10 +6241,6 @@ function VIS1({ vis, setVis, profile, setProfile, goProfile }) {
 
       {items.length > 0 && (
         <div style={cardStyle()}>
-          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", gap:12, flexWrap:"wrap", marginBottom:12 }}>
-            <div style={cardLblStyle({ marginBottom:0 })}>{items.length} claims to work with</div>
-            <button onClick={add} style={{ ...btnStyle("outline"), fontSize:12, padding:"6px 13px" }}>+ Add one</button>
-          </div>
           <div style={{ fontSize:12.5, color:T.fgM, marginBottom:14, lineHeight:1.55 }}>Swipe horizontally through the claims pulled from your Farm Profile. Edit anything that came across wrong, split anything that is really two claims, and remove anything you no longer stand behind.</div>
           <div ref={carouselRef} onScroll={(event) => { const track = event.currentTarget; const cardWidth = track.clientWidth + 12; setActiveAdvantage(Math.min(items.length - 1, Math.max(0, Math.round(track.scrollLeft / cardWidth)))); }} style={{ display:"flex", gap:12, overflowX:"auto", overscrollBehaviorX:"contain", scrollSnapType:"x mandatory", padding:"2px 2px 12px", margin:"0 -2px", WebkitOverflowScrolling:"touch" }}>
             {items.map((it, index) => (
@@ -6264,6 +6260,9 @@ function VIS1({ vis, setVis, profile, setProfile, goProfile }) {
     </div>
     <div style={{ textAlign:"center", fontSize:11.5, color:T.fgS, marginTop:6 }}>Swipe right to see the next advantage. The dark dot marks the card you are viewing.</div>
   </>}
+  <div style={{ display:"flex", justifyContent:"flex-start", marginTop:12 }}>
+    <button onClick={add} style={{ ...btnStyle("outline"), fontSize:12, padding:"6px 13px" }}>+ Add one</button>
+  </div>
   </div>
       )}
       {items.length > 0 && (
