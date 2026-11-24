@@ -655,7 +655,7 @@ const OPPS = [
   // lead (the farmer's own time is the binding constraint), and ideally peaks when field
   // work is idle. demandMonths (0-indexed) lists the months the path actually needs; paths
   // without one fall back to the cluster default in CLUSTER_DEMAND_MONTHS.
-  { id:"equipRepair", label:"Independent equipment repair & diagnostics", category:"Human capital", cluster:"Skilled Trades & Industrial Services", growthTier:1, sizeFit:["small","mid","large"], desc:"Diagnose and repair machinery for neighbours out of your own shop. Dealer consolidation has stretched service wait times in most areas, and right-to-repair rules have widened access to diagnostic software.", demand:"Dealers short on technicians; repair access now opening", time:"3–8 months", capital:"$15K–$60K", fit:{asset:75,trust:85,risk:45}, reg:2, seasonal:2, effort:4, liquidity:3, entRelevant:["grain","dairy","beef"], employeeLed:true, offSeason:true, demandMonths:[0,1,11] },
+  { id:"equipRepair", label:"Independent equipment repair & diagnostics", category:"Human capital", cluster:"Skilled Trades & Industrial Services", growthTier:1, sizeFit:["small","mid","large"], desc:"Diagnose and repair machinery for neighbors out of your own shop. Dealer consolidation has stretched service wait times in most areas, and right-to-repair rules have widened access to diagnostic software.", demand:"Dealers short on technicians; repair access now opening", time:"3–8 months", capital:"$15K–$60K", fit:{asset:75,trust:85,risk:45}, reg:2, seasonal:2, effort:4, liquidity:3, entRelevant:["grain","dairy","beef"], employeeLed:true, offSeason:true, demandMonths:[0,1,11] },
   { id:"millwright", label:"Contract industrial maintenance & millwright work", category:"Human capital", cluster:"Skilled Trades & Industrial Services", growthTier:1, sizeFit:["small","mid"], desc:"Mechanical maintenance for elevators, feed mills, ethanol plants and food processors. Pays well, runs year-round, and rewards exactly the skills a mechanically capable operator already has.", demand:"Megaprojects pull trades away from plant upkeep", time:"4–10 months", capital:"$10K–$40K", fit:{asset:45,trust:80,risk:50}, reg:3, seasonal:1, effort:4, liquidity:4, employeeLed:true, offSeason:true, demandMonths:[0,1,2,3,4,5,6,7,8,9,10,11] },
   { id:"fabShop", label:"Fabrication & welding job shop", category:"Human capital", cluster:"Skilled Trades & Industrial Services", growthTier:2, sizeFit:["small","mid"], desc:"Put skilled farm welders to work on customer drawings: structural, repair, and production fabrication out of existing shop space.", demand:"Machine shop count falling about 1% a year", time:"3–9 months", capital:"$10K–$50K", fit:{asset:55,trust:85,risk:45}, reg:3, seasonal:2, effort:4, liquidity:3, employeeLed:true, offSeason:true },
   { id:"meatproc", label:"Local meat processing", category:"Assets", cluster:"Skilled Trades & Industrial Services", growthTier:1, sizeFit:["mid","large"], desc:"Small-scale slaughter or further processing. Demand has outrun capacity in most regions since 2020, with producers routinely booking a year out. Inspection is the gate, not the market.", demand:"Producers routinely book processing a year out", time:"18–36 months", capital:"$300K–$3M", fit:{asset:55,trust:70,risk:25}, reg:5, seasonal:2, effort:5, liquidity:1, entRelevant:["beef","dairy"], employeeLed:true, offSeason:false, demandMonths:[9,10,11,0], policyPrograms:[{name:"Meat and Poultry Processing Expansion Program (MPPEP)",agency:"USDA Rural Development",note:"Grants for independent processing capacity. Competitive and heavily oversubscribed; confirm the current funding round and deadlines before building a plan around it."},{name:"Local Meat Capacity Grants (Local MCap)",agency:"USDA AMS",note:"Smaller awards aimed at rendering, smokehouse and packaging capacity. Check current status."}] },
@@ -2929,7 +2929,8 @@ function RD6({ rd, setRData, profile }) {
             <div style={{ fontSize:12.5, color:T.fgM, marginBottom:12, lineHeight:1.5 }}>From your Farm Profile — worth holding next to each option below before you rank them.</div>
             <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:4 }}>
               {profile.values && <div style={{ background:T.bgAlt, borderRadius:8, padding:"10px 14px" }}><div style={{ fontSize:10.5, fontWeight:700, color:T.fgS, textTransform:"uppercase", letterSpacing:"0.05em", marginBottom:3 }}>Core values</div><div style={{ fontSize:12.5, color:T.navy }}>{profile.values}</div></div>}
-              {profile.advantage && <div style={{ background:T.bgAlt, borderRadius:8, padding:"10px 14px" }}><div style={{ fontSize:10.5, fontWeight:700, color:T.fgS, textTransform:"uppercase", letterSpacing:"0.05em", marginBottom:3 }}>Competitive advantage</div><div style={{ fontSize:12.5, color:T.navy }}>{profile.advantage}</div></div>}
+              {profile.coreCompetency && <div style={{ background:T.bgAlt, borderRadius:8, padding:"10px 14px" }}><div style={{ fontSize:10.5, fontWeight:700, color:T.fgS, textTransform:"uppercase", letterSpacing:"0.05em", marginBottom:3 }}>Core competencies</div><div style={{ fontSize:12.5, color:T.navy }}>{profile.coreCompetency}</div></div>}
+        {profile.advantage && <div style={{ background:T.bgAlt, borderRadius:8, padding:"10px 14px" }}><div style={{ fontSize:10.5, fontWeight:700, color:T.fgS, textTransform:"uppercase", letterSpacing:"0.05em", marginBottom:3 }}>Competitive advantage</div><div style={{ fontSize:12.5, color:T.navy }}>{profile.advantage}</div></div>}
               {profile.nearTerm && <div style={{ background:T.bgAlt, borderRadius:8, padding:"10px 14px" }}><div style={{ fontSize:10.5, fontWeight:700, color:T.fgS, textTransform:"uppercase", letterSpacing:"0.05em", marginBottom:3 }}>Near-term objectives</div><div style={{ fontSize:12.5, color:T.navy }}>{profile.nearTerm}</div></div>}
               {profile.longTerm && <div style={{ background:T.bgAlt, borderRadius:8, padding:"10px 14px" }}><div style={{ fontSize:10.5, fontWeight:700, color:T.fgS, textTransform:"uppercase", letterSpacing:"0.05em", marginBottom:3 }}>Long-term objectives</div><div style={{ fontSize:12.5, color:T.navy }}>{profile.longTerm}</div></div>}
             </div>
@@ -5980,13 +5981,13 @@ const VIS_TESTS = [
     fail:"no", failVerdict:"personal",
     failNote:"Then it is a personal strength rather than something the business owns yet. Very common on a family farm, and the single most useful thing this module can hand to a succession plan." },
   { id:"evidence", label:"The evidence test",
-    q:"What happened in the last two years that proves this?",
+    q:"What happened in the last two years that proves this is a competitive advantage?",
     kind:"text",
-    failNote:"An advantage with no evidence behind it is a self-image. Worth either finding the evidence or demoting the claim." },
+    failNote:"If nothing specific comes to mind, this may be how you see the operation rather than something you can point to yet. Find a real example, or treat it as a core strength for now." },
   { id:"cost", label:"The cost test",
     q:"What have you turned down, or what has it cost you, because of this?",
     kind:"text",
-    failNote:"A value that has never cost anything is not governing behaviour yet. This is the question most operators have a real answer to and have never been asked." },
+    failNote:"A value that has never cost anything is not steering decisions yet. This is the question most operators have a real answer to and have never been asked." },
 ];
 
 // Three kinds of strength, not a pass and two fails. Each leads somewhere different.
@@ -6007,8 +6008,8 @@ const VIS_VERDICTS = {
 };
 
 const VIS_NO_ADVANTAGE = {
-  head:"Most operations come out of this with core competencies rather than a competitive advantage",
-  body:"That is the usual result, not a bad one. A true competitive advantage is rare by definition. What you have named here is a set of real capabilities, and the practical question is which one is closest to becoming something a neighbor could not copy.",
+  head:"These are real core strengths of your operation",
+  body:"They do not yet rise to the level of a competitive advantage, and that is the usual result, not a bad one. A true competitive advantage is rare by definition. What you have named is exactly the kind of thing worth building on. Keep developing it, and it can become one. The practical question is which strength is closest to becoming something a neighbor could not copy.",
 };
 
 // When a lender or advisor has already called something an advantage, the tool
@@ -6073,6 +6074,7 @@ const visSeedItems = (profile) => {
     String(raw).split(/\.\s+|\n/).map(s=>s.trim()).filter(s=>s.length>8).slice(0,4)
       .forEach((text,i) => out.push({ id:`${field}-${i}`, kind, sourceLabel:label, text:text.replace(/\.$/,""), tests:{}, verdict:"untested" }));
   };
+  push("advantage","coreCompetency","Core competencies");
   push("advantage","advantage","Competitive advantage");
   push("value","values","Core values");
   push("goal","nearTerm","Near-term objectives");
@@ -6227,7 +6229,7 @@ function VIS1({ vis, setVis, profile, setProfile, goProfile }) {
   const [activeAdvantage, setActiveAdvantage] = useState(0);
   const [draftAdvantage, setDraftAdvantage] = useState("");
   const seeded = !!vis.seeded;
-  const profileHasVision = ["advantage","values","nearTerm","longTerm"].some(f => (profile||{})[f] && String(profile[f]).trim());
+  const profileHasVision = ["coreCompetency","advantage","values","nearTerm","longTerm"].some(f => (profile||{})[f] && String(profile[f]).trim());
   // Profile answers load automatically as a first draft; asking someone to press
   // a button to import their own answers earns nothing.
   useEffect(() => {
@@ -6257,17 +6259,18 @@ function VIS1({ vis, setVis, profile, setProfile, goProfile }) {
   return (
     <div>
       <Head eyebrow={visEyebrow(2)} title="Core Competencies and Competitive Advantage" sub="Start with the reason customers, employees, landlords, or partners choose this operation over another." /><SectionSteps><div style={cardStyle({ borderTop:`4px solid ${T.blue}`, marginBottom:18 })}><div style={cardLblStyle()}>Bring existing profile</div><p style={{ color:T.fgM, fontSize:13.5, lineHeight:1.5, marginTop:0 }}>Upload a Maximum Farm Potential JSON export to update the profile fields used across the Strategic Vision categories.</p><input type="file" accept=".json,application/json" onChange={importProfile} /></div>
-      <div data-section-lead="true" style={{ marginBottom:24, padding:"22px 0", borderBottom:`1px solid ${T.div}` }}><div style={cardLblStyle()}>The capability behind the farm</div><p style={{ fontSize:15, color:T.fgM, lineHeight:1.55, margin:0, maxWidth:560 }}>What can this operation do exceptionally well—and what would be difficult for another farm to copy?</p></div>
+      <div data-section-lead="true" style={{ marginBottom:24, padding:"22px 0", borderBottom:`1px solid ${T.div}` }}><div style={cardLblStyle()}>The capability behind the farm</div><p style={{ fontSize:15, color:T.fgM, lineHeight:1.55, margin:0, maxWidth:560 }}>Let&apos;s start with your core competencies — the things your operation does well. Beyond those, what are the competitive advantages that set your operation apart?</p></div>
+      <Flag type="info">Competitive advantages are things your operation does exceptionally well that would be difficult for another operation to copy. They can include your core competencies, plus unique attributes like preferred market access or premium supply contracts.</Flag>
       {!profileHasVision && (<>
-        <Flag type="warn">Your Farm Profile does not have competitive advantage, core values, or objectives filled in yet. You can add items here directly, or fill the profile first.
+        <Flag type="warn">Your Farm Profile does not have core competencies, competitive advantage, core values, or objectives filled in yet. You can add items here directly, or fill the profile first.
           {goProfile && <div style={{ marginTop:9 }}><button onClick={goProfile} style={{ ...btnStyle("outline"), fontSize:12, padding:"6px 13px" }}>Open Farm Profile</button></div>}
         </Flag>
-        <div style={cardStyle({ borderTop:`4px solid ${T.moss}` })}><div style={cardLblStyle()}>What makes this farm hard to copy?</div><p style={{ fontSize:14, color:T.fgM, lineHeight:1.6, marginTop:0 }}>Think about a capability, relationship, reputation, location, or way of operating that creates value for customers, employees, landlords, or partners.</p><textarea value={draftAdvantage} onChange={e=>setDraftAdvantage(e.target.value)} placeholder="In one or two sentences, what is this operation especially good at?" style={inputStyle({ minHeight:100, fontSize:14 })} /><button type="button" onClick={addDraft} disabled={!draftAdvantage.trim()} style={{ ...btnStyle("primary"), marginTop:12, opacity:draftAdvantage.trim()?1:0.5 }}>Save competitive advantage →</button></div>
+        <div style={cardStyle({ borderTop:`4px solid ${T.moss}` })}><div style={cardLblStyle()}>What makes this farm hard to copy?</div><p style={{ fontSize:14, color:T.fgM, lineHeight:1.6, marginTop:0 }}>Think about a capability, relationship, reputation, location, or way of operating that creates value for customers, employees, landlords, or partners.</p><div style={{ fontSize:12.5, color:T.fgS, marginBottom:6 }}>Type your answer, or press the speak button to record it.</div><LegacyVoiceField><textarea value={draftAdvantage} onChange={e=>setDraftAdvantage(e.target.value)} placeholder="In one or two sentences, what is this operation especially good at?" style={inputStyle({ minHeight:100, fontSize:14 })} /></LegacyVoiceField><button type="button" onClick={addDraft} disabled={!draftAdvantage.trim()} style={{ ...btnStyle("primary"), marginTop:12, opacity:draftAdvantage.trim()?1:0.5 }}>Save competitive advantage →</button></div>
       </>)}
 
       {items.length > 0 && (
         <div style={cardStyle()}>
-          <div style={{ fontSize:12.5, color:T.fgM, marginBottom:14, lineHeight:1.55 }}>These advantages were pulled from your Farm Profile. Step through them one at a time: edit anything that came across wrong, split anything that is really two separate advantages, and remove anything you no longer stand behind.</div>
+          <div style={{ fontSize:12.5, color:T.fgM, marginBottom:14, lineHeight:1.55 }}>These advantages were pulled from your Farm Profile. Step through them one at a time: edit anything that came across wrong, split anything that is really two separate advantages, and remove anything you no longer stand behind. Type your edits, or press the speak button to record them.</div>
           {items.length > 1 && (
             <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", gap:10, marginBottom:10 }}>
               <button type="button" onClick={()=>scrollToAdvantage(activeAdvantage-1)} disabled={activeAdvantage===0} aria-label="Previous advantage" style={{ ...btnStyle("outline"), padding:"6px 12px", fontSize:12, opacity:activeAdvantage===0?0.4:1, cursor:activeAdvantage===0?"default":"pointer" }}>← Previous</button>
@@ -6338,7 +6341,7 @@ function VIS1({ vis, setVis, profile, setProfile, goProfile }) {
   const s = visStats(vis);
 
   const title = isValuesTest ? "Test core values" : "Sort your strengths";
-  const eyebrow = isValuesTest ? "Strategic vision · Stage 5" : "Strategic vision · Stage 3";
+  const eyebrow = isValuesTest ? visEyebrow(5) : visEyebrow(3);
   const sub = isValuesTest ? "Test whether each value changes a real decision." : "Two questions per item. They decide which kind of strength each one is, which tells you where to put your effort.";
   if (!items.length) return <div><Head eyebrow={eyebrow} title={title} sub="" /><Flag type="warn">Nothing to test yet. Go back a stage and bring in what you have written.</Flag></div>;
   
@@ -6346,7 +6349,7 @@ function VIS1({ vis, setVis, profile, setProfile, goProfile }) {
   <div>
   <Head eyebrow={eyebrow} title={title} sub={sub} />
       <SectionSteps key={kind}>
-      <Flag type="info">{isValuesTest ? "A shorter, honest list is more useful than a long one." : "There is no wrong answer here and nothing gets thrown away. Most items land as core competencies, which is the normal result and a perfectly good one."}</Flag>
+      <Flag type="info">{isValuesTest ? "A shorter, honest list is more useful than a long one." : "There is no wrong answer here and nothing gets thrown away. Most items land as core competencies, which is the normal result and a perfectly good one. Some advantages belong to the operation; some are tied to you personally. We will sort each one."}</Flag>
 
       {items.map(it => {
         const t = it.tests || {};
@@ -6420,7 +6423,7 @@ function VIS1({ vis, setVis, profile, setProfile, goProfile }) {
               <div key={k}><div style={{ fontSize:11, color:T.fgS, marginBottom:3 }}>{lab}</div><div style={{ fontSize:24, fontWeight:600, color:n>0?col:T.fgS }}>{n}</div></div>
             ))}
           </div>
-          {s.real === 0 && s.tested >= 2 && (
+          {s.real === 0 && s.tableStakes > 0 && (
             <div style={{ marginTop:14, borderLeft:`2px solid ${T.blue}`, background:T.blueL, borderRadius:"0 5px 5px 0", padding:"13px 16px" }}>
               <div style={{ fontSize:14.5, fontWeight:600, color:T.navy, marginBottom:5 }}>{VIS_NO_ADVANTAGE.head}</div>
               <div style={{ fontSize:13.5, color:T.fgM, lineHeight:1.65 }}>{VIS_NO_ADVANTAGE.body}</div>
@@ -6744,7 +6747,7 @@ function VIS_PROFILE({ vis, profile, setProfile, goFA, fa }) {
   const field = (label,key,placeholder,multi=false) => <label style={{ ...labelStyle, display:"block" }}>{label}{multi?<textarea value={draft[key]||""} onChange={update(key)} placeholder={placeholder} style={inputStyle({ minHeight:70, marginTop:6 })} />:<input value={draft[key]||""} onChange={update(key)} placeholder={placeholder} style={inputStyle({ marginTop:6 })} />}</label>;
   const box = (title, text, color) => <div style={cardStyle({ marginBottom:0, borderTop:`4px solid ${color}` })}><div style={cardLblStyle()}>{title}</div><div style={{ color:text?T.fgM:T.fgS, fontSize:13.5, lineHeight:1.5 }}>{text || "This section will populate after the Strategic Vision intake or a JSON profile import."}</div></div>;
   const swot = { strengths:advantages.join("; "), weaknesses:draft.swotWeaknesses, opportunities:draft.swotOpportunities||draft.nearTerm, threats:draft.swotThreats||draft.productionMix };
-  return <div><Head eyebrow="Strategic Vision · Profile and SWOT" title="Farm profile and SWOT" sub="This section combines the farm profile, JSON import, and vision-derived SWOT. It stays intentionally empty until the first two vision steps or an uploaded profile provide content." /><div style={{ display:"flex", gap:24, alignItems:"flex-end", borderBottom:`1px solid ${T.border}`, marginBottom:24 }}><button type="button" onClick={()=>setProfileTab("profile")} style={{ background:"none", border:0, borderBottom:`3px solid ${profileTab==="profile"?T.blue:"transparent"}`, padding:"0 2px 12px", color:profileTab==="profile"?T.blue:T.fgS, fontWeight:700, cursor:"pointer" }}>Farm Profile</button><button type="button" onClick={()=>setProfileTab("swot")} style={{ background:"none", border:0, borderBottom:`3px solid ${profileTab==="swot"?T.blue:"transparent"}`, padding:"0 2px 12px", color:profileTab==="swot"?T.blue:T.fgS, fontWeight:700, cursor:"pointer" }}>Farm SWOT</button><button type="button" onClick={()=>setProfileTab("glance")} style={{ background:"none", border:0, borderBottom:`3px solid ${profileTab==="glance"?T.blue:"transparent"}`, padding:"0 2px 12px", color:profileTab==="glance"?T.blue:T.fgS, fontWeight:700, cursor:"pointer" }}>Business at a glance</button></div><div style={{ display:profileTab==="profile"?"block":"none" }}><div style={cardStyle({ borderTop:`4px solid ${T.blue}`, display:"none" })}><div style={cardLblStyle()}>Bring in an existing profile</div><p style={{ color:T.fgM, fontSize:13.5, lineHeight:1.5, marginTop:0 }}>Upload a Maximum Farm Potential JSON export to prefill these fields. The import stays in this working session until you save it.</p><input type="file" accept=".json,application/json" onChange={importJSON} /></div><div style={cardStyle()}><div style={cardLblStyle()}>Farm profile</div>{field("Farm name","name","e.g., Jensen Family Farms")}{field("Location","location","State and county")}{field("Size and production mix","productionMix","Acres, livestock, and primary enterprises",true)}{field("Business ventures beyond production","ventures","Services, shops, leases, or other ventures",true)}{field("Near-term objective","nearTerm","What should improve in the next 1–3 years?",true)}{field("Long-term direction","longTerm","Where is the farm headed?",true)}{field("Core values","values","What will this operation not trade away?",true)}{field("Competitive advantage","advantage","What makes this operation difficult to copy?",true)}</div></div><div style={{ display:profileTab==="swot"?"block":"none" }}><div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(250px,1fr))", gap:14 }}>{box("Strengths",hasVisionInputs?swot.strengths:"",T.green)}{box("Weaknesses / trade-offs",hasVisionInputs?swot.weaknesses:"",T.amber)}{box("Opportunities",hasVisionInputs?swot.opportunities:"",T.blue)}{box("Threats / conditions",hasVisionInputs?swot.threats:"",T.red)}</div></div><div style={{ display:profileTab==="glance"?"block":"none" }}><div style={cardStyle()}><div style={cardLblStyle()}>Business at a glance</div><div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))", gap:12 }}>{[["Farm name",draft.name],["Location",draft.location],["Production mix",draft.productionMix],["Near-term direction",draft.nearTerm],["Financial basis",fa?.accounting?.basis],["Working capital",fa?.budget ? `$${((Number(fa.budget.cash)||0)+(Number(fa.budget.line)||0)-(Number(fa.budget.committed)||0)-(Number(fa.budget.debt)||0)).toLocaleString()}` : ""]].map(([label,value])=><div key={label} style={{ padding:14, background:value?T.bgAlt:"#f2f4f6", borderRadius:8, color:value?T.navy:T.fgS }}><div style={{ fontSize:11, fontWeight:700, textTransform:"uppercase", letterSpacing:"0.05em", marginBottom:5 }}>{label}</div><div style={{ fontSize:14 }}>{value||"Not updated yet"}</div></div>)}</div><p style={{ color:T.fgS, fontSize:12.5, lineHeight:1.5, marginBottom:0 }}>Financial values update from Financial Analysis as records, budgets, and working capital assumptions are completed.</p></div></div><div style={cardStyle({ background:T.blueL, borderColor:"#c8d9e8", marginTop:16 })}><strong>Save profile for Eagle Eye and MFP modules</strong><p style={{ margin:"5px 0 13px", color:T.fgM, fontSize:13, lineHeight:1.5 }}>Saving makes the profile available to Eagle Eye Intelligence, Financial Analysis, Revenue Diversification, and Farm Risk.</p><button type="button" onClick={() => { save(); goFA(1); }} style={btnStyle("primary")}>Save profile and continue to Financial Analysis →</button></div></div>;
+  return <div><Head eyebrow="Strategic Vision · Profile and SWOT" title="Farm profile and SWOT" sub="This section combines the farm profile, JSON import, and vision-derived SWOT. It stays intentionally empty until the first two vision steps or an uploaded profile provide content." /><div style={{ display:"flex", gap:24, alignItems:"flex-end", borderBottom:`1px solid ${T.border}`, marginBottom:24 }}><button type="button" onClick={()=>setProfileTab("profile")} style={{ background:"none", border:0, borderBottom:`3px solid ${profileTab==="profile"?T.blue:"transparent"}`, padding:"0 2px 12px", color:profileTab==="profile"?T.blue:T.fgS, fontWeight:700, cursor:"pointer" }}>Farm Profile</button><button type="button" onClick={()=>setProfileTab("swot")} style={{ background:"none", border:0, borderBottom:`3px solid ${profileTab==="swot"?T.blue:"transparent"}`, padding:"0 2px 12px", color:profileTab==="swot"?T.blue:T.fgS, fontWeight:700, cursor:"pointer" }}>Farm SWOT</button><button type="button" onClick={()=>setProfileTab("glance")} style={{ background:"none", border:0, borderBottom:`3px solid ${profileTab==="glance"?T.blue:"transparent"}`, padding:"0 2px 12px", color:profileTab==="glance"?T.blue:T.fgS, fontWeight:700, cursor:"pointer" }}>Business at a glance</button></div><div style={{ display:profileTab==="profile"?"block":"none" }}><div style={cardStyle({ borderTop:`4px solid ${T.blue}`, display:"none" })}><div style={cardLblStyle()}>Bring in an existing profile</div><p style={{ color:T.fgM, fontSize:13.5, lineHeight:1.5, marginTop:0 }}>Upload a Maximum Farm Potential JSON export to prefill these fields. The import stays in this working session until you save it.</p><input type="file" accept=".json,application/json" onChange={importJSON} /></div><div style={cardStyle()}><div style={cardLblStyle()}>Farm profile</div>{field("Farm name","name","e.g., Jensen Family Farms")}{field("Location","location","State and county")}{field("Size and production mix","productionMix","Acres, livestock, and primary enterprises",true)}{field("Business ventures beyond production","ventures","Services, shops, leases, or other ventures",true)}{field("Near-term objective","nearTerm","What should improve in the next 1–3 years?",true)}{field("Long-term direction","longTerm","Where is the farm headed?",true)}{field("Core values","values","What will this operation not trade away?",true)}{field("Core competencies","coreCompetency","What does this operation do well, even if a good neighbor could do it too?",true)}{field("Competitive advantage","advantage","What makes this operation difficult to copy?",true)}</div>{(profile||{}).strategicVision && <div style={cardStyle({ borderTop:`4px solid ${T.moss}` })}><div style={cardLblStyle()}>Standing Strategic Vision</div><div style={{ fontSize:12.5, color:T.fgS, marginBottom:10 }}>Saved {profile.strategicVision.updated} from the Document stage.</div>{(profile.strategicVision.sections||[]).filter(s=>s.text).map(s=><div key={s.key} style={{ marginBottom:10 }}><div style={{ fontSize:11, fontWeight:700, color:T.fgS, textTransform:"uppercase", letterSpacing:"0.05em", marginBottom:2 }}>{s.label}</div><div style={{ fontSize:13.5, color:T.fg, lineHeight:1.55, whiteSpace:"pre-wrap" }}>{s.text}</div></div>)}{(profile.visionShares||[]).length>0 && <div style={{ fontSize:12.5, color:T.fgM, marginTop:6 }}>Shared with: {profile.visionShares.map(s=>`${s.person?`${s.person} (${s.role})`:s.role}, ${s.date}`).join(" · ")}</div>}</div>}</div><div style={{ display:profileTab==="swot"?"block":"none" }}><div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(250px,1fr))", gap:14 }}>{box("Strengths",hasVisionInputs?swot.strengths:"",T.green)}{box("Weaknesses / trade-offs",hasVisionInputs?swot.weaknesses:"",T.amber)}{box("Opportunities",hasVisionInputs?swot.opportunities:"",T.blue)}{box("Threats / conditions",hasVisionInputs?swot.threats:"",T.red)}</div></div><div style={{ display:profileTab==="glance"?"block":"none" }}><div style={cardStyle()}><div style={cardLblStyle()}>Business at a glance</div><div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))", gap:12 }}>{[["Farm name",draft.name],["Location",draft.location],["Production mix",draft.productionMix],["Near-term direction",draft.nearTerm],["Financial basis",fa?.accounting?.basis],["Working capital",fa?.budget ? `$${((Number(fa.budget.cash)||0)+(Number(fa.budget.line)||0)-(Number(fa.budget.committed)||0)-(Number(fa.budget.debt)||0)).toLocaleString()}` : ""]].map(([label,value])=><div key={label} style={{ padding:14, background:value?T.bgAlt:"#f2f4f6", borderRadius:8, color:value?T.navy:T.fgS }}><div style={{ fontSize:11, fontWeight:700, textTransform:"uppercase", letterSpacing:"0.05em", marginBottom:5 }}>{label}</div><div style={{ fontSize:14 }}>{value||"Not updated yet"}</div></div>)}</div><p style={{ color:T.fgS, fontSize:12.5, lineHeight:1.5, marginBottom:0 }}>Financial values update from Financial Analysis as records, budgets, and working capital assumptions are completed.</p></div></div><div style={cardStyle({ background:T.blueL, borderColor:"#c8d9e8", marginTop:16 })}><strong>Save profile for Eagle Eye and MFP modules</strong><p style={{ margin:"5px 0 13px", color:T.fgM, fontSize:13, lineHeight:1.5 }}>Saving makes the profile available to Eagle Eye Intelligence, Financial Analysis, Revenue Diversification, and Farm Risk.</p><button type="button" onClick={() => { save(); goFA(1); }} style={btnStyle("primary")}>Save profile and continue to Financial Analysis →</button></div></div>;
 }
 
 // ── Vision 9 — The document ─────────────────────────────────────────────────
@@ -6752,7 +6755,7 @@ function VIS_PROFILE({ vis, profile, setProfile, goFA, fa }) {
 // record: demoted claims, person-dependent advantages, cost-test answers and the
 // who-holds-this ratings never appear here. Publishing a document that names a
 // key-person risk to the team is the failure mode this split exists to prevent.
-function VIS8({ vis, profile }) {
+function VIS8({ vis, profile, setProfile }) {
   const [form, setForm] = useState("full");
   const pub = vis.published || {};
   const approved = vis.approved || {};
@@ -6910,6 +6913,54 @@ function VIS8({ vis, profile }) {
           </div>
         </div>
       )}
+
+      <VisionShare live={live} pub={pub} rules={rules} profile={profile} setProfile={setProfile} />
+    </div>
+  );
+}
+
+// Records the standing Strategic Vision into the farm profile and logs who it was
+// shared with. The profile is the farm's home record, so a share lands there
+// rather than only in a printed PDF.
+const VIS_SHARE_ROLES = ["Banker or lender", "Insurer", "Accountant", "Attorney", "Family member", "Other"];
+function VisionShare({ live, pub, rules, profile, setProfile }) {
+  const [role, setRole] = useState(VIS_SHARE_ROLES[0]);
+  const [customRole, setCustomRole] = useState("");
+  const [person, setPerson] = useState("");
+  const [saved, setSaved] = useState("");
+  const shares = (profile||{}).visionShares || [];
+  const label = role === "Other" ? customRole.trim() : role;
+  const canShare = !!setProfile && !!label;
+  const share = () => {
+    if (!canShare) return;
+    const when = new Date().toLocaleDateString("en-US", { year:"numeric", month:"short", day:"numeric" });
+    const document = { sections: live.map(s => ({ key:s.k, label:s.label, text:(pub[s.k]||"").trim() })), rules: rules.map(r => r.statement.trim()), updated: when };
+    const entry = { id:"share-"+Date.now(), role:label, person:person.trim(), date:when };
+    setProfile(s => ({ ...s, strategicVision: document, visionShares: [...((s||{}).visionShares||[]), entry] }));
+    setSaved(`Saved to the farm profile and recorded as shared with ${person.trim() ? `${person.trim()} (${label})` : label}.`);
+    setPerson(""); setCustomRole("");
+  };
+  return (
+    <div style={cardStyle({ borderTop:`4px solid ${T.blue}` })}>
+      <div style={cardLblStyle()}>Share with my advisor</div>
+      <p style={{ fontSize:14, color:T.fgM, lineHeight:1.6, marginTop:0 }}>Sharing saves this Strategic Vision into your farm profile as the standing record and notes who has seen it, so the lender, insurer, or advisor conversation starts from the same page you do. Print or save as PDF above to hand them a copy.</p>
+      <div style={{ display:"flex", gap:12, flexWrap:"wrap", alignItems:"flex-end" }}>
+        <label style={{ ...labelStyle, flex:"1 1 180px", marginBottom:0 }}>Who are you sharing with?
+          <select value={role} onChange={e=>setRole(e.target.value)} style={inputStyle({ marginTop:6 })}>{VIS_SHARE_ROLES.map(r => <option key={r} value={r}>{r}</option>)}</select>
+        </label>
+        {role === "Other" && <label style={{ ...labelStyle, flex:"1 1 180px", marginBottom:0 }}>Their role<input value={customRole} onChange={e=>setCustomRole(e.target.value)} placeholder="e.g., Landlord, co-op agronomist" style={inputStyle({ marginTop:6 })} /></label>}
+        <label style={{ ...labelStyle, flex:"1 1 180px", marginBottom:0 }}>Name (optional)<input value={person} onChange={e=>setPerson(e.target.value)} placeholder="e.g., Mark at Compeer" style={inputStyle({ marginTop:6 })} /></label>
+        <button type="button" onClick={share} disabled={!canShare} style={{ ...btnStyle("primary"), opacity:canShare?1:0.5 }}>Save and record share →</button>
+      </div>
+      {saved && <div style={{ marginTop:12 }}><Flag type="ok">{saved}</Flag></div>}
+      {shares.length > 0 && (
+        <div style={{ marginTop:16, borderTop:`1px solid ${T.border}`, paddingTop:12 }}>
+          <div style={{ fontSize:12, fontWeight:600, color:T.fgM, marginBottom:6 }}>Shared so far</div>
+          <ul style={{ margin:0, paddingLeft:20, fontSize:13.5, color:T.fgM, lineHeight:1.8 }}>
+            {shares.map(s => <li key={s.id}>{s.person ? `${s.person} · ` : ""}{s.role} · {s.date}</li>)}
+          </ul>
+        </div>
+      )}
     </div>
   );
 }
@@ -7054,6 +7105,7 @@ const profileFromMFPExport = (raw) => {
     grossIncome: value("grossIncome", "revenue", "grossRevenue", "financials.grossIncome", "financial.grossRevenue"),
     nearTerm: value("nearTerm", "nearTermObjectives", "openEnded.nearTermObjectives", "objectives.nearTerm", "goals.shortTerm"),
     longTerm: value("longTerm", "longTermObjectives", "openEnded.longTermObjectives", "objectives.longTerm", "goals.longTerm"),
+    coreCompetency: value("coreCompetency", "coreCompetencies", "openEnded.coreCompetencies", "strategy.coreCompetencies"),
     advantage: value("advantage", "competitiveAdvantage", "openEnded.competitiveAdvantage", "strengths", "strategy.advantage"),
     values: value("values", "coreValues", "openEnded.coreValues", "familyValues", "strategy.values"),
     swotStrengths: value("swotStrengths", "swot.strengths", "strengths"),
@@ -7077,6 +7129,7 @@ const profileFromMFPText = (text) => {
     grossIncome: "gross income|revenue|gross revenue",
     nearTerm: "near-term objectives|near term objectives|short-term goals|short term goals",
     longTerm: "long-term objectives|long term objectives|long-term goals|long term goals",
+    coreCompetency: "core competencies|core competency",
     advantage: "competitive advantage|advantage|strengths",
     values: "core values|family values|values",
     swotStrengths: "swot strengths",
@@ -7367,7 +7420,7 @@ export default function App() {
   const faPct = Math.round(Math.min(fa.stage,faTotal)/faTotal*100);
   const rdPct = Math.round(Math.min(rd.stage,rdTotal)/rdTotal*100);
   const riskPct = riskProg.pct;
-  const PROFILE_FIELDS = ["location","size","productionMix","ventures","grossIncome","nearTerm","longTerm","advantage","values","swotStrengths","swotWeaknesses","swotOpportunities","swotThreats"];
+  const PROFILE_FIELDS = ["location","size","productionMix","ventures","grossIncome","nearTerm","longTerm","coreCompetency","advantage","values","swotStrengths","swotWeaknesses","swotOpportunities","swotThreats"];
   const profilePct = Math.round((PROFILE_FIELDS.filter(f=>(profile[f]||"").trim()).length / PROFILE_FIELDS.length) * 100);
   const legPct = Math.round(Math.min(leg.stage,legTotal)/legTotal*100);
   const visPct = Math.round(Math.min(vis.stage,visTotal)/visTotal*100);
@@ -7530,7 +7583,7 @@ else if (isRD) { if (rd.stage<rdTotal) goRD(rd.stage+1); else goLegacy(1); }
   <VIS3 vis={vis} setVis={setVis} />, <VIS4 vis={vis} setVis={setVis} />, <VIS5 vis={vis} setVis={setVis} goLegacy={()=>{ setModule("legacy"); setLeg(s=>({...s, role:"compare"})); }} />,
     <VIS6 vis={vis} setVis={setVis} />, <VIS7 vis={vis} setVis={setVis} profile={profile} />,
     <VIS_PROFILE vis={vis} profile={profile} setProfile={setProfile} goFA={goFA} fa={fa} />,
-    <VIS8 vis={vis} profile={profile} />,
+    <VIS8 vis={vis} profile={profile} setProfile={setProfile} />,
   ];
   const body = isFA ? FA_BODY[stage-1] : isRD ? (rdUnlocked ? RD_BODY[stage-1] : <div style={cardStyle({ borderTop:`4px solid ${T.blue}` })}><div style={cardLblStyle()}>Complete the foundation modules first</div><p style={{ color:T.fgM, lineHeight:1.6, marginTop:0 }}>Revenue Diversification uses your Strategic Vision and Financial Analysis results. Complete both modules before starting this flow so multiple farm types, revenue tier, financial health, and SWOT signals are grounded in your farm&apos;s work.</p><div style={{ display:"flex", gap:10, flexWrap:"wrap" }}><button type="button" onClick={()=>setModule("vision")} style={btnStyle("outline")}>Go to Strategic Vision</button><button type="button" onClick={()=>setModule("fa")} style={btnStyle("primary")}>Go to Financial Analysis</button></div></div>) : isLeg ? <div>{legBodyForRole}</div> : isVis ? VIS_BODY[stage-1] : riskBody;
   const moduleName = isVis ? "Strategic Vision" : isFA ? "Financial Analysis" : isLeg ? "Legacy" : isRD ? "Revenue Diversification" : "Risk Ready";
@@ -7543,12 +7596,10 @@ else if (isRD) { if (rd.stage<rdTotal) goRD(rd.stage+1); else goLegacy(1); }
         : isRisk
           ? "Risk is not a failure to eliminate. It is the weather, markets, health, people, and surprises you plan around so one hard season does not decide everything."
           : "Legacy is about people and a workable handoff, not just assets. We will make room for difficult conversations and practical next steps.";
-  const flowLabels = isVis ? VIS_STEPS.map(s => s.label) : isFA ? ["Books","Enterprises","Records","Budget","Ratios","Benchmarking"] : [];
-  const visStepRanges = VIS_STEPS.map(s => [s.from, s.to]);
-  const stageVisual = flowLabels.length ? <div aria-label={`${moduleName} progress map`} style={{ display:"flex", alignItems:"center", gap:0, marginBottom:26, padding:"14px 18px", background:T.bgAlt, borderRadius:16, border:`1px solid ${T.div}`, overflowX:"auto" }}>{flowLabels.map((label,i)=>{ const n=Math.min(i+1, total); const [from,to]=isVis ? visStepRanges[i] : [n,n]; const active=stage>=from && stage<=to; const done=stage>to; return <Fragment key={label}><div style={{ minWidth:78, display:"flex", flexDirection:"column", alignItems:"center", gap:6, color:active?T.navy:done?T.green:T.fgS }}><div style={{ width:28, height:28, borderRadius:"50%", display:"grid", placeItems:"center", background:active?T.blue:done?T.green:"#fff", color:active||done?"#fff":T.fgS, fontSize:11, fontWeight:800, border:`1px solid ${active?T.blue:done?T.green:T.border}` }}>{done?<IconCheckSm size={12}/>:i+1}</div><span style={{ fontSize:10.5, fontWeight:active?750:550, whiteSpace:"nowrap" }}>{label}</span></div>{i<flowLabels.length-1&&<div style={{ minWidth:18, height:2, background:done?T.green:T.border, marginBottom:22 }} />}</Fragment>})}</div> : null;
+  const flowLabels = isFA ? ["Books","Enterprises","Records","Budget","Ratios","Benchmarking"] : [];
+  const stageVisual = flowLabels.length ? <div aria-label={`${moduleName} progress map`} style={{ display:"flex", alignItems:"center", gap:0, marginBottom:26, padding:"14px 18px", background:T.bgAlt, borderRadius:16, border:`1px solid ${T.div}`, overflowX:"auto" }}>{flowLabels.map((label,i)=>{ const n=Math.min(i+1, total); const [from,to]=[n,n]; const active=stage>=from && stage<=to; const done=stage>to; return <Fragment key={label}><div style={{ minWidth:78, display:"flex", flexDirection:"column", alignItems:"center", gap:6, color:active?T.navy:done?T.green:T.fgS }}><div style={{ width:28, height:28, borderRadius:"50%", display:"grid", placeItems:"center", background:active?T.blue:done?T.green:"#fff", color:active||done?"#fff":T.fgS, fontSize:11, fontWeight:800, border:`1px solid ${active?T.blue:done?T.green:T.border}` }}>{done?<IconCheckSm size={12}/>:i+1}</div><span style={{ fontSize:10.5, fontWeight:active?750:550, whiteSpace:"nowrap" }}>{label}</span></div>{i<flowLabels.length-1&&<div style={{ minWidth:18, height:2, background:done?T.green:T.border, marginBottom:22 }} />}</Fragment>})}</div> : null;
   const stageCard = (
   <section className={isRisk ? "mfp-risk-stage" : "mfp-stage-card"} aria-label={isVis ? `${moduleName} step ${visStepIndex(stage)+1} of ${VIS_STEPS.length}` : `${moduleName} question ${stage} of ${total}`}>
-  {isVis && <div style={eyebrowStyle}>Strategic Vision · Step {visStepIndex(stage)+1} of {VIS_STEPS.length}</div>}
   {stageVisual}
   {false && <div style={{ marginBottom:26, borderRadius:16, overflow:"hidden", border:`1px solid ${T.div}`, background:T.bgAlt }}><img src="/strategic-vision-roadmap.png" alt="Strategic vision roadmap from capabilities and values to a statement, profile, and final document" style={{ display:"block", width:"100%", height:150, objectFit:"cover" }} /><div style={{ display:"flex", justifyContent:"space-between", gap:10, padding:"10px 14px", color:T.fgS, fontSize:11.5 }}><span>Build the next decision-ready layer</span><span style={{ color:T.green, fontWeight:700 }}>Stage {stage} of {total}</span></div></div>}
   <div style={{ maxWidth:900, marginBottom:26, color:T.fgS, fontSize:14, lineHeight:1.6 }}>{moduleSupport}</div>
